@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ spu.name }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="{{ url_for('data_browser__.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('data_browser__.static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('data_browser__.static', filename='js/jquery-1.9.1.min.js') }}"></script>
+  <script src="{{ url_for('data_browser__.static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.raty.min.js') }}"></script>
+  <script>
+    $(function () {
+      $("#rating").raty({readOnly: true, score: {{ spu.rating}}, path: '/static/js/img' })
+    });
+  </script>
+</head>
+<body>
+<br>
+<div class="container">
+  <div class="carousel-div">
+    <div id="carousel-generic" class="carousel slide" data-ride="carousel">
+      <!-- Indicators -->
+      <ol class="carousel-indicators">
+        {% for idx in spu.pic_url_list %}
+          <li data-target="#carousel-generic" data-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}>
+          </li>
+        {% endfor %}
+      </ol>
+
+      <div class="carousel-inner">
+        {% for pic_url in spu.pic_url_list %}
+          <div class="item{%- if loop.first %} active{% endif -%}">
+            <img src="{{ pic_url }}" alt="{{ spu.name }}">
+
+            <div class="carousel-caption">
+              <p>{{ spu.name }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Controls -->
+      <a class="left carousel-control" href="#carousel-generic" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+      </a>
+      <a class="right carousel-control" href="#carousel-generic" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+      </a>
+    </div>
+  </div>
+  <br>
+
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <h3 class="panel-title">产品信息</h3>
+    </div>
+    <table class="table">
+      <tr>
+        <td>产品编号</td>
+        <td>{{ spu.code }}</td>
+      </tr>
+      <tr>
+        <td>产品名称</td>
+        <td>{{ spu.name }}</td>
+      </tr>
+      <tr>
+        <td>评分</td>
+        <td><span id="rating"></span></td>
+      </tr>
+      <tr>
+        <td>生产厂家</td>
+        <td>{{ spu.vendor.name }}</td>
+      </tr>
+    </table>
+  </div>
+  <div>
+    <a href="/download/last_version.apk" class="btn btn-primary btn-lg btn-block"><i class="fa fa-android fa-2x fa-fw"></i>下载 乐鉴</a>
+  </div>
+</div>
+</body>
+</html>

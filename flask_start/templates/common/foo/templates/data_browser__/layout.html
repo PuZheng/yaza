@@ -1,0 +1,117 @@
+
+{% extends "data_browser__/base_layout.html" %}
+
+{% block __data_browser__customized_head_block %}
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/custom.css") }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/opentip.css") }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/jquery.pnotify.default.css") }}"/>
+  <script src="{{ url_for('data_browser__.static', filename='js/select2_locale_zh-CN.js') }}"></script>
+  <script src="{{ url_for("data_browser__.static", filename="js/locales/bootstrap-datetimepicker.zh-CN.js") }}" charset="UTF-8"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery.pnotify.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="js/JSPinYin.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/svg.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/holder.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/svg.foreignobject.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/opentip-jquery.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      $(".fancybox").fancybox();
+      setTimeout(function () {
+        $(".flash").fadeOut("slow")
+      }, 3000);
+      function my_matcher(term, text) {
+        return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+      }
+
+      if ($("select").data("select2") == undefined || $("select").data("select2") == null) {
+        $("select").select2({
+          width: "element",
+          placeholder: "请选择",
+          matcher: my_matcher
+        });
+      } else {
+        $("select").each(function () {
+          $(this).data("select2").opts.placeholder = "请选择";
+          $(this).data("select2").opts.matcher = my_matcher;
+        });
+      }
+      $("[data-toggle=tooltip]").tooltip();
+      // 展示代办事项
+      $.pnotify.defaults.history = false;
+      $.pnotify.defaults.styling = "bootstrap";
+      var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+
+      function display(message) {
+        var ret = message["msg"];
+        if (message.context_url.length > 0) {
+          var url = message.context_url;
+          if (url.indexOf("?") == -1) {
+            url += "?url=" + "{{ request.url|urlencode }}";
+          } else {
+            url += "&url=" + "{{ request.url|urlencode }}";
+          }
+
+          ret += sprintf('<a href="%s">开始&gt;&gt;</a>', url)
+        }
+        return ret;
+      }
+
+    })
+  </script>
+  <style type="text/css">
+    .stack-bottomright {
+      /* These are just CSS default values to reset the pnotify CSS. */
+      right: auto;
+      top: auto;
+    }
+  </style>
+{% endblock %}
+
+{% block __data_browser__nav_bar_block %}
+  <header>
+    {% import "data_browser__/navbar.html" as navbar %}
+    {{ navbar.render_nav_bar(current_user, nav_bar, titlename, g) }}
+  </header>
+  {% if current_user.groups|length > 1 %}
+    <div id="switch-group-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 id="myModalLabel" class="modal-title">切换角色</h3>
+          </div>
+          <div class="modal-body">
+            <ul class="nav nav-pills nav-stacked">
+              {% for group in current_user.groups %}
+                <li class='pagination-centered{% if group.id == current_user.group.id %} active{% endif %}'>
+                  <a href="{{ '#' if group.id == current_user.group.id else url_for('auth.switch_group', id_=group.id) }}">
+                    <b>{{ group.name }}</b></a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block __data_browser__footer_block %}
+  <footer class="footer visible-md visible-lg">
+    <div class="container">
+      <div class="text-muted">
+        copyright@ 360真品
+      </div>
+    </div>
+  </footer>
+{% endblock %}
+
+{% block __data_browser__title_block %}
+  {{ title }}
+{% endblock %}
