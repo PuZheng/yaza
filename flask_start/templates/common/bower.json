@@ -1,0 +1,14 @@
+{
+    "name": "__foo__", 
+    "version": "0.1.0", 
+    "dependencies": {
+        "bootstrap": "latest",
+        "fancybox": "latest", 
+        "select2": "latest",
+        "backbone": "latest",
+        "requirejs": "latest",
+        "holderjs": "latest",
+        "normalize-css": "latest",
+        "mordenizr": "latest"
+    }
+}
