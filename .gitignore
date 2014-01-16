@@ -37,3 +37,4 @@ nosetests.xml
 .pydevproject
 .swp
 .ropeproject/*
+node_modules/*
