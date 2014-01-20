@@ -50,6 +50,7 @@ def make_common_project(dir_name):
                 cmd.autopep8['--in-place', fname]()
 
     with local.cwd(dir_name):
+        cmd.bower['install']()
         cmd.mv['__package_name__', package_name]()
 
 
