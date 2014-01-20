@@ -1,5 +1,5 @@
 {
-    "name": "__foo__", 
+    "name": "__package_name__", 
     "version": "0.1.0", 
     "dependencies": {
         "bootstrap": "latest",
@@ -9,6 +9,7 @@
         "requirejs": "latest",
         "holderjs": "latest",
         "normalize-css": "latest",
-        "mordenizr": "latest"
+        "modernizr": "latest",
+        "html5shiv": "latest"
     }
 }

@@ -28,6 +28,6 @@ for o, v in opts:
         print "unkown option: " + o
         print __doc__
 
-from genuine_ap.basemain import app
+from __package_name__.basemain import app
 
 app.run(host=host, port=port, debug=True)

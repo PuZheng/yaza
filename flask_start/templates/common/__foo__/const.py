@@ -1,6 +1,0 @@
-# -*- coding: UTF-8 -*-
-
-VENDOR_GROUP = 1
-CUSTOMER_GROUP = 2
-RETAILER_GROUP = 3
-SUPER_ADMIN = 4

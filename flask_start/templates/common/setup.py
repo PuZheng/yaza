@@ -3,7 +3,8 @@ from setuptools import find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
-NAME = "{{ project_name }}"
+NAME = "__project_name__"
+PACKAGE = "__package_name__"
 DESCRIPTION = ""
 AUTHOR = ""
 AUTHOR_EMAIL = ""
@@ -35,7 +36,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    scripts=['flask_start.py'],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
     classifiers=[

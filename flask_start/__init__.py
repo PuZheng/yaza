@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
-import posixpath
+import os.path
 from plumbum import cmd, local
 
 
@@ -33,9 +33,24 @@ def make_common_project(dir_name):
                 break
 
     this_dir, this_filename = os.path.split(__file__)
-    cmd.cp['-r', posixpath.join(this_dir, 'templates', 'common'), dir_name]()
+    cmd.cp['-r', os.path.join(this_dir, 'templates', 'common'), dir_name]()
     if host_in_github:
         add_to_github(dir_name, github_repos)
+
+    for fname in cmd.find[dir_name, '-type', 'f']().split():
+        is_py = fname.endswith(".py")
+        is_html = fname.endswith(".html")
+        if is_html or is_py and not \
+            fname.startswith(os.path.join(dir_name, '__package_name__',
+                                          'static')):
+            sed_cmds = 's/__package_name__/%s/g;s/__project_name__/%s/g' % (
+                package_name, project_name)
+            cmd.sed['-i', sed_cmds, fname]()
+            if is_py:
+                cmd.autopep8['--in-place', fname]()
+
+    with local.cwd(dir_name):
+        cmd.mv['__package_name__', package_name]()
 
 
 def add_to_github(dir_name, github_repos):

@@ -10,7 +10,7 @@ DESCRIPTION = ("A django-admin like tool which setup flask project from "
 AUTHOR = "xiechao"
 AUTHOR_EMAIL = "xiechao06@gmail.com"
 URL = "https://github.com/PuZheng/flask-start.git"
-DOC = __import__(PACKAGE).__doc__
+DOC = __doc__
 VERSION = '0.1'
 
 
@@ -42,6 +42,7 @@ setup(
     cmdclass={'test': PyTest},
     install_requires=[
         'plumbum',
+        'autopep8'
     ],
     classifiers=[
         'Environment :: Web Environment',

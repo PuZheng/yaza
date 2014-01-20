@@ -7,11 +7,10 @@ from itsdangerous import URLSafeTimedSerializer, BadTimeSignature
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 
-from genuine_ap import const
-from genuine_ap.basemain import app
-from genuine_ap.apis import ModelWrapper, wraps
-from genuine_ap.exceptions import AuthenticateFailure
-from genuine_ap.models import User
+from __package_name__.basemain import app
+from __package_name__.apis import ModelWrapper, wraps
+from __package_name__.exceptions import AuthenticateFailure
+from __package_name__.models import User
 
 
 class UserWrapper(login.UserMixin, ModelWrapper):
@@ -53,22 +52,6 @@ LoginManager.token_loader`_
         if posixpath.exists(posixpath.join('static', user_pic)):
             return url_for('static', filename=user_pic)
         return ''
-
-    @property
-    def default_url(self):
-        from genuine_ap.vendor import vendor_model_view
-        from genuine_ap.retailer import retailer_model_view
-        if self.group_id == const.VENDOR_GROUP:
-            if self.vendor:
-                return vendor_model_view.url_for_object(self.vendor)
-            else:
-                return url_for('no_vendor')
-        if self.group_id == const.RETAILER_GROUP:
-            if self.retailer:
-                return retailer_model_view.url_for_object(self.retailer)
-            else:
-                return url_for('no_retailer')
-        return self.group.default_url
 
     def as_dict(self, include_auth_token=False):
 

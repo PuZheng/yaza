@@ -15,11 +15,11 @@ from flask.ext.databrowser.col_spec import (InputColSpec, ColSpec,
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.principal import Permission
 
-from genuine_ap.user import user_ws, user
-from genuine_ap.models import User, Group
-from genuine_ap import utils, apis, const
-from genuine_ap.exceptions import AuthenticateFailure
-from genuine_ap.database import db
+from __package_name__.user import user_ws, user
+from __package_name__.models import User, Group
+from __package_name__ import utils, apis, const
+from __package_name__.exceptions import AuthenticateFailure
+from __package_name__.database import db
 
 
 @user_ws.route('/register', methods=['POST'])
