@@ -5,7 +5,6 @@
         "bootstrap": "latest",
         "fancybox": "latest", 
         "select2": "latest",
-        "backbone": "latest",
         "requirejs": "latest",
         "holderjs": "latest",
         "normalize-css": "latest",
