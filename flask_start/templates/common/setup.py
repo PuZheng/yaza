@@ -1,9 +1,11 @@
+# -*- coding: UTF-8 -*-
+
 from distutils.core import setup
 from setuptools import find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
-NAME = "__project_name__"
+NAME = u"__project_name__"
 PACKAGE = "__package_name__"
 DESCRIPTION = ""
 AUTHOR = ""
@@ -38,6 +40,7 @@ setup(
     zip_safe=False,
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
+    install_requires=open("requirements.txt").readlines(),
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
