@@ -7,3 +7,5 @@ user_ws = Blueprint("user-ws", __name__, static_folder="static",
 
 user = Blueprint("user", __name__, static_folder="static",
                  template_folder="templates")
+
+from . import views

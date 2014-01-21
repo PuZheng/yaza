@@ -9,6 +9,7 @@
         "holderjs": "latest",
         "normalize-css": "latest",
         "modernizr": "latest",
-        "html5shiv": "latest"
+        "html5shiv": "latest",
+        "Font-Awesome": "latest"
     }
 }

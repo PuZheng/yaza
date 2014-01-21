@@ -30,4 +30,4 @@ for o, v in opts:
 
 from __package_name__.basemain import app
 
-app.run(host=host, port=port, debug=True)
+app.run(host=host, port=port)

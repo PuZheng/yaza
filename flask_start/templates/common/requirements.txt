@@ -5,3 +5,4 @@ Flask-Principal
 Flask-SQLAlchemy
 Flask-WTF
 Flask-Babel
+Flask-Mail>=0.9

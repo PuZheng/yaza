@@ -30,6 +30,7 @@ nosetests.xml
 
 # Translations
 *.mo
+*.pot
 
 # Mr Developer
 .mr.developer.cfg
@@ -38,4 +39,3 @@ nosetests.xml
 .swp
 .ropeproject/*
 node_modules/*
-flask_start/templates/common/__package_name__/static/components/*
