@@ -40,7 +40,8 @@ def make_common_project(dir_name):
     for fname in cmd.find[dir_name, '-type', 'f']().split():
         is_py = fname.endswith(".py")
         is_html = fname.endswith(".html")
-        if is_html or is_py or os.path.basename(fname) == 'bower.json' and \
+        if is_html or is_py or os.path.basename(fname) == 'bower.json'  or \
+           os.path.basename(fname) == '.bowerrc' and \
            not fname.startswith(os.path.join(dir_name, '__package_name__',
                                              'static')):
             sed_cmds = 's/__package_name__/%s/g;s/__project_name__/%s/g' % (
