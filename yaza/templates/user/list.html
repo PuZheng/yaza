@@ -1,0 +1,18 @@
+{% extends "data_browser__/list.html" %}
+
+{% block body %}
+<div class="row">
+  {{ sub_nav_bar.as_ul(highlight_class='active')|safe }}
+</div>
+<div class="row">
+    {% block lists %} 
+      {{ super() }}
+    {% endblock %}
+    <div class="col-lg-2">
+      {% block filters %}
+        {{ super() }}
+      {% endblock filters %}
+    </div>
+</div>
+{% endblock %}
+

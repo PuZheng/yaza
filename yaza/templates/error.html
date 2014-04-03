@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block page_title %}
+  Yaza - {{ _('Error') }}
+{% endblock %}
+{% block main %}
+  <div class="container">
+    <div>
+      <h3 class="alert alert-danger">
+        {{ error }}
+      </h3>
+      {% if detail %}
+        {{ detail|safe }}
+      {% endif %}
+    </div>
+    <a href="{{ back_url }}" class="btn btn-primary btn-default">{{ _('Back') }}</a>
+  </div>
+{% endblock %}

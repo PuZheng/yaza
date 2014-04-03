@@ -1,0 +1,16 @@
+@media screen and (min-width: 979px) {
+    body {
+        /* for nav bar */
+        padding-top: 60px !important;
+    }
+
+    .form-signin {
+        margin: 10px auto;
+        width: 30em;
+    }
+
+    .playground, .hotspot {
+        border: 1px dashed black;
+        width: 400px;
+    }
+}

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block customized_tail_block %}
+<script type="text/javascript" src="{{ url_for('static', filename='components/kineticjs/kinetic.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='components/buckets/buckets-minified.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/edge.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/control-point-map.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}
+
+{% block main %}
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="playground center-block"></div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hotspot center-block"></div>
+        </div>
+      </div> 
+      <hr />
+      <footer class="footer visible-md visible-lg">
+      <div class="container">
+        <div class="text-muted">
+          copyright@Yaza
+        </div>
+      </div>
+      </footer>
+    </div><!-- /.container -->
+{% endblock %}

@@ -1,8 +1,0 @@
-path.py
-Flask
-Flask-Login
-Flask-Principal
-Flask-SQLAlchemy
-Flask-WTF
-Flask-Babel
-Flask-Mail>=0.9

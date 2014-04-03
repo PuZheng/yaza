@@ -1,0 +1,21 @@
+2014-04-02 11:45:32,827 - ERROR: GET http://127.0.0.1:5000/
+2014-04-02 11:45:32,859 - ERROR: Traceback (most recent call last):
+  File "/home/xc/work/yaza-env/env/lib/python2.7/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/xc/work/yaza-env/yaza/yaza/portal/index.py", line 8, in index
+    return render_template('index.html')
+  File "/home/xc/work/yaza-env/env/lib/python2.7/site-packages/flask/templating.py", line 128, in render_template
+    context, ctx.app)
+  File "/home/xc/work/yaza-env/env/lib/python2.7/site-packages/flask/templating.py", line 110, in _render
+    rv = template.render(context)
+  File "/home/xc/work/yaza-env/env/lib/python2.7/site-packages/jinja2/environment.py", line 969, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "/home/xc/work/yaza-env/env/lib/python2.7/site-packages/jinja2/environment.py", line 742, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/home/xc/work/yaza-env/yaza/yaza/templates/index.html", line 1, in top-level template code
+    {% extends "layout.html" %}
+  File "/home/xc/work/yaza-env/yaza/yaza/templates/layout.html", line 41, in top-level template code
+    {% block customized_tail_block %}
+  File "/home/xc/work/yaza-env/yaza/yaza/templates/index.html", line 3, in block "customized_tail_block"
+    <script type="text/javascript" src="{{ url_for('static', 'components/kineticjs/kineticjs.min.js') }}"></script>
+TypeError: url_for() takes exactly 1 argument (2 given)

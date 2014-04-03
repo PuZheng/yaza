@@ -1,20 +1,22 @@
+# -*- coding: UTF-8 -*-
+
 from distutils.core import setup
 from setuptools import find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
-PACKAGE = "flask_start"
-NAME = "flask-start"
-DESCRIPTION = ("A django-admin like tool which setup flask project from "
-               "predefined templates")
-AUTHOR = "xiechao"
-AUTHOR_EMAIL = "xiechao06@gmail.com"
-URL = "https://github.com/PuZheng/flask-start.git"
-DOC = __doc__
+NAME = u"Yaza"
+PACKAGE = "yaza"
+DESCRIPTION = ""
+AUTHOR = ""
+AUTHOR_EMAIL = ""
+URL = ""
+DOC = __import__(PACKAGE).__doc__
 VERSION = '0.1'
 
 
 class PyTest(TestCommand):
+
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
@@ -37,13 +39,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    scripts=['flask-start'],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
-    install_requires=[
-        'plumbum',
-        'autopep8'
-    ],
+    install_requires=open("requirements.txt").readlines(),
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
