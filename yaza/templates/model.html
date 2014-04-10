@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block customized_tail_block %}
   {% if config.DEBUG %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='js/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/model/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
   {% else %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/model/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
   {% endif %}
 {% endblock %}
 

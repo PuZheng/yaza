@@ -9,8 +9,4 @@
         width: 30em;
     }
 
-    .playground, .hotspot {
-        border: 1px dashed black;
-        width: 400px;
-    }
 }
