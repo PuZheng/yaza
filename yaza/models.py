@@ -40,13 +40,14 @@ class SPU(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     shape = db.Column(db.String(16))
+    brief = db.Column(db.String(64))
 
 class OCSPU(db.Model):
     __tablename__ = "TB_OCSPU"
     id = db.Column(db.Integer, primary_key=True)
     color = db.Column(db.String(16))
     pic = db.Column(db.String(64))
-
+    brief = db.Column(db.String(64))
 
 class SKU(db.Model):
     __tablename__ = "TB_SKU"
@@ -54,7 +55,7 @@ class SKU(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     color = db.Column(db.String(16))
     size = db.Column(db.Integer)
-
+    brief = db.Column(db.String(64))
 
 class SKC(db.Model):
     __tablename__ = "TB_SKC"
