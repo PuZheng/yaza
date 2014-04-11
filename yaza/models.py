@@ -48,6 +48,7 @@ class OCSPU(db.Model):
     color = db.Column(db.String(16))
     pic = db.Column(db.String(64))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
+    spu = db.relationship("SPU")
 
 class SKU(db.Model):
     __tablename__ = "TB_SKU"

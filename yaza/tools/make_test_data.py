@@ -34,7 +34,7 @@ class InitializeTestDB(Command):
     def add_sku(self):
         spu = SPU(brief=u"测试", shape=u"T恤")
         do_commit(spu)
-        ocspu = OCSPU(spu_id=spu.id, color=u"blue", pic="")
+        ocspu = OCSPU(spu_id=spu.id, color=u"blue", pic="tshirt_1.jpg")
         do_commit(ocspu)
         skc = SKC(size=1, ocspu_id=ocspu.id)
         do_commit(skc)
