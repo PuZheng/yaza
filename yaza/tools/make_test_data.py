@@ -29,9 +29,13 @@ class InitializeTestDB(Command):
         do_commit(User(name="foo",
                        password=generate_password_hash('foo', 'pbkdf2:sha256'),
                        group=group))
-        self.add_sku(u"T恤", color=u"blue", pic=u"tshirt_1.jpg")
+        self.add_sku(u"男士T恤", color=u"blue", pic=u"tshirt_1.jpg")
 
-        self.add_sku(u"长袖", color=u"red", pic=u"jean_1.jpg")
+        self.add_sku(u"男士长袖", color=u"red", pic=u"shirt_1.jpg")
+
+        self.add_sku(u"女士T恤", color=u"white", pic=u"tshirt_2.jpg")
+
+        self.add_sku(u"女士长袖", color=u"green", pic=u"shirt_2.jpg")
 
     def add_sku(self, shape, color, pic):
         spu = SPU(brief=u"测试用" + shape, shape=shape)
