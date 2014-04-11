@@ -29,22 +29,27 @@ class InitializeTestDB(Command):
         do_commit(User(name="foo",
                        password=generate_password_hash('foo', 'pbkdf2:sha256'),
                        group=group))
-        self.add_sku(u"男士T恤", color=u"blue", pic=u"tshirt_1.jpg")
 
-        self.add_sku(u"男士长袖", color=u"red", pic=u"shirt_1.jpg")
+        color = [u"blue", u"red", u"white", u"green"]
+        size = [1, 2, 3, 4, 5]
+        self.add_sku(u"男士T恤", color=color, size=size)
 
-        self.add_sku(u"女士T恤", color=u"white", pic=u"tshirt_2.jpg")
+        self.add_sku(u"男士长袖", color=color, size=size)
 
-        self.add_sku(u"女士长袖", color=u"green", pic=u"shirt_2.jpg")
+        self.add_sku(u"女士T恤", color=color, size=size)
 
-    def add_sku(self, shape, color, pic):
+        self.add_sku(u"女士长袖", color=color, size=size)
+
+    def add_sku(self, shape, color, size):
         spu = SPU(brief=u"测试用" + shape, shape=shape)
         do_commit(spu)
-        ocspu = OCSPU(spu_id=spu.id, color=color, pic=pic)
-        do_commit(ocspu)
-        skc = SKC(size=1, ocspu_id=ocspu.id)
-        do_commit(skc)
-        do_commit(SKU(skc_id=skc.id))
+        for c in color:
+            ocspu = OCSPU(spu_id=spu.id, color=c, pic=shape + c + ".jpg")
+            do_commit(ocspu)
+            for s in size:
+                skc = SKC(size=s, ocspu_id=ocspu.id)
+                do_commit(skc)
+                do_commit(SKU(skc_id=skc.id))
 
 
 if __name__ == "__main__":
