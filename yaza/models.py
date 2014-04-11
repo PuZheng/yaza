@@ -6,7 +6,6 @@ from .database import db
 
 
 class User(db.Model):
-
     __tablename__ = 'TB_USER'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -23,7 +22,6 @@ class User(db.Model):
 
 
 class Group(db.Model):
-
     __tablename__ = 'TB_GROUP'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -35,3 +33,30 @@ class Group(db.Model):
 
     def __repr__(self):
         return '<Group: %s>' % self.name
+
+
+class SPU(db.Model):
+    __tablename__ = 'TB_SPU'
+
+    id = db.Column(db.Integer, primary_key=True)
+    shape = db.Column(db.String(16))
+    brief = db.Column(db.String(64))
+
+class OCSPU(db.Model):
+    __tablename__ = "TB_OCSPU"
+    id = db.Column(db.Integer, primary_key=True)
+    color = db.Column(db.String(16))
+    pic = db.Column(db.String(64))
+    spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
+    spu = db.relationship("SPU")
+
+class SKU(db.Model):
+    __tablename__ = "TB_SKU"
+    id = db.Column(db.Integer, primary_key=True)
+    skc_id = db.Column(db.Integer, db.ForeignKey("TB_SKC.id"), nullable=False)
+
+class SKC(db.Model):
+    __tablename__ = "TB_SKC"
+    id = db.Column(db.Integer, primary_key=True)
+    ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"), nullable=False)
+    size = db.Column(db.Integer)
