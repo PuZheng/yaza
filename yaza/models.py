@@ -47,14 +47,11 @@ class OCSPU(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     color = db.Column(db.String(16))
     pic = db.Column(db.String(64))
-    brief = db.Column(db.String(64))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
 
 class SKU(db.Model):
     __tablename__ = "TB_SKU"
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
-    brief = db.Column(db.String(64))
     skc_id = db.Column(db.Integer, db.ForeignKey("TB_SKC.id"), nullable=False)
 
 class SKC(db.Model):
