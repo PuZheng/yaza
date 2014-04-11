@@ -54,8 +54,6 @@ class SKU(db.Model):
     __tablename__ = "TB_SKU"
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
-    color = db.Column(db.String(16))
-    size = db.Column(db.Integer)
     brief = db.Column(db.String(64))
     skc_id = db.Column(db.Integer, db.ForeignKey("TB_SKC.id"), nullable=False)
 
@@ -63,3 +61,4 @@ class SKC(db.Model):
     __tablename__ = "TB_SKC"
     id = db.Column(db.Integer, primary_key=True)
     ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"), nullable=False)
+    size = db.Column(db.Integer)
