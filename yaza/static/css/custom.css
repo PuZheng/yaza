@@ -9,4 +9,9 @@
         width: 30em;
     }
 
+    .play-ground .dashboard .upload-img-btn {
+        height: 160px;
+        width: 120px;
+    }
+
 }

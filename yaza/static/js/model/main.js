@@ -10,6 +10,7 @@ require.config({
         // application
         app: 'js/model/app',
         'views/app-view': 'js/model/views/app-view',
+        'views/play-ground': 'js/model/views/play-ground',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {

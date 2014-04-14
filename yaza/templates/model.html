@@ -13,16 +13,34 @@
       <div class="row">
         <div class="col-sm-9">
           <div class="row">
-            <div class="playground">
-              <div class="playground col-sm-4">
+            <div class="play-ground">
+              <div class="play-ground col-sm-4">
                 <div class="touch-screen">
                 </div>
                 <div class="dashboard">
                   <div class="panel panel-default">
                     <div class="panel-body">
-                      <button class="btn btn-default">新增图片</button>
+                      <div class="btn-group">
+                        <button class="btn btn-default add-img-btn" data-toggle='modal' data-target='.add-img-modal'>增加图片</button>
+                      </div>
                     </div>
                   </div>
+                  <div class="modal fade add-img-modal">
+                    <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-body">
+                          <button type="button" class="btn btn-primary upload-img-btn">
+                            <i class="fa fa-plus fa-4x"></i>
+                            <p>上传新图片</p>
+                          </button>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn btn-primary">确认</button>
+                        </div>
+                      </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
                 </div>
               </div>
               <div class="jit-preview col-sm-8">
