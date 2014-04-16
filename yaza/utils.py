@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 import os
 import types
+import string
+import random
 from .apis import ModelWrapper, wraps
 
 
@@ -37,3 +39,8 @@ def get_or_404(cls, id_):
     from .database import db
     assert issubclass(cls, db.Model) or issubclass(cls, ModelWrapper)
     return wraps(cls.query.get_or_404(id_))
+
+
+def random_str(size=6, chars=string.ascii_uppercase + string.digits):
+    random.seed = (os.urandom(1024))
+    return ''.join(random.choice(chars) for x in range(size))

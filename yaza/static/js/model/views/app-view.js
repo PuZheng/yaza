@@ -5,7 +5,7 @@
             el: '.primary',
 
             initialize: function () {
-                this._playGround = new PlayGround({el: this.$('.playground')}).render(); 
+                this._playGround = new PlayGround({el: this.$('.play-ground')}).render(); 
             }
         });
         return AppView;

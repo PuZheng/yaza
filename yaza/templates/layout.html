@@ -21,6 +21,8 @@
       <![endif]-->
       <script type="text/javascript" src="{{ url_for('static', filename='components/modernizr/modernizr.js') }}"></script>
     {% endblock %}
+    {% block customized_head_block %}
+    {% endblock %}
   </head>
 <body>
   {% block nav_bar_block %}

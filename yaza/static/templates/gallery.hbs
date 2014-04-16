@@ -1,0 +1,19 @@
+<div class="gallery">
+  {{# if this}}
+  {{#each this}}
+    <div class="row">
+      {{#each this}}
+      <div class="col-xs-6 col-md-3">
+        <a href="#" class="thumbnail">
+          <img src="{{this}}" alt="" style="width: 100%; height: 180px"/>
+        </a>
+      </div>
+      {{/each}}
+    </div>
+  {{/each}}
+  {{else}}
+  <div class="alert alert-info">
+    您还没有上传过任何图片，请先上传！
+  </div>
+  {{/if}}
+</div>
