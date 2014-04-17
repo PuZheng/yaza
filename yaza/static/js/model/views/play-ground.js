@@ -85,7 +85,7 @@
             _renderGallery: function () {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
-                var upload_images = Cookies.get('upload-images').trim();
+                var upload_images = (Cookies.get('upload-images')||'').trim();
                 if (!!upload_images) {
                     upload_images = _.filter(upload_images.split('||'), function (val) {
                         return !!val;
