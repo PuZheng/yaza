@@ -1,0 +1,14 @@
+<div>
+  {% for design_region in obj.design_region_list %}
+    <div style="max-width: 200px;height: 100%; " name="div-ocspu-pic-{{ design_region.id }}">
+      <div class="thumbnail">
+        <img src="{{ design_region.pic_url }}" alt="{{ design_region.id }}" style="display: block"/>
+        <input name="design_region_id_list" type="hidden" value="{{ design_region.id }}"/>
+
+        <div class="caption text-center">
+          <button class="btn btn-primary" href="#" name="delete-ocspu-pic" data-src="{{ design_region.id }}" type="button">{{ _("remove") }}</button>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>

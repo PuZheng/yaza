@@ -12,7 +12,7 @@ SECURITY_SALT = "sleiuyyao"
 SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
 SQLALCHEMY_ECHO = True
 
-UPLOADS_DEFAULT_DEST = 'uploads'
+UPLOAD_FOLDER = 'static/uploads'
 LOG_FILE = 'log.txt'
 
 ERROR_LOG_RECIPIENTS = []
@@ -24,3 +24,5 @@ MAIL_SERVER = 'smtp.foo.com'
 MAIL_USERNAME = 'username'
 MAIL_PASSWORD = 'password'
 MAIL_DEFAULT_SENDER = 'user@foo.com'
+
+ASPECT_FILE_NAME = "aspect.jpg"

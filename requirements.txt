@@ -6,3 +6,6 @@ Flask-SQLAlchemy
 Flask-WTF
 Flask-Babel
 Flask-Mail>=0.9
+-e git+https://github.com/PuZheng/flask-upload2.git@5c9531dc6516c425f1bbc9edb54112e5b8766883#egg=flask_upload2
+-e git+https://github.com/PuZheng/Flask-DataBrowser.git#egg=Flask_DataBrowser
+
