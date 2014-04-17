@@ -109,6 +109,15 @@
                     gallery.find('.thumbnail').removeClass('selected-img');
                     $(this).addClass('selected-img');
                 });
+                gallery.find('.thumbnail').dblclick(
+                        _.partial(
+                            function (modal, e) {
+                                gallery.find('.thumbnail').removeClass('selected-img');
+                                $(this).addClass('selected-img');
+                                alert('选中了' +  modal.find('.gallery .selected-img img').attr('src'));
+                                modal.modal('hide');
+                            }, 
+                            this.$('.add-img-modal')));
                 gallery.find('.thumbnail:first').click();
             }
 
