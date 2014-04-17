@@ -34,7 +34,7 @@ init_login()
 def register_views():
     __import__('yaza.portal.index')
     installed_ws_apps = ['user']
-    installed_apps = ['user']
+    installed_apps = ['user', 'image']
     # register web services
     for mod in installed_ws_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])
@@ -118,3 +118,7 @@ if not app.debug:
                                        method=request.method, url=request.url),
                                detail=traceback.render_summary(),
                                back_url=request.args.get("__back_url__", "/"))
+
+
+from yaza.utils import assert_dir
+assert_dir(app.config['UPLOADS_DEFAULT_DEST'])
