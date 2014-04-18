@@ -66,8 +66,8 @@ class Aspect(db.Model):
     __tablename__ = "TB_ASPECT"
     id = db.Column(db.Integer, primary_key=True)
     ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"), nullable=False)
-    ocspu = db.relationship("OCSPU", backref="aspect_list")
-    pic_path = db.Column(db.String(64), unique=True)
+    ocspu = db.relationship("OCSPU", backref=db.backref("aspect_list", cascade="all, delete-orphan"))
+    pic_path = db.Column(db.String(64))
 
 
 class DesignRegion(db.Model):
@@ -75,7 +75,7 @@ class DesignRegion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     aspect_id = db.Column(db.Integer, db.ForeignKey("TB_ASPECT.id"), nullable=False)
     aspect = db.relationship("Aspect", backref=db.backref("design_region_list", cascade="all, delete-orphan"))
-    pic_path = db.Column(db.String(64), unique=True)
+    pic_path = db.Column(db.String(64))
 
 
 class SKU(db.Model):

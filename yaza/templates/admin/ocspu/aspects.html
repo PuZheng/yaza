@@ -2,11 +2,15 @@
   {% for aspect in field._value() %}
     <div style="max-width: 200px;height: 100%; " name="div-ocspu-pic-{{ aspect.id }}">
       <div class="thumbnail">
-        <img src="{{ aspect.pic_url }}" alt="{{ aspect.id }}" style="display: block"/>
-        <input name="aspect_id_list" type="hidden" value="{{ aspect.id }}"/>
+        <img src="{{ aspect.pic_url }}" alt="{{ aspect.id }}"/>
+
+        <div class="thumbnail">
+          {% for design_region in aspect.design_region_list %}
+            <img src="{{ design_region.pic_url }}" alt="{{ design_region.id }}" style="max-width: 50px; height: 100%; display: inline-block;"/>
+          {% endfor %}
+        </div>
 
         <div class="caption text-center">
-          <button class="btn btn-primary" href="#" name="delete-ocspu-pic" data-src="{{ aspect.id }}" type="button">{{ _("remove") }}</button>
           <a class="btn btn-default" href="{{ url_for('admin.aspect', id_=aspect.id) }}">{{ _("view") }}</a>
         </div>
       </div>

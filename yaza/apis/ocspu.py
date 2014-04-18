@@ -21,6 +21,7 @@ class AspectWrapper(ModelWrapper):
 
         return ""
 
+
 class DesignRegionWrapper(ModelWrapper):
     @property
     def pic_url(self):
