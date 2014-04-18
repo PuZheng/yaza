@@ -19,7 +19,7 @@ zip_validator = ext_validators.FileUploadValidator(".*\.zip", message=_("upload 
 
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1] in ARCHIVES
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ARCHIVES
 
 
 def garble_filename(source):
