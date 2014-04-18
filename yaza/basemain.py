@@ -12,26 +12,32 @@ app.config.from_object("yaza.default_settings")
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
 
 from flask.ext.babel import Babel
+
 babel = Babel(app)
 
 from flask.ext.login import LoginManager, current_user
 from flask.ext.databrowser import DataBrowser
 # TODO logger need
-data_browser = DataBrowser(app, upload_folder='static/uploads', plugins=['password'])
+data_browser = DataBrowser(app, upload_folder=app.config["UPLOAD_FOLDER"], plugins=['password'])
 
 from flask.ext.upload2 import FlaskUpload
+
 FlaskUpload(app)
+
 
 def init_login():
     from . import models
     from .apis import wraps
+
     login_manager = LoginManager()
     login_manager.init_app(app)
 
     @login_manager.user_loader
     def load_user(user_id):
         return wraps(models.User.query.get(user_id))
+
     login_manager.login_view = 'user.login'
+
 
 init_login()
 
@@ -47,6 +53,7 @@ def register_views():
         for k, v in pkg.__dict__.iteritems():
             if isinstance(v, Blueprint):
                 app.register_blueprint(v, url_prefix='/' + v.name)
+
 
 register_views()
 principal = Principal(app)
@@ -109,8 +116,10 @@ if not app.debug:
     def error(error):
         if isinstance(error, SQLAlchemyError):
             from yaza.database import db
+
             db.session.rollback()
         from werkzeug.debug.tbtools import get_current_traceback
+
         traceback = get_current_traceback(skip=1, show_hidden_frames=False,
                                           ignore_system_exceptions=True)
         app.logger.error("%s %s" % (request.method, request.url))
@@ -123,4 +132,5 @@ if not app.debug:
                                back_url=request.args.get("__back_url__", "/"))
 
 from yaza.utils import assert_dir
+
 assert_dir(app.config['UPLOAD_FOLDER'])
