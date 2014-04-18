@@ -26,13 +26,6 @@ def allowed_file(filename, types=ARCHIVES):
 zip_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Zip files"))
 
 
-def garble_filename(source):
-    from hashlib import md5
-    from time import time
-
-    return md5(request.remote_addr + source + str(time())).hexdigest() + ".jpg"
-
-
 def unzip(source_filename, dest_dir):
     with zipfile.ZipFile(source_filename) as zf:
         zf.extractall(dest_dir)
