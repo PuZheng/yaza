@@ -43,8 +43,11 @@ init_login()
 
 
 def register_views():
+    from yaza.admin import admin
+    app.register_blueprint(admin, url_prefix="/admin")
+
     __import__('yaza.portal.index')
-    installed_apps = ['user', "manage"]
+    installed_apps = ['user']
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])
@@ -53,7 +56,6 @@ def register_views():
         for k, v in pkg.__dict__.iteritems():
             if isinstance(v, Blueprint):
                 app.register_blueprint(v, url_prefix='/' + v.name)
-
 
 register_views()
 principal = Principal(app)

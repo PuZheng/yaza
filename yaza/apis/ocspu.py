@@ -16,7 +16,7 @@ class AspectWrapper(ModelWrapper):
             ocspu_dir = os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(self.ocspu.spu.id), str(self.ocspu.id))
 
             if os.path.exists(os.path.join(ocspu_dir, self.pic_path)):
-                return url_for("manage.pic_render", spu_id=self.ocspu.spu.id, ocspu_id=self.ocspu.id,
+                return url_for("admin.pic_render", spu_id=self.ocspu.spu.id, ocspu_id=self.ocspu.id,
                                pic_path=self.pic_path)
 
         return ""
@@ -30,7 +30,7 @@ class DesignRegionWrapper(ModelWrapper):
             ocspu_dir = os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(spu_id), str(ocspu_id))
 
             if os.path.exists(os.path.join(ocspu_dir, self.pic_path)):
-                return url_for("manage.pic_render", spu_id=spu_id, ocspu_id=ocspu_id,
+                return url_for("admin.pic_render", spu_id=spu_id, ocspu_id=ocspu_id,
                                pic_path=self.pic_path)
 
         return ""
