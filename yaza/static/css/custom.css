@@ -9,4 +9,40 @@
         width: 30em;
     }
 
+    .play-ground .dashboard .upload-img-btn {
+        height: 160px;
+        width: 120px;
+    }
+
+    .play-ground .upload-img-form {
+        display: inline-block;
+        width: 80%;
+        text-align: left;
+    }
+
+    .play-ground .add-img-modal .modal-footer {
+         text-align: center !important;
+    }
+
+    .play-ground .upload-img-form .uploading-progress {
+        display: inline-block;
+        width: 80%;
+    }
+
+    .play-ground .upload-img-form .uploading-progress .progress {
+        display: inline-block;
+        width: 70%;
+        vertical-align: middle;
+        margin-top: auto;
+        margin-bottom: auto;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+    .play-ground .upload-img-form .uploading-progress .upload-cancel-btn {
+        margin-left: 10px;
+    }
+
+    .play-ground .add-img-modal .gallery .selected-img {
+        border: 2px solid red;
+    }
 }
