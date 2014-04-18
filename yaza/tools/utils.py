@@ -2,6 +2,15 @@
 from collections import OrderedDict
 
 def calc_control_points(edges, size, cp_num):
+    '''
+    get all the contol points map COUNTERCLOCKWISE
+    :param edges: the edges of image, namely the output of `detect_edges`
+    :param size: the original image(it should be a rectangular) size, it
+        is a pair, say (400, 300)
+
+    :param cp_num: control points number, in width and height, it is a
+        pair, say (10, 8)
+    '''
     width, height = size
     cp_map = {
         'top': OrderedDict(),
@@ -12,36 +21,51 @@ def calc_control_points(edges, size, cp_num):
     # top
     step1 = float(len(edges['top'])) / (cp_num[0] - 1)
     step2 = float(width) / (cp_num[0] - 1)
-    for i in xrange(cp_num[0] - 1):
+    # anchor the top right corner
+    cp_map['top'][edges['top'][-1]] = (width - 1, height - 1)
+    # note! we omit the top left corner
+    for i in xrange(cp_num[0] - 2, 0, -1):
         p = edges['top'][int(round(i * step1))]
         cp_map['top'][p] = (int(round(i * step2)), height - 1)
-    cp_map['top'][edges['top'][-1]] = (width - 1, height - 1)
-
-    # bottom
-    step1 = float(len(edges['bottom'])) / (cp_num[0] - 1)
-    for i in xrange(cp_num[0] - 1):
-        p = edges['bottom'][int(round(i * step1))]
-        cp_map['bottom'][p] = (int(round(i * step2)), 0)
-    cp_map['bottom'][edges['bottom'][-1]] = (width - 1, 0)
 
     # left
     step1 = float(len(edges['left'])) / (cp_num[1] - 1)
     step2 = float(height) / (cp_num[1] - 1)
-    for i in xrange(cp_num[1] - 1):
+    # anchor the top left corner
+    cp_map['left'][edges['left'][-1]] = (0, height - 1)
+    # note! we omit the left bottom corner
+    for i in xrange(cp_num[1] - 2, 0, -1):
         p = edges['left'][int(round(i * step1))]
         cp_map['left'][p] = (0, int(round(i * step2)))
-    cp_map['left'][edges['left'][-1]] = (0, height - 1)
+
+    # bottom
+    step1 = float(len(edges['bottom'])) / (cp_num[0] - 1)
+    step2 = float(width) / (cp_num[0] - 1)
+    # anchor the left bottom corner
+    cp_map['bottom'][edges['bottom'][0]] = (0, 0)
+    # note! we omit the bottom right corner
+    for i in xrange(1, cp_num[0] - 1):
+        p = edges['bottom'][int(round(i * step1))]
+        cp_map['bottom'][p] = (int(round(i * step2)), 0)
 
     # right
     step1 = float(len(edges['right'])) / (cp_num[1] - 1)
-    for i in xrange(cp_num[1] - 1):
+    step2 = float(height) / (cp_num[1] - 1)
+    # we anchor the bottom right corner
+    cp_map['right'][edges['right'][0]] = (width - 1, 0)
+    # note! we omit the top left corner
+    for i in xrange(1, cp_num[1] - 1):
         p = edges['right'][int(round(i * step1))]
         cp_map['right'][p] = (width - 1, int(round(i * step2)))
-    cp_map['right'][edges['right'][-1]] = (width - 1, height - 1)
     return cp_map
 
 
 def detect_edges(im):
+    '''
+    dectect the edges of an image
+    :param im: an image
+    :type im: PIL.Image.Image
+    '''
     pa = im.load()
     edges = {
         'top': [],
