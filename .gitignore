@@ -46,3 +46,5 @@ nosetests.xml
 .ropeproject/*
 node_modules/*
 /yaza/static/components/*
+/yaza/*.db
+log.txt

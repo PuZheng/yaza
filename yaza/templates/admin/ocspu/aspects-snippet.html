@@ -1,0 +1,8 @@
+<div>
+  {% for aspect in field._value() %}
+    <div style="max-width: 200px;height: 100%; ">
+      <a class="thumbnail">
+        <img src="{{ aspect.pic_url }}" alt="{{ aspect.id }}" style="display: block"/>
+      </a></div>
+  {% endfor %}
+</div>
