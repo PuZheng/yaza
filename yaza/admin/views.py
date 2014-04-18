@@ -7,7 +7,6 @@ from flask.ext.babel import lazy_gettext, _
 
 from flask.ext.databrowser.extra_widgets import Image
 import shutil
-import sys
 from yaza import ext_validators
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app
@@ -123,7 +122,8 @@ class OCSPUModelView(ModelView):
         obj.aspect_list = []
         do_commit(obj)
         dir_ = self.get_base_pic_folder(obj)
-        shutil.rmtree(dir_)
+        if os.path.exists(dir_):
+            shutil.rmtree(dir_)
 
     def on_record_created(self, obj):
         if hasattr(obj, "pic_zip") and obj.pic_zip:

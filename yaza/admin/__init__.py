@@ -5,7 +5,6 @@ from flask.ext.babel import _
 from yaza.admin import views
 
 from yaza.basemain import data_browser, app
-from yaza import models
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
 
