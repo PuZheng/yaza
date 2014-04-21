@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from collections import OrderedDict
 
+
 def calc_control_points(edges, size, cp_num):
     '''
     get all the contol points map COUNTERCLOCKWISE

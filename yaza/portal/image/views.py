@@ -22,3 +22,21 @@ def upload():
 @image.route("/serve/<filename>")
 def serve(filename):
     return send_from_directory(app.config['UPLOADS_DEFAULT_DEST'], filename)
+
+
+@image.route("/edges/<int:design_region_id>")
+def detect_egdets(design_region_id):
+    from yaza.models import DesignRegion
+    from yaza.apis import wraps
+
+    design_region = DesignRegion.query.get_or_404(design_region_id)
+    return jsonify(wraps(design_region).edges)
+
+
+@image.route("/control-points/<int:design_region_id>")
+def calc_control_points(design_region_id):
+    from yaza.models import DesignRegion
+    from yaza.apis import wraps
+
+    design_region = DesignRegion.query.get_or_404(design_region_id)
+    return jsonify(wraps(design_region).control_points)
