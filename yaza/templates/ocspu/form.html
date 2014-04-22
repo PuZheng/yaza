@@ -1,0 +1,9 @@
+{% extends "data_browser__/form.html" %}
+
+
+{% block __data_browser__customized_head_block %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='components/jquery.ui/ui/jquery.ui.widget.js') }}"></script>
+
+  {% include "flask_upload2__/macro.html" %}
+{% endblock %}

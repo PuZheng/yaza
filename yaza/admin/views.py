@@ -52,7 +52,7 @@ def serialize(data, filename, encode_func=None):
         _file.write(data)
 
 
-class SPUModelView(ModelView):
+class SPUAdminModelView(ModelView):
     def try_view(self, *args):
         pass
 
@@ -60,7 +60,7 @@ class SPUModelView(ModelView):
         pass
 
 
-class OCSPUModelView(ModelView):
+class OCSPUAdminModelView(ModelView):
     create_template = edit_template = 'admin/ocspu/ocspu-form.html'
 
     def try_view(self, *args):
@@ -175,7 +175,7 @@ class OCSPUModelView(ModelView):
         pass
 
 
-class AspectModelView(ModelView):
+class AspectAdminModelView(ModelView):
     create_template = edit_template = 'admin/ocspu/aspect-form.html'
 
     def try_view(self, processed_objs=None):
@@ -194,8 +194,8 @@ class AspectModelView(ModelView):
         return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.ocspu.spu.id), str(obj.ocspu.id))
 
 
-spu_model_view = SPUModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
+spu_model_view = SPUAdminModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
 
-ocspu_model_view = OCSPUModelView(sa.SAModell(OCSPU, db, lazy_gettext("OCSPU")))
+ocspu_model_view = OCSPUAdminModelView(sa.SAModell(OCSPU, db, lazy_gettext("OCSPU")))
 
-aspect_model_view = AspectModelView(sa.SAModell(Aspect, db, lazy_gettext("Aspect")))
+aspect_model_view = AspectAdminModelView(sa.SAModell(Aspect, db, lazy_gettext("Aspect")))

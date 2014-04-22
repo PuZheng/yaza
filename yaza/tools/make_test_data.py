@@ -4,14 +4,16 @@
 本脚本用于创建测试数据，是为了帮助进行随意测试。本脚本基于数据库的初始化脚本
 """
 import os
-from setuptools import Command
 import shutil
 
+from setuptools import Command
 from werkzeug.security import generate_password_hash
+
 from yaza.basemain import app
 
+
 __import__('yaza.basemain')
-from yaza.models import (User, Group, SKU, SKC, SPU, OCSPU, Aspect)
+from yaza.models import (User, Group, SKU, SKC, SPU, OCSPU, Aspect, DesignImage)
 from yaza.utils import do_commit, assert_dir
 
 
@@ -43,6 +45,8 @@ class InitializeTestDB(Command):
 
         self.add_sku(u"女士长袖", color=color, size=size)
 
+        self.add_image(u"超人标记", u"superman.jpg")
+
     def add_sku(self, shape, color, size):
         import yaza
         spu = SPU(brief=u"测试用" + shape, shape=shape)
@@ -65,6 +69,14 @@ class InitializeTestDB(Command):
                 skc = SKC(size=s, ocspu_id=ocspu.id)
                 do_commit(skc)
                 do_commit(SKU(skc_id=skc.id))
+
+    def add_image(self, title, pic_path):
+        import yaza
+        file_path = os.path.join(os.path.split(yaza.__file__)[0], "static", "assets", pic_path)
+        design_image_folder = os.path.join(os.path.split(yaza.__file__)[0], app.config["UPLOAD_FOLDER"], "design image")
+        if os.path.exists(design_image_folder):
+            shutil.copyfile(file_path, os.path.join(design_image_folder, pic_path))
+        do_commit(DesignImage(title=title, pic_path=pic_path))
 
 
 if __name__ == "__main__":

@@ -80,3 +80,18 @@ class DesignRegionWrapper(ModelWrapper):
     @cached_property
     def control_points(self):
         return json.loads(self.read_file(self.serialized_control_point_file))
+
+
+class DesignImageWrapper(ModelWrapper):
+
+    @classmethod
+    def _stored_dir(cls):
+        return os.path.join(app.config["UPLOAD_FOLDER"], "design image")
+
+    @property
+    def pic_url(self):
+        if self.pic_path:
+            return url_for("ocspu.design_image_render", pic_path=self.pic_path)
+        return ""
+
+DesignImageWrapper.StoredDir = DesignImageWrapper._stored_dir()
