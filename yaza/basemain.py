@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 import os
+
 from flask import Flask, render_template, request, redirect, url_for
 from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
 from flask.ext.babel import gettext as _
 from flask.ext.mail import Mail, Message
 from sqlalchemy.exc import SQLAlchemyError
+
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object("yaza.default_settings")
@@ -47,7 +49,7 @@ def register_views():
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
-    installed_apps = ['user']
+    installed_apps = ['user', "image"]
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])

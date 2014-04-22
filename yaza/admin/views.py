@@ -1,23 +1,29 @@
 #-*- coding:utf-8 -*-
 import os
 import zipfile
-from flask import request
+import shutil
+
+from flask import json
+from PIL import Image as PILImage
 from flask.ext.databrowser import ModelView, sa, col_spec
 from flask.ext.babel import lazy_gettext, _
-
 from flask.ext.databrowser.extra_widgets import Image
-import shutil
+
 from yaza import ext_validators
-from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
+from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignRegionWrapper
 from yaza.basemain import app
+from yaza.exceptions import BadImageFileException
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
+from yaza.tools.utils import detect_edges, calc_control_points
+
 
 ARCHIVES = ('zip', )
 
-IMAGES = ('jpg', "jpeg")
+IMAGES = ('jpg', "jpeg", "png")
 
+CONTROL_POINTS_NUMBER = (4, 4)
 
 def allowed_file(filename, types=ARCHIVES):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in types
@@ -35,6 +41,15 @@ def _delete_file(dir_, filename):
     file_ = os.path.join(dir_, filename)
     if os.path.exists(file_):
         os.unlink(file_)
+
+
+def serialize(data, filename, encode_func=None):
+    if encode_func:
+        data = encode_func(data)
+    if not isinstance(data, basestring):
+        data = json.dumps(data)
+    with open(filename, "w") as _file:
+        _file.write(data)
 
 
 class SPUModelView(ModelView):
@@ -100,15 +115,43 @@ class OCSPUModelView(ModelView):
                     dirs.append(file_path)
             if len(files) >= 1:
                 pic_path = files[0]
-                if allowed_file(pic_path, IMAGES):
-                    aspect = Aspect(ocspu=obj, pic_path=pic_path)
-                    for dir_path in dirs:
-                        for root, walk_dirs, design_files in os.walk(os.path.join(dir_, dir_path)):
-                            for design_file in design_files:
-                                if allowed_file(design_file, IMAGES):
-                                    pic_path = os.path.join(dir_path, design_file)
-                                    do_commit(DesignRegion(aspect=aspect, pic_path=pic_path))
+                design_files = {}
+                for dir_path in dirs:
+                    for root, walk_dirs, files in os.walk(os.path.join(dir_, dir_path)):
+                        for design_file in files:
+                            if allowed_file(design_file, IMAGES):
+                                filtered_files = design_files.setdefault(dir_path, [])
+                                filtered_files.append(design_file)
 
+                if allowed_file(pic_path, IMAGES):
+                    # 先处理图片，之后再导入到数据库
+                    for dir_path, files in design_files.iteritems():
+                        for file_ in files:
+                            image_filename = os.path.join(self.get_base_pic_folder(obj), dir_path, file_)
+
+                            im = PILImage.open(image_filename)
+                            try:
+                                edges = detect_edges(im)
+                            except Exception as e:
+                                app.logger.error(e)
+                                raise BadImageFileException(file_)
+                            img_extension = os.path.splitext(file_)[-1]
+                            edge_filename = image_filename.replace(img_extension,
+                                                                   "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+                            serialize(edges, edge_filename)
+                            control_point_filename = image_filename.replace(img_extension,
+                                                                            "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
+                            control_points = calc_control_points(edges, im.size, CONTROL_POINTS_NUMBER)
+                            serialize(control_points, control_point_filename,
+                                      lambda data: json.dumps(
+                                          {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
+                                           k, v in dict_.iteritems()}))
+
+                    aspect = Aspect(ocspu=obj, pic_path=pic_path)
+                    for dir_path, files in design_files.iteritems():
+                        for file_ in files:
+                            pic_path = os.path.join(dir_path, file_)
+                            do_commit(DesignRegion(aspect=aspect, pic_path=pic_path))
         os.unlink(obj.pic_zip)
 
     def clear_old_pics(self, obj):
