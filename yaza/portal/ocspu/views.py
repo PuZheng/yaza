@@ -51,16 +51,17 @@ class DesignImageModelView(ModelView):
     @property
     def create_columns(self):
         return [InputColSpec("title", label=u"标题"),
-                FileColSpec("pic_path", label=u"上传设计图", validators=[img_validator])]
+                FileColSpec("pic_upload", label=u"上传设计图", validators=[img_validator])]
 
     def on_record_created(self, obj):
-        obj.pic_path = self.save_pic(obj.pic_path)
+        obj.pic_path = self.save_pic(obj.pic_upload)
 
     def expand_model(self, obj):
         return DesignImageWrapper(obj)
 
     def on_model_change(self, form, model):
-        model.pic_path = self.save_pic(model.pic_path)
+        if hasattr(model, "pic_upload"):
+            model.pic_path = self.save_pic(model.pic_upload)
 
     @ModelView.cached
     @property
@@ -69,6 +70,7 @@ class DesignImageModelView(ModelView):
 
     def save_pic(self, pic_path):
         from hashlib import md5
+
         file_name = md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1]
         assert_dir(DesignImageWrapper.StoredDir)
         shutil.copy(pic_path, os.path.join(DesignImageWrapper.StoredDir, file_name))
@@ -79,7 +81,7 @@ class DesignImageModelView(ModelView):
     @property
     def edit_columns(self):
         return [InputColSpec("title", label=u"标题"), ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
-                FileColSpec("pic_path", label=u"上传设计图", validators=[img_validator])]
+                FileColSpec("pic_path", label=u"上传设计图")]
 
 
 ocspu_model_view = OCSPUModelView(modell=SAModell(models.OCSPU, db, lazy_gettext("OCSPU")))
