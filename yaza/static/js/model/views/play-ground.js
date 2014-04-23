@@ -1,5 +1,5 @@
 (function (mods) {
-    define(mods, function (Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, Cookies) {
+    define(mods, function (Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, customerPicsTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -104,6 +104,7 @@
                 }
                 var gallery = $(template(rows));
                 this.$('.add-img-modal .modal-body').html(gallery);
+                $("#customer-pics").html($(handlebars.default.compile(customerPicsTemplate)(rows)));
                 var modal = this.$('.add-img-modal');
                 gallery.find('.thumbnail').click(function (e) {
                     gallery.find('.thumbnail').removeClass('selected-img');
@@ -126,5 +127,5 @@
     });
 })(['backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
     'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 
-    'text!templates/gallery.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
+    'text!templates/gallery.hbs','text!templates/customer-pics.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
 
