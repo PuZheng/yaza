@@ -11,8 +11,8 @@ def demo():
     return render_template('demo.html')
 
 
-@app.route('/model/<int:id_>')
-def index(id_):
+@app.route('/spu/<int:id_>')
+def spu_view(id_):
     from yaza import models
 
     ocspu_model = models.OCSPU.query.get_or_404(id_)
