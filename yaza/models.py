@@ -1,12 +1,8 @@
 # -*- coding: UTF-8 -*-
 from datetime import datetime
-import os
-from path import path
-from flask import url_for
 
 from flask.ext.babel import _
-import shutil
-import sys
+
 from .database import db
 
 
@@ -89,3 +85,11 @@ class SKC(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"), nullable=False)
     size = db.Column(db.Integer)
+
+
+class DesignImage(db.Model):
+    __tablename__ = "TB_DESIGN_IMAGE"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(32), nullable=False)
+    pic_path = db.Column(db.String(64), nullable=False)
