@@ -45,4 +45,21 @@
     .play-ground .add-img-modal .gallery .selected-img {
         border: 2px solid red;
     }
+
+    .image_picker_image{
+        max-height: 200px !important;
+        width: 100% !important;
+    }
+
+    .image_picker_selector{
+        margin-top:10px !important;
+    }
+    
+    .picker{
+        margin: 10px;
+    }
+
+    .selected-img{
+        max-height: 100px;
+    }
 }

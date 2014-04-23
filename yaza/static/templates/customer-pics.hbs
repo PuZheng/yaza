@@ -1,0 +1,11 @@
+<div class="picker">
+  <select class="image-picker form-control" name="image-picker-select" id="customer-pic-select" multiple>
+      {{#if this}}
+         {{#each this}}
+              {{#each this}}
+            <option data-img-src="{{ this }}" value="{{ this }}" data-img-label="{{ this }}">{{ this }}</option>
+          {{/each}}
+         {{/each}}
+      {{/if}}
+  </select>
+</div>
