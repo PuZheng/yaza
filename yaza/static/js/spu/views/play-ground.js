@@ -32,10 +32,23 @@
 
         var PlayGround = Backbone.View.extend({
             events: {
-
+                'click .thumbnails .thumbnail': function (evt) {
+                    $(".thumbnails .thumbnail").removeClass("selected");
+                    $(evt.target).addClass("selected");
+                },
+                'dblclick .thumbnails .thumbnail': function (evt) {
+                    $(".thumbnails .thumbnail").removeClass("selected");
+                    $(evt.target).addClass("selected");
+                    $('.add-img-modal').modal('hide');
+                },
+                'click .btn-ok': function (evt) {
+                    alert("选择了" + $(".thumbnail.selected img").attr("src"));
+                    $('.add-img-modal').modal('hide');
+                }
             },
 
             initialize: function (options) {
+                this.$('.nav-tabs a:first').tab('show');
                 dispatcher.on('design-region-selected', function (designRegion) {
                     var ts = this.$('.touch-screen');
                     var er = this.$('.touch-screen .editable-region');
@@ -57,6 +70,7 @@
                     var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
                     var templateFail = handlebars.default.compile(uploadingFailTemplate);
+                    //playGround.$('.nav-tabs a:first').tab('show');
                     $(this).find('.upload-img-form').fileupload({
                         dataType: 'json',
                         add: function (e, data) {
@@ -99,8 +113,6 @@
                             $(this).find('.uploading-progress').fadeOut(1000);
                         }
                     });
-                }).on("hidden.bs.modal", function () {
-                    alert("选择了" + $(".thumbnail.selected img").attr("src"));
                 });
                 this._renderGallery();
             },
@@ -133,11 +145,7 @@
             _selectFirstIfSelectedEmpty: function () {
                 if ($(".thumbnail.selected img").length == 0) {
                     var upload_images = (Cookies.get('upload-images') || '').trim();
-                    if (!!upload_images) {
-                        _selectFirstCustomerImg();
-                    } else {
-                        $("#builtin-pics .thumbnail:first").addClass("selected");
-                    }
+                    $("#builtin-pics .thumbnail:first").addClass("selected");
                 }
             }
 

@@ -75,6 +75,22 @@
         margin-right: auto;
     }
 
+    .jit-preview .aspect-selector {
+        height: 96px;
+        border: 1px dashed #ccc;
+    }
+
+    .jit-preview .hotspot {
+        height: 512px;
+        border: 1px solid #ccc;
+    }
+
+    .jit-preview .ocspu-select {
+        height: 96px;
+        max-height: 96px;
+        border: 1px solid #ccc;
+    }
+
     ul.thumbnails.image_picker_selector {
         list-style: none outside none;
         margin: 10px 0 0;

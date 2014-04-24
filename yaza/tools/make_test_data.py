@@ -5,17 +5,18 @@
 """
 import os
 import json
+import shutil
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
 
 import yaza
+from yaza.basemain import app
 
 
-__import__('yaza.basemain')
 from yaza.models import (User, Group, SPU, OCSPU, Aspect,
                          DesignImage, DesignRegion)
-from yaza.utils import do_commit
+from yaza.utils import do_commit, assert_dir
 
 
 class InitializeTestDB(Command):
@@ -42,10 +43,18 @@ class InitializeTestDB(Command):
         for spu_name in os.listdir(spu_list_dir):
             spu_dir = os.path.join(spu_list_dir, spu_name)
             if os.path.isdir(spu_dir):
-                self._create_spu(spu_dir)
+                assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
+                                        app.config['SPU_IMAGE_FOLDER']))
+                shutil.copytree(spu_dir,
+                                os.path.join(app.config['UPLOAD_FOLDER'],
+                                             app.config['SPU_IMAGE_FOLDER'],
+                                             spu_name))
+                self._create_spu(os.path.join(app.config['UPLOAD_FOLDER'],
+                                              app.config['SPU_IMAGE_FOLDER'],
+                                              spu_name))
 
         design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
-                                        "static", "assets", 'builtin-designs')
+                                        "static", "assets", 'design-images')
         if os.path.isdir(design_image_dir):
             self._create_design_images(design_image_dir)
 
@@ -71,9 +80,12 @@ class InitializeTestDB(Command):
             full_path = os.path.join(aspect_dir, fname)
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
+                    start = os.path.join(os.path.split(yaza.__file__)[0],
+                                         app.config['UPLOAD_FOLDER'])
+                    pic_path = os.path.relpath(full_path, start)
                     aspect = do_commit(Aspect(name=
                                               os.path.basename(aspect_dir),
-                                              pic_path=full_path,
+                                              pic_path=pic_path,
                                               ocspu=ocspu))
 
         for fname in os.listdir(aspect_dir):
@@ -89,21 +101,33 @@ class InitializeTestDB(Command):
                 design_region_name = fname.rsplit('.')[0]
                 width, height = \
                     config['designRegions'][design_region_name]['size']
+                start = os.path.join(os.path.split(yaza.__file__)[0],
+                                     app.config['UPLOAD_FOLDER'])
+                pic_path = os.path.relpath(full_path, start)
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
-                                       pic_path=full_path,
+                                       pic_path=pic_path,
                                        width=width,
                                        height=height))
 
     def _create_design_images(self, dir):
-        do_commit(DesignImage(title=u'李宇春', pic_path=
-                              os.path.join(dir, 'liyuchun.png')))
-        do_commit(DesignImage(title=u'马丁.路德', pic_path=
-                              os.path.join(dir, 'martin_luther.png')))
-        do_commit(DesignImage(title=u'小红帽', pic_path=
-                              os.path.join(dir, 'redhat.png')))
-        do_commit(DesignImage(title=u'python', pic_path=
-                              os.path.join(dir, 'pyday.png')))
+        assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
+                                app.config['DESIGN_IMAGE_FOLDER']))
+        full_path = os.path.join(dir, 'liyuchun.png')
+        for title, fname in ((u'李宇春', 'liyuchun.png'),
+                             (u'马丁.路德', 'martin_luther.png'),
+                             (u'小红帽', 'redhat.png'),
+                             ('python', 'pyday.png'),
+                             (u'列宁', 'lenin.png'),
+                             (u'海蒂.拉玛', 'heddylamarr.png')):
+            shutil.copy(full_path,
+                        os.path.join(app.config['UPLOAD_FOLDER'],
+                                     app.config['DESIGN_IMAGE_FOLDER'],
+                                     fname))
+            do_commit(DesignImage(title=title,
+                                  pic_path=os.path.join(
+                                      app.config['DESIGN_IMAGE_FOLDER'],
+                                      fname)))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block customized_head_block %}
-  
+  <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload.css') }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload-ui.css') }}"/>
 {% endblock %}
 
@@ -72,7 +72,7 @@
                               <!-- The file uploads will be shown here -->
                             </div>
                           </form>
-                          <button type="button" class="btn-ok btn btn-default"  data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn btn-default"  data-dismiss="modal">关闭</button>
                           <button type="button" class="btn-ok btn btn-primary"  data-dismiss="modal">确认</button>
                         </div>
                       </div>
@@ -84,8 +84,28 @@
                 </div>
               </div>
               
-              <div class="jit-preview col-sm-7">
-
+              <div class="col-sm-7">
+                <div class="jit-preview">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <div class="hotspot">
+                        <div class="design-region-selector">
+                          <select name="current-aspect"></select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <div class="ocspu-select">
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="aspect-selector">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

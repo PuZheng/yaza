@@ -11,17 +11,14 @@
             initialize: function () {
                 spu = this.$('input[name="spu"]').data('val');
                 this._playGround = new PlayGround({el: this.$('.play-ground'), spu: spu}).render();
-                $('.nav-tabs a:first').tab('show');
-                $(document).ready(this._displayImgs);
                 this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu}).render();
-                $('.nav-tabs a:first').tab('show');
 
-                $(document).on("click", ".thumbnails .thumbnail",function () {
-                    select(this);
-                }).on("dblclick", function () {
-                    select(this);
-                    $('.add-img-modal').modal('hide');
-                });
+                //$(document).on("click", ".thumbnails .thumbnail",function () {
+                    //select(this);
+                //}).on("dblclick", function () {
+                    //select(this);
+                    //$('.add-img-modal').modal('hide');
+                //});
             }
 
         });
