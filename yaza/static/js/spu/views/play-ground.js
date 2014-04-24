@@ -37,6 +37,7 @@
                     $(this).find('.upload-img-form').fileupload({
                         dataType: 'json',
                         add: function (e, data) {
+                            $('.nav-tabs a:last').tab('show');
                             $(this).find('.uploading-progress').html(
                                 templateProgress({
                                     fileSize: formatFileSize(data.files[0].size),
@@ -65,9 +66,12 @@
                         done: function (e, data) {
                             $(this).find('.uploading-progress').html(templateSuccess());
                             $(this).find('.uploading-progress').fadeOut(1000);
-                            Cookies.set('upload-images', 
-                                    data.result.filename + '||' + (Cookies.get('upload-images')||''), {expires: 7 * 24 * 3600});
+                            Cookies.set('upload-images',
+                                data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
                             playGround._renderGallery();
+                            $("[name=image-picker-select]").imagepicker();
+                            $("#customer-pics .thumbnail").removeClass("selected-img");
+                            $("#customer-pics").find(".thumbnail:first").addClass("selected-img");
                         },
                         fail: function (e, data) {
                             $(this).find('.uploading-progress').html(templateFail());
@@ -76,16 +80,12 @@
                     });
                 });
                 this._renderGallery();
-                this.$('.add-img-modal .btn-ok').click(_.bind(function (e) {
-                    alert('选中了' + this.$('.add-img-modal .gallery .selected-img img').attr('src'));
-                    this.$('.add-img-modal').modal('hide');
-                }, this));
             },
 
             _renderGallery: function () {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
-                var upload_images = (Cookies.get('upload-images')||'').trim();
+                var upload_images = (Cookies.get('upload-images') || '').trim();
                 if (!!upload_images) {
                     upload_images = _.filter(upload_images.split('||'), function (val) {
                         return !!val;
@@ -94,7 +94,7 @@
                     _.each(upload_images, function (img, idx) {
                         if (idx > 0 && idx % 4 == 0) {
                             rows.push(row);
-                            row = []; 
+                            row = [];
                         }
                         row.push(img);
                     });
@@ -103,29 +103,13 @@
                     }
                 }
                 var gallery = $(template(rows));
-                this.$('.add-img-modal .modal-body').html(gallery);
-                $("#customer-pics").html($(handlebars.default.compile(customerPicsTemplate)(rows)));
-                var modal = this.$('.add-img-modal');
-                gallery.find('.thumbnail').click(function (e) {
-                    gallery.find('.thumbnail').removeClass('selected-img');
-                    $(this).addClass('selected-img');
-                });
-                gallery.find('.thumbnail').dblclick(
-                        _.partial(
-                            function (modal, e) {
-                                gallery.find('.thumbnail').removeClass('selected-img');
-                                $(this).addClass('selected-img');
-                                alert('选中了' +  modal.find('.gallery .selected-img img').attr('src'));
-                                modal.modal('hide');
-                            }, 
-                            this.$('.add-img-modal')));
-                gallery.find('.thumbnail:first').click();
+                this.$('.add-img-modal #customer-pics').html(gallery);
             }
 
         });
         return PlayGround;
     });
-})(['backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
-    'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 
-    'text!templates/gallery.hbs','text!templates/customer-pics.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
+})(['backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
+        'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs',
+        'text!templates/gallery.hbs', 'text!templates/customer-pics.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
 

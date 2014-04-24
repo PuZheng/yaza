@@ -47,8 +47,8 @@
     }
 
     .image_picker_image{
-        max-height: 200px !important;
-        width: 100% !important;
+        max-height: 180px !important;
+        /*width: 100% !important;*/
     }
 
     .image_picker_selector {

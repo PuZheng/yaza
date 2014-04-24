@@ -6,7 +6,7 @@
 
             initialize: function () {
                 this._playGround = new PlayGround({el: this.$('.play-ground')}).render();
-                $("[name=image-picker-select]").select2().imagepicker({show_label: true, hide_select: false}).on("change", this._displayImgs);
+                $("[name=image-picker-select]").imagepicker().on("change", this._displayImgs);
                 $('.nav-tabs a:first').tab('show');
                 $(document).ready(this._displayImgs);
             },

@@ -1,19 +1,15 @@
-<div class="gallery">
-  {{# if this}}
-  {{#each this}}
-    <div class="row">
-      {{#each this}}
-      <div class="col-xs-6 col-md-3">
-        <a href="#" class="thumbnail">
-          <img src="{{this}}" alt="" style="max-width: 100%; height: 180px"/>
-        </a>
+<div class="picker gallery">
+    {{#if this}}
+      <select class="image-picker form-control" name="image-picker-select" id="customer-pic-select" multiple>
+          {{#each this}}
+              {{#each this}}
+                <option data-img-src="{{ this }}" value="{{ this }}" data-img-label="{{ this }}">{{ this }}</option>
+              {{/each}}
+          {{/each}}
+      </select>
+    {{else}}
+      <div class="alert alert-info">
+        您还没有上传过任何图片，请先上传！
       </div>
-      {{/each}}
-    </div>
-  {{/each}}
-  {{else}}
-  <div class="alert alert-info">
-    您还没有上传过任何图片，请先上传！
-  </div>
-  {{/if}}
+    {{/if}}
 </div>
