@@ -37,6 +37,26 @@
                     <div class="modal-dialog modal-lg">
                       <div class="modal-content">
                         <div class="modal-body">
+                          <ul class="nav nav-tabs">
+                            <li><a data-toggle="tab" href="#builtin-pics">默认图片</a></li>
+                            <li><a href="#customer-pics" data-toggle="tab">自定义图片</a></li>
+                          </ul>
+                          <div class="tab-content">
+                            <div class="tab-pane fade" id="builtin-pics">
+                              <ul class="thumbnails gallery image_picker_selector picker">
+                                {% for design_image in design_image_list %}
+                                  <li>
+                                    <div class="thumbnail">
+                                      <img class="image_picker_image" src="{{ design_image.pic_url }}" alt="{{ design_image.title }}"/>
+                                    </div>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                            <div class="tab-pane fade" id="customer-pics">
+
+                            </div>
+                          </div>
                         </div>
                         <div class="modal-footer">
                           <form class='upload-img-form' method="post" action="{{ url_for('image.upload') }}" enctype="multipart/form-data">
@@ -50,8 +70,8 @@
                               <!-- The file uploads will be shown here -->
                             </div>
                           </form>
-                          <button type="button" class="btn-ok btn btn-primary">确认</button>
-                          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn-ok btn btn-default"  data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn-ok btn btn-primary"  data-dismiss="modal">确认</button>
                         </div>
                       </div>
                       <!-- /.modal-content -->
@@ -68,33 +88,7 @@
           </div>
           <div class="row">
             <div class="details">
-              <div class="panel panel-primary">
-                <div class="panel-heading">
-                    已选择的图片
-                </div>
-                <div class="panel-body row" id="selected-imgs">
-
-                </div>
-              </div>
-              <ul class="nav nav-tabs">
-                <li><a data-toggle="tab" href="#builtin-pics">Builtin Pics</a></li>
-                <li><a href="#customer-pics" data-toggle="tab">Customer Pics</a></li>
-              </ul>
-              <div class="tab-content">
-                <div class="tab-pane fade" id="builtin-pics">
-                  <div class="picker">
-                    <select class="image-picker form-control" name="image-picker-select" id="builtin-pic-select" multiple>
-                      {% for design_image in design_image_list %}
-                        <option data-img-src="{{ design_image.pic_url }}" value="{{ design_image.id }}" data-img-label="{{ design_image.title }}">{{ design_image.title }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <div class="tab-pane fade" id="customer-pics">
-
-
-                </div>
-              </div>
+              details
             </div>
           </div>
         </div>
