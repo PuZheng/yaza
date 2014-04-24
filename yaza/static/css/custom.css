@@ -1,4 +1,4 @@
-@media screen and (min-width: 979px) {
+@media screen and (min-width: 992px) {
     body {
         /* for nav bar */
         padding-top: 60px !important;
@@ -51,15 +51,16 @@
         width: 100% !important;
     }
 
-    .image_picker_selector{
+    .image_picker_selector {
         margin-top:10px !important;
     }
     
-    .picker{
+    .picker {
         margin: 10px;
     }
 
-    .selected-img{
-        max-height: 100px;
+    .play-ground .touch-screen {
+        border: 1px solid #ccc;
     }
+
 }

@@ -4,6 +4,9 @@ import time
 from flask import render_template
 
 from yaza.basemain import app
+from yaza import models
+from yaza.utils import get_or_404
+from yaza.apis import wraps
 
 
 @app.route('/demo')
@@ -13,12 +16,9 @@ def demo():
 
 @app.route('/spu/<int:id_>')
 def spu_view(id_):
-    from yaza import models
 
-    ocspu_model = models.OCSPU.query.get_or_404(id_)
-    from yaza.apis.ocspu import OCSPUWrapper, DesignImageWrapper
+    spu = get_or_404(models.SPU, id_)
 
-    model = OCSPUWrapper(ocspu_model)
-    design_image_list = models.DesignImage.query.all()
-    return render_template('model.html', time=time.time(), model=model,
-                           design_image_list=[DesignImageWrapper(model) for model in design_image_list])
+    design_image_list = [wraps(di) for di in models.DesignImage.query.all()]
+    return render_template('spu.html', time=time.time(), spu=spu,
+                           design_image_list=design_image_list)

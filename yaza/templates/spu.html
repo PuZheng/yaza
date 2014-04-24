@@ -6,9 +6,9 @@
 
 {% block customized_tail_block %}
   {% if config.DEBUG %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='js/model/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
   {% else %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/model/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
   {% endif %}
 {% endblock %}
 
@@ -16,17 +16,18 @@
   <div class="container-fluid">
     <div class="primary">
       <div class="row">
-        <div class="col-sm-9">
+        <div class="col-sm-12">
           <div class="row">
             <div class="play-ground">
-              <div class="play-ground col-sm-4">
+              <div class="play-ground col-sm-5">
                 <div class="touch-screen">
                 </div>
                 <div class="dashboard">
                   <div class="panel panel-default">
-                    <div class="panel-body">
+                    <div class="panel-body bg-info">
                       <div class="btn-group">
-                        <button class="btn btn-default add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+                        <button class="btn btn-success add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+                          <i class="fa fa-plus"></i>
                           增加图片
                         </button>
                       </div>
@@ -60,7 +61,7 @@
                   <!-- /.modal -->
                 </div>
               </div>
-              <div class="jit-preview col-sm-8">
+              <div class="jit-preview col-sm-7">
                 实时预览
               </div>
             </div>
@@ -95,13 +96,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <!--/span-->
-
-        <div class="col-sm-3">
-          <div class="control-panel">
-            CONTROL PANEL
           </div>
         </div>
         <!--/span-->

@@ -21,9 +21,9 @@ require.config({
         "image-picker":'components/image-picker/image-picker/image-picker.min',
         'select2':['//cdn.staticfile.org/select2/3.4.6/select2.min', 'components/select2/select2.min'],
         // application
-        app: 'js/model/app',
-        'views/app-view': 'js/model/views/app-view',
-        'views/play-ground': 'js/model/views/play-ground',
+        app: 'js/spu/app',
+        'views/app-view': 'js/spu/views/app-view',
+        'views/play-ground': 'js/spu/views/play-ground',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
