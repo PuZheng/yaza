@@ -25,12 +25,18 @@
             return (bytes / 1000).toFixed(2) + ' KB';
         }
 
+        function _selectFirstCustomerImg() {
+            $(".thumbnails .thumbnail").removeClass("selected");
+            $("#customer-pics").find(".thumbnail:first").addClass("selected");
+        }
+
         var PlayGround = Backbone.View.extend({
             events: {
             },
             render: function () {
                 var playGround = this;
-                this.$('.add-img-modal').on('shown.bs.modal', function (e) {
+                this.$('.add-img-modal').on('show.bs.modal', this._selectFirstIfSelectedEmpty).on('shown.bs.modal',function (e) {
+
                     var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
                     var templateFail = handlebars.default.compile(uploadingFailTemplate);
@@ -69,15 +75,15 @@
                             Cookies.set('upload-images',
                                 data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
                             playGround._renderGallery();
-                            $("[name=image-picker-select]").imagepicker();
-                            $("#customer-pics .thumbnail").removeClass("selected-img");
-                            $("#customer-pics").find(".thumbnail:first").addClass("selected-img");
+                            _selectFirstCustomerImg();
                         },
                         fail: function (e, data) {
                             $(this).find('.uploading-progress').html(templateFail());
                             $(this).find('.uploading-progress').fadeOut(1000);
                         }
                     });
+                }).on("hidden.bs.modal", function () {
+                    alert("选择了" + $(".thumbnail.selected img").attr("src"));
                 });
                 this._renderGallery();
             },
@@ -104,6 +110,17 @@
                 }
                 var gallery = $(template(rows));
                 this.$('.add-img-modal #customer-pics').html(gallery);
+            },
+
+            _selectFirstIfSelectedEmpty: function () {
+                if ($(".thumbnail.selected img").length == 0) {
+                    var upload_images = (Cookies.get('upload-images') || '').trim();
+                    if (!!upload_images) {
+                        _selectFirstCustomerImg();
+                    } else {
+                        $("#builtin-pics .thumbnail:first").addClass("selected");
+                    }
+                }
             }
 
         });

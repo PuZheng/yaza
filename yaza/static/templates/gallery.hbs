@@ -1,15 +1,17 @@
-<div class="picker gallery">
+<ul class="thumbnails gallery image_picker_selector picker">
     {{#if this}}
-      <select class="image-picker form-control" name="image-picker-select" id="customer-pic-select" multiple>
-          {{#each this}}
-              {{#each this}}
-                <option data-img-src="{{ this }}" value="{{ this }}" data-img-label="{{ this }}">{{ this }}</option>
-              {{/each}}
-          {{/each}}
-      </select>
+        {{#each this}}
+            {{#each this}}
+              <li>
+                <div class="thumbnail">
+                  <img class="image_picker_image" src="{{this}}" alt="{{this}}"/>
+                </div>
+              </li>
+            {{/each}}
+        {{/each}}
     {{else}}
       <div class="alert alert-info">
         您还没有上传过任何图片，请先上传！
       </div>
     {{/if}}
-</div>
+</ul>

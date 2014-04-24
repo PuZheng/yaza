@@ -43,13 +43,15 @@
                           </ul>
                           <div class="tab-content">
                             <div class="tab-pane fade" id="builtin-pics">
-                              <div class="picker">
-                                <select class="image-picker form-control" name="image-picker-select" id="builtin-pic-select" multiple>
-                                  {% for design_image in design_image_list %}
-                                    <option data-img-src="{{ design_image.pic_url }}" value="{{ design_image.id }}" data-img-label="{{ design_image.title }}">{{ design_image.title }}</option>
-                                  {% endfor %}
-                                </select>
-                              </div>
+                              <ul class="thumbnails gallery image_picker_selector picker">
+                                {% for design_image in design_image_list %}
+                                  <li>
+                                    <div class="thumbnail">
+                                      <img class="image_picker_image" src="{{ design_image.pic_url }}" alt="{{ design_image.title }}"/>
+                                    </div>
+                                  </li>
+                                {% endfor %}
+                              </ul>
                             </div>
                             <div class="tab-pane fade" id="customer-pics">
 
@@ -68,6 +70,7 @@
                               <!-- The file uploads will be shown here -->
                             </div>
                           </form>
+                          <button type="button" class="btn-ok btn btn-default"  data-dismiss="modal">关闭</button>
                           <button type="button" class="btn-ok btn btn-primary"  data-dismiss="modal">确认</button>
                         </div>
                       </div>
