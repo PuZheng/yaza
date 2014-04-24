@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block customized_head_block %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload.css') }}"/>
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload-ui.css') }}"/>
 {% endblock %}
 
@@ -15,12 +15,14 @@
 {% block main %}
   <div class="container-fluid">
     <div class="primary">
+      <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
       <div class="row">
         <div class="col-sm-12">
           <div class="row">
             <div class="play-ground">
               <div class="play-ground col-sm-5">
                 <div class="touch-screen">
+                  <div class="editable-region"></div>
                 </div>
                 <div class="dashboard">
                   <div class="panel panel-default">
@@ -61,8 +63,9 @@
                   <!-- /.modal -->
                 </div>
               </div>
+              
               <div class="jit-preview col-sm-7">
-                实时预览
+
               </div>
             </div>
           </div>

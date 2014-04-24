@@ -1,0 +1,23 @@
+{
+	"name": "自由呼吸2014春夏新品短袖圆领拼色边字母印花时尚休闲T恤",
+	"ocspus": {
+	    "ocspu1": {
+			"color": "白色" 
+	    },
+	    "ocspu2": {
+			"color": "黑色"
+	    }
+	},
+	"designRegions": {
+		"design-region-1": {
+		    "size": [11.69, 16.53]
+		},		
+		"design-region-2": {
+		    "size": [4.13, 5.83]
+		},
+		"design-region-3": {
+		    "size": [11.69, 16.53]
+	    }
+	},
+	"cover": "aspect1",
+}

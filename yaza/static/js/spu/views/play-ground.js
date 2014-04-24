@@ -1,5 +1,5 @@
 (function (mods) {
-    define(mods, function (Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, customerPicsTemplate, Cookies) {
+    define(mods, function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, customerPicsTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -27,7 +27,24 @@
 
         var PlayGround = Backbone.View.extend({
             events: {
+
             },
+
+            initialize: function (options) {
+                dispatcher.on('design-region-selected', function (designRegion) {
+                    var ts = this.$('.touch-screen');
+                    var er = this.$('.touch-screen .editable-region');
+                    if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
+                        er.addClass('portrait').removeClass('landspace');
+                        er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
+                    } else {
+                        er.addClass('landspace').removeClass('portrait');
+                        er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
+                    }
+                    console.log('aspect ' + designRegion.id + ' selected'); 
+                }, this);
+            },
+
             render: function () {
                 var playGround = this;
                 this.$('.add-img-modal').on('shown.bs.modal', function (e) {
@@ -125,7 +142,7 @@
         });
         return PlayGround;
     });
-})(['backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
+})(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
     'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 
     'text!templates/gallery.hbs','text!templates/customer-pics.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
 

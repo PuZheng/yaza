@@ -9,20 +9,42 @@ from yaza.basemain import app
 
 
 class OCSPUWrapper(ModelWrapper):
-    pass
+
+    @property
+    def cover(self):
+        return [aspect for aspect in self.aspect_list if
+                aspect.name == self.spu.cover_name][0]
+
+    def as_dict(self, camel_case):
+        return {
+            'id': self.id,
+            'aspectList' if camel_case else 'aspect_list':
+            [aspect.as_dict(camel_case) for aspect in self.aspect_list],
+            'cover': self.cover.as_dict(camel_case)
+        }
 
 
 class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
-            ocspu_dir = os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(self.ocspu.spu.id), str(self.ocspu.id))
+            ocspu_dir = os.path.join(app.config["UPLOAD_FOLDER"], "ocspu",
+                                     str(self.ocspu.spu.id), str(self.ocspu.id))
 
             if os.path.exists(os.path.join(ocspu_dir, self.pic_path)):
-                return url_for("admin.pic_render", spu_id=self.ocspu.spu.id, ocspu_id=self.ocspu.id,
+                return url_for("admin.pic_render", spu_id=self.ocspu.spu.id,
+                               ocspu_id=self.ocspu.id,
                                pic_path=self.pic_path)
 
         return ""
+
+    def as_dict(self, camel_case=True):
+        return {
+            'id': self.id,
+            'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'designRegionList' if camel_case else 'design_region_list':
+            [dr.as_dict(camel_case) for dr in self.design_region_list]
+        }
 
     @property
     def spu(self):
@@ -33,7 +55,6 @@ class DesignRegionWrapper(ModelWrapper):
     DETECT_EDGE_EXTENSION = "edge"
 
     CONTROL_POINT_EXTENSION = "cpmap"
-
 
     @property
     def pic_url(self):
@@ -81,6 +102,12 @@ class DesignRegionWrapper(ModelWrapper):
     def control_points(self):
         return json.loads(self.read_file(self.serialized_control_point_file))
 
+    def as_dict(self, camel_case):
+        return {
+            'id': self.id,
+            'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'size': [1754, 2480],
+        }
 
 class DesignImageWrapper(ModelWrapper):
 

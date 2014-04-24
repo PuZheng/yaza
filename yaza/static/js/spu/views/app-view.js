@@ -1,14 +1,16 @@
 (function (mods) {
-    define(mods, function (Backbone, PlayGround) {
+    define(mods, function (Backbone, PlayGround, JitPreview) {
 
         var AppView = Backbone.View.extend({
             el: '.primary',
 
             initialize: function () {
-                this._playGround = new PlayGround({el: this.$('.play-ground')}).render();
+                spu = this.$('input[name="spu"]').data('val');
+                this._playGround = new PlayGround({el: this.$('.play-ground'), spu: spu}).render();
                 $("[name=image-picker-select]").select2().imagepicker({show_label: true, hide_select: false}).on("change", this._displayImgs);
                 $('.nav-tabs a:first').tab('show');
                 $(document).ready(this._displayImgs);
+                this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu}).render();
             },
 
             _displayImgs:function () {
@@ -24,4 +26,5 @@
         });
         return AppView;
     })
-})(['backbone', 'views/play-ground', 'bootstrap', 'select2', 'image-picker']);
+})(['backbone', 'views/play-ground', 'views/jit-preview',
+    'bootstrap', 'select2', 'image-picker']);
