@@ -18,7 +18,6 @@ require.config({
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'cookies-js': 'components/cookies-js/src/cookies.min',
-        "image-picker":'components/image-picker/image-picker/image-picker.min',
         'select2':['//cdn.staticfile.org/select2/3.4.6/select2.min', 'components/select2/select2.min'],
         // application
         app: 'js/spu/app',
@@ -37,9 +36,6 @@ require.config({
         'bootstrap': {
             deps: ['jquery'],
             exports: '$.fn.tooltip',
-        },
-        'image-picker':{
-            deps:['jquery', 'css!components/image-picker/image-picker/image-picker.css']
         },
         'select2':{
             deps:['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']

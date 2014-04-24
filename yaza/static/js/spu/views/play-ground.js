@@ -1,5 +1,5 @@
 (function (mods) {
-    define(mods, function (Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, customerPicsTemplate, Cookies) {
+    define(mods, function (Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -128,5 +128,5 @@
     });
 })(['backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
         'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs',
-        'text!templates/gallery.hbs', 'text!templates/customer-pics.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
+        'text!templates/gallery.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
 
