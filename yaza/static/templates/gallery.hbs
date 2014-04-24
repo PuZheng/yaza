@@ -1,19 +1,17 @@
-<div class="gallery">
-  {{# if this}}
-  {{#each this}}
-    <div class="row">
-      {{#each this}}
-      <div class="col-xs-6 col-md-3">
-        <a href="#" class="thumbnail">
-          <img src="{{this}}" alt="" style="max-width: 100%; height: 180px"/>
-        </a>
+<ul class="thumbnails gallery image_picker_selector picker">
+    {{#if this}}
+        {{#each this}}
+            {{#each this}}
+              <li>
+                <div class="thumbnail">
+                  <img class="image_picker_image" src="{{this}}" alt="{{this}}"/>
+                </div>
+              </li>
+            {{/each}}
+        {{/each}}
+    {{else}}
+      <div class="alert alert-info">
+        您还没有上传过任何图片，请先上传！
       </div>
-      {{/each}}
-    </div>
-  {{/each}}
-  {{else}}
-  <div class="alert alert-info">
-    您还没有上传过任何图片，请先上传！
-  </div>
-  {{/if}}
-</div>
+    {{/if}}
+</ul>
