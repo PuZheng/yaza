@@ -110,6 +110,7 @@
                 }
                 var gallery = $(template(rows));
                 this.$('.add-img-modal #customer-pics').html(gallery);
+
             },
 
             _selectFirstIfSelectedEmpty: function () {

@@ -12,7 +12,7 @@
                 this._playGround = new PlayGround({el: this.$('.play-ground')}).render();
                 $('.nav-tabs a:first').tab('show');
 
-                $(".thumbnails .thumbnail").on("click",function () {
+                $(document).on("click", ".thumbnails .thumbnail",function () {
                     select(this);
                 }).on("dblclick", function () {
                     select(this);

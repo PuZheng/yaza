@@ -91,7 +91,7 @@
     }
 
     ul.thumbnails.image_picker_selector li .thumbnail.selected {
-        background: none repeat scroll 0 0 #0088CC;
+        border: 2px solid #0088CC;
     }
 
 }
