@@ -1,5 +1,5 @@
 (function (mods) {
-    define(mods, function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, Cookies) {
+    define(mods, function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -31,14 +31,20 @@
         }
 
         var PlayGround = Backbone.View.extend({
+            _template: handlebars.default.compile(playGroundTemplate),
+
+
+            // 使用currentTarget而不是target，原因：
+            //            event.currentTarget
+            //            The current DOM element within the event bubbling phase.
             events: {
                 'click .thumbnails .thumbnail': function (evt) {
                     $(".thumbnails .thumbnail").removeClass("selected");
-                    $(evt.target).addClass("selected");
+                    $(evt.currentTarget).addClass("selected");
                 },
                 'dblclick .thumbnails .thumbnail': function (evt) {
                     $(".thumbnails .thumbnail").removeClass("selected");
-                    $(evt.target).addClass("selected");
+                    $(evt.currentTarget).addClass("selected");
                     $('.add-img-modal').modal('hide');
                 },
                 'click .btn-ok': function (evt) {
@@ -48,7 +54,8 @@
             },
 
             initialize: function (options) {
-                this.$('.nav-tabs a:first').tab('show');
+                this._design_image_list = options.design_image_list;
+
                 dispatcher.on('design-region-selected', function (designRegion) {
                     var ts = this.$('.touch-screen');
                     var er = this.$('.touch-screen .editable-region');
@@ -64,6 +71,9 @@
             },
 
             render: function () {
+                this.$el.append(this._template({"design_image_list": this._design_image_list}));
+                this.$('.nav-tabs a:first').tab('show');
+
                 var playGround = this;
                 this.$('.add-img-modal').on('show.bs.modal', this._selectFirstIfSelectedEmpty).on('shown.bs.modal',function (e) {
 
@@ -153,5 +163,5 @@
     });
 })(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
     'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 
-    'text!templates/gallery.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
+    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
 
