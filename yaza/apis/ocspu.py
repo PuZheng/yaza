@@ -120,5 +120,12 @@ class DesignImageWrapper(ModelWrapper):
         if self.pic_path:
             return url_for("ocspu.design_image_render", pic_path=self.pic_path)
         return ""
+    
+    def as_dict(self, camel_case=True):
+        return {
+            "id": self.id,
+            "title": self.title,
+            'picUrl' if camel_case else 'pic_url': self.pic_url
+        }
 
 DesignImageWrapper.StoredDir = DesignImageWrapper._stored_dir()

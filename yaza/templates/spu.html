@@ -16,98 +16,12 @@
   <div class="container-fluid">
     <div class="primary">
       <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
+      <input name="design-image-list" type="hidden" data-val="{{ design_image_list }}"/>
       <div class="row">
         <div class="col-sm-12">
           <div class="row">
-            <div class="play-ground">
-              <div class="play-ground col-sm-5">
-                <div class="touch-screen">
-                  <div class="editable-region"></div>
-                </div>
-                <div class="dashboard">
-                  <div class="panel panel-default">
-                    <div class="panel-body bg-info">
-                      <div class="btn-group">
-                        <button class="btn btn-success add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
-                          <i class="fa fa-plus"></i>
-                          增加图片
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="modal fade add-img-modal">
-                    <div class="modal-dialog modal-lg">
-                      <div class="modal-content">
-                        <div class="modal-body">
-                          <ul class="nav nav-tabs">
-                            <li><a data-toggle="tab" href="#builtin-pics">默认图片</a></li>
-                            <li><a href="#customer-pics" data-toggle="tab">自定义图片</a></li>
-                          </ul>
-                          <div class="tab-content">
-                            <div class="tab-pane fade" id="builtin-pics">
-                              <ul class="thumbnails gallery image_picker_selector picker">
-                                {% for design_image in design_image_list %}
-                                  <li>
-                                    <div class="thumbnail">
-                                      <img class="image_picker_image" src="{{ design_image.pic_url }}" alt="{{ design_image.title }}"/>
-                                    </div>
-                                  </li>
-                                {% endfor %}
-                              </ul>
-                            </div>
-                            <div class="tab-pane fade" id="customer-pics">
-
-                            </div>
-                          </div>
-                        </div>
-                        <div class="modal-footer">
-                          <form class='upload-img-form' method="post" action="{{ url_for('image.upload') }}" enctype="multipart/form-data">
-                            <span class="btn btn-success fileinput-button">
-                              <i class="glyphicon glyphicon-plus"></i>
-                              <span>上传新图片</span>
-                              <input type="file" name="files[]">
-                            </span>
-
-                            <div class='uploading-progress'>
-                              <!-- The file uploads will be shown here -->
-                            </div>
-                          </form>
-                          <button type="button" class="btn btn-default"  data-dismiss="modal">关闭</button>
-                          <button type="button" class="btn-ok btn btn-primary"  data-dismiss="modal">确认</button>
-                        </div>
-                      </div>
-                      <!-- /.modal-content -->
-                    </div>
-                    <!-- /.modal-dialog -->
-                  </div>
-                  <!-- /.modal -->
-                </div>
-              </div>
-              
-              <div class="col-sm-7">
-                <div class="jit-preview">
-                  <div class="row">
-                    <div class="col-sm-12">
-                      <div class="hotspot">
-                        <div class="design-region-selector">
-                          <select name="current-aspect"></select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-sm-6">
-                      <div class="ocspu-select">
-                      </div>
-                    </div>
-                    <div class="col-sm-6">
-                      <div class="aspect-selector">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="play-ground"></div>
+            <div class="jit-preview"></div>
           </div>
           <div class="row">
             <div class="details">
