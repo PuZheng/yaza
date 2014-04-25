@@ -40,8 +40,10 @@ class SPU(db.Model):
     __tablename__ = 'TB_SPU'
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(16))
     shape = db.Column(db.String(16))
     brief = db.Column(db.String(64))
+    cover_name = db.Column(db.String(16))
 
     def __unicode__(self):
         return _(self.shape)
@@ -55,14 +57,18 @@ class OCSPU(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     color = db.Column(db.String(16))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
-    spu = db.relationship("SPU")
+    spu = db.relationship("SPU", backref='ocspu_list')
 
 
 class Aspect(db.Model):
     __tablename__ = "TB_ASPECT"
     id = db.Column(db.Integer, primary_key=True)
-    ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"), nullable=False)
-    ocspu = db.relationship("OCSPU", backref=db.backref("aspect_list", cascade="all, delete-orphan"))
+    name = db.Column(db.String(16))
+    ocspu_id = db.Column(db.Integer, db.ForeignKey("TB_OCSPU.id"),
+                         nullable=False)
+    ocspu = db.relationship("OCSPU",
+                            backref=db.backref("aspect_list",
+                                               cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
 
 
@@ -71,7 +77,10 @@ class DesignRegion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     aspect_id = db.Column(db.Integer, db.ForeignKey("TB_ASPECT.id"), nullable=False)
     aspect = db.relationship("Aspect", backref=db.backref("design_region_list", cascade="all, delete-orphan"))
+    name = db.Column(db.String(16))
     pic_path = db.Column(db.String(64))
+    width = db.Column(db.Float)
+    height = db.Column(db.Float)
 
 
 class SKU(db.Model):

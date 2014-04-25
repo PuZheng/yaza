@@ -1,4 +1,4 @@
-#SQLALCHEMY_ECHO = False
+SQLALCHEMY_ECHO = False
 #SQLALCHEMY_DATABASE_URI = 'postgresql://user:password@localhost/database'
 DEBUG = True
 ERROR_LOG_RECIPIENTS = ['xiechao@foxmail.com']

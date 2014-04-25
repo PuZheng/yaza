@@ -20,9 +20,11 @@ require.config({
         'cookies-js': 'components/cookies-js/src/cookies.min',
         'select2':['//cdn.staticfile.org/select2/3.4.6/select2.min', 'components/select2/select2.min'],
         // application
+        dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
         'views/app-view': 'js/spu/views/app-view',
         'views/play-ground': 'js/spu/views/play-ground',
+        'views/jit-preview': 'js/spu/views/jit-preview',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {

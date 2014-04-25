@@ -4,16 +4,18 @@
 本脚本用于创建测试数据，是为了帮助进行随意测试。本脚本基于数据库的初始化脚本
 """
 import os
+import json
 import shutil
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
 
+import yaza
 from yaza.basemain import app
 
 
-__import__('yaza.basemain')
-from yaza.models import (User, Group, SKU, SKC, SPU, OCSPU, Aspect, DesignImage)
+from yaza.models import (User, Group, SPU, OCSPU, Aspect,
+                         DesignImage, DesignRegion)
 from yaza.utils import do_commit, assert_dir
 
 
@@ -35,48 +37,97 @@ class InitializeTestDB(Command):
                        password=generate_password_hash('foo', 'pbkdf2:sha256'),
                        group=group))
 
-        color = [u"blue", u"red", u"white", u"green"]
-        size = [1, 2, 3, 4, 5]
-        self.add_sku(u"男士T恤", color=color, size=size)
+        spu_list_dir = os.path.join(os.path.split(yaza.__file__)[0], "static",
+                                    "assets", 'spus')
 
-        self.add_sku(u"男士长袖", color=color, size=size)
+        for spu_name in os.listdir(spu_list_dir):
+            spu_dir = os.path.join(spu_list_dir, spu_name)
+            if os.path.isdir(spu_dir):
+                assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
+                                        app.config['SPU_IMAGE_FOLDER']))
+                shutil.copytree(spu_dir,
+                                os.path.join(app.config['UPLOAD_FOLDER'],
+                                             app.config['SPU_IMAGE_FOLDER'],
+                                             spu_name))
+                self._create_spu(os.path.join(app.config['UPLOAD_FOLDER'],
+                                              app.config['SPU_IMAGE_FOLDER'],
+                                              spu_name))
 
-        self.add_sku(u"女士T恤", color=color, size=size)
+        design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
+                                        "static", "assets", 'design-images')
+        if os.path.isdir(design_image_dir):
+            self._create_design_images(design_image_dir)
 
-        self.add_sku(u"女士长袖", color=color, size=size)
+    def _create_spu(self, spu_dir):
+        config = json.load(open(os.path.join(spu_dir, 'config.json')))
+        spu = do_commit(SPU(name=config['name'], cover_name=config['cover']))
+        for ocspu_name in os.listdir(spu_dir):
+            ocspu_dir = os.path.join(spu_dir, ocspu_name)
+            if os.path.isdir(ocspu_dir):
+                self._create_ocspu(ocspu_dir, config, spu)
 
-        self.add_image(u"超人标记", u"superman.jpg")
+    def _create_ocspu(self, ocspu_dir, config, spu):
+        color = config['ocspus'][os.path.basename(ocspu_dir)]['color']
+        ocspu = do_commit(OCSPU(spu=spu,
+                                color=color))
+        for aspect_name in os.listdir(ocspu_dir):
+            aspect_dir = os.path.join(ocspu_dir, aspect_name)
+            if os.path.isdir(aspect_dir):
+                self._create_aspect(aspect_dir, config, ocspu)
 
-    def add_sku(self, shape, color, size):
-        import yaza
-        spu = SPU(brief=u"测试用" + shape, shape=shape)
-        do_commit(spu)
-        for c in color:
-            ocspu = OCSPU(spu_id=spu.id, color=c)
-            do_commit(ocspu)
-            ocspu_dir = os.path.join(os.path.split(yaza.__file__)[0], app.config["UPLOAD_FOLDER"], "ocspu",
-                                     str(spu.id), str(ocspu.id))
-            assert_dir(ocspu_dir)
-            pic_dir = os.path.join(os.path.split(yaza.__file__)[0], "static", "assets")
-            filename = shape+c+".jpg"
+    def _create_aspect(self, aspect_dir, config, ocspu):
+        for fname in os.listdir(aspect_dir):
+            full_path = os.path.join(aspect_dir, fname)
+            if os.path.isfile(full_path):
+                if fname.split('.')[-1].lower() == 'png':
+                    start = os.path.join(os.path.split(yaza.__file__)[0],
+                                         app.config['UPLOAD_FOLDER'])
+                    pic_path = os.path.relpath(full_path, start)
+                    aspect = do_commit(Aspect(name=
+                                              os.path.basename(aspect_dir),
+                                              pic_path=pic_path,
+                                              ocspu=ocspu))
 
-            if os.path.exists(os.path.join(pic_dir, filename)):
-                shutil.copyfile(os.path.join(pic_dir, filename), os.path.join(ocspu_dir, filename))
-                aspect = Aspect(ocspu=ocspu, pic_path=filename)
-                do_commit(aspect)
+        for fname in os.listdir(aspect_dir):
+            full_path = os.path.join(aspect_dir, fname)
+            if os.path.isdir(full_path):
+                self._create_design_region(full_path, config, aspect)
 
-            for s in size:
-                skc = SKC(size=s, ocspu_id=ocspu.id)
-                do_commit(skc)
-                do_commit(SKU(skc_id=skc.id))
+    def _create_design_region(self, design_region_dir, config, aspect):
+        for fname in os.listdir(design_region_dir):
+            full_path = os.path.join(design_region_dir, fname)
+            if os.path.isfile(full_path) and \
+               fname.split('.')[-1].lower() == 'png':
+                design_region_name = fname.rsplit('.')[0]
+                width, height = \
+                    config['designRegions'][design_region_name]['size']
+                start = os.path.join(os.path.split(yaza.__file__)[0],
+                                     app.config['UPLOAD_FOLDER'])
+                pic_path = os.path.relpath(full_path, start)
+                do_commit(DesignRegion(aspect=aspect,
+                                       name=design_region_name,
+                                       pic_path=pic_path,
+                                       width=width,
+                                       height=height))
 
-    def add_image(self, title, pic_path):
-        import yaza
-        file_path = os.path.join(os.path.split(yaza.__file__)[0], "static", "assets", pic_path)
-        design_image_folder = os.path.join(os.path.split(yaza.__file__)[0], app.config["UPLOAD_FOLDER"], "design image")
-        if os.path.exists(design_image_folder):
-            shutil.copyfile(file_path, os.path.join(design_image_folder, pic_path))
-        do_commit(DesignImage(title=title, pic_path=pic_path))
+    def _create_design_images(self, dir):
+        assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
+                                app.config['DESIGN_IMAGE_FOLDER']))
+        full_path = os.path.join(dir, 'liyuchun.png')
+        for title, fname in ((u'李宇春', 'liyuchun.png'),
+                             (u'马丁.路德', 'martin_luther.png'),
+                             (u'小红帽', 'redhat.png'),
+                             ('python', 'pyday.png'),
+                             (u'列宁', 'lenin.png'),
+                             (u'海蒂.拉玛', 'heddylamarr.png')):
+            shutil.copy(full_path,
+                        os.path.join(app.config['UPLOAD_FOLDER'],
+                                     app.config['DESIGN_IMAGE_FOLDER'],
+                                     fname))
+            do_commit(DesignImage(title=title,
+                                  pic_path=os.path.join(
+                                      app.config['DESIGN_IMAGE_FOLDER'],
+                                      fname)))
 
 
 if __name__ == "__main__":

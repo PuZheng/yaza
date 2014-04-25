@@ -13,6 +13,8 @@ SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
 SQLALCHEMY_ECHO = True
 
 UPLOAD_FOLDER = 'static/uploads'
+DESIGN_IMAGE_FOLDER = 'design-images'  # relative to UPLOAD_FOLDER
+SPU_IMAGE_FOLDER = 'spus'  # relative to UPLOAD_FOLDER
 LOG_FILE = 'log.txt'
 
 ERROR_LOG_RECIPIENTS = []

@@ -15,12 +15,14 @@
 {% block main %}
   <div class="container-fluid">
     <div class="primary">
+      <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
       <div class="row">
         <div class="col-sm-12">
           <div class="row">
             <div class="play-ground">
               <div class="play-ground col-sm-5">
                 <div class="touch-screen">
+                  <div class="editable-region"></div>
                 </div>
                 <div class="dashboard">
                   <div class="panel panel-default">
@@ -70,7 +72,7 @@
                               <!-- The file uploads will be shown here -->
                             </div>
                           </form>
-                          <button type="button" class="btn-ok btn btn-default"  data-dismiss="modal">关闭</button>
+                          <button type="button" class="btn btn-default"  data-dismiss="modal">关闭</button>
                           <button type="button" class="btn-ok btn btn-primary"  data-dismiss="modal">确认</button>
                         </div>
                       </div>
@@ -81,8 +83,29 @@
                   <!-- /.modal -->
                 </div>
               </div>
-              <div class="jit-preview col-sm-7">
-                实时预览
+              
+              <div class="col-sm-7">
+                <div class="jit-preview">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <div class="hotspot">
+                        <div class="design-region-selector">
+                          <select name="current-aspect"></select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <div class="ocspu-select">
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="aspect-selector">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
