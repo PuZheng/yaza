@@ -144,7 +144,6 @@
 
             _selectFirstIfSelectedEmpty: function () {
                 if ($(".thumbnail.selected img").length == 0) {
-                    var upload_images = (Cookies.get('upload-images') || '').trim();
                     $("#builtin-pics .thumbnail:first").addClass("selected");
                 }
             }
