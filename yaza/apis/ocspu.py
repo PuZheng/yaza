@@ -11,8 +11,9 @@ from yaza.basemain import app
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
+
         aspect_list = [aspect for aspect in self.aspect_list if
-                       aspect.name == self.spu.cover_name]
+                       aspect.part == 'front']
         if aspect_list:
             return aspect_list[0]
         return None
@@ -22,7 +23,8 @@ class OCSPUWrapper(ModelWrapper):
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list':
                 [aspect.as_dict(camel_case) for aspect in self.aspect_list],
-            'cover': self.cover.as_dict(camel_case) if self.cover else ""
+            'cover': self.cover.as_dict(camel_case) if self.cover else "",
+            'color': self.color,
         }
 
 
@@ -40,7 +42,8 @@ class AspectWrapper(ModelWrapper):
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'designRegionList' if camel_case else 'design_region_list':
-                [dr.as_dict(camel_case) for dr in self.design_region_list]
+                [dr.as_dict(camel_case) for dr in self.design_region_list],
+            'name': self.name
         }
 
     @property
@@ -103,6 +106,7 @@ class DesignRegionWrapper(ModelWrapper):
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'size': [1754, 2480],
+            'name': self.name,
         }
 
 

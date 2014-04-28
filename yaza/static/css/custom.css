@@ -81,7 +81,20 @@
 
     .jit-preview .hotspot {
         height: 512px;
-        border: 1px solid #ccc;
+        background-color: #ccc;
+    }
+    
+    .jit-preview .hotspot img {
+        max-height: 100%;
+        max-width: 100%;
+        background-color: #fff;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    .jit-preview div.design-region-selector {
+        position: absolute !important;
     }
 
     .jit-preview .ocspu-selector {

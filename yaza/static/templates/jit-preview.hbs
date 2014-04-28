@@ -14,7 +14,7 @@
       <div class="ocspu-selector">
           {{#each spu.ocspuList }}
             <div class="thumbnail">
-                <img src="{{this.cover.picUrl}}" alt="" />
+                <img src="{{this.cover.picUrl}}" alt="{{this.name}}" title="{{this.color}}" />
             </div>
           {{/each}}
         </ul>
@@ -26,6 +26,3 @@
     </div>
   </div>
 </div>
-<script class="thumbnail" type="text/handldebars-tmpl" style="display: none">
-  <div class="thumbnail"><img src="{{aspect.picUrl}}" alt="" /></div>
-</script>

@@ -41,7 +41,6 @@ class InitializeTestDB(Command):
 
         spu_list_dir = os.path.join(os.path.split(yaza.__file__)[0], "static",
                                     "assets", 'spus')
-
         for spu_name in os.listdir(spu_list_dir):
             spu_dir = os.path.join(spu_list_dir, spu_name)
             if os.path.isdir(spu_dir):
@@ -88,10 +87,13 @@ class InitializeTestDB(Command):
                     start = os.path.join(os.path.split(yaza.__file__)[0],
                                          app.config['UPLOAD_FOLDER'])
                     pic_path = os.path.relpath(full_path, start)
-                    aspect = do_commit(Aspect(name=
-                                              os.path.basename(aspect_dir),
+                    part = 'other'
+                    if config['cover'] == os.path.basename(aspect_dir):
+                        part = 'front'
+                    name = config['aspects'][os.path.basename(aspect_dir)]['name']
+                    aspect = do_commit(Aspect(name=name,
                                               pic_path=pic_path,
-                                              part="other",
+                                              part=part,
                                               ocspu=ocspu))
 
         for fname in os.listdir(aspect_dir):

@@ -24,7 +24,7 @@
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
                     ocspu.aspectList.forEach(function (aspect) {
-                        $(this._aspectTpl({aspect: aspect})).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s"/></div>', aspect.picUrl, aspect.name, aspect.name)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                     }.bind(this));
                     this.$('.aspect-selector .thumbnail:first-child').click();
                 },
@@ -35,8 +35,9 @@
                     var aspect = $(evt.currentTarget).data('aspect');
                     this.$('.hotspot img').attr('src', aspect.picUrl);
                     
+                    var select = this.$('select[name="current-design-region"]');
+                    select.empty();
                     aspect.designRegionList.forEach(function (designRegion) {
-                        var select = this.$('select[name="current-design-region"]');
                         $(_.sprintf('<option value="%d">%s</option>', designRegion.id, 
                                 designRegion.name)).appendTo(select);
                     }.bind(this));
@@ -58,7 +59,6 @@
 
             render: function () {
                 this.$el.append(this._template({spu: this._spu}));
-                this._aspectTpl = Handlebars.default.compile(this.$('script.thumbnail').html().trim());
                 this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                     $(e).data('ocspu', this._spu.ocspuList[idx]);
                 }.bind(this));

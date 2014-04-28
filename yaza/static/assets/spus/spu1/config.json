@@ -8,6 +8,14 @@
 			"color": "黑色"
 	    }
 	},
+	"aspects": {
+	    "aspect1": {
+	        "name": "正面"
+	    },
+	    "aspect2": {
+	        "name": "背面"
+	    }
+	},
 	"designRegions": {
 		"design-region-1": {
 		    "name": "胸腹部", 
