@@ -46,7 +46,7 @@ class SPU(db.Model):
     cover_name = db.Column(db.String(16))
 
     def __unicode__(self):
-        return _(self.shape)
+        return _(self.name)
 
     def __repr__(self):
         return "<SPU: %s>" % self.shape
@@ -70,6 +70,7 @@ class Aspect(db.Model):
                             backref=db.backref("aspect_list",
                                                cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
+    part = db.Column(db.String(16))  # 标识是否正面
 
 
 class DesignRegion(db.Model):
@@ -81,6 +82,7 @@ class DesignRegion(db.Model):
     pic_path = db.Column(db.String(64))
     width = db.Column(db.Float)
     height = db.Column(db.Float)
+    part = db.Column(db.String(16))  # 对于同ocspu的不同aspet，如果part相同，则认为design_region是相同区域
 
 
 class SKU(db.Model):

@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import os
 import shutil
+import sys
 
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser import ModelView
@@ -10,6 +11,7 @@ from flask.ext.databrowser.sa import SAModell
 
 from yaza import models
 from yaza.apis.ocspu import DesignImageWrapper
+from yaza.basemain import app
 from yaza.database import db
 from yaza.utils import assert_dir
 from yaza import ext_validators
@@ -75,7 +77,10 @@ class DesignImageModelView(ModelView):
         assert_dir(DesignImageWrapper.StoredDir)
         shutil.copy(pic_path, os.path.join(DesignImageWrapper.StoredDir, file_name))
         os.unlink(pic_path)
-        return file_name
+        rel_path = os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
+        if sys.platform.startswith("win32"):
+            rel_path = rel_path.replace(os.path.sep, os.path.altsep)
+        return rel_path
 
     @ModelView.cached
     @property

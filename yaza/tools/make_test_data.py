@@ -12,8 +12,6 @@ from werkzeug.security import generate_password_hash
 
 import yaza
 from yaza.basemain import app
-
-
 from yaza.models import (User, Group, SPU, OCSPU, Aspect,
                          DesignImage, DesignRegion)
 from yaza.utils import do_commit, assert_dir
@@ -32,6 +30,10 @@ class InitializeTestDB(Command):
         from yaza.tools import build_db
 
         build_db.build_db()
+
+        #change current work path
+        os.chdir(os.path.split(yaza.__file__)[0])
+
         group = do_commit(Group(name="Sample Group"))
         do_commit(User(name="foo",
                        password=generate_password_hash('foo', 'pbkdf2:sha256'),
@@ -45,10 +47,13 @@ class InitializeTestDB(Command):
             if os.path.isdir(spu_dir):
                 assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                         app.config['SPU_IMAGE_FOLDER']))
-                shutil.copytree(spu_dir,
-                                os.path.join(app.config['UPLOAD_FOLDER'],
-                                             app.config['SPU_IMAGE_FOLDER'],
-                                             spu_name))
+                if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'],
+                                                   app.config['SPU_IMAGE_FOLDER'],
+                                                   spu_name)):
+                    shutil.copytree(spu_dir,
+                                    os.path.join(app.config['UPLOAD_FOLDER'],
+                                                 app.config['SPU_IMAGE_FOLDER'],
+                                                 spu_name))
                 self._create_spu(os.path.join(app.config['UPLOAD_FOLDER'],
                                               app.config['SPU_IMAGE_FOLDER'],
                                               spu_name))
@@ -86,6 +91,7 @@ class InitializeTestDB(Command):
                     aspect = do_commit(Aspect(name=
                                               os.path.basename(aspect_dir),
                                               pic_path=pic_path,
+                                              part="other",
                                               ocspu=ocspu))
 
         for fname in os.listdir(aspect_dir):
@@ -97,7 +103,7 @@ class InitializeTestDB(Command):
         for fname in os.listdir(design_region_dir):
             full_path = os.path.join(design_region_dir, fname)
             if os.path.isfile(full_path) and \
-               fname.split('.')[-1].lower() == 'png':
+                            fname.split('.')[-1].lower() == 'png':
                 design_region_name = fname.rsplit('.')[0]
                 width, height = \
                     config['designRegions'][design_region_name]['size']
@@ -108,6 +114,7 @@ class InitializeTestDB(Command):
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
+                                       part=design_region_name,
                                        height=height))
 
     def _create_design_images(self, dir):

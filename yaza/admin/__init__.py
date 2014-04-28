@@ -1,11 +1,9 @@
 #-*- coding:utf-8 -*-
-import os
-
-from flask import Blueprint, send_from_directory, render_template
+from flask import Blueprint, render_template
 from flask.ext.babel import _
 
 from yaza.admin import views
-from yaza.basemain import data_browser, app
+from yaza.basemain import data_browser
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
@@ -37,11 +35,3 @@ for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view]
 @admin.route("/")
 def index():
     return render_template("admin/index.html")
-
-
-@admin.route("/img/<string:spu_id>/<string:ocspu_id>/<string:pic_path>")
-def pic_render(spu_id, ocspu_id, pic_path):
-    dir, file = os.path.split(pic_path)
-    return send_from_directory(os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", spu_id, ocspu_id, dir), file)
-
-

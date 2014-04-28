@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+import sys
 
 from flask import request, jsonify, url_for, send_from_directory
 
@@ -21,6 +22,8 @@ def upload():
 
 @image.route("/serve/<filename>")
 def serve(filename):
+    if sys.platform.startswith("win32"):
+        filename = filename.replace(os.path.sep, os.path.altsep)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
