@@ -20,7 +20,7 @@ def upload():
     })
 
 
-@image.route("/serve/<filename>")
+@image.route("/serve/<path:filename>")
 def serve(filename):
     if sys.platform.startswith("win32"):
         filename = filename.replace(os.path.sep, os.path.altsep)
