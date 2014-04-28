@@ -66,7 +66,7 @@
                         er.addClass('landspace').removeClass('portrait');
                         er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
                     }
-                    console.log('aspect ' + designRegion.id + ' selected'); 
+                    console.log('design region ' + designRegion.id + ' selected'); 
                 }, this);
             },
 
