@@ -76,7 +76,6 @@
     }
 
     .jit-preview .aspect-selector {
-        height: 96px;
         border: 1px dashed #ccc;
     }
 
@@ -85,10 +84,28 @@
         border: 1px solid #ccc;
     }
 
-    .jit-preview .ocspu-select {
-        height: 96px;
-        max-height: 96px;
+    .jit-preview .ocspu-selector {
         border: 1px solid #ccc;
+    }
+
+    .jit-preview .thumbnail {
+        margin: 3px 3px 3px 0px;
+        display: inline-block;
+        height: 96px;
+        width: 96px;
+    }
+
+    .jit-preview .thumbnail:first-child {
+        margin-left: 3px;
+    }
+
+    .jit-preview .thumbnail img {
+        max-height: 96px;
+        max-height: 96px;
+    }
+
+    .thumbnail.selected {
+        border: 2px solid #0088CC;
     }
 
     ul.thumbnails.image_picker_selector {
@@ -127,5 +144,6 @@
     ul.thumbnails.image_picker_selector li .thumbnail.selected {
         border: 2px solid #0088CC;
     }
+
 
 }

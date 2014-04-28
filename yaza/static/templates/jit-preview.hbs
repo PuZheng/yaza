@@ -3,14 +3,21 @@
     <div class="col-sm-12">
       <div class="hotspot">
         <div class="design-region-selector">
-          <select name="current-aspect"></select>
+          <select name="current-design-region"></select>
         </div>
+        <img src="" alt="" />
       </div>
     </div>
   </div>
   <div class="row">
     <div class="col-sm-6">
-      <div class="ocspu-select">
+      <div class="ocspu-selector">
+          {{#each spu.ocspuList }}
+            <div class="thumbnail">
+                <img src="{{this.cover.picUrl}}" alt="" />
+            </div>
+          {{/each}}
+        </ul>
       </div>
     </div>
     <div class="col-sm-6">
@@ -19,3 +26,6 @@
     </div>
   </div>
 </div>
+<script class="thumbnail" type="text/handldebars-tmpl" style="display: none">
+  <div class="thumbnail"><img src="{{aspect.picUrl}}" alt="" /></div>
+</script>
