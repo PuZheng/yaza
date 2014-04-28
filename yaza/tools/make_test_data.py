@@ -107,6 +107,8 @@ class InitializeTestDB(Command):
                 design_region_name = fname.rsplit('.')[0]
                 width, height = \
                     config['designRegions'][design_region_name]['size']
+                design_region_name = \
+                    config['designRegions'][design_region_name]['name']
                 start = os.path.join(os.path.split(yaza.__file__)[0],
                                      app.config['UPLOAD_FOLDER'])
                 pic_path = os.path.relpath(full_path, start)
