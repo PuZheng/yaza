@@ -1,55 +1,23 @@
 #-*- coding:utf-8 -*-
 import os
-import zipfile
 import shutil
 
-from flask import json
-from PIL import Image as PILImage
 from flask.ext.databrowser import ModelView, sa, col_spec
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
 
 from yaza import ext_validators
-from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignRegionWrapper
+from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app
-from yaza.exceptions import BadImageFileException
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
-from yaza.tools.utils import detect_edges, calc_control_points
+from yaza.tools.utils import allowed_file, unzip, extract_images
 
-
-ARCHIVES = ('zip', )
-
-IMAGES = ('jpg', "jpeg", "png")
 
 CONTROL_POINTS_NUMBER = (4, 4)
 
-def allowed_file(filename, types=ARCHIVES):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in types
-
-
 zip_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Zip files"))
-
-
-def unzip(source_filename, dest_dir):
-    with zipfile.ZipFile(source_filename) as zf:
-        zf.extractall(dest_dir)
-
-
-def _delete_file(dir_, filename):
-    file_ = os.path.join(dir_, filename)
-    if os.path.exists(file_):
-        os.unlink(file_)
-
-
-def serialize(data, filename, encode_func=None):
-    if encode_func:
-        data = encode_func(data)
-    if not isinstance(data, basestring):
-        data = json.dumps(data)
-    with open(filename, "w") as _file:
-        _file.write(data)
 
 
 class SPUAdminModelView(ModelView):
@@ -104,54 +72,12 @@ class OCSPUAdminModelView(ModelView):
         assert_dir(dir_)
         unzip(obj.pic_zip, dir_)
 
-        for root_dir in os.listdir(dir_):
-            files = []
-            dirs = []
-            for name in os.listdir(os.path.join(dir_, root_dir)):
-                file_path = os.path.join(root_dir, name)
-                if os.path.isfile(os.path.join(dir_, file_path)):
-                    files.append(file_path)
-                else:
-                    dirs.append(file_path)
-            if len(files) >= 1:
-                pic_path = files[0]
-                design_files = {}
-                for dir_path in dirs:
-                    for root, walk_dirs, files in os.walk(os.path.join(dir_, dir_path)):
-                        for design_file in files:
-                            if allowed_file(design_file, IMAGES):
-                                filtered_files = design_files.setdefault(dir_path, [])
-                                filtered_files.append(design_file)
+        images_dict = extract_images(dir_, app.config["UPLOAD_FOLDER"])
 
-                if allowed_file(pic_path, IMAGES):
-                    # 先处理图片，之后再导入到数据库
-                    for dir_path, files in design_files.iteritems():
-                        for file_ in files:
-                            image_filename = os.path.join(self.get_base_pic_folder(obj), dir_path, file_)
-
-                            im = PILImage.open(image_filename)
-                            try:
-                                edges = detect_edges(im)
-                            except Exception as e:
-                                app.logger.error(e)
-                                raise BadImageFileException(file_)
-                            img_extension = os.path.splitext(file_)[-1]
-                            edge_filename = image_filename.replace(img_extension,
-                                                                   "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
-                            serialize(edges, edge_filename)
-                            control_point_filename = image_filename.replace(img_extension,
-                                                                            "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
-                            control_points = calc_control_points(edges, im.size, CONTROL_POINTS_NUMBER)
-                            serialize(control_points, control_point_filename,
-                                      lambda data: json.dumps(
-                                          {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
-                                           k, v in dict_.iteritems()}))
-
-                    aspect = Aspect(ocspu=obj, pic_path=pic_path)
-                    for dir_path, files in design_files.iteritems():
-                        for file_ in files:
-                            pic_path = os.path.join(dir_path, file_)
-                            do_commit(DesignRegion(aspect=aspect, pic_path=pic_path))
+        for key, aspect_dict in images_dict.iteritems():
+            aspect = Aspect(ocspu=obj, pic_path=aspect_dict["file_path"], part=aspect_dict.get("path", "other"))
+            for part, design_region in aspect_dict.get("design_region_list", {}).iteritems():
+                do_commit(DesignRegion(aspect=aspect, pic_path=design_region, part=part))
         os.unlink(obj.pic_zip)
 
     def clear_old_pics(self, obj):

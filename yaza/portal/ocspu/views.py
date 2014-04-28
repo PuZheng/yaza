@@ -10,6 +10,7 @@ from flask.ext.databrowser.sa import SAModell
 
 from yaza import models
 from yaza.apis.ocspu import DesignImageWrapper
+from yaza.basemain import app
 from yaza.database import db
 from yaza.utils import assert_dir
 from yaza import ext_validators
@@ -75,7 +76,7 @@ class DesignImageModelView(ModelView):
         assert_dir(DesignImageWrapper.StoredDir)
         shutil.copy(pic_path, os.path.join(DesignImageWrapper.StoredDir, file_name))
         os.unlink(pic_path)
-        return file_name
+        return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
 
     @ModelView.cached
     @property

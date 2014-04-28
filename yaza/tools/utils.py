@@ -1,5 +1,23 @@
 # -*- coding: UTF-8 -*-
 from collections import OrderedDict
+import os
+import zipfile
+
+from flask import json
+from PIL import Image
+
+from yaza.apis.ocspu import DesignRegionWrapper
+
+
+ARCHIVES = ('zip', )
+
+IMAGES = ('jpg', "jpeg", "png")
+
+CONTROL_POINTS_NUMBER = (4, 4)
+
+
+def allowed_file(filename, types=ARCHIVES):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in types
 
 
 def calc_control_points(edges, size, cp_num):
@@ -95,7 +113,6 @@ def detect_edges(im):
         if rt_met:
             break
 
-
     lb_met = False
     rb_met = False
     for i in xrange(im.size[0]):
@@ -153,3 +170,71 @@ def detect_edges(im):
         if rt_met:
             break
     return edges
+
+
+def calc_design_region_image(design_region_path):
+    im = Image.open(design_region_path)
+    edges = detect_edges(im)
+    img_extension = os.path.splitext(design_region_path)[-1]
+    edge_filename = design_region_path.replace(img_extension,
+                                               "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+    serialize(edges, edge_filename)
+    control_point_filename = design_region_path.replace(img_extension,
+                                                        "." + DesignRegionWrapper
+                                                        .CONTROL_POINT_EXTENSION)
+    control_points = calc_control_points(edges, im.size, CONTROL_POINTS_NUMBER)
+    serialize(control_points, control_point_filename,
+              lambda data: json.dumps(
+                  {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
+                   k, v in dict_.iteritems()}))
+
+
+def _get_rel_path(file_path, relpath_start):
+    rel_path = os.path.relpath(file_path, relpath_start)
+    return rel_path
+
+
+def extract_images(dir_, relpath_start="", front_aspect_name="aa.png"):
+    result = {}
+    # aspect_list
+    for aspect_dir in os.listdir(dir_):
+        for name in os.listdir(os.path.join(dir_, aspect_dir)):
+            file_path = os.path.join(aspect_dir, name)
+            abs_path = os.path.join(dir_, file_path)
+            if os.path.isfile(abs_path) and allowed_file(file_path, IMAGES):
+                aspect = result.setdefault(aspect_dir, {})
+                aspect["file_path"] = _get_rel_path(abs_path, relpath_start)
+                if os.path.split(file_path)[-1].lower() == front_aspect_name:
+                    aspect["part"] = "front"
+                else:
+                    aspect["part"] = "other"
+
+            elif os.path.isdir(abs_path):
+
+                #design_region_list
+                for root, walk_dirs, files in os.walk(abs_path):
+                    for design_file in files:
+                        if allowed_file(design_file, IMAGES):
+                            design_region_path = os.path.join(root, design_file)
+                            calc_design_region_image(design_region_path)
+
+                            aspect = result.setdefault(aspect_dir, {})
+                            design_region_list = aspect.setdefault("design_region_list", {})
+                            key = os.path.splitext(design_file)[0].lower()
+                            design_region_list[key] = _get_rel_path(design_region_path, relpath_start)
+
+    return result
+
+
+def unzip(source_filename, dest_dir):
+    with zipfile.ZipFile(source_filename) as zf:
+        zf.extractall(dest_dir)
+
+
+def serialize(data, filename, encode_func=None):
+    if encode_func:
+        data = encode_func(data)
+    if not isinstance(data, basestring):
+        data = json.dumps(data)
+    with open(filename, "w") as _file:
+        _file.write(data)
