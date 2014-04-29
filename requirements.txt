@@ -8,5 +8,4 @@ Flask-Babel
 Flask-Mail>=0.9
 -e git+https://github.com/PuZheng/flask-upload2.git@5c9531dc6516c425f1bbc9edb54112e5b8766883#egg=flask_upload2
 -e git+https://github.com/PuZheng/Flask-DataBrowser.git#egg=Flask_DataBrowser
--e git+https://github.com/xiechao06/Flask-NavBar.git@13468d18a464774ff94fb5503a54908100f5b5bd#egg=flask_navbar-dev
-
+-e git+https://github.com/xiechao06/Flask-NavBar.git@d672c61b7a58f5717b485e0603935e3b1bfd7b90#egg=flask_navbar-master
