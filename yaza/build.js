@@ -53,4 +53,9 @@
     preserveLicenseComments: false,
     optimizeCss: "standard",
     dir: "static/dist",
+    modules: [
+        {
+            name: 'js/spu/main'
+        },
+    ]
 })
