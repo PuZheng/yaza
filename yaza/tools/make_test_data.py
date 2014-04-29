@@ -124,13 +124,13 @@ class InitializeTestDB(Command):
     def _create_design_images(self, dir):
         assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                 app.config['DESIGN_IMAGE_FOLDER']))
-        full_path = os.path.join(dir, 'liyuchun.png')
         for title, fname in ((u'李宇春', 'liyuchun.png'),
                              (u'马丁.路德', 'martin_luther.png'),
                              (u'小红帽', 'redhat.png'),
                              ('python', 'pyday.png'),
                              (u'列宁', 'lenin.png'),
-                             (u'海蒂.拉玛', 'heddylamarr.png')):
+                             (u'海蒂.拉玛', 'hedylamarr.png')):
+            full_path = os.path.join(dir, fname)
             shutil.copy(full_path,
                         os.path.join(app.config['UPLOAD_FOLDER'],
                                      app.config['DESIGN_IMAGE_FOLDER'],

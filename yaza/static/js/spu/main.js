@@ -15,7 +15,7 @@ require.config({
         handlebars: 'components/handlebars/handlebars.amd.min',
         'underscore.string': 'components/underscore.string/dist/underscore.string.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-        'jquery.ui.widget': 'components/jquery-ui/ui/minified/jquery.ui.widget.min',
+        'jquery.ui.widget': 'components/jquery-ui/ui/jquery.ui.widget',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'cookies-js': 'components/cookies-js/src/cookies.min',
@@ -46,9 +46,6 @@ require.config({
         'select2': {
             deps: ['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
         },
-        'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
-        }
     }
 });
 

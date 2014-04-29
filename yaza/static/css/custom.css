@@ -93,8 +93,17 @@
         display: block;
     }
 
-    .jit-preview div.design-region-selector {
+    .jit-preview .hotspot div.design-region-selector {
         position: absolute !important;
+    }
+
+    .jit-preview .hotspot .design-regions {
+        position: absolute !important;
+        max-height: 100%;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
     }
 
     .jit-preview .ocspu-selector {

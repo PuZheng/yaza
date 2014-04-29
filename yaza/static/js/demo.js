@@ -210,9 +210,6 @@ $(function () {
             tan0 = Math.sqrt(Math.max(0, 1.0 - cos0) / (1 + cos0));
             tan1 = Math.sqrt(Math.max(0, 1.0 - cos1) / (1 + cos1));
             w = (tan0 + tan1) / Math.sqrt(Math.pow(cp1[0] - point[0], 2) + Math.pow(cp1[1] - point[1], 2));
-            if (isNaN(w)) {
-                debugger;
-            }
             weights.push(w);
         }
 
