@@ -1,5 +1,5 @@
-(function (mods) {
-    define(mods, function (_, Backbone, dispatcher, Handlebars, jitPreviewTemplate) {
+define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'underscore.string'],
+    function (_, Backbone, dispatcher, Handlebars, jitPreviewTemplate) {
         _.mixin(_.str.exports());
         Handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -13,9 +13,9 @@
             _template: Handlebars.default.compile(jitPreviewTemplate),
 
             initialize: function (options) {
-                this._spu = options.spu; 
+                this._spu = options.spu;
             },
-            
+
             events: {
                 'click .ocspu-selector .thumbnail': function (evt) {
                     this.$(".ocspu-selector .thumbnail").removeClass("selected");
@@ -34,26 +34,26 @@
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
                     this.$('.hotspot img').attr('src', aspect.picUrl);
-                    
+
                     var select = this.$('select[name="current-design-region"]');
                     select.empty();
                     aspect.designRegionList.forEach(function (designRegion) {
-                        $(_.sprintf('<option value="%d">%s</option>', designRegion.id, 
-                                designRegion.name)).appendTo(select);
+                        $(_.sprintf('<option value="%d">%s</option>', designRegion.id,
+                            designRegion.name)).appendTo(select);
                     }.bind(this));
                     $('select[name="current-design-region"]').change(
-                            function (designRegionList) {
-                                return function (evt) {
-                                    for (var i = 0; i < designRegionList.length; ++i) {
-                                        var designRegion = designRegionList[i];
-                                        if (designRegion.id == $(this).val()) {
-                                            dispatcher.trigger('design-region-selected',
-                                                designRegion);
-                                            break;
-                                        }
+                        function (designRegionList) {
+                            return function (evt) {
+                                for (var i = 0; i < designRegionList.length; ++i) {
+                                    var designRegion = designRegionList[i];
+                                    if (designRegion.id == $(this).val()) {
+                                        dispatcher.trigger('design-region-selected',
+                                            designRegion);
+                                        break;
                                     }
                                 }
-                            }(aspect.designRegionList)).change();
+                            }
+                        }(aspect.designRegionList)).change();
                 },
             },
 
@@ -67,4 +67,3 @@
         });
         return JitPreview;
     });
-})(['underscore', 'backbone', 'dispatcher', 'handlebars','text!templates/jit-preview.hbs', 'underscore.string']);
