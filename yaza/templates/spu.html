@@ -1,8 +1,4 @@
 {% extends "layout.html" %}
-{% block customized_head_block %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload.css') }}"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='components/blueimp-file-upload/css/jquery.fileupload-ui.css') }}"/>
-{% endblock %}
 
 {% block customized_tail_block %}
   {% if config.DEBUG %}
