@@ -1,8 +1,8 @@
 require.config({
     baseUrl: '/static',
-    map:{
-        '*':{
-            'css':'components/require-css/css.min'
+    map: {
+        '*': {
+            'css': 'components/require-css/css.min'
         }
     },
     paths: {
@@ -43,8 +43,11 @@ require.config({
             deps: ['jquery'],
             exports: '$.fn.tooltip',
         },
-        'select2':{
-            deps:['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
+        'select2': {
+            deps: ['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
+        },
+        'jquery-file-upload': {
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
         }
     }
 });

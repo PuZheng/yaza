@@ -1,5 +1,7 @@
-(function (mods) {
-    define(mods, function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
+    'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs',
+    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload'],
+    function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -66,7 +68,7 @@
                         er.addClass('landspace').removeClass('portrait');
                         er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
                     }
-                    console.log('design region ' + designRegion.id + ' selected'); 
+                    console.log('design region ' + designRegion.id + ' selected');
                 }, this);
             },
 
@@ -75,7 +77,7 @@
                 this.$('.nav-tabs a:first').tab('show');
 
                 var playGround = this;
-                this.$('.add-img-modal').on('show.bs.modal', this._selectFirstIfSelectedEmpty).on('shown.bs.modal',function (e) {
+                this.$('.add-img-modal').on('show.bs.modal', this._selectFirstIfSelectedEmpty).on('shown.bs.modal', function (e) {
 
                     var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
@@ -161,7 +163,5 @@
         });
         return PlayGround;
     });
-})(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 
-    'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 
-    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload']);
+
 
