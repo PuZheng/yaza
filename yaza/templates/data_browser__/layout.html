@@ -1,0 +1,26 @@
+
+{% extends "data_browser__/base_layout.html" %}
+{% block __data_browser__customized_head_block %}
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/custom.css") }}"/>
+
+{% endblock %}
+{% block __data_browser__nav_bar_block %}
+  <header>
+    {% import "data_browser__/navbar.html" as navbar %}
+    {{ navbar.render_nav_bar(current_user, nav_bar, titlename) }}
+  </header>
+{% endblock %}
+
+{% block __data_browser__footer_block %}
+  <footer class="footer visible-md visible-lg">
+    <div class="container">
+      <div class="text-muted">
+        copyright@ yaza
+      </div>
+    </div>
+  </footer>
+{% endblock %}
+
+{% block __data_browser__title_block %}
+  {{ title }}
+{% endblock %}

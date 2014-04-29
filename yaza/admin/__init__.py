@@ -11,15 +11,19 @@ admin = Blueprint("admin", __name__, static_folder="static", template_folder="te
 
 def register_model_view(model_view, bp, **kwargs):
     label = model_view.modell.label
+    from yaza.basemain import admin_nav_bar
 
     extra_params = {
         "list_view": {
+            "nav_bar": admin_nav_bar,
             'title': _('%(label)s list', label=label),
         },
         "create_view": {
+            "nav_bar": admin_nav_bar,
             'title': _('create %(label)s', label=label),
         },
         "form_view": {
+            "nav_bar": admin_nav_bar,
             'title': _('edit %(label)s', label=label),
         }
     }
@@ -34,4 +38,6 @@ for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view]
 
 @admin.route("/")
 def index():
-    return render_template("admin/index.html")
+    from yaza.basemain import admin_nav_bar
+
+    return render_template("admin/index.html", nav_bar=admin_nav_bar)

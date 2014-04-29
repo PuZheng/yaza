@@ -6,6 +6,7 @@ from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
 from flask.ext.babel import gettext as _
 from flask.ext.mail import Mail, Message
+import speaklater
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -25,6 +26,10 @@ data_browser = DataBrowser(app, upload_folder=app.config["UPLOAD_FOLDER"], plugi
 from flask.ext.upload2 import FlaskUpload
 
 FlaskUpload(app)
+
+from flask.ext.nav_bar import FlaskNavBar
+
+admin_nav_bar = FlaskNavBar(app)
 
 
 def init_login():
@@ -46,6 +51,7 @@ init_login()
 
 def register_views():
     from yaza.admin import admin
+
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
@@ -59,7 +65,23 @@ def register_views():
             if isinstance(v, Blueprint):
                 app.register_blueprint(v, url_prefix='/' + v.name)
 
+
+def setup_nav_bar():
+    from yaza.admin import views, admin
+
+    default_url = speaklater.make_lazy_string(views.spu_model_view.url_for_list)
+    admin_nav_bar.register(admin, name=_('SPU'), default_url=default_url,
+                           enabler=lambda nav: request.path.startswith('/admin/spu'))
+
+    default_url = speaklater.make_lazy_string(views.ocspu_model_view.url_for_list)
+    admin_nav_bar.register(admin, name=_('OCSPU'), default_url=default_url,
+                           enabler=lambda nav: request.path.startswith('/admin/ocspu'))
+
+
 register_views()
+
+setup_nav_bar()
+
 principal = Principal(app)
 
 
