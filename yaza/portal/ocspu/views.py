@@ -2,13 +2,14 @@
 import os
 import shutil
 
+from flask.ext.principal import Permission, RoleNeed
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.col_spec import InputColSpec, FileColSpec, ColSpec
 from flask.ext.databrowser.extra_widgets import Image
 from flask.ext.databrowser.sa import SAModell
 
-from yaza import models
+from yaza import models, const
 from yaza.apis.ocspu import DesignImageWrapper
 from yaza.basemain import app
 from yaza.database import db
@@ -40,13 +41,13 @@ class DesignImageModelView(ModelView):
     create_template = edit_template = "ocspu/form.html"
 
     def try_edit(self, processed_objs=None):
-        return True
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_view(self, processed_objs=None):
-        return True
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        return True
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     @ModelView.cached
     @property

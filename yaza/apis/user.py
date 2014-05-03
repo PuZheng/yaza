@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import posixpath
+
 from flask import _request_ctx_stack, current_app, request, url_for
 from flask.ext import login
 from flask.ext.principal import identity_changed, Identity, AnonymousIdentity
@@ -7,6 +8,7 @@ from itsdangerous import URLSafeTimedSerializer, BadTimeSignature
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 
+from yaza import const
 from yaza.basemain import app
 from yaza.apis import ModelWrapper, wraps
 from yaza.exceptions import AuthenticateFailure
@@ -68,6 +70,13 @@ LoginManager.token_loader`_
             ret['auth_token'] = self.auth_token
 
         return ret
+
+    @property
+    def default_url(self):
+        from yaza.admin import views
+        if self.group_id == const.VENDOR_GROUP:
+            return views.ocspu_model_view.url_for_list()
+        return self.group.default_url
 
 
 class GroupWrapper(ModelWrapper):

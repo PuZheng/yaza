@@ -28,16 +28,22 @@ class InitializeTestDB(Command):
 
     def run(self):
         from yaza.tools import build_db
+        from yaza import const
 
         build_db.build_db()
 
         #change current work path
         os.chdir(os.path.split(yaza.__file__)[0])
 
-        group = do_commit(Group(name="Sample Group"))
-        do_commit(User(name="foo",
-                       password=generate_password_hash('foo', 'pbkdf2:sha256'),
-                       group=group))
+        vendor_group = Group.query.get(const.VENDOR_GROUP)
+        do_commit(User(name="vendor1",
+                       password=generate_password_hash('vendor1', 'pbkdf2:sha256'),
+                       group=vendor_group))
+        customer_group = Group.query.get(const.CUSTOMER_GROUP)
+
+        do_commit(User(name="customer1",
+                       password=generate_password_hash('customer1', 'pbkdf2:sha256'),
+                       group=customer_group))
 
         spu_list_dir = os.path.join(os.path.split(yaza.__file__)[0], "static",
                                     "assets", 'spus')
