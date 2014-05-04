@@ -1,7 +1,7 @@
-define(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
+define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
     'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs',
-    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload'],
-    function (exports, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap'],
+    function (Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -34,24 +34,28 @@ define(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!t
 
         var PlayGround = Backbone.View.extend({
             _template: handlebars.default.compile(playGroundTemplate),
-
-
+            _initMargin: 50,
+            _designRegionCache: {},
+            
             // 使用currentTarget而不是target，原因：
             //            event.currentTarget
             //            The current DOM element within the event bubbling phase.
             events: {
                 'click .thumbnails .thumbnail': function (evt) {
-                    $(".thumbnails .thumbnail").removeClass("selected");
-                    $(evt.currentTarget).addClass("selected");
+                    this.$(".thumbnails .thumbnail").removeClass("selected");
+                    this.$(evt.currentTarget).addClass("selected");
                 },
                 'dblclick .thumbnails .thumbnail': function (evt) {
-                    $(".thumbnails .thumbnail").removeClass("selected");
-                    $(evt.currentTarget).addClass("selected");
-                    $('.add-img-modal').modal('hide');
+                    this.$(".thumbnails .thumbnail").removeClass("selected");
+                    this.$(evt.currentTarget).addClass("selected");
+                    this.$('.add-img-modal').modal('hide');
+                    var $img = this.$(".thumbnail.selected img")
+                    this._addImage($img.attr("src"), $img.data('title'));
                 },
                 'click .btn-ok': function (evt) {
-                    alert("选择了" + $(".thumbnail.selected img").attr("src"));
-                    $('.add-img-modal').modal('hide');
+                    this.$('.add-img-modal').modal('hide');
+                    var $img = this.$(".thumbnail.selected img")
+                    this._addImage($img.attr("src"), $img.data('title'));
                 }
             },
 
@@ -59,21 +63,51 @@ define(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!t
                 this._design_image_list = options.design_image_list;
 
                 dispatcher.on('design-region-selected', function (designRegion) {
-                    var ts = this.$('.touch-screen');
-                    var er = this.$('.touch-screen .editable-region');
-                    if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
-                        er.addClass('portrait').removeClass('landspace');
-                        er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
-                    } else {
-                        er.addClass('landspace').removeClass('portrait');
-                        er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
+                    console.log('design region ' + designRegion.name + ' selected'); 
+                    if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
+                        var ts = this.$('.touch-screen');
+                        var er = this.$('.touch-screen .editable-region');
+                        if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
+                            er.addClass('portrait').removeClass('landspace');
+                            er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
+                        } else {
+                            er.addClass('landspace').removeClass('portrait');
+                            er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
+                        }
+                        this._stage.width(er.width());
+                        this._stage.height(er.height());
+                        if (!!this._currentDesignRegion) {
+                            this._designRegionCache[this._currentDesignRegion.name] = {
+                                imageLayer: this._imageLayer,
+                    controlLayer: this._controlLayer,
+                            };
+                        }
+                        this._currentDesignRegion = designRegion;
+                        var cache = this._designRegionCache[designRegion.name];
+                        !!this._imageLayer && this._imageLayer.remove();
+                        !!this._controlLayer && this._controlLayer.remove();
+                        if (cache) {
+                            this._controlLayer = cache.controlLayer;
+                            this._imageLayer = cache.imageLayer;
+                            dispatcher.trigger('update-hotspot', this._imageLayer);
+                        } else {
+                            this._controlLayer = new Kinetic.Layer();
+                            this._imageLayer = new Kinetic.Layer();
+                        }
+                        this._stage.add(this._imageLayer);
+                        this._stage.add(this._controlLayer);
+                        this._stage.draw();
                     }
-                    console.log('design region ' + designRegion.id + ' selected');
+                    dispatcher.trigger('update-spot', this._imageLayer);
                 }, this);
+
             },
 
             render: function () {
                 this.$el.append(this._template({"design_image_list": this._design_image_list}));
+                this._stage = new Kinetic.Stage({
+                    container: this.$('.editable-region')[0],
+                });
                 this.$('.nav-tabs a:first').tab('show');
 
                 var playGround = this;
@@ -158,8 +192,169 @@ define(['exports', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!t
                 if ($(".thumbnail.selected img").length == 0) {
                     $("#builtin-pics .thumbnail:first").addClass("selected");
                 }
-            }
+            },
+            
+            _addImage: function (src, title) {
+                if (!title) { // 用户自己上传的图片没有title
+                    title = (new Date()).getTime(); 
+                }
+                // 将图片按比例缩小，并且放在正中
+                var er = this.$('.touch-screen .editable-region');
+                var imageObj = new Image();
+                imageObj.onload = _.bind(function () {
+                    var width = er.width() - 2 * this._initMargin;
+                    var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
+                    if (imageObj.height * width > imageObj.width * height) {
+                        // portrait
+                        width = imageObj.width * height / imageObj.height; 
+                    } else {
+                        height = imageObj.height * width / imageObj.width;
+                    }
 
+                    var image = new Kinetic.Image({
+                        x: (er.width() - width) / 2,
+                        y: (er.height() - height) /2,
+                        image: imageObj,
+                        width: width,
+                        height: height,
+                        name: title, 
+                    });
+                    this._imageLayer.add(image);
+                    this._imageLayer.draw();
+
+                    var group = new Kinetic.Group({
+                        x: (er.width() - width) / 2,
+                        y: (er.height() - height) /2,
+                        draggable: true,
+                        name: title,
+                    });
+                    group.on('dragstart', function() {
+                        this.moveToTop();
+                    });
+                    group.on('dragend', function (playGround) {
+                        return function() {
+                            this.moveToTop();
+                            image.x(this.x());
+                            image.y(this.y());
+                            playGround._imageLayer.draw();
+                            dispatcher.trigger('update-hotspot', playGround._imageLayer); 
+                        }
+                    }(this));
+                    var rect = new Kinetic.Rect({
+                        x: 0,
+                        y: 0,
+                        stroke: 'gray',
+                        strokeWidth: 1,
+                        width: width,
+                        height: height,
+                        dash: [5, 5],
+                        name: 'rect',
+                    });
+                    group.add(rect);
+                    this._controlLayer.add(group);
+                    this._addAnchor(group, 0, 0, 'topLeft');
+                    this._addAnchor(group, width, 0, 'topRight');
+                    this._addAnchor(group, width, height, 'bottomRight');
+                    this._addAnchor(group, 0, height, 'bottomLeft');
+                    this._controlLayer.draw();
+
+
+                    dispatcher.trigger('update-hotspot', this._imageLayer); 
+                }, this);
+                imageObj.src = src;
+            },
+
+            _addAnchor: function (group, x, y, name) {
+                var stage = group.getStage();
+                var layer = group.getLayer();
+
+                var anchor = new Kinetic.Circle({
+                    x: x,
+                    y: y,
+                    stroke: '#666',
+                    fill: '#ddd',
+                    strokeWidth: 2,
+                    radius: 8,
+                    name: name,
+                    draggable: true,
+                    dragOnTop: false
+                });
+
+                anchor.on('dragmove', function(playGround) {
+                    return function() {
+                        playGround._update(this);
+                        layer.draw();
+                    }
+                }(this));
+                anchor.on('mousedown touchstart', function() {
+                    group.setDraggable(false);
+                    this.moveToTop();
+                });
+                anchor.on('dragend', function() {
+                    group.setDraggable(true);
+                    layer.draw();
+                    dispatcher.trigger('update-hotspot', layer); 
+                });
+                // add hover styling
+                anchor.on('mouseover', function() {
+                    var layer = this.getLayer();
+                    document.body.style.cursor = 'pointer';
+                    this.setStrokeWidth(4);
+                    layer.draw();
+                });
+                anchor.on('mouseout', function() {
+                    var layer = this.getLayer();
+                    document.body.style.cursor = 'default';
+                    this.strokeWidth(2);
+                    layer.draw();
+                });
+
+                group.add(anchor);
+            },
+
+            _update: function (anchor) {
+                var group = anchor.getParent();
+
+                var topLeft = group.find('.topLeft')[0];
+                var topRight = group.find('.topRight')[0];
+                var bottomRight = group.find('.bottomRight')[0];
+                var bottomLeft = group.find('.bottomLeft')[0];
+
+                var anchorX = anchor.x();
+                var anchorY = anchor.y();
+
+                // update anchor positions
+                switch (anchor.name()) {
+                    case 'topLeft':
+                        topRight.y(anchorY);
+                        bottomLeft.x(anchorX);
+                        break;
+                    case 'topRight':
+                        topLeft.y(anchorY);
+                        bottomRight.x(anchorX);
+                        break;
+                    case 'bottomRight':
+                        bottomLeft.y(anchorY);
+                        topRight.x(anchorX); 
+                        break;
+                    case 'bottomLeft':
+                        bottomRight.y(anchorY);
+                        topLeft.x(anchorX); 
+                        break;
+                }
+
+                var rect = group.find('.rect')[0];
+                rect.width(topRight.x() - topLeft.x());
+                rect.height(bottomRight.y() - topRight.y());
+                var image = this._imageLayer.find('.' + group.name())[0];
+                image.setPosition(topLeft.getPosition());
+
+                var width = topRight.x() - topLeft.x();
+                var height = bottomLeft.y() - topLeft.y();
+                if(width && height) {
+                    image.setSize({width:width, height: height});
+                }
+            }
         });
         return PlayGround;
     });
