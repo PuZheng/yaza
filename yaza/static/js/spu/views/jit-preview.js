@@ -104,6 +104,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 }.bind(this));
                 this.$('.ocspu-selector .thumbnail:first-child').click();
                 dispatcher.on('update-hotspot', function (layer) {
+                    // TODO 当design region没有发生变化，不应该生成预览
                     console.log('hotspot updated');
                 }.bind(this));
             },
