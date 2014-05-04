@@ -5,8 +5,9 @@ import shutil
 from flask.ext.databrowser import ModelView, sa, col_spec
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
+from flask.ext.principal import Permission, RoleNeed
 
-from yaza import ext_validators
+from yaza import ext_validators, const
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
@@ -21,21 +22,27 @@ zip_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Plea
 
 
 class SPUAdminModelView(ModelView):
-    def try_view(self, *args):
-        pass
+    def try_edit(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_view(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        pass
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
 
 class OCSPUAdminModelView(ModelView):
     create_template = edit_template = 'admin/ocspu/ocspu-form.html'
 
-    def try_view(self, *args):
-        pass
+    def try_edit(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_view(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        pass
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     @ModelView.cached
     @property
@@ -97,15 +104,18 @@ class OCSPUAdminModelView(ModelView):
             self.clear_old_pics(model)
             self.save_new_pics(model)
 
-    def try_edit(self, preprocessed_objs=None):
-        pass
-
 
 class AspectAdminModelView(ModelView):
     create_template = edit_template = 'admin/ocspu/aspect-form.html'
 
+    def try_edit(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
     def try_view(self, processed_objs=None):
-        pass
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_create(self):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     @ModelView.cached
     @property
