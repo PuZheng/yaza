@@ -6,8 +6,6 @@ import zipfile
 from flask import json
 from PIL import Image
 
-from yaza.apis.ocspu import DesignRegionWrapper
-
 
 ARCHIVES = ('zip', )
 
@@ -184,6 +182,8 @@ def detect_edges(im):
 
 
 def calc_design_region_image(design_region_path):
+    from yaza.apis.ocspu import DesignRegionWrapper
+
     im = Image.open(design_region_path)
     edges = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]

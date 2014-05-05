@@ -1,5 +1,6 @@
-define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'underscore.string'],
+define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
     function (_, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+
         _.mixin(_.str.exports());
         Handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -23,7 +24,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 });
             },
 
-            _calcCurrentPoints: function(designRegion, originalSize) {
+            _calcCurrentPoints: function (designRegion, originalSize) {
                 var positions = ['top', 'left', 'bottom', 'right'];
                 var X = 0;
                 var Y = 1;
@@ -33,35 +34,65 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     var val = designRegion.edges[positions[idx]];
                     _.each(val, function (v) {
                         result.push(v[X] * currentSize[X] / originalSize[X]);
-                        result.push(currentSize[Y] - v[Y] * currentSize[Y] / originalSize[Y]);
+                        result.push(v[Y] * currentSize[Y] / originalSize[Y]);
                     });
                 }
                 return result;
             },
 
+            _setColorTransFunction: function(obj, period) {
+                obj._colors = ColorGrads(['red', "#FFF"], 20);
+
+                obj._index = obj._colors.length;
+                obj._set = function () {
+                    var color = obj._colors[Math.min(Math.max(0, obj._index), obj._colors.length - 1)];
+                    obj.stroke("rgb(" + color.join(",") + ")");
+                };
+
+                obj.transOut = function () {
+                    obj._index--;
+                    obj._set();
+                    if (obj._index > 0) {
+                        obj._timer = setTimeout(_.bind(obj.transOut, obj), period);
+                    }
+                };
+            },
+
             _designRegionAnimate: function (data) {
                 var jitPreview = this;
+                if (!jitPreview._currentLayer.hasChildren()) {
+                    var designRegionHex = new Kinetic.Line({
+                        points: data,
+                        stroke: 'red',
+                        strokeWidth: 3,
+                        dash: [20, 10],
+                    });
 
-                var designRegionHex = new Kinetic.Line({
-                    points: data,
-                    stroke: 'red',
-                    strokeWidth: 3,
-                    dash: [20, 10],
-                    x: jitPreview._stage.width() / 2,
-                    y: jitPreview._stage.height() / 2,
-                });
+                    jitPreview._currentLayer.add(designRegionHex);
+                } else {
+                    designRegionHex = jitPreview._currentLayer.getChildren()[0];
+                    designRegionHex.stroke('red');
+                }
 
-                jitPreview._currentLayer.add(designRegionHex);
+                clearTimeout(designRegionHex._timer);
 
-//                var period = 2000;
-//
-//                var anim = new Kinetic.Animation(function (frame) {
-//                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 2;
-//                    designRegionHex.scale({x: scale, y: scale});
-//                }, jitPreview._currentLayer);
-//
-//                anim.start();
-                jitPreview._currentLayer.draw();
+                var period = 2000;
+
+                jitPreview._setColorTransFunction(designRegionHex, period / 10);
+
+                var sizeAnim = new Kinetic.Animation(function (frame) {
+                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 0.01;
+                    if (!!sizeAnim && scale > 1) {
+                        designRegionHex.scale({x: 1, y: 1});
+                        sizeAnim.stop();
+                        designRegionHex.transOut();
+                    } else {
+                        designRegionHex.scale({x: scale, y: scale});
+                    }
+                }, jitPreview._currentLayer);
+
+                sizeAnim.start();
+//                jitPreview._curentLayer.draw();
             },
 
             events: {
@@ -130,7 +161,9 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
+                                        $(this).find("option:not(:selected)").data('layer').hide();
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
+                                        jitPreview._currentLayer.show();
                                         dispatcher.trigger('design-region-selected', designRegion, aspect.size);
                                         break;
                                     }
