@@ -156,7 +156,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                         jitPreview._currentLayer.show();
                                         dispatcher.trigger('design-region-selected', designRegion, aspect.size);
                                         break;
-                                    }z
+                                    }
                                 }
                             }
                         }(aspect.designRegionList, this)).change();
