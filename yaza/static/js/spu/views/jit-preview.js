@@ -40,20 +40,21 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 return result;
             },
 
-            _setColorTransFunction: function(obj, period) {
+            _colorTrans: function (obj, period) {
                 obj._colors = ColorGrads(['red', "#FFF"], 20);
 
-                obj._index = obj._colors.length;
+                obj._index = 0;
                 obj._set = function () {
                     var color = obj._colors[Math.min(Math.max(0, obj._index), obj._colors.length - 1)];
                     obj.stroke("rgb(" + color.join(",") + ")");
+                    obj.draw();
                 };
 
-                obj.transOut = function () {
-                    obj._index--;
+                obj.transIn = function () {
+                    obj._index++;
                     obj._set();
-                    if (obj._index > 0) {
-                        obj._timer = setTimeout(_.bind(obj.transOut, obj), period);
+                    if (obj._index < obj._colors.length - 1) {
+                        obj._timer = setTimeout(_.bind(obj.transIn, obj), period);
                     }
                 };
             },
@@ -78,14 +79,14 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
                 var period = 2000;
 
-                jitPreview._setColorTransFunction(designRegionHex, period / 10);
+                jitPreview._colorTrans(designRegionHex, period / 100);
 
                 var sizeAnim = new Kinetic.Animation(function (frame) {
                     var scale = Math.sin(frame.time * 2 * Math.PI / period) + 0.01;
                     if (!!sizeAnim && scale > 1) {
                         designRegionHex.scale({x: 1, y: 1});
                         sizeAnim.stop();
-                        designRegionHex.transOut();
+                        designRegionHex.transIn();
                     } else {
                         designRegionHex.scale({x: scale, y: scale});
                     }
