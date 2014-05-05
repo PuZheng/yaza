@@ -55,27 +55,26 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     obj._set();
                     if (obj._index < obj._colors.length - 1) {
                         obj._timer = setTimeout(_.bind(obj.transIn, obj), period);
+                    } else {
+                        obj._timer = setTimeout(function () {
+                            var layer = obj.getLayer();
+                            obj.destroy();
+                            layer.draw();
+                        }, period);
                     }
                 };
             },
 
             _designRegionAnimate: function (data) {
                 var jitPreview = this;
-                if (!jitPreview._currentLayer.hasChildren()) {
-                    var designRegionHex = new Kinetic.Line({
-                        points: data,
-                        stroke: 'red',
-                        strokeWidth: 3,
-                        dash: [20, 10],
-                    });
+                jitPreview._currentLayer.removeChildren();
+                var designRegionHex = new Kinetic.Line({
+                    points: data,
+                    stroke: 'red',
+                    strokeWidth: 3,
+                });
 
-                    jitPreview._currentLayer.add(designRegionHex);
-                } else {
-                    designRegionHex = jitPreview._currentLayer.getChildren()[0];
-                    designRegionHex.stroke('red');
-                }
-
-                clearTimeout(designRegionHex._timer);
+                jitPreview._currentLayer.add(designRegionHex);
 
                 var period = 2000;
 
@@ -162,7 +161,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
-                                        $("option:not(:selected)").each(function() {
+                                        $("option:not(:selected)").each(function () {
                                             $(this).data("layer").hide();
                                         });
 
