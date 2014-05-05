@@ -91,6 +91,7 @@ class InitializeTestDB(Command):
                     if config['cover'] == os.path.basename(aspect_dir):
                         part = 'front'
                     name = config['aspects'][os.path.basename(aspect_dir)]['name']
+
                     aspect = do_commit(Aspect(name=name,
                                               pic_path=pic_path,
                                               part=part,
@@ -114,6 +115,11 @@ class InitializeTestDB(Command):
                 start = os.path.join(os.path.split(yaza.__file__)[0],
                                      app.config['UPLOAD_FOLDER'])
                 pic_path = os.path.relpath(full_path, start)
+
+                from yaza.tools.utils import calc_design_region_image
+                print "calculate image: " + str(full_path)
+                calc_design_region_image(full_path)
+
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,

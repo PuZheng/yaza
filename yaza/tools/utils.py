@@ -176,8 +176,7 @@ def calc_design_region_image(design_region_path):
     im = Image.open(design_region_path)
     edges = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
-    edge_filename = design_region_path.replace(img_extension,
-                                               "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+    edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
     serialize(edges, edge_filename)
     control_point_filename = design_region_path.replace(img_extension,
                                                         "." + DesignRegionWrapper

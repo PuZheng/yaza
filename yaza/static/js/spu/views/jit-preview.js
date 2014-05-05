@@ -15,6 +15,48 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
             initialize: function (options) {
                 this._spu = options.spu;
+
+                var jitPreview = this;
+                dispatcher.on('design-region-selected', function (designRegion, aspectSize) {
+                    var data = jitPreview._calcCurrentPoints(designRegion, aspectSize);
+                    jitPreview._designRegionAnimate(data);
+                });
+            },
+
+            _calcCurrentPoints: function(designRegion, originalSize) {
+                var X = 0;
+                var Y = 1;
+                var currentSize = [this.$('.hotspot img').width(), this.$('.hotspot img').height()];
+                var result = [];
+                _.each(designRegion.edges, function (val, key) {
+                    _.each(val, function (v) {
+                        result.push(v[X] * currentSize[X] / originalSize[X]);
+                        result.push(v[Y] * currentSize[Y] / originalSize[Y]);
+                    });
+                });
+                return result;
+            },
+
+            _designRegionAnimate: function (data) {
+                var jitPreview = this;
+
+                var designRegionHex = new Kinetic.Line({
+                    points: data,
+                    stroke: 'black',
+                    strokeWidth: 3,
+                    closed: true
+                });
+
+                jitPreview._currentLayer.add(designRegionHex);
+
+                var period = 2000;
+
+                var anim = new Kinetic.Animation(function (frame) {
+                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 2;
+                    designRegionHex.scale({x: scale, y: scale});
+                }, jitPreview._currentLayer);
+
+                anim.start();
             },
 
             events: {
@@ -40,16 +82,16 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
                     this.$('.hotspot img').attr('src', aspect.picUrl).load(
-                            function (playGround) {
-                                return function () {
-                                    playGround.$('.design-regions').css({
-                                        width: $(this).width(),
-                                        height: $(this).height(),
-                                    }).offset($(this).offset());
-                                    playGround._stage.width($(this).width()); 
-                                    playGround._stage.height($(this).height()); 
-                                }
-                            }(this));
+                        function (playGround) {
+                            return function () {
+                                playGround.$('.design-regions').css({
+                                    width: $(this).width(),
+                                    height: $(this).height(),
+                                }).offset($(this).offset());
+                                playGround._stage.width($(this).width());
+                                playGround._stage.height($(this).height());
+                            }
+                        }(this));
                     this._currentAspectName = aspect.name;
 
                     var select = this.$('select[name="current-design-region"]');
@@ -75,7 +117,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                         $(_.sprintf('<option value="%d">%s</option>', designRegion.id,
                             designRegion.name)).data('design-region', designRegion).
                             data('layer', layer).appendTo(select);
-                         
+
                     }.bind(this));
                     $('select[name="current-design-region"]').change(
                         function (designRegionList, jitPreview) {
@@ -83,9 +125,8 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
-                                        dispatcher.trigger('design-region-selected',
-                                            designRegion);
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
+                                        dispatcher.trigger('design-region-selected', designRegion, aspect.size);
                                         break;
                                     }
                                 }
@@ -107,6 +148,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     // TODO 当design region没有发生变化，不应该生成预览
                     console.log('hotspot updated');
                 }.bind(this));
+
             },
         });
         return JitPreview;
