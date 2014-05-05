@@ -24,18 +24,18 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
             },
 
             _calcCurrentPoints: function(designRegion, originalSize) {
-                var positions = ['top', 'left', 'bottom', 'right'];
+                var positions = ['top', 'right', 'bottom', 'left'];
                 var X = 0;
                 var Y = 1;
                 var currentSize = [this.$('.hotspot img').width(), this.$('.hotspot img').height()];
                 var result = [];
-                for(idx in positions) {
+                for (idx in positions) {
                     var val = designRegion.edges[positions[idx]];
                     _.each(val, function (v) {
                         result.push(v[X] * currentSize[X] / originalSize[X]);
-                        result.push(v[Y] * currentSize[Y] / originalSize[Y]);
+                        result.push(currentSize[Y] - v[Y] * currentSize[Y] / originalSize[Y]);
                     });
-                };
+                }
                 return result;
             },
 
@@ -44,20 +44,24 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
                 var designRegionHex = new Kinetic.Line({
                     points: data,
-                    stroke: 'black',
+                    stroke: 'red',
                     strokeWidth: 3,
+                    dash: [20, 10],
+                    x: jitPreview._stage.width() / 2,
+                    y: jitPreview._stage.height() / 2,
                 });
 
                 jitPreview._currentLayer.add(designRegionHex);
 
-                var period = 2000;
-
-                var anim = new Kinetic.Animation(function (frame) {
-                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 2;
-                    designRegionHex.scale({x: scale, y: scale});
-                }, jitPreview._currentLayer);
-
-                anim.start();
+//                var period = 2000;
+//
+//                var anim = new Kinetic.Animation(function (frame) {
+//                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 2;
+//                    designRegionHex.scale({x: scale, y: scale});
+//                }, jitPreview._currentLayer);
+//
+//                anim.start();
+                jitPreview._currentLayer.draw();
             },
 
             events: {

@@ -81,6 +81,9 @@ def calc_control_points(edges, size, cp_num):
 
 def detect_edges(im):
     '''
+    Warning !
+        in order: top right bottom right
+
     dectect the edges of an image
     :param im: an image
     :type im: PIL.Image.Image
@@ -113,9 +116,28 @@ def detect_edges(im):
         if rt_met:
             break
 
+    rb_met = False
+    rt_met = False
+    for i in xrange(im.size[1] - 1, -1, -1):
+        for j in xrange(im.size[0] - 1, -1, -1):
+            pixel = pa[(j, i)]
+            if pixel[3] != 0:
+                if pixel[0] == 255:
+                    edges['right'].append((j, i))
+                    if not rb_met:
+                        rb_met = True
+                    else:
+                        rt_met = True
+                else:
+                    if rb_met:
+                        edges['right'].append((j, i))
+                break
+        if rt_met:
+            break
+
     lb_met = False
     rb_met = False
-    for i in xrange(im.size[0]):
+    for i in xrange(im.size[0] - 1, -1, -1):
         for j in xrange(im.size[1]):
             pixel = pa[(i, j)]
             if pixel[3] != 0:
@@ -151,24 +173,6 @@ def detect_edges(im):
         if lt_met:
             break
 
-    rb_met = False
-    rt_met = False
-    for i in xrange(im.size[1]):
-        for j in xrange(im.size[0] - 1, -1, -1):
-            pixel = pa[(j, i)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['right'].append((j, i))
-                    if not rb_met:
-                        rb_met = True
-                    else:
-                        rt_met = True
-                else:
-                    if rb_met:
-                        edges['right'].append((j, i))
-                break
-        if rt_met:
-            break
     return edges
 
 
