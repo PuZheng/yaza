@@ -117,7 +117,7 @@ class InitializeTestDB(Command):
                 pic_path = os.path.relpath(full_path, start)
 
                 from yaza.tools.utils import calc_design_region_image
-                print "calculate image: " + str(full_path)
+                print "processing image: " + str(full_path)
                 calc_design_region_image(full_path)
 
                 do_commit(DesignRegion(aspect=aspect,

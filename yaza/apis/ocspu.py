@@ -95,25 +95,17 @@ class DesignRegionWrapper(ModelWrapper):
         return self.pic_rel_path.replace(
             os.path.splitext(self.pic_path)[-1], "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
 
-    def read_file(self, file_name):
-        result = ""
-        if os.path.exists(file_name):
-            with open(file_name) as _file:
-                for line in _file:
-                    result += line
-        return result
-
     @cached_property
     def pic_rel_path(self):
         return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
 
     @cached_property
     def edges(self):
-        return json.loads(self.read_file(self.serialized_edge_file))
+        return json.load(file(self.serialized_edge_file))
 
     @cached_property
     def control_points(self):
-        return json.loads(self.read_file(self.serialized_control_point_file))
+        return json.load(file(self.serialized_control_point_file))
 
     def as_dict(self, camel_case):
         return {

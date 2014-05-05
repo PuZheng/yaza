@@ -24,7 +24,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
             },
 
             _calcCurrentPoints: function(designRegion, originalSize) {
-                var positions = ['top', 'right', 'bottom', 'left'];
+                var positions = ['top', 'left', 'bottom', 'right'];
                 var X = 0;
                 var Y = 1;
                 var currentSize = [this.$('.hotspot img').width(), this.$('.hotspot img').height()];
