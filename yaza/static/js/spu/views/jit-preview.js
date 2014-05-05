@@ -24,16 +24,18 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
             },
 
             _calcCurrentPoints: function(designRegion, originalSize) {
+                var positions = ['top', 'left', 'bottom', 'right'];
                 var X = 0;
                 var Y = 1;
                 var currentSize = [this.$('.hotspot img').width(), this.$('.hotspot img').height()];
                 var result = [];
-                _.each(designRegion.edges, function (val, key) {
+                for(idx in positions) {
+                    var val = designRegion.edges[positions[idx]];
                     _.each(val, function (v) {
                         result.push(v[X] * currentSize[X] / originalSize[X]);
                         result.push(v[Y] * currentSize[Y] / originalSize[Y]);
                     });
-                });
+                };
                 return result;
             },
 
@@ -44,7 +46,6 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     points: data,
                     stroke: 'black',
                     strokeWidth: 3,
-                    closed: true
                 });
 
                 jitPreview._currentLayer.add(designRegionHex);
