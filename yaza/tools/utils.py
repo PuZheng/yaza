@@ -86,7 +86,7 @@ def calc_control_points(edges, size, cp_num):
 def detect_edges(im):
     '''
     Warning !
-        in order: top right bottom right
+        in order: top left bottom right
 
     dectect the edges of an image, in COUNTER-CLOCKWISE, namely, from top to
     left, to bottom, to right, and in 'top' edge, x from high to low;
