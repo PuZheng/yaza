@@ -71,7 +71,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 var designRegionHex = new Kinetic.Line({
                     points: data,
                     stroke: 'red',
-                    strokeWidth: 3,
+                    strokeWidth: 3
                 });
 
                 jitPreview._currentLayer.add(designRegionHex);
@@ -79,20 +79,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 var period = 2000;
 
                 jitPreview._colorTrans(designRegionHex, period / 100);
-
-                var sizeAnim = new Kinetic.Animation(function (frame) {
-                    var scale = Math.sin(frame.time * 2 * Math.PI / period) + 0.01;
-                    if (!!sizeAnim && scale > 1) {
-                        designRegionHex.scale({x: 1, y: 1});
-                        sizeAnim.stop();
-                        designRegionHex.transIn();
-                    } else {
-                        designRegionHex.scale({x: scale, y: scale});
-                    }
-                }, jitPreview._currentLayer);
-
-                sizeAnim.start();
-//                jitPreview._curentLayer.draw();
+                designRegionHex.transIn();
             },
 
             events: {
@@ -122,7 +109,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                             return function () {
                                 playGround.$('.design-regions').css({
                                     width: $(this).width(),
-                                    height: $(this).height(),
+                                    height: $(this).height()
                                 }).offset($(this).offset());
                                 playGround._stage.width($(this).width());
                                 playGround._stage.height($(this).height());
@@ -169,17 +156,17 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                         jitPreview._currentLayer.show();
                                         dispatcher.trigger('design-region-selected', designRegion, aspect.size);
                                         break;
-                                    }
+                                    }z
                                 }
                             }
                         }(aspect.designRegionList, this)).change();
-                },
+                }
             },
 
             render: function () {
                 this.$el.append(this._template({spu: this._spu}));
                 this._stage = new Kinetic.Stage({
-                    container: this.$('.design-regions')[0],
+                    container: this.$('.design-regions')[0]
                 });
                 this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                     $(e).data('ocspu', this._spu.ocspuList[idx]);
@@ -190,7 +177,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     console.log('hotspot updated');
                 }.bind(this));
 
-            },
+            }
         });
         return JitPreview;
     });
