@@ -162,7 +162,10 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
-                                        $(this).find("option:not(:selected)").data('layer').hide();
+                                        $("option:not(:selected)").each(function() {
+                                            $(this).data("layer").hide();
+                                        });
+
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
                                         dispatcher.trigger('design-region-selected', designRegion, aspect.size);
