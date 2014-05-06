@@ -36,8 +36,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     } else {
                         obj._timer = setTimeout(function () {
                             var layer = obj.getLayer();
-                            obj.destroy();
-                            layer.draw();
+                            layer.destroy();
+                            this._stage.draw();
                         }, period);
                     }
                 };
@@ -52,7 +52,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 });
                 var data = [];
                 ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                    data.push.apply(data, edges[position]);
+                    edges[position].forEach(function (point) {
+                        data.push(point[0]);
+                        data.push(point[1]);
+                    });
                 });
                 var designRegionHex = new Kinetic.Line({
                     points: data,
@@ -61,8 +64,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     name: 'highlight-frame',
                 });
 
-                jitPreview._currentLayer.add(designRegionHex);
-                jitPreview._stage.draw();
+                // 一定要创建一个新的layer，否则会连预览图像整个清除掉
+                var layer = new Kinetic.Layer();
+                layer.add(designRegionHex);
+                jitPreview._stage.add(layer);
                 
 
                 var period = 2000;
@@ -78,6 +83,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
+                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
                     ocspu.aspectList.forEach(function (aspect) {
                         $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s"/></div>', aspect.picUrl, aspect.name, aspect.name)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                     }.bind(this));
@@ -93,8 +99,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
-                    this.$('.hotspot img').attr('src', aspect.picUrl).load(
-                        function (jitPreview) {
+                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
+                    // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
+                    this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
+                        function (jitPreview, aspect) {
                             return function () {
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
@@ -110,6 +118,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 aspect.designRegionList.forEach(function (designRegion) {
                                     if (!designRegion.previewEdges) {
+                                        console.log('calculate preview edges');
                                         designRegion.previewEdges = jitPreview._getPreviewEdges(
                                             designRegion.edges, 
                                             {
@@ -117,13 +126,13 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                                 y: jitPreview._stage.height() / aspect.size[1],
                                             });
                                     }
-                                    if (!designRegion.edgeSet) {
-                                        designRegion.edgeSet = jitPreview._getEdgeSet(designRegion.previewEdges);
+                                    if (!designRegion.bounds) {
+                                        designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
                                     }
                                 });
                                 jitPreview.$('select[name="current-design-region"]').change();
                             }
-                        }(this));
+                        }(this, aspect));
                     this._currentAspectName = aspect.name;
 
                     var select = this.$('select[name="current-design-region"]');
@@ -161,11 +170,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
-
                                         jitPreview._currentDesignRegion = designRegion;
-                                        dispatcher.trigger('design-region-selected', designRegion);
-
                                         jitPreview._designRegionAnimate(designRegion.previewEdges);
+                                        dispatcher.trigger('design-region-selected', designRegion);
                                         break;
                                     }
                                 }
@@ -193,57 +200,46 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0, 
                         playGroundLayer.width(), playGroundLayer.height()).data;
-
                     if (!this._currentDesignRegion.controlPointsMap) {
-                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.edges, playGroundLayer.size(), [4, 4]); 
+                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(), [4, 4]); 
                     }
 
-                    for (var i = 0; i < this._currentLayer.width(); ++i) {
-                        var met_edge = 0;
-                        for (var j = 0; j < this._currentLayer.height(); ++j) {
-                            if (this._currentDesignRegion.edgeSet.contains([i, j])) {
-                                met_edge += 1;
-                                var pos = (i + j * width) * 4;
-                                hotspotImageData.data[pos] = 255;
-                                hotspotImageData.data[pos + 1] = 0;
-                                hotspotImageData.data[pos + 2] = 0;
-                                hotspotImageData.data[pos + 3] = 255;
-                            } else {
-                                if (met_edge == 1) {
-                                    origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
-                                    var pos = (i + j * width) * 4;
-                                    var origPos = (origPoint[0] + (origPoint[1] * width))* 4;
-                                    hotspotImageData.data[pos] = srcImageData[origPos];
-                                    hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
-                                    hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
-                                    hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
-                                } else if (met_edge == 2) {
-                                    break; 
-                                }
+                    console.log(playGroundLayer.size());
+                    console.log(this._currentLayer.size());
+                    console.log(this._currentDesignRegion.controlPointsMap);
+                    var targetWidth = this._currentLayer.width();
+                    var targetHeight = this._currentLayer.height();
+                    var srcWidth = playGroundLayer.width();
+                    var srcHeight = playGroundLayer.height();
+                    for (var i = 0; i < 300; ++i) {
+                        for (var j = 0; j < targetHeight; ++j) {
+                            if (this._within(i, j)) {
+                                var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
+                                var pos = (i + j * targetWidth) * 4;
+                                origPos = (origPoint[0] + (origPoint[1] * srcWidth))* 4;
+                                hotspotImageData.data[pos] = srcImageData[origPos];
+                                hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
+                                hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
+                                hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
                             }
                         }
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
-                    var rect = new Kinetic.Rect({
-                        x: 0,
-                        y: 0,
-                        stroke: 'red',
-                        strokeWidth: 1,
-                        width: 800,
-                        height: 90,
-                        dash: [5, 5],
-                        name: 'rect',
-                    });
-                    this._currentLayer.add(rect);
-                    this._stage.draw();
                 }.bind(this));
             },
 
             _getPreviewEdges: function (edges, ratio) {
                 var ret = {};
+                // 这里必须要去重，否则边界计算错误
+                var set = new buckets.Set();
                 ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                    ret[position] = edges[position].map(function (point) {
-                        return [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
+                    ret[position] = [];
+                    edges[position].forEach(function (point) {
+                        var p = [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
+                        if (!set.contains(p)) {
+                            set.add(p);
+                            ret[position].push(p);
+                        }
                     });
                 });
                 return ret;
@@ -264,6 +260,60 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     edgeSet.add(p);
                 });
                 return edgeSet;
+            },
+
+            _getBounds: function (edges) {
+                var ret = {
+                    leftRight: {},
+                    topBottom: {},
+                };
+                edges['bottom'].forEach(function (point) {
+                    ret.topBottom[point[0]] = {
+                        bottom: point[1],
+                        top: Number.MIN_VALUE,
+                    };
+                });
+                edges['top'].forEach(function (point) {
+                    if (!!ret.topBottom[point[0]]) {
+                        ret.topBottom[point[0]].top = point[1];
+                    } else {
+                        ret.topBottom[point[0]] = {
+                            bottom: Number.MAX_VALUE,
+                            top: point[1],
+                        }
+                    }
+                });
+                edges['left'].forEach(function (point) {
+                    ret.leftRight[point[1]] = {
+                        left: point[0],
+                        right: Number.MIN_VALUE,
+                    };
+                });
+                edges['right'].forEach(function (point) {
+                    if (!!ret.leftRight[point[1]]) {
+                        ret.leftRight[point[1]].right = point[0];
+                    } else {
+                        ret.leftRight[point[1]] = {
+                            left: Number.MAX_VALUE,
+                            right: point[0],
+                        }
+                    }
+                });
+                return ret;
+            },
+
+            _within: function(x, y) {
+                var test = 0;
+                var leftRight = this._currentDesignRegion.bounds.leftRight[y];
+                var topBottom = this._currentDesignRegion.bounds.topBottom[x];
+                if (!(leftRight && topBottom)) {
+                    return false;
+                }
+                test += (x >= leftRight.left);
+                test += (x <= leftRight.right);
+                test += (y >= topBottom.bottom);
+                test += (y <= topBottom.top);
+                return test >= 3;
             },
         });
 

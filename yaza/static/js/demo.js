@@ -168,9 +168,9 @@ $(function () {
                     hotspotImageData.data[pos + 3] = 255;
                 } else {
                     if (met_edge == 1) {
-                        origPoint = mvc([i, j], control_points_pairs);
+                        var origPoint = mvc([i, j], control_points_pairs);
                         var pos = (i + j * width) * 4;
-                        var origPos = (origPoint[0] + (origPoint[1] * width))* 4;
+                        origPos = (origPoint[0] + (origPoint[1] * width))* 4;
                         hotspotImageData.data[pos] = srcImageData[origPos];
                         hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
                         hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
