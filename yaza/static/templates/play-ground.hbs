@@ -1,63 +1,65 @@
-<div class="col-sm-5">
-  <div class="touch-screen">
-    <div class="editable-region"></div>
-  </div>
-  <div class="dashboard">
-    <div class="panel panel-default">
-      <div class="panel-body bg-info">
-        <div class="btn-group">
-          <button class="btn btn-success add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
-            <i class="fa fa-plus"></i>
-            增加图片
-          </button>
-        </div>
+<div class="touch-screen" style="position: relative">
+  <button class="btn btn-xs btn-save btn-primary">
+    <i class="fa fa-save fa"></i>
+    <a href=""></a>
+  </button>
+  <div class="editable-region"></div>
+</div>
+<div class="dashboard">
+  <div class="panel panel-default">
+    <div class="panel-body bg-info">
+      <div class="btn-group">
+        <button class="btn btn-success add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+          <i class="fa fa-plus"></i>
+          增加图片
+        </button>
       </div>
     </div>
-    <div class="modal fade add-img-modal">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-body">
-            <ul class="nav nav-tabs">
-              <li><a data-toggle="tab" href="#builtin-pics">默认图片</a></li>
-              <li><a href="#customer-pics" data-toggle="tab">自定义图片</a></li>
-            </ul>
-            <div class="tab-content">
-              <div class="tab-pane fade" id="builtin-pics">
-                <ul class="thumbnails gallery image_picker_selector picker">
-                  {{#each design_image_list}}
-                  <li>
-                    <div class="thumbnail">
-                      <img class="image_picker_image" src="{{ this.pic_url }}" alt="{{ this.title }}" data-title="{{this.title}}"/>
-                    </div>
-                  </li>
-                  {{/each}}
-                </ul>
-              </div>
-              <div class="tab-pane fade" id="customer-pics">
+  </div>
+  <div class="modal fade add-img-modal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-body">
+          <ul class="nav nav-tabs">
+            <li><a data-toggle="tab" href="#builtin-pics">默认图片</a></li>
+            <li><a href="#customer-pics" data-toggle="tab">自定义图片</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane fade" id="builtin-pics">
+              <ul class="thumbnails gallery image_picker_selector picker">
+                {{#each design_image_list}}
+                <li>
+                  <div class="thumbnail">
+                    <img class="image_picker_image" src="{{ this.pic_url }}" alt="{{ this.title }}" data-title="{{this.title}}"/>
+                  </div>
+                </li>
+                {{/each}}
+              </ul>
+            </div>
+            <div class="tab-pane fade" id="customer-pics">
 
-              </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <form class='upload-img-form' method="post" action="/image/upload" enctype="multipart/form-data">
-              <span class="btn btn-success fileinput-button">
-                <i class="glyphicon glyphicon-plus"></i>
-                <span>上传新图片</span>
-                <input type="file" name="files[]">
-              </span>
-
-              <div class='uploading-progress'>
-                <!-- The file uploads will be shown here -->
-              </div>
-            </form>
-            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-            <button type="button" class="btn-ok btn btn-primary" data-dismiss="modal">确认</button>
-          </div>
         </div>
-        <!-- /.modal-content -->
+        <div class="modal-footer">
+          <form class='upload-img-form' method="post" action="/image/upload" enctype="multipart/form-data">
+            <span class="btn btn-success fileinput-button">
+              <i class="glyphicon glyphicon-plus"></i>
+              <span>上传新图片</span>
+              <input type="file" name="files[]">
+            </span>
+
+            <div class='uploading-progress'>
+              <!-- The file uploads will be shown here -->
+            </div>
+          </form>
+          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+          <button type="button" class="btn-ok btn btn-primary" data-dismiss="modal">确认</button>
+        </div>
       </div>
-      <!-- /.modal-dialog -->
+      <!-- /.modal-content -->
     </div>
-    <!-- /.modal -->
+    <!-- /.modal-dialog -->
   </div>
+  <!-- /.modal -->
 </div>

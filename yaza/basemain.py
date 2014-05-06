@@ -160,3 +160,7 @@ if not app.debug:
 from yaza.utils import assert_dir
 
 assert_dir(app.config['UPLOAD_FOLDER'])
+
+if app.debug:
+    from flask.ext.debugtoolbar import DebugToolbarExtension
+    DebugToolbarExtension(app)
