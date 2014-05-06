@@ -290,6 +290,8 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
+                    // 注意，group本身没有大小，位置也是固定的, 能拖动的是
+                    // group里面的元素
                     var group = new Kinetic.Group({
                         x: (er.width() - width) / 2,
                         y: (er.height() - height) /2,
@@ -302,8 +304,11 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     group.on('dragend', function (playGround) {
                         return function() {
                             this.moveToTop();
-                            image.x(this.x());
-                            image.y(this.y());
+                            var rect = this.find('.rect')[0];
+                            image.position({
+                                x: this.position().x + rect.position().x,
+                                y: this.position().y + rect.position().y,
+                            });
                             playGround._imageLayer.draw();
                             dispatcher.trigger('update-hotspot', playGround._imageLayer); 
                         }
@@ -358,11 +363,15 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     group.setDraggable(false);
                     this.moveToTop();
                 });
-                anchor.on('dragend', function() {
+                anchor.on('dragend', _.bind(function() {
                     group.setDraggable(true);
-                    layer.draw();
+                    var rect = group.find('.rect')[0];
+                    var image = this._imageLayer.find('.' + group.name())[0];
+                    image.position(rect.position());
+                    image.size(rect.size());
+                    this._imageLayer.draw();
                     dispatcher.trigger('update-hotspot', layer); 
-                });
+                }, this));
                 // add hover styling
                 anchor.on('mouseover', function() {
                     var layer = this.getLayer();
@@ -412,16 +421,11 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 }
 
                 var rect = group.find('.rect')[0];
-                var image = this._imageLayer.find('.' + group.name())[0];
-                image.setPosition(topLeft.getPosition());
-                rect.setPosition(topLeft.getPosition());
+                rect.position(topLeft.position());
 
                 var width = topRight.x() - topLeft.x();
                 var height = bottomLeft.y() - topLeft.y();
-                if(width && height) {
-                    image.setSize({width:width, height: height});
-                    rect.setSize({width:width, height: height});
-                }
+                rect.size({width:width, height: height});
             }
         });
         return PlayGround;
