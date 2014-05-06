@@ -16,12 +16,6 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
             initialize: function (options) {
                 this._spu = options.spu;
-
-                var jitPreview = this;
-                dispatcher.on('design-region-selected', function (designRegion, aspectSize) {
-                    var data = jitPreview._calcCurrentPoints(designRegion, aspectSize);
-                    jitPreview._designRegionAnimate(data);
-                });
             },
 
             _calcCurrentPoints: function (designRegion, originalSize) {
@@ -71,7 +65,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                 var designRegionHex = new Kinetic.Line({
                     points: data,
                     stroke: 'red',
-                    strokeWidth: 3
+                    strokeWidth: 1
                 });
 
                 jitPreview._currentLayer.add(designRegionHex);
@@ -154,7 +148,9 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
-                                        dispatcher.trigger('design-region-selected', designRegion, aspect.size);
+                                        dispatcher.trigger('design-region-selected', designRegion);
+
+                                        jitPreview._designRegionAnimate(jitPreview._calcCurrentPoints(designRegion, aspect.size));
                                         break;
                                     }
                                 }
