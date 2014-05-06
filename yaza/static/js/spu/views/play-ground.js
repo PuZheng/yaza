@@ -87,7 +87,18 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         var ratio = designRegion.size[0] / imageLayer.width(); 
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
-                                var im = this._draw.image(node.image().src, node.width() * ratio, node.height() * ratio).move(node.x() * ratio, node.y() * ratio);
+                                var im = this._draw.image(
+                                    // 注意，必须保证获取整个image
+                                    node.toDataURL({
+                                        x: node.x(), 
+                                        y: node.y(), 
+                                        width: node.width(), 
+                                        height: node.height(),
+                                        quality: 0.5, // 不能用来直接打印生产，不用高清
+                                    }), 
+                                    node.width() * ratio, 
+                                    node.height() * ratio)
+                                    .move(node.x() * ratio, node.y() * ratio);
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this) 
@@ -128,8 +139,6 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         }
                         this._stage.width(er.width());
                         this._stage.height(er.height());
-                        //this._draw.size(designRegion.size[0] * 100, designRegion.size[1] * 100);
-                        //this._draw.size(er.width(), er.height());
                         this._currentDesignRegion = designRegion;
                         var cache = this._designRegionCache[designRegion.name];
                         !!this._imageLayer && this._imageLayer.remove();
@@ -150,6 +159,8 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         }
                         this._imageLayer.width(this._stage.width());
                         this._imageLayer.height(this._stage.height());
+                        this._controlLayer.width(this._stage.width());
+                        this._controlLayer.height(this._stage.height());
                         this._stage.add(this._imageLayer);
                         this._stage.add(this._controlLayer);
                         this._stage.draw();
@@ -401,15 +412,15 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 }
 
                 var rect = group.find('.rect')[0];
-                rect.width(topRight.x() - topLeft.x());
-                rect.height(bottomRight.y() - topRight.y());
                 var image = this._imageLayer.find('.' + group.name())[0];
                 image.setPosition(topLeft.getPosition());
+                rect.setPosition(topLeft.getPosition());
 
                 var width = topRight.x() - topLeft.x();
                 var height = bottomLeft.y() - topLeft.y();
                 if(width && height) {
                     image.setSize({width:width, height: height});
+                    rect.setSize({width:width, height: height});
                 }
             }
         });
