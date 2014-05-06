@@ -165,7 +165,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         this._stage.add(this._controlLayer);
                         this._stage.draw();
                     }
-                    dispatcher.trigger('update-spot', this._imageLayer);
+                    dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
 
             },

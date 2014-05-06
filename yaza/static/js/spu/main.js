@@ -13,6 +13,7 @@ require.config({
         backbone: 'components/backbone/backbone',
         bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
         handlebars: 'components/handlebars/handlebars.amd.min',
+        buckets: 'components/buckets/buckets',
         'underscore.string': 'components/underscore.string/dist/underscore.string.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.ui.widget': 'components/jquery-ui/ui/jquery.ui.widget',
@@ -57,6 +58,9 @@ require.config({
         },
         'svg.export': {
             deps: ['svg'],
+        },
+        'buckets': {
+            exports: 'buckets',
         },
     }
 });
