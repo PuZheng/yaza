@@ -155,7 +155,7 @@
 
     ul.thumbnails.image_picker_selector li .thumbnail {
         -moz-user-select: none;
-        border: 1px solid #DDDDDD;
+        border: 2px solid #DDDDDD;
         padding: 6px;
         display: table-cell;
         vertical-align: middle;
