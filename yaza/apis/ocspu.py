@@ -29,11 +29,14 @@ class OCSPUWrapper(ModelWrapper):
 
 
 class AspectWrapper(ModelWrapper):
+    @cached_property
+    def pic_rel_path(self):
+        return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
+
     @property
     def pic_url(self):
-        if self.pic_path:
-            if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)):
-                return url_for("image.serve", filename=self.pic_path)
+        if self.pic_path and os.path.exists(self.pic_rel_path):
+            return url_for("image.serve", filename=self.pic_path)
 
         return ""
 
@@ -43,8 +46,19 @@ class AspectWrapper(ModelWrapper):
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'designRegionList' if camel_case else 'design_region_list':
                 [dr.as_dict(camel_case) for dr in self.design_region_list],
-            'name': self.name
+            'name': self.name,
+            'size': self.size,
         }
+
+    @cached_property
+    def size(self):
+        if self.pic_path and os.path.exists(self.pic_rel_path):
+            from PIL import Image
+
+            im = Image.open(self.pic_rel_path)
+            return im.size
+
+        return 0, 0
 
     @property
     def spu(self):
@@ -58,14 +72,10 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)):
-                return url_for("image.serve", filename=self.pic_path)
+        if self.pic_path and os.path.exists(self.pic_rel_path):
+            return url_for("image.serve", filename=self.pic_path)
         return ""
 
-    @property
-    def ocspu_dir(self):
-        return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(self.spu.id), str(self.ocspu.id))
 
     @property
     def spu(self):
@@ -77,34 +87,31 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def serialized_edge_file(self):
-        return os.path.join(self.ocspu_dir, self.pic_path).replace(os.path.splitext(self.pic_path)[-1],
-                                                                   "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+        return self.pic_rel_path.replace(
+            os.path.splitext(self.pic_path)[-1], "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
 
     @property
     def serialized_control_point_file(self):
-        return os.path.join(self.ocspu_dir, self.pic_path).replace(os.path.splitext(self.pic_path)[-1],
-                                                                   "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
+        return self.pic_rel_path.replace(
+            os.path.splitext(self.pic_path)[-1], "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
 
-    def read_file(self, file_name):
-        result = ""
-        if os.path.exists(file_name):
-            with open(file_name) as _file:
-                for line in _file:
-                    result += line
-        return result
+    @cached_property
+    def pic_rel_path(self):
+        return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
 
     @cached_property
     def edges(self):
-        return json.loads(self.read_file(self.serialized_edge_file))
+        return json.load(file(self.serialized_edge_file))
 
     @cached_property
     def control_points(self):
-        return json.loads(self.read_file(self.serialized_control_point_file))
+        return json.load(file(self.serialized_control_point_file))
 
     def as_dict(self, camel_case):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'edges': self.edges,
             'size': [1754, 2480],
             'name': self.name,
         }

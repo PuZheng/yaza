@@ -6,8 +6,6 @@ import zipfile
 from flask import json
 from PIL import Image
 
-from yaza.apis.ocspu import DesignRegionWrapper
-
 
 ARCHIVES = ('zip', )
 
@@ -41,47 +39,57 @@ def calc_control_points(edges, size, cp_num):
     step1 = float(len(edges['top'])) / (cp_num[0] - 1)
     step2 = float(width) / (cp_num[0] - 1)
     # anchor the top right corner
-    cp_map['top'][edges['top'][-1]] = (width - 1, height - 1)
+    top = list(reversed(edges['top']))
+    cp_map['top'][top[-1]] = (width - 1, height - 1)
     # note! we omit the top left corner
     for i in xrange(cp_num[0] - 2, 0, -1):
-        p = edges['top'][int(round(i * step1))]
+        p = top[int(round(i * step1))]
         cp_map['top'][p] = (int(round(i * step2)), height - 1)
 
     # left
     step1 = float(len(edges['left'])) / (cp_num[1] - 1)
     step2 = float(height) / (cp_num[1] - 1)
+    left = list(reversed(edges['left']))
     # anchor the top left corner
-    cp_map['left'][edges['left'][-1]] = (0, height - 1)
+    cp_map['left'][left[-1]] = (0, height - 1)
     # note! we omit the left bottom corner
     for i in xrange(cp_num[1] - 2, 0, -1):
-        p = edges['left'][int(round(i * step1))]
+        p = left[int(round(i * step1))]
         cp_map['left'][p] = (0, int(round(i * step2)))
 
     # bottom
     step1 = float(len(edges['bottom'])) / (cp_num[0] - 1)
     step2 = float(width) / (cp_num[0] - 1)
+    bottom = edges['bottom']
     # anchor the left bottom corner
-    cp_map['bottom'][edges['bottom'][0]] = (0, 0)
+    cp_map['bottom'][bottom[0]] = (0, 0)
     # note! we omit the bottom right corner
     for i in xrange(1, cp_num[0] - 1):
-        p = edges['bottom'][int(round(i * step1))]
+        p = bottom[int(round(i * step1))]
         cp_map['bottom'][p] = (int(round(i * step2)), 0)
 
     # right
     step1 = float(len(edges['right'])) / (cp_num[1] - 1)
     step2 = float(height) / (cp_num[1] - 1)
+    right = edges['right']
     # we anchor the bottom right corner
-    cp_map['right'][edges['right'][0]] = (width - 1, 0)
+    cp_map['right'][right[0]] = (width - 1, 0)
     # note! we omit the top left corner
     for i in xrange(1, cp_num[1] - 1):
-        p = edges['right'][int(round(i * step1))]
+        p = right[int(round(i * step1))]
         cp_map['right'][p] = (width - 1, int(round(i * step2)))
     return cp_map
 
 
 def detect_edges(im):
     '''
-    dectect the edges of an image
+    Warning !
+        in order: top left bottom right
+
+    dectect the edges of an image, in COUNTER-CLOCKWISE, namely, from top to
+    left, to bottom, to right, and in 'top' edge, x from high to low;
+    in 'left' edge, y from high to low, in 'bottom' edge, x from low to high;
+    in 'right' edge, y from low to high
     :param im: an image
     :type im: PIL.Image.Image
     '''
@@ -96,7 +104,7 @@ def detect_edges(im):
     lt_met = False  # left top corner
     rt_met = False
 
-    for i in xrange(im.size[0]):
+    for i in xrange(im.size[0] - 1, -1, -1):
         for j in xrange(im.size[1] - 1, -1, -1):
             pixel = pa[(i, j)]
             if pixel[3] != 0:
@@ -111,6 +119,25 @@ def detect_edges(im):
                         edges['top'].append((i, j))
                 break
         if rt_met:
+            break
+
+    lb_met = False
+    lt_met = False
+    for i in xrange(im.size[1] - 1, -1, -1):
+        for j in xrange(im.size[0]):
+            pixel = pa[(j, i)]
+            if pixel[3] != 0:
+                if pixel[0] == 255:
+                    edges['left'].append((j, i))
+                    if not lb_met:
+                        lb_met = True
+                    else:
+                        lt_met = True
+                else:
+                    if lb_met:
+                        edges['left'].append((j, i))
+                break
+        if lt_met:
             break
 
     lb_met = False
@@ -132,25 +159,6 @@ def detect_edges(im):
         if rb_met:
             break
 
-    lb_met = False
-    lt_met = False
-    for i in xrange(im.size[1]):
-        for j in xrange(im.size[0]):
-            pixel = pa[(j, i)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['left'].append((j, i))
-                    if not lb_met:
-                        lb_met = True
-                    else:
-                        lt_met = True
-                else:
-                    if lb_met:
-                        edges['left'].append((j, i))
-                break
-        if lt_met:
-            break
-
     rb_met = False
     rt_met = False
     for i in xrange(im.size[1]):
@@ -169,15 +177,17 @@ def detect_edges(im):
                 break
         if rt_met:
             break
+
     return edges
 
 
 def calc_design_region_image(design_region_path):
+    from yaza.apis.ocspu import DesignRegionWrapper
+
     im = Image.open(design_region_path)
     edges = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
-    edge_filename = design_region_path.replace(img_extension,
-                                               "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+    edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
     serialize(edges, edge_filename)
     control_point_filename = design_region_path.replace(img_extension,
                                                         "." + DesignRegionWrapper

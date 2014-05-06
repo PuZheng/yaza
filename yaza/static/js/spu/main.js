@@ -26,6 +26,7 @@ require.config({
         'views/app-view': 'js/spu/views/app-view',
         'views/play-ground': 'js/spu/views/play-ground',
         'views/jit-preview': 'js/spu/views/jit-preview',
+        'color-tools':'js/color-tools'
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -46,6 +47,9 @@ require.config({
         'select2': {
             deps: ['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
         },
+        'color-tools':{
+            deps:['underscore', 'jquery']
+        }
     }
 });
 

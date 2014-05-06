@@ -1,5 +1,6 @@
-define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'underscore.string'],
+define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
     function (_, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+
         _.mixin(_.str.exports());
         Handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -15,6 +16,64 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
 
             initialize: function (options) {
                 this._spu = options.spu;
+            },
+
+            _calcCurrentPoints: function (designRegion, originalSize) {
+                var positions = ['top', 'left', 'bottom', 'right'];
+                var X = 0;
+                var Y = 1;
+                var currentSize = [this.$('.hotspot img').width(), this.$('.hotspot img').height()];
+                var result = [];
+                for (idx in positions) {
+                    var val = designRegion.edges[positions[idx]];
+                    _.each(val, function (v) {
+                        result.push(v[X] * currentSize[X] / originalSize[X]);
+                        result.push(v[Y] * currentSize[Y] / originalSize[Y]);
+                    });
+                }
+                return result;
+            },
+
+            _colorTrans: function (obj, period) {
+                obj._colors = ColorGrads(['red', "#FFF"], 20);
+
+                obj._index = 0;
+                obj._set = function () {
+                    var color = obj._colors[Math.min(Math.max(0, obj._index), obj._colors.length - 1)];
+                    obj.stroke("rgb(" + color.join(",") + ")");
+                    obj.draw();
+                };
+
+                obj.transIn = function () {
+                    obj._index++;
+                    obj._set();
+                    if (obj._index < obj._colors.length - 1) {
+                        obj._timer = setTimeout(_.bind(obj.transIn, obj), period);
+                    } else {
+                        obj._timer = setTimeout(function () {
+                            var layer = obj.getLayer();
+                            obj.destroy();
+                            layer.draw();
+                        }, period);
+                    }
+                };
+            },
+
+            _designRegionAnimate: function (data) {
+                var jitPreview = this;
+                jitPreview._currentLayer.removeChildren();
+                var designRegionHex = new Kinetic.Line({
+                    points: data,
+                    stroke: 'red',
+                    strokeWidth: 1
+                });
+
+                jitPreview._currentLayer.add(designRegionHex);
+
+                var period = 2000;
+
+                jitPreview._colorTrans(designRegionHex, period / 100);
+                designRegionHex.transIn();
             },
 
             events: {
@@ -40,16 +99,16 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
                     this.$('.hotspot img').attr('src', aspect.picUrl).load(
-                            function (playGround) {
-                                return function () {
-                                    playGround.$('.design-regions').css({
-                                        width: $(this).width(),
-                                        height: $(this).height(),
-                                    }).offset($(this).offset());
-                                    playGround._stage.width($(this).width()); 
-                                    playGround._stage.height($(this).height()); 
-                                }
-                            }(this));
+                        function (playGround) {
+                            return function () {
+                                playGround.$('.design-regions').css({
+                                    width: $(this).width(),
+                                    height: $(this).height()
+                                }).offset($(this).offset());
+                                playGround._stage.width($(this).width());
+                                playGround._stage.height($(this).height());
+                            }
+                        }(this));
                     this._currentAspectName = aspect.name;
 
                     var select = this.$('select[name="current-design-region"]');
@@ -75,7 +134,7 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                         $(_.sprintf('<option value="%d">%s</option>', designRegion.id,
                             designRegion.name)).data('design-region', designRegion).
                             data('layer', layer).appendTo(select);
-                         
+
                     }.bind(this));
                     $('select[name="current-design-region"]').change(
                         function (designRegionList, jitPreview) {
@@ -83,21 +142,27 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
-                                        dispatcher.trigger('design-region-selected',
-                                            designRegion);
+                                        $("option:not(:selected)").each(function () {
+                                            $(this).data("layer").hide();
+                                        });
+
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
+                                        jitPreview._currentLayer.show();
+                                        dispatcher.trigger('design-region-selected', designRegion);
+
+                                        jitPreview._designRegionAnimate(jitPreview._calcCurrentPoints(designRegion, aspect.size));
                                         break;
                                     }
                                 }
                             }
                         }(aspect.designRegionList, this)).change();
-                },
+                }
             },
 
             render: function () {
                 this.$el.append(this._template({spu: this._spu}));
                 this._stage = new Kinetic.Stage({
-                    container: this.$('.design-regions')[0],
+                    container: this.$('.design-regions')[0]
                 });
                 this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                     $(e).data('ocspu', this._spu.ocspuList[idx]);
@@ -107,7 +172,8 @@ define(['underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/ji
                     // TODO 当design region没有发生变化，不应该生成预览
                     console.log('hotspot updated');
                 }.bind(this));
-            },
+
+            }
         });
         return JitPreview;
     });
