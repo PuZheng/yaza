@@ -46,15 +46,12 @@ require.config({
             deps: ['jquery'],
             exports: '$.fn.tooltip',
         },
-        'select2': {
-            deps: ['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
-        },
         'color-tools':{
             deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css']
-        }
+        },
         'svg': {
             exports: 'SVG',
         },

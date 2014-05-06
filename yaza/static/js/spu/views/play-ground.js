@@ -97,16 +97,16 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         type: 'POST',
                         url: '/image/design-pkg', 
                         data: data,
-                        success: _.bind(function (data) {
+                    }).done(function (data) {
                             var uri = "data:application/svg+xml;base64," + data;
-                            $(evt.currentTarget).removeClass('disabled');
                             // 注意, $.click仅仅是调用handler，并不是真正触发事件，
                             // 必须直接在html element上调用click, 而且注意要
                             // 避免click扩散到父级元素
-                            $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".svg").click(function (evt) {
+                            $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
                                 evt.stopPropagation();
                             })[0].click();
-                        }, this)
+                    }).always(function () {
+                        $(evt.currentTarget).removeClass('disabled');
                     });
                 },
             },
