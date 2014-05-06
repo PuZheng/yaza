@@ -1,7 +1,17 @@
-define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs',
-    'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs',
-    'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap'],
-    function (Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
+    function (SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+
+        function stringToByteArray(str) {
+            var array = new (window.Uint8Array !== void 0 ? Uint8Array : Array)(str.length);
+            var i;
+            var il;
+
+            for (i = 0, il = str.length; i < il; ++i) {
+                array[i] = str.charCodeAt(i) & 0xff;
+            }
+
+            return array;
+        }
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -56,7 +66,49 @@ define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img")
                     this._addImage($img.attr("src"), $img.data('title'));
-                }
+                },
+                'click .touch-screen .btn-save': function (evt) {
+                    this._draw.clear();
+                    if (_.chain(this._designRegionCache).values().all(function (cache) {
+                        return cache.imageLayer.children.length == 0;
+                    }).value()) {
+                        alert('您尚未作出任何定制，请先定制!'); 
+                        return;
+                    }
+                    var nested = null;
+                    var data = {};
+                    for (var name in this._designRegionCache) {
+                        var imageLayer = this._designRegionCache[name].imageLayer;
+                        var offsetY = !!nested? nested.height() + 30: 0;
+                        var designRegion = this._designRegionCache[name].designRegion;
+                        this._draw.clear();
+                        this._draw.size(designRegion.size[0], designRegion.size[1])
+                            .data('name', name);
+                        var ratio = designRegion.size[0] / imageLayer.width(); 
+                        _.each(imageLayer.children, function (node) {
+                            if (node.className === "Image") {
+                                var im = this._draw.image(node.image().src, node.width() * ratio, node.height() * ratio).move(node.x() * ratio, node.y() * ratio);
+                            }
+                            data[designRegion.name] = this._draw.exportSvg({whitespace: true});
+                        }, this) 
+                    }
+                    $(evt.currentTarget).addClass('disabled');
+                    $.ajax({
+                        type: 'POST',
+                        url: '/image/design-pkg', 
+                        data: data,
+                        success: _.bind(function (data) {
+                            var uri = "data:application/svg+xml;base64," + data;
+                            $(evt.currentTarget).removeClass('disabled');
+                            // 注意, $.click仅仅是调用handler，并不是真正触发事件，
+                            // 必须直接在html element上调用click, 而且注意要
+                            // 避免click扩散到父级元素
+                            $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".svg").click(function (evt) {
+                                evt.stopPropagation();
+                            })[0].click();
+                        }, this)
+                    });
+                },
             },
 
             initialize: function (options) {
@@ -76,12 +128,8 @@ define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text
                         }
                         this._stage.width(er.width());
                         this._stage.height(er.height());
-                        if (!!this._currentDesignRegion) {
-                            this._designRegionCache[this._currentDesignRegion.name] = {
-                                imageLayer: this._imageLayer,
-                    controlLayer: this._controlLayer,
-                            };
-                        }
+                        //this._draw.size(designRegion.size[0] * 100, designRegion.size[1] * 100);
+                        //this._draw.size(er.width(), er.height());
                         this._currentDesignRegion = designRegion;
                         var cache = this._designRegionCache[designRegion.name];
                         !!this._imageLayer && this._imageLayer.remove();
@@ -90,10 +138,18 @@ define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text
                             this._controlLayer = cache.controlLayer;
                             this._imageLayer = cache.imageLayer;
                             dispatcher.trigger('update-hotspot', this._imageLayer);
+
                         } else {
                             this._controlLayer = new Kinetic.Layer();
                             this._imageLayer = new Kinetic.Layer();
+                            this._designRegionCache[this._currentDesignRegion.name] = {
+                                imageLayer: this._imageLayer,
+                                controlLayer: this._controlLayer,
+                                designRegion: designRegion,
+                            }
                         }
+                        this._imageLayer.width(this._stage.width());
+                        this._imageLayer.height(this._stage.height());
                         this._stage.add(this._imageLayer);
                         this._stage.add(this._controlLayer);
                         this._stage.draw();
@@ -104,7 +160,7 @@ define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text
             },
 
             render: function () {
-                this.$el.append(this._template({"design_image_list": this._design_image_list}));
+                this.$el.prepend(this._template({"design_image_list": this._design_image_list}));
                 this._stage = new Kinetic.Stage({
                     container: this.$('.editable-region')[0],
                 });
@@ -161,6 +217,7 @@ define(['kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text
                     });
                 });
                 this._renderGallery();
+                this._draw = SVG(this.$('.svg-drawing')[0]);
             },
 
             _renderGallery: function () {

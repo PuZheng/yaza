@@ -17,21 +17,25 @@
       <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
       <input name="design-image-list" type="hidden" data-val="{{ design_image_list }}"/>
       <div class="row">
-        <div class="col-sm-12">
-          <div class="row">
-            <div class="play-ground"></div>
-            <div class="jit-preview"></div>
-          </div>
-          <div class="row">
-            <div class="details">
-              details
+          <div class="col-sm-5">
+            <div class="play-ground">
+              <div class="row" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+                <div class="col-sm-12">
+                  <div class="svg-drawing">
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+          <div class="col-sm-7">
+            <div class="jit-preview"></div>
           </div>
         </div>
         <!--/span-->
       </div>
       <!--/row-->
     </div>
+
 
     <hr/>
     <footer class="footer visible-md visible-lg">

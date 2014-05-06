@@ -20,6 +20,8 @@ require.config({
         'text': 'components/text/text',
         'cookies-js': 'components/cookies-js/src/cookies.min',
         'select2': 'components/select2/select2.min',
+        'svg': 'components/svg.js/dist/svg.min',
+        'svg.export': 'components/svg.export.js/svg.export.min',
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
@@ -53,6 +55,12 @@ require.config({
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css']
         }
+        'svg': {
+            exports: 'SVG',
+        },
+        'svg.export': {
+            deps: ['svg'],
+        },
     }
 });
 

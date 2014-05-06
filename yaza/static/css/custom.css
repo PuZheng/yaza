@@ -74,6 +74,15 @@
         margin-left: auto;
         margin-right: auto;
     }
+    
+    .play-ground .touch-screen button.btn-save {
+       position: absolute !important;
+       right: 0px;
+    } 
+
+    .play-ground .svg-drawing svg {
+        border: 1px dashed #ccc;
+    }
 
     .jit-preview .aspect-selector {
         border: 1px dashed #ccc;

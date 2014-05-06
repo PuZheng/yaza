@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 import sys
+import base64
 
 from flask import request, jsonify, url_for, send_from_directory
 
@@ -43,3 +44,11 @@ def calc_control_points(design_region_id):
 
     design_region = DesignRegion.query.get_or_404(design_region_id)
     return jsonify(wraps(design_region).control_points)
+
+
+@image.route('/design-pkg', methods=['POST'])
+def design_pkg():
+    # 将svg打入包
+    import pudb; pudb.set_trace()
+
+    return base64.b64encode(request.get_data())
