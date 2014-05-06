@@ -49,6 +49,9 @@ require.config({
         },
         'color-tools':{
             deps:['underscore', 'jquery']
+        },
+        'jquery-file-upload': {
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css']
         }
     }
 });

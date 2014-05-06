@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 
+{% block customized_head_block %}
+{% endblock %}
+
 {% block customized_tail_block %}
   {% if config.DEBUG %}
     <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
