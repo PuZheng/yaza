@@ -29,6 +29,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             _colorTrans: function (obj, period) {
+                var jitPreview = this;
+
                 obj._colors = ColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
@@ -47,7 +49,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         obj._timer = setTimeout(function () {
                             var layer = obj.getLayer();
                             layer.destroy();
-                            this._stage.draw();
+                            jitPreview._stage.draw();
                         }, period);
                     }
                 };
