@@ -164,10 +164,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 for (var i = 0; i < designRegionList.length; ++i) {
                                     var designRegion = designRegionList[i];
                                     if (designRegion.id == $(this).val()) {
-                                        //$("option:not(:selected)").each(function () {
-                                            //$(this).data("layer").hide();
-                                        //});
-
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
                                         jitPreview._currentDesignRegion = designRegion;
@@ -211,7 +207,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     var targetHeight = this._currentLayer.height();
                     var srcWidth = playGroundLayer.width();
                     var srcHeight = playGroundLayer.height();
-                    for (var i = 0; i < 300; ++i) {
+                    for (var i = 0; i < targetWidth; ++i) {
                         for (var j = 0; j < targetHeight; ++j) {
                             if (this._within(i, j)) {
                                 var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
@@ -221,7 +217,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
                                 hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
                                 hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
-                            }
+                            } 
                         }
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
