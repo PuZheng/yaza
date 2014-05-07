@@ -1,5 +1,15 @@
 define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
     function (buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                if(pair[0] == variable){return pair[1];}
+            }
+            return(false);
+        }
+        var __debug__ = (getQueryVariable('debug') == '1');
 
         _.mixin(_.str.exports());
         Handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -221,31 +231,33 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             } 
                         }
                     }
-                    var layer = new Kinetic.Layer();
-                    var data = [];
-                    this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
-                        data.push(pair[0][0]);
-                        data.push(pair[0][1]);
-                        var circle = new Kinetic.Circle({
-                            x: pair[0][0],
-                            y: pair[0][1],
-                            stroke: '#666',
-                            fill: '#ddd',
-                            strokeWidth: 2,
-                            radius: 3,
+                    if (__debug__) {
+                        var layer = new Kinetic.Layer();
+                        var data = [];
+                        this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                            data.push(pair[0][0]);
+                            data.push(pair[0][1]);
+                            var circle = new Kinetic.Circle({
+                                x: pair[0][0],
+                                y: pair[0][1],
+                                stroke: '#666',
+                                fill: '#ddd',
+                                strokeWidth: 2,
+                                radius: 3,
+                            });
+                            layer.add(circle);
+                        }.bind(this));
+                        data.push(data[0]);
+                        data.push(data[1]);
+                        var line = new Kinetic.Line({
+                            points: data,
+                            stroke: 'white',
+                            strokeWidth: 1,
                         });
-                        layer.add(circle);
-                    }.bind(this));
-                    data.push(data[0]);
-                    data.push(data[1]);
-                    var line = new Kinetic.Line({
-                        points: data,
-                        stroke: 'white',
-                        strokeWidth: 1,
-                    });
-                    layer.add(line);
-                    this._stage.add(layer);
-                    this._stage.draw();
+                        layer.add(line);
+                        this._stage.add(layer);
+                        this._stage.draw();
+                    }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
                 }.bind(this));
             },
@@ -324,6 +336,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 return ret;
             },
 
+            // 测试一个点是否在边界内
             _within: function(x, y) {
                 var test = 0;
                 var leftRight = this._currentDesignRegion.bounds.leftRight[y];
