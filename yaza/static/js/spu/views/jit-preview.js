@@ -197,7 +197,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0, 
                         playGroundLayer.width(), playGroundLayer.height()).data;
                     if (!this._currentDesignRegion.controlPointsMap) {
-                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(), [4, 4]); 
+                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(), 
+                            [4, 4]); 
                     }
 
                     console.log(playGroundLayer.size());
@@ -220,6 +221,31 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             } 
                         }
                     }
+                    var layer = new Kinetic.Layer();
+                    var data = [];
+                    this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                        data.push(pair[0][0]);
+                        data.push(pair[0][1]);
+                        var circle = new Kinetic.Circle({
+                            x: pair[0][0],
+                            y: pair[0][1],
+                            stroke: '#666',
+                            fill: '#ddd',
+                            strokeWidth: 2,
+                            radius: 3,
+                        });
+                        layer.add(circle);
+                    }.bind(this));
+                    data.push(data[0]);
+                    data.push(data[1]);
+                    var line = new Kinetic.Line({
+                        points: data,
+                        stroke: 'white',
+                        strokeWidth: 1,
+                    });
+                    layer.add(line);
+                    this._stage.add(layer);
+                    this._stage.draw();
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
                 }.bind(this));
             },
@@ -332,12 +358,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
                 cos0 = getCos(point, cp0, cp1);
                 cos1 = getCos(point, cp1, cp2);
-                if (cos1 <= -1 || cos0 <= -1) {
-                    weights.push(0);
-                    continue;
-                }
-                tan0 = Math.sqrt(Math.max(0, 1.0 - cos0) / (1 + cos0));
-                tan1 = Math.sqrt(Math.max(0, 1.0 - cos1) / (1 + cos1));
+                tan0 = Math.sqrt((1.0 - cos0) / (1.0 + cos0));
+                tan1 = Math.sqrt((1.0 - cos1) / (1.0 + cos1));
                 w = (tan0 + tan1) / Math.sqrt(Math.pow(cp1[0] - point[0], 2) + Math.pow(cp1[1] - point[1], 2));
                 weights.push(w);
             }
@@ -349,7 +371,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 x += weights[i] * cpPairs[i][1][0];
                 y += weights[i] * cpPairs[i][1][1];
             }
-            return [Math.round(x / weights_sum), Math.round(y / weights_sum)];
+            return [parseInt(Math.round(x / weights_sum)), 
+                   parseInt(Math.round(y / weights_sum))];
         }
         
         function calcControlPoints(edges, size, cpNum) {
@@ -398,7 +421,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
             // right
             var step1 = edges['right'].length / (cpNum[1] - 1);
-            var steps = height / (cpNum[1] - 1);
+            var step2 = height / (cpNum[1] - 1);
             var right = edges['right'];
             // anchor the bottom right corner
             cpMap.push([right[0], [width - 1, 0]]);
