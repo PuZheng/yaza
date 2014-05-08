@@ -126,7 +126,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 this._design_image_list = options.design_image_list;
 
                 dispatcher.on('design-region-selected', function (designRegion) {
-                    console.log('design region ' + designRegion.name + ' selected'); 
+                    console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
                         var ts = this.$('.touch-screen');
                         var er = this.$('.touch-screen .editable-region');
@@ -146,8 +146,6 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         if (cache) {
                             this._controlLayer = cache.controlLayer;
                             this._imageLayer = cache.imageLayer;
-                            dispatcher.trigger('update-hotspot', this._imageLayer);
-
                         } else {
                             this._controlLayer = new Kinetic.Layer();
                             this._imageLayer = new Kinetic.Layer();
@@ -310,7 +308,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                                 y: this.position().y + rect.position().y,
                             });
                             playGround._imageLayer.draw();
-                            dispatcher.trigger('update-hotspot', playGround._imageLayer); 
+                            dispatcher.trigger('update-hotspot', playGround._imageLayer);
                         }
                     }(this));
                     var rect = new Kinetic.Rect({
@@ -331,8 +329,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     this._addAnchor(group, 0, height, 'bottomLeft');
                     this._controlLayer.draw();
 
-
-                    dispatcher.trigger('update-hotspot', this._imageLayer); 
+                    dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
                 imageObj.src = src;
             },
@@ -370,7 +367,6 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     image.position(rect.position());
                     image.size(rect.size());
                     this._imageLayer.draw();
-                    dispatcher.trigger('update-hotspot', layer); 
                 }, this));
                 // add hover styling
                 anchor.on('mouseover', function() {
