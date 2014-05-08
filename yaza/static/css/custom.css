@@ -132,7 +132,6 @@
 
     .jit-preview .thumbnail img {
         max-height: 96px;
-        max-height: 96px;
     }
 
     .thumbnail.selected {
@@ -176,5 +175,15 @@
         border: 2px solid #0088CC;
     }
 
+    .aspect-selector img {
+        margin: auto;
+        display: block;
+    }
+
+    .aspect-selector .layer {
+        position: absolute;
+        margin: auto;
+        display: block;
+    }
 
 }

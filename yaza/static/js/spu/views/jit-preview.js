@@ -23,7 +23,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             }
         });
 
-
         var JitPreview = Backbone.View.extend({
             _template: Handlebars.default.compile(jitPreviewTemplate),
             _layerCache: {},
@@ -62,7 +61,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             _designRegionAnimate: function (edges) {
                 var jitPreview = this;
                 jitPreview._currentLayer.getChildren(function (node) {
-                    return node.name == 'highlight-frame';
+                    return node.getName() == 'highlight-frame';
                 }).forEach(function (node) {
                     node.remove();
                 });
@@ -83,6 +82,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 jitPreview._designRegionAnimationLayer.add(designRegionHex);
                 jitPreview._designRegionAnimationLayer.show();
 
+
                 var period = 2000;
 
                 jitPreview._colorTrans(designRegionHex, period / 100);
@@ -96,9 +96,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
-                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
+//                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
                     ocspu.aspectList.forEach(function (aspect) {
-                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s"/></div>', aspect.picUrl, aspect.name, aspect.name)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
+                            aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                     }.bind(this));
                     if (!this._currentAspectName) {
                         this.$('.aspect-selector .thumbnail:first-child').click();
@@ -112,12 +113,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
-                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
+//                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
                             return function () {
-                                console.log("load image" + aspect.picUrl);
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
                                     height: $(this).height()
@@ -132,7 +132,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 aspect.designRegionList.forEach(function (designRegion) {
                                     if (!designRegion.previewEdges) {
-                                        console.log('calculate preview edges');
+//                                        console.log('calculate preview edges');
                                         designRegion.previewEdges = jitPreview._getPreviewEdges(
                                             designRegion.edges,
                                             {
@@ -181,6 +181,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
                                         jitPreview._currentDesignRegion = designRegion;
+                                        jitPreview._currentDesignRegion.aspectId = aspect.id;
                                         jitPreview._designRegionAnimate(designRegion.previewEdges);
                                         dispatcher.trigger('design-region-selected', designRegion);
                                         break;
@@ -205,12 +206,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
-
-                    console.log('hotspot updated');
+//                    console.log('hotspot updated');
                     if (playGroundLayer.children.length == 0) {
                         return;
                     }
-
                     var hotspotContext = this._currentLayer.getContext();
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
@@ -220,9 +219,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             [4, 4]);
                     }
 
-                    console.log(playGroundLayer.size());
-                    console.log(this._currentLayer.size());
-                    console.log(this._currentDesignRegion.controlPointsMap);
+//                    console.log(playGroundLayer.size());
+//                    console.log(this._currentLayer.size());
+//                    console.log(this._currentDesignRegion.controlPointsMap);
                     var targetWidth = this._currentLayer.width();
                     var targetHeight = this._currentLayer.height();
                     var srcWidth = playGroundLayer.width();
@@ -268,7 +267,38 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         this._stage.draw();
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
+                    this._updateThumbnail(this._currentDesignRegion.aspectId, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                 }.bind(this));
+            },
+
+
+            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
+                var aspectElement = this.$('[data-aspectId=' + aspectId + "]");
+                var designRegionName = "design-region-" + designRegionId;
+                var stage = aspectElement.data("stage");
+                if (!stage) {
+                    var div = $("<div></div>").addClass("layer");
+                    aspectElement.before(div);
+                    stage = new Kinetic.Stage({
+                        container: div[0],
+                        width: aspectElement.width(),
+                        height: aspectElement.height()
+                    });
+                    aspectElement.data("stage", stage);
+                }
+                stage.getChildren(function (node) {
+                    return node.getName() == designRegionName;
+                }).forEach(function (node) {
+                    node.destroy();
+                });
+                var layer = new Kineticjs.Layer({
+                    name: designRegionName
+                });
+                stage.add(layer);
+                stage.draw();
+                var thumbnailContext = layer.getContext();
+                thumbnailContext.imageSmoothEnabled = false;
+                thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
             },
 
             _getPreviewEdges: function (edges, ratio) {
