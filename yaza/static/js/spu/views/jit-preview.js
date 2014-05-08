@@ -32,6 +32,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             _colorTrans: function (obj, period) {
+                var jitPreview = this;
+
                 obj._colors = ColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
@@ -49,8 +51,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     } else {
                         obj._timer = setTimeout(function () {
                             var layer = obj.getLayer();
-                            layer.destroy();
-                            this._stage.draw();
+                            obj.destroy();
+                            layer.hide();
                         }, period);
                     }
                 };
@@ -77,10 +79,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     name: 'highlight-frame',
                 });
 
-                // 一定要创建一个新的layer，否则会连预览图像整个清除掉
-                var layer = new Kinetic.Layer();
-                layer.add(designRegionHex);
-                jitPreview._stage.add(layer);
+                jitPreview._designRegionAnimationLayer.add(designRegionHex);
+                jitPreview._designRegionAnimationLayer.show();
 
 
                 var period = 2000;
@@ -97,9 +97,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
 //                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
-                    var jitPreview = this;
-                    jitPreview._aspectMap = {};
-
                     ocspu.aspectList.forEach(function (aspect) {
                         $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
                             aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
@@ -175,7 +172,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             data('layer', layer).appendTo(select);
 
                     }.bind(this));
-                    this.$('select[name="current-design-region"]').change(
+                    this.$('select[name="current-design-region"]').off("change").change(
                         function (designRegionList, jitPreview) {
                             return function (evt) {
                                 for (var i = 0; i < designRegionList.length; ++i) {
@@ -200,6 +197,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this._stage = new Kinetic.Stage({
                     container: this.$('.design-regions')[0]
                 });
+                this._designRegionAnimationLayer = new Kinetic.Layer();
+                this._stage.add(this._designRegionAnimationLayer);
+
                 this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                     $(e).data('ocspu', this._spu.ocspuList[idx]);
                 }.bind(this));
