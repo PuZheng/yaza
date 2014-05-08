@@ -59,6 +59,9 @@ require.config({
         'svg.export': {
             deps: ['svg'],
         },
+        'select2':{
+            deps:['jquery', 'css!components/select2/select2.css', 'css!components/select2/select2-bootstrap.css']
+        },
         'buckets': {
             exports: 'buckets',
         },
