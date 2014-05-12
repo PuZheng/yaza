@@ -83,6 +83,9 @@ class DesignRegion(db.Model):
     width = db.Column(db.Float)
     height = db.Column(db.Float)
     part = db.Column(db.String(16))  # 对于同ocspu的不同aspet，如果part相同，则认为design_region是相同区域
+    min_hsv_value = db.Column(db.Integer)
+    max_hsv_value = db.Column(db.Integer)
+    median_hsv_value = db.Column(db.Integer)
 
 
 class SKU(db.Model):

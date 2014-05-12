@@ -9,12 +9,14 @@ import shutil
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
+from PIL import Image
 
 import yaza
 from yaza.basemain import app
 from yaza.models import (User, Group, SPU, OCSPU, Aspect,
                          DesignImage, DesignRegion)
 from yaza.utils import do_commit, assert_dir
+from yaza.tools.utils import calc_design_region_image, calc_hsv_values
 
 
 class InitializeTestDB(Command):
@@ -122,16 +124,18 @@ class InitializeTestDB(Command):
                                      app.config['UPLOAD_FOLDER'])
                 pic_path = os.path.relpath(full_path, start)
 
-                from yaza.tools.utils import calc_design_region_image
                 print "processing image: " + str(full_path)
                 calc_design_region_image(full_path)
-
+                hsv_values = calc_hsv_values(Image.open(full_path))
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        part=design_region_name,
-                                       height=height))
+                                       height=height,
+                                       min_hsv_value=hsv_values['min'],
+                                       max_hsv_value=hsv_values['max'],
+                                       median_hsv_value=hsv_values['median']))
 
     def _create_design_images(self, dir):
         assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],

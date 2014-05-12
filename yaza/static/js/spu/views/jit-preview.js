@@ -113,15 +113,24 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
-//                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
-                            return function () {
+                            return function (evt) {
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
                                     height: $(this).height()
                                 }).offset($(this).offset());
+                                var im = new Kinetic.Image({
+                                    image: evt.target, 
+                                    width: $(this).width(),
+                                    height: $(this).height()
+                                });
+                                jitPreview._backgroundLayer = new Kinetic.Layer();
+                                jitPreview._backgroundLayer.add(im);
+                                //$(this).hide();
+                                jitPreview._stage.add(jitPreview._backgroundLayer);
+                                jitPreview._backgroundLayer.moveToBottom();
                                 jitPreview._stage.width($(this).width());
                                 jitPreview._stage.height($(this).height());
                                 jitPreview._stage.children.forEach(function (node) {
@@ -132,7 +141,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 aspect.designRegionList.forEach(function (designRegion) {
                                     if (!designRegion.previewEdges) {
-//                                        console.log('calculate preview edges');
                                         designRegion.previewEdges = jitPreview._getPreviewEdges(
                                             designRegion.edges,
                                             {
@@ -206,7 +214,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
-//                    console.log('hotspot updated');
                     if (playGroundLayer.children.length == 0) {
                         return;
                     }
@@ -214,28 +221,35 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
                         playGroundLayer.width(), playGroundLayer.height()).data;
+                    var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
                     if (!this._currentDesignRegion.controlPointsMap) {
                         this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
                             [4, 4]);
                     }
 
-//                    console.log(playGroundLayer.size());
-//                    console.log(this._currentLayer.size());
-//                    console.log(this._currentDesignRegion.controlPointsMap);
                     var targetWidth = this._currentLayer.width();
                     var targetHeight = this._currentLayer.height();
                     var srcWidth = playGroundLayer.width();
                     var srcHeight = playGroundLayer.height();
+                    var delta1 = 10;
+                    var delta2 = -5;
+                    var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1, 
+                        this._currentDesignRegion.maxHSVValue);
+                    var test2 = this._currentDesignRegion.medianHSVValue - delta2;
                     for (var i = 0; i < targetWidth; ++i) {
                         for (var j = 0; j < targetHeight; ++j) {
                             if (this._within(i, j)) {
                                 var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
                                 var pos = (i + j * targetWidth) * 4;
                                 origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
-                                hotspotImageData.data[pos] = srcImageData[origPos];
-                                hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
-                                hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
+                                var v = getHSVValue(backgroundImageData, pos, srcImageData, 
+                                        origPos, test1, test2);
+                                        
+                                hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
+                                hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
+                                hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
                                 hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
+
                             }
                         }
                     }
@@ -488,5 +502,16 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             return cpMap;
         }
 
+        function getHSVValue(imageData, pos, srcImageData, srcPos, test1, test2) {
+            // see http://www.cs.rit.edu/~ncs/color/t_convert.html
+            var v = Math.max(srcImageData[srcPos], srcImageData[srcPos + 1], 
+                    srcImageData[srcPos + 2]);
+            // 对亮图,重点展示阴影,而且原色彩越亮,阴影越明显, 对于暗图, 重点展示亮点,
+            // 而且原色彩越暗, 亮点越明显. 但需要注意的是,这样会减少对比度. 所以不能
+            // 做的太过
+            return (v > 127)? (imageData[pos] - test1) * (1 + v / 255): 
+                (imageData[pos] - test2) * (2 - v / 255);
+        }
+        
         return JitPreview;
     });
