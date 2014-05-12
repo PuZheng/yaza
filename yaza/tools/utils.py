@@ -199,6 +199,23 @@ def calc_design_region_image(design_region_path):
                    k, v in dict_.iteritems()}))
 
 
+def calc_hsv_values(im):
+    pa = im.load()
+    hsv_list = []
+    for i in xrange(im.size[0]):
+        for j in xrange(im.size[1]):
+            pixel = pa[(i, j)]
+            if pixel[3] != 0:
+                hsv_list.append(max(pixel[0], pixel[1], pixel[2]))
+
+    hsv_list.sort()
+    return {
+        'min': hsv_list[0],
+        'median': hsv_list[len(hsv_list) / 2],
+        'max': hsv_list[-1]
+    }
+
+
 def _get_rel_path(file_path, relpath_start):
     rel_path = os.path.relpath(file_path, relpath_start)
     return rel_path
@@ -297,11 +314,16 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 pic_path = os.path.relpath(full_path, start_dir)
 
                 print "progressing image: " + full_path
-
                 calc_design_region_image(full_path)
-
-                do_commit(DesignRegion(aspect=aspect, name=design_region_name, pic_path=pic_path, width=width,
-                                       part=design_region_name, height=height))
+                hsv_values = calc_hsv_values(Image.open(full_path))
+                do_commit(DesignRegion(aspect=aspect,
+                                       name=design_region_name,
+                                       pic_path=pic_path,
+                                       width=width,
+                                       height=height,
+                                       min_hsv_value=hsv_values['min'],
+                                       max_hsv_value=hsv_values['max'],
+                                       median_hsv_value=hsv_values['median']))
 
     def _update(spu, **kwargs):
         for key, value in kwargs.iteritems():
