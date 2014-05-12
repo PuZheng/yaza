@@ -3,12 +3,15 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
-            for (var i=0;i<vars.length;i++) {
+            for (var i = 0; i < vars.length; i++) {
                 var pair = vars[i].split("=");
-                if(pair[0] == variable){return pair[1];}
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
             }
             return(false);
         }
+
         var __debug__ = (getQueryVariable('debug') == '1');
 
         _.mixin(_.str.exports());
@@ -29,6 +32,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             _colorTrans: function (obj, period) {
+                var jitPreview = this;
+
                 obj._colors = ColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
@@ -46,8 +51,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     } else {
                         obj._timer = setTimeout(function () {
                             var layer = obj.getLayer();
-                            layer.destroy();
-                            this._stage.draw();
+                            obj.destroy();
+                            layer.hide();
                         }, period);
                     }
                 };
@@ -56,7 +61,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             _designRegionAnimate: function (edges) {
                 var jitPreview = this;
                 jitPreview._currentLayer.getChildren(function (node) {
-                    return node.name == 'highlight-frame';
+                    return node.getName() == 'highlight-frame';
                 }).forEach(function (node) {
                     node.remove();
                 });
@@ -74,11 +79,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     name: 'highlight-frame',
                 });
 
-                // 一定要创建一个新的layer，否则会连预览图像整个清除掉
-                var layer = new Kinetic.Layer();
-                layer.add(designRegionHex);
-                jitPreview._stage.add(layer);
-                
+                jitPreview._designRegionAnimationLayer.add(designRegionHex);
+                jitPreview._designRegionAnimationLayer.show();
+
 
                 var period = 2000;
 
@@ -93,9 +96,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
-                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
+//                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
                     ocspu.aspectList.forEach(function (aspect) {
-                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s"/></div>', aspect.picUrl, aspect.name, aspect.name)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
+                            aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                     }.bind(this));
                     if (!this._currentAspectName) {
                         this.$('.aspect-selector .thumbnail:first-child').click();
@@ -109,7 +113,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
-                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
+//                    console.log('select aspect ' + aspect.id + ' ' + aspect.name);
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
@@ -128,9 +132,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 aspect.designRegionList.forEach(function (designRegion) {
                                     if (!designRegion.previewEdges) {
-                                        console.log('calculate preview edges');
+//                                        console.log('calculate preview edges');
                                         designRegion.previewEdges = jitPreview._getPreviewEdges(
-                                            designRegion.edges, 
+                                            designRegion.edges,
                                             {
                                                 x: jitPreview._stage.width() / aspect.size[0],
                                                 y: jitPreview._stage.height() / aspect.size[1],
@@ -168,7 +172,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             data('layer', layer).appendTo(select);
 
                     }.bind(this));
-                    this.$('select[name="current-design-region"]').change(
+                    this.$('select[name="current-design-region"]').off("change").change(
                         function (designRegionList, jitPreview) {
                             return function (evt) {
                                 for (var i = 0; i < designRegionList.length; ++i) {
@@ -177,6 +181,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         jitPreview._currentLayer = $(this).find("option:selected").data('layer');
                                         jitPreview._currentLayer.show();
                                         jitPreview._currentDesignRegion = designRegion;
+                                        jitPreview._currentDesignRegion.aspectId = aspect.id;
                                         jitPreview._designRegionAnimate(designRegion.previewEdges);
                                         dispatcher.trigger('design-region-selected', designRegion);
                                         break;
@@ -192,28 +197,31 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this._stage = new Kinetic.Stage({
                     container: this.$('.design-regions')[0]
                 });
+                this._designRegionAnimationLayer = new Kinetic.Layer();
+                this._stage.add(this._designRegionAnimationLayer);
+
                 this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                     $(e).data('ocspu', this._spu.ocspuList[idx]);
                 }.bind(this));
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
-                    console.log('hotspot updated');
+//                    console.log('hotspot updated');
                     if (playGroundLayer.children.length == 0) {
                         return;
                     }
                     var hotspotContext = this._currentLayer.getContext();
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
-                    var srcImageData = playGroundLayer.getContext().getImageData(0, 0, 
+                    var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
                         playGroundLayer.width(), playGroundLayer.height()).data;
                     if (!this._currentDesignRegion.controlPointsMap) {
-                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(), 
-                            [4, 4]); 
+                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
+                            [4, 4]);
                     }
 
-                    console.log(playGroundLayer.size());
-                    console.log(this._currentLayer.size());
-                    console.log(this._currentDesignRegion.controlPointsMap);
+//                    console.log(playGroundLayer.size());
+//                    console.log(this._currentLayer.size());
+//                    console.log(this._currentDesignRegion.controlPointsMap);
                     var targetWidth = this._currentLayer.width();
                     var targetHeight = this._currentLayer.height();
                     var srcWidth = playGroundLayer.width();
@@ -223,12 +231,12 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             if (this._within(i, j)) {
                                 var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
                                 var pos = (i + j * targetWidth) * 4;
-                                origPos = (origPoint[0] + (origPoint[1] * srcWidth))* 4;
+                                origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
                                 hotspotImageData.data[pos] = srcImageData[origPos];
                                 hotspotImageData.data[pos + 1] = srcImageData[origPos + 1];
                                 hotspotImageData.data[pos + 2] = srcImageData[origPos + 2];
                                 hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
-                            } 
+                            }
                         }
                     }
                     if (__debug__) {
@@ -259,7 +267,38 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         this._stage.draw();
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
+                    this._updateThumbnail(this._currentDesignRegion.aspectId, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                 }.bind(this));
+            },
+
+
+            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
+                var aspectElement = this.$('[data-aspectId=' + aspectId + "]");
+                var designRegionName = "design-region-" + designRegionId;
+                var stage = aspectElement.data("stage");
+                if (!stage) {
+                    var div = $("<div></div>").addClass("layer");
+                    aspectElement.before(div);
+                    stage = new Kinetic.Stage({
+                        container: div[0],
+                        width: aspectElement.width(),
+                        height: aspectElement.height()
+                    });
+                    aspectElement.data("stage", stage);
+                }
+                stage.getChildren(function (node) {
+                    return node.getName() == designRegionName;
+                }).forEach(function (node) {
+                    node.destroy();
+                });
+                var layer = new Kineticjs.Layer({
+                    name: designRegionName
+                });
+                stage.add(layer);
+                stage.draw();
+                var thumbnailContext = layer.getContext();
+                thumbnailContext.imageSmoothEnabled = false;
+                thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
             },
 
             _getPreviewEdges: function (edges, ratio) {
@@ -337,7 +376,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             // 测试一个点是否在边界内
-            _within: function(x, y) {
+            _within: function (x, y) {
                 var test = 0;
                 var leftRight = this._currentDesignRegion.bounds.leftRight[y];
                 var topBottom = this._currentDesignRegion.bounds.topBottom[x];
@@ -365,9 +404,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             var weights = [];
             var cp0, cp1, cp2, cos0, cos1, tan0, tan1, w;
             for (var i = 0; i < cpPairsLen; ++i) {
-                cp0 = cpPairs[(i-1 + cpPairsLen) % cpPairsLen][0];
+                cp0 = cpPairs[(i - 1 + cpPairsLen) % cpPairsLen][0];
                 cp1 = cpPairs[i][0];
-                cp2 = cpPairs[(i+1) % cpPairsLen][0];
+                cp2 = cpPairs[(i + 1) % cpPairsLen][0];
 
                 cos0 = getCos(point, cp0, cp1);
                 cos1 = getCos(point, cp1, cp2);
@@ -379,17 +418,19 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
             var x = 0.0;
             var y = 0.0;
-            var weights_sum = weights.reduce(function (a, b) { return a + b;}, 0);
+            var weights_sum = weights.reduce(function (a, b) {
+                return a + b;
+            }, 0);
             for (var i = 0; i < cpPairsLen; ++i) {
                 x += weights[i] * cpPairs[i][1][0];
                 y += weights[i] * cpPairs[i][1][1];
             }
-            return [parseInt(Math.round(x / weights_sum)), 
-                   parseInt(Math.round(y / weights_sum))];
+            return [parseInt(Math.round(x / weights_sum)),
+                parseInt(Math.round(y / weights_sum))];
         }
-        
+
         function calcControlPoints(edges, size, cpNum) {
-            var cpMap = [];  
+            var cpMap = [];
             var width = size.width;
             var height = size.height;
             // top
@@ -397,15 +438,15 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             var step2 = width / (cpNum[0] - 1);
             // anchor the top right corner
             var top = _.clone(edges['top']).reverse();
-            cpMap.push([top[top.length -1], [width - 1, height - 1]]);
+            cpMap.push([top[top.length - 1], [width - 1, height - 1]]);
             // note! we omit the top left corner
             for (var i = cpNum[0] - 2; i > 0; --i) {
                 cpMap.push([
-                        top[parseInt(Math.round(i * step1))], 
-                        [parseInt(Math.round(i * step2)), height - 1],
-                        ]);
+                    top[parseInt(Math.round(i * step1))],
+                    [parseInt(Math.round(i * step2)), height - 1],
+                ]);
             }
-            
+
             // left
             var step1 = edges['left'].length / (cpNum[1] - 1);
             var step2 = height / (cpNum[1] - 1);
@@ -414,9 +455,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             cpMap.push([left[left.length - 1], [0, height - 1]]);
             for (var i = cpNum[1] - 2; i > 0; --i) {
                 cpMap.push([
-                        left[parseInt(Math.round(i * step1))],
-                        [0, parseInt(Math.round(i * step2))]
-                        ]);
+                    left[parseInt(Math.round(i * step1))],
+                    [0, parseInt(Math.round(i * step2))]
+                ]);
             }
 
             // bottom
@@ -427,9 +468,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             cpMap.push([bottom[0], [0, 0]]);
             for (var i = 1; i < cpNum[0] - 1; ++i) {
                 cpMap.push([
-                        bottom[parseInt(Math.round(i * step1))],
-                        [parseInt(Math.round(i * step2)), 0],
-                        ]);
+                    bottom[parseInt(Math.round(i * step1))],
+                    [parseInt(Math.round(i * step2)), 0],
+                ]);
             }
 
             // right
@@ -440,9 +481,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             cpMap.push([right[0], [width - 1, 0]]);
             for (var i = 1; i < cpNum[1] - 1; ++i) {
                 cpMap.push([
-                        right[parseInt(Math.round(i * step1))],
-                        [width - 1, parseInt(Math.round(i * step2))],
-                        ]);
+                    right[parseInt(Math.round(i * step1))],
+                    [width - 1, parseInt(Math.round(i * step2))],
+                ]);
             }
             return cpMap;
         }
