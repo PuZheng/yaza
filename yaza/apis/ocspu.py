@@ -21,7 +21,7 @@ class OCSPUWrapper(ModelWrapper):
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list':
                 [aspect.as_dict(camel_case) for aspect in self.aspect_list],
-            'cover': self.cover.as_dict(camel_case) if self.cover else "",
+            'cover': self.cover,
             'color': self.color,
         }
 
