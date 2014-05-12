@@ -68,70 +68,74 @@ class InitializeTestDB(Command):
         if os.path.isdir(design_image_dir):
             self._create_design_images(design_image_dir)
 
-    def _create_spu(self, spu_dir):
-        config = json.load(open(os.path.join(spu_dir, 'config.json')))
-        spu = do_commit(SPU(name=config['name'], cover_name=config['cover']))
-        for ocspu_name in os.listdir(spu_dir):
-            ocspu_dir = os.path.join(spu_dir, ocspu_name)
-            if os.path.isdir(ocspu_dir):
-                self._create_ocspu(ocspu_dir, config, spu)
+    def getValueFromList(self, list_, key, condition):
+        for item in list_:
+            if all(item.get(conditionKey) == conditionVal for conditionKey, conditionVal in
+                   condition.iteritems()):
+                return item.get(key)
+        return None
 
-    def _create_ocspu(self, ocspu_dir, config, spu):
-        color = config['ocspus'][os.path.basename(ocspu_dir)]['color']
-        ocspu = do_commit(OCSPU(spu=spu,
-                                color=color))
+    def _create_ocspu(self, ocspu_dir, cover_file, color, spu, config):
+        start = os.path.join(os.path.split(yaza.__file__)[0], app.config['UPLOAD_FOLDER'])
+        cover_path = os.path.relpath(cover_file, start)
+        ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
         for aspect_name in os.listdir(ocspu_dir):
             aspect_dir = os.path.join(ocspu_dir, aspect_name)
             if os.path.isdir(aspect_dir):
                 self._create_aspect(aspect_dir, config, ocspu)
 
     def _create_aspect(self, aspect_dir, config, ocspu):
+        aspect_configs = config["aspects"]
         for fname in os.listdir(aspect_dir):
             full_path = os.path.join(aspect_dir, fname)
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
-                    start = os.path.join(os.path.split(yaza.__file__)[0],
-                                         app.config['UPLOAD_FOLDER'])
+                    start = os.path.join(os.path.split(yaza.__file__)[0], app.config['UPLOAD_FOLDER'])
                     pic_path = os.path.relpath(full_path, start)
-                    part = 'other'
-                    if config['cover'] == os.path.basename(aspect_dir):
+                    if self.getValueFromList(aspect_configs, "part", {"dir": os.path.basename(aspect_dir)}) == "front":
                         part = 'front'
-                    name = config['aspects'][os.path.basename(aspect_dir)]['name']
-
-                    aspect = do_commit(Aspect(name=name,
-                                              pic_path=pic_path,
-                                              part=part,
-                                              ocspu=ocspu))
-
-        for fname in os.listdir(aspect_dir):
-            full_path = os.path.join(aspect_dir, fname)
-            if os.path.isdir(full_path):
-                self._create_design_region(full_path, config, aspect)
+                    else:
+                        part = "other"
+                    name = self.getValueFromList(aspect_configs, "name", {"dir": os.path.basename(aspect_dir)})
+                    aspect = do_commit(Aspect(name=name, pic_path=pic_path, part=part, ocspu=ocspu))
+                    for fname in os.listdir(aspect_dir):
+                        full_path = os.path.join(aspect_dir, fname)
+                        if os.path.isdir(full_path):
+                            self._create_design_region(full_path, config, aspect)
+                    return
 
     def _create_design_region(self, design_region_dir, config, aspect):
+        design_region_configs = config['designRegions']
         for fname in os.listdir(design_region_dir):
             full_path = os.path.join(design_region_dir, fname)
-            if os.path.isfile(full_path) and \
-                            fname.split('.')[-1].lower() == 'png':
+            if os.path.isfile(full_path) and fname.split('.')[-1].lower() == 'png':
                 design_region_name = fname.rsplit('.')[0]
-                width, height = \
-                    config['designRegions'][design_region_name]['size']
-                design_region_name = \
-                    config['designRegions'][design_region_name]['name']
-                start = os.path.join(os.path.split(yaza.__file__)[0],
-                                     app.config['UPLOAD_FOLDER'])
+
+                width, height = self.getValueFromList(design_region_configs, "size", {"dir": design_region_name})
+                design_region_name = self.getValueFromList(design_region_configs, "name", {"dir": design_region_name})
+                start = os.path.join(os.path.split(yaza.__file__)[0], app.config['UPLOAD_FOLDER'])
                 pic_path = os.path.relpath(full_path, start)
 
                 from yaza.tools.utils import calc_design_region_image
-                print "processing image: " + str(full_path)
+
+                print "progressing image: " + full_path
+
                 calc_design_region_image(full_path)
 
-                do_commit(DesignRegion(aspect=aspect,
-                                       name=design_region_name,
-                                       pic_path=pic_path,
-                                       width=width,
-                                       part=design_region_name,
-                                       height=height))
+                do_commit(DesignRegion(aspect=aspect, name=design_region_name, pic_path=pic_path, width=width,
+                                       part=design_region_name, height=height))
+
+    def _create_spu(self, spu_dir):
+        config = json.load(file(os.path.join(spu_dir, app.config["SPU_CONFIG_FILE"])))
+        spu = do_commit(SPU(name=config['name'], cover_name=config['cover']))
+
+        for ocspu_config in config["ocspus"]:
+            ocspu_dir = os.path.join(spu_dir, ocspu_config["dir"])
+            cover_file = os.path.join(ocspu_dir, ocspu_config["cover"])
+            color = ocspu_config.get("color")
+            if os.path.isdir(ocspu_dir):
+                self._create_ocspu(ocspu_dir, cover_file, color, spu, config)
+
 
     def _create_design_images(self, dir):
         assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],

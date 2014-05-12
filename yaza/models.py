@@ -56,6 +56,7 @@ class OCSPU(db.Model):
     __tablename__ = "TB_OCSPU"
     id = db.Column(db.Integer, primary_key=True)
     color = db.Column(db.String(16))
+    cover_path = db.Column(db.String(64))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
     spu = db.relationship("SPU", backref='ocspu_list')
 

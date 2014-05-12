@@ -11,12 +11,10 @@ from yaza.basemain import app
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
+        if self.cover_path and os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], self.cover_path)):
+            return url_for("image.serve", filename=self.cover_path)
 
-        aspect_list = [aspect for aspect in self.aspect_list if
-                       aspect.part == 'front']
-        if aspect_list:
-            return aspect_list[0]
-        return None
+        return ""
 
     def as_dict(self, camel_case):
         return {
