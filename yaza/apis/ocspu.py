@@ -11,7 +11,7 @@ from yaza.basemain import app
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
-        if self.cover_path and os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], self.cover_path)):
+        if self.cover_path:
             return url_for("image.serve", filename=self.cover_path)
 
         return ""
@@ -33,7 +33,7 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
+        if self.pic_path:
             return url_for("image.serve", filename=self.pic_path)
 
         return ""
@@ -70,7 +70,7 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
+        if self.pic_path:
             return url_for("image.serve", filename=self.pic_path)
         return ""
 
