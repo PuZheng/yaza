@@ -2,7 +2,6 @@
 import os
 import shutil
 
-from flask import json
 from flask.ext.databrowser import ModelView, sa, col_spec
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
@@ -14,7 +13,7 @@ from yaza.basemain import app
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
-from yaza.tools.utils import allowed_file, unzip, extract_images
+from yaza.tools.utils import allowed_file, unzip, extract_images, create_or_update_spu
 
 
 CONTROL_POINTS_NUMBER = (4, 4)
@@ -50,82 +49,16 @@ class SPUAdminModelView(ModelView):
     def on_record_created(self, obj):
         upload_dir = os.path.join(app.config["UPLOAD_FOLDER"])
 
-        def getValueFromList(list_, key, condition):
-            for item in list_:
-                if all(item.get(conditionKey) == conditionVal for conditionKey, conditionVal in
-                       condition.iteritems()):
-                    return item.get(key)
-            return None
-
-        def _create_ocspu(ocspu_dir, cover_file, color, spu, config):
-            cover_path = os.path.relpath(cover_file, upload_dir)
-            ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
-            for aspect_name in os.listdir(ocspu_dir):
-                aspect_dir = os.path.join(ocspu_dir, aspect_name)
-                if os.path.isdir(aspect_dir):
-                    _create_aspect(aspect_dir, config, ocspu)
-
-        def _create_aspect(aspect_dir, config, ocspu):
-            aspect_configs = config["aspects"]
-            for fname in os.listdir(aspect_dir):
-                full_path = os.path.join(aspect_dir, fname)
-                if os.path.isfile(full_path):
-                    if fname.split('.')[-1].lower() == 'png':
-                        pic_path = os.path.relpath(full_path, upload_dir)
-                        if getValueFromList(aspect_configs, "part", {"dir": os.path.basename(aspect_dir)}) == "front":
-                            part = 'front'
-                        else:
-                            part = "other"
-                        name = getValueFromList(aspect_configs, "name", {"dir": os.path.basename(aspect_dir)})
-                        aspect = do_commit(Aspect(name=name, pic_path=pic_path, part=part, ocspu=ocspu))
-                        for fname in os.listdir(aspect_dir):
-                            full_path = os.path.join(aspect_dir, fname)
-                            if os.path.isdir(full_path):
-                                _create_design_region(full_path, config, aspect)
-                        return
-
-        def _create_design_region(design_region_dir, config, aspect):
-            design_region_configs = config['designRegions']
-            for fname in os.listdir(design_region_dir):
-                full_path = os.path.join(design_region_dir, fname)
-                if os.path.isfile(full_path) and fname.split('.')[-1].lower() == 'png':
-                    design_region_name = fname.rsplit('.')[0]
-
-                    width, height = getValueFromList(design_region_configs, "size", {"dir": design_region_name})
-                    design_region_name = getValueFromList(design_region_configs, "name", {"dir": design_region_name})
-                    pic_path = os.path.relpath(full_path, upload_dir)
-
-                    from yaza.tools.utils import calc_design_region_image
-
-                    calc_design_region_image(full_path)
-
-                    do_commit(DesignRegion(aspect=aspect, name=design_region_name, pic_path=pic_path, width=width,
-                                           part=design_region_name, height=height))
-
         spu_dir = os.path.join(self.base_dir, str(obj.id))
         assert_dir(spu_dir)
         unzip(obj.spu_zip, spu_dir)
         try:
-            config = json.load(file(os.path.join(spu_dir, app.config["SPU_CONFIG_FILE"])))
-            for ocspu_config in config["ocspus"]:
-                ocspu_dir = os.path.join(spu_dir, ocspu_config["dir"])
-                cover_file = os.path.join(ocspu_dir, ocspu_config["cover"])
-                color = ocspu_config.get("color")
-                if os.path.isdir(ocspu_dir):
-                    _create_ocspu(ocspu_dir, cover_file, color, obj, config)
+            create_or_update_spu(spu_dir, upload_dir, obj)
         except Exception as e:
             do_commit(obj, "delete")
             raise e
 
-        self._set_attr(obj, ["name", "brief"], config)
-        do_commit(obj)
-
         os.unlink(obj.spu_zip)
-
-    def _set_attr(self, obj, properties, property_dict):
-        for property_ in properties:
-            if property_ in property_dict:
-                setattr(obj, property_, property_dict.get(property_))
 
 
 class OCSPUAdminModelView(ModelView):

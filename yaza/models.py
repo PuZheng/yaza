@@ -71,7 +71,6 @@ class Aspect(db.Model):
                             backref=db.backref("aspect_list",
                                                cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
-    part = db.Column(db.String(16))  # 标识是否正面
 
 
 class DesignRegion(db.Model):

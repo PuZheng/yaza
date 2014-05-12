@@ -248,3 +248,78 @@ def serialize(data, filename, encode_func=None):
         data = json.dumps(data)
     with open(filename, "w") as _file:
         _file.write(data)
+
+
+def create_or_update_spu(spu_dir, start_dir, spu=None):
+    from yaza.basemain import app
+    from yaza.utils import do_commit
+    from yaza.models import OCSPU, Aspect, DesignRegion, SPU
+
+    def _get_value_from_list(list_, key, condition):
+        for item in list_:
+            if all(item.get(conditionKey) == conditionVal for conditionKey, conditionVal in
+                   condition.iteritems()):
+                return item.get(key)
+        return None
+
+    def _create_ocspu(ocspu_dir, cover_file, color, spu, config):
+        cover_path = os.path.relpath(cover_file, start_dir)
+        ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
+        for aspect_name in os.listdir(ocspu_dir):
+            aspect_dir = os.path.join(ocspu_dir, aspect_name)
+            if os.path.isdir(aspect_dir):
+                _create_aspect(aspect_dir, config, ocspu)
+
+    def _create_aspect(aspect_dir, config, ocspu):
+        aspect_configs = config["aspects"]
+        for fname in os.listdir(aspect_dir):
+            full_path = os.path.join(aspect_dir, fname)
+            if os.path.isfile(full_path):
+                if fname.split('.')[-1].lower() == 'png':
+                    pic_path = os.path.relpath(full_path, start_dir)
+                    name = _get_value_from_list(aspect_configs, "name", {"dir": os.path.basename(aspect_dir)})
+                    aspect = do_commit(Aspect(name=name, pic_path=pic_path, ocspu=ocspu))
+                    for fname in os.listdir(aspect_dir):
+                        full_path = os.path.join(aspect_dir, fname)
+                        if os.path.isdir(full_path):
+                            _create_design_region(full_path, config, aspect)
+                    return
+
+    def _create_design_region(design_region_dir, config, aspect):
+        design_region_configs = config['designRegions']
+        for fname in os.listdir(design_region_dir):
+            full_path = os.path.join(design_region_dir, fname)
+            if os.path.isfile(full_path) and fname.split('.')[-1].lower() == 'png':
+                design_region_name = fname.rsplit('.')[0]
+
+                width, height = _get_value_from_list(design_region_configs, "size", {"dir": design_region_name})
+                design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
+                pic_path = os.path.relpath(full_path, start_dir)
+
+                print "progressing image: " + full_path
+
+                calc_design_region_image(full_path)
+
+                do_commit(DesignRegion(aspect=aspect, name=design_region_name, pic_path=pic_path, width=width,
+                                       part=design_region_name, height=height))
+
+    def _update(spu, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(spu, key, value)
+
+    config = json.load(file(os.path.join(spu_dir, app.config["SPU_CONFIG_FILE"])))
+    if spu:
+        print "updating spu:" + str(spu.id)
+        _update(spu, name=config['name'], cover_name=config['cover'])
+        do_commit(spu)
+    else:
+        spu = do_commit(SPU(name=config['name'], cover_name=config['cover']))
+        print "created spu:" + str(spu.id)
+    for ocspu_config in config["ocspus"]:
+        ocspu_dir = os.path.join(spu_dir, ocspu_config["dir"])
+        cover_file = os.path.join(ocspu_dir, ocspu_config["cover"])
+        color = ocspu_config.get("color")
+        if os.path.isdir(ocspu_dir):
+            _create_ocspu(ocspu_dir, cover_file, color, spu, config)
+
+    return {"spu": spu, "config": config}
