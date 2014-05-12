@@ -33,10 +33,7 @@
         display: inline-block;
         width: 70%;
         vertical-align: middle;
-        margin-top: auto;
-        margin-bottom: auto;
-        margin-left: 10px;
-        margin-right: 10px;
+        margin: auto 10px;
     }
 
     .play-ground .upload-img-form .uploading-progress .upload-cancel-btn {
@@ -74,11 +71,11 @@
         margin-left: auto;
         margin-right: auto;
     }
-    
+
     .play-ground .touch-screen button.btn-save {
-       position: absolute !important;
-       right: 0px;
-    } 
+        position: absolute !important;
+        right: 0;
+    }
 
     .play-ground .svg-drawing svg {
         border: 1px dashed #ccc;
@@ -92,7 +89,7 @@
         height: 512px;
         background-color: #ccc;
     }
-    
+
     .jit-preview .hotspot img {
         max-height: 100%;
         max-width: 100%;
@@ -120,7 +117,7 @@
     }
 
     .jit-preview .thumbnail {
-        margin: 3px 3px 3px 0px;
+        margin: 3px 3px 3px 0;
         display: inline-block;
         height: 96px;
         width: 96px;
@@ -131,7 +128,8 @@
     }
 
     .jit-preview .thumbnail img {
-        max-height: 96px;
+        max-width: 100%;
+        max-height: 100%;
     }
 
     .thumbnail.selected {
