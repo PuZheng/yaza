@@ -108,6 +108,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
                             return function (evt) {
+                                $(this).show();
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
                                     height: $(this).height()
@@ -119,7 +120,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 jitPreview._backgroundLayer = new Kinetic.Layer();
                                 jitPreview._backgroundLayer.add(im);
-                                //$(this).hide();
+                                $(this).hide();
                                 jitPreview._stage.add(jitPreview._backgroundLayer);
                                 jitPreview._backgroundLayer.moveToBottom();
                                 jitPreview._stage.width($(this).width());
