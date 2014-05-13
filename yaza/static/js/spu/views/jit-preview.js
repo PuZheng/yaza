@@ -108,6 +108,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
                             return function (evt) {
+                                // 其实可以不用使用本img标签,直接在backgroud layer中画,
+                                // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
+                                // 图片的大小
                                 $(this).show();
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
@@ -120,6 +123,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 });
                                 jitPreview._backgroundLayer = new Kinetic.Layer();
                                 jitPreview._backgroundLayer.add(im);
+                                // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
+                                // background layer不重叠
                                 $(this).hide();
                                 jitPreview._stage.add(jitPreview._backgroundLayer);
                                 jitPreview._backgroundLayer.moveToBottom();
