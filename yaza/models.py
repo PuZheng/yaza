@@ -43,7 +43,6 @@ class SPU(db.Model):
     name = db.Column(db.String(16))
     shape = db.Column(db.String(16))
     brief = db.Column(db.String(64))
-    cover_name = db.Column(db.String(16))
 
     def __unicode__(self):
         return _(self.name)
@@ -82,7 +81,9 @@ class DesignRegion(db.Model):
     pic_path = db.Column(db.String(64))
     width = db.Column(db.Float)
     height = db.Column(db.Float)
-    part = db.Column(db.String(16))  # 对于同ocspu的不同aspet，如果part相同，则认为design_region是相同区域
+    min_hsv_value = db.Column(db.Integer)
+    max_hsv_value = db.Column(db.Integer)
+    median_hsv_value = db.Column(db.Integer)
 
 
 class SKU(db.Model):

@@ -112,6 +112,12 @@ class DesignRegionWrapper(ModelWrapper):
             'edges': self.edges,
             'size': [1754, 2480],
             'name': self.name,
+            'minHSVValue' if camel_case else 'min_hsv_value':
+            self.min_hsv_value,
+            'maxHSVValue' if camel_case else 'max_hsv_value':
+            self.max_hsv_value,
+            'medianHSVValue' if camel_case else 'median_hsv_value':
+            self.median_hsv_value,
         }
 
 

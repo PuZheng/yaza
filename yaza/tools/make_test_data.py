@@ -8,11 +8,13 @@ import shutil
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
+from PIL import Image
 
 import yaza
 from yaza.basemain import app
 from yaza.models import (User, Group, DesignImage)
 from yaza.utils import do_commit, assert_dir
+from yaza.tools.utils import calc_design_region_image, calc_hsv_values
 
 
 class InitializeTestDB(Command):
