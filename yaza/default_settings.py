@@ -15,6 +15,7 @@ SQLALCHEMY_ECHO = True
 UPLOAD_FOLDER = 'static/uploads'
 DESIGN_IMAGE_FOLDER = 'design-images'  # relative to UPLOAD_FOLDER
 SPU_IMAGE_FOLDER = 'spus'  # relative to UPLOAD_FOLDER
+SPU_CONFIG_FILE = 'config.json'
 LOG_FILE = 'log.txt'
 
 ERROR_LOG_RECIPIENTS = []

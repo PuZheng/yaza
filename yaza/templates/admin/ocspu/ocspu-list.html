@@ -1,0 +1,12 @@
+{% extends "data_browser__/list.html" %}
+
+{% block __data_browser__builtin_head_block %}
+  {{ super() }}
+  <link rel="stylesheet" href="//cdn.staticfile.org/fancybox/2.1.5/jquery.fancybox.min.css"/>
+  <script src="//cdn.staticfile.org/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+  <script>
+    $(function () {
+      $(".fancybox").fancybox();
+    })
+  </script>
+{% endblock %}

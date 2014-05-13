@@ -13,7 +13,7 @@ from yaza.basemain import app
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
-from yaza.tools.utils import allowed_file, unzip, extract_images
+from yaza.tools.utils import allowed_file, unzip, extract_images, create_or_update_spu
 
 
 CONTROL_POINTS_NUMBER = (4, 4)
@@ -31,8 +31,38 @@ class SPUAdminModelView(ModelView):
     def try_create(self):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
+    @ModelView.cached
+    @property
+    def create_columns(self):
+        def save_path(obj, filename):
+            from hashlib import md5
+
+            return os.path.join(app.config["UPLOAD_FOLDER"], md5(filename).hexdigest() + ".zip")
+
+        return [
+            col_spec.FileColSpec('spu_zip', label=_('upload zip'), save_path=save_path, validators=[zip_validator])]
+
+    @property
+    def base_dir(self):
+        return os.path.join(app.config["UPLOAD_FOLDER"], app.config["SPU_IMAGE_FOLDER"])
+
+    def on_record_created(self, obj):
+        upload_dir = os.path.join(app.config["UPLOAD_FOLDER"])
+
+        spu_dir = os.path.join(self.base_dir, str(obj.id))
+        assert_dir(spu_dir)
+        unzip(obj.spu_zip, spu_dir)
+        try:
+            create_or_update_spu(spu_dir, upload_dir, obj)
+        except Exception as e:
+            do_commit(obj, "delete")
+            raise e
+
+        os.unlink(obj.spu_zip)
+
 
 class OCSPUAdminModelView(ModelView):
+    list_template = "admin/ocspu/ocspu-list.html"
     create_template = edit_template = 'admin/ocspu/ocspu-form.html'
 
     def try_edit(self, processed_objs=None):
@@ -58,7 +88,7 @@ class OCSPUAdminModelView(ModelView):
     @ModelView.cached
     @property
     def list_columns(self):
-        return ["id", "spu", "color",
+        return ["id", "spu", "color", col_spec.ColSpec("cover", widget=Image(Image.SMALL)),
                 col_spec.HtmlSnippetColSpec('aspect_list', "admin/ocspu/aspects-snippet.html")]
 
     def expand_model(self, obj):

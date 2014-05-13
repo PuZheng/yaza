@@ -11,19 +11,17 @@ from yaza.basemain import app
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
+        if self.cover_path:
+            return url_for("image.serve", filename=self.cover_path)
 
-        aspect_list = [aspect for aspect in self.aspect_list if
-                       aspect.part == 'front']
-        if aspect_list:
-            return aspect_list[0]
-        return None
+        return ""
 
     def as_dict(self, camel_case):
         return {
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list':
                 [aspect.as_dict(camel_case) for aspect in self.aspect_list],
-            'cover': self.cover.as_dict(camel_case) if self.cover else "",
+            'cover': self.cover,
             'color': self.color,
         }
 
@@ -35,7 +33,7 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
+        if self.pic_path:
             return url_for("image.serve", filename=self.pic_path)
 
         return ""
@@ -72,7 +70,7 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
+        if self.pic_path:
             return url_for("image.serve", filename=self.pic_path)
         return ""
 
