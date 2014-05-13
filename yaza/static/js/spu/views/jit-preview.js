@@ -32,8 +32,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             _colorTrans: function (obj, period) {
-                var jitPreview = this;
-
                 obj._colors = ColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
@@ -52,7 +50,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         obj._timer = setTimeout(function () {
                             var layer = obj.getLayer();
                             obj.destroy();
-                            layer.hide();
+                            layer.draw();
                         }, period);
                     }
                 };
@@ -60,11 +58,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
             _designRegionAnimate: function (edges) {
                 var jitPreview = this;
-                jitPreview._currentLayer.getChildren(function (node) {
-                    return node.getName() == 'highlight-frame';
-                }).forEach(function (node) {
-                    node.remove();
-                });
                 var data = [];
                 ['top', 'left', 'bottom', 'right'].forEach(function (position) {
                     edges[position].forEach(function (point) {
@@ -80,8 +73,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 });
 
                 jitPreview._designRegionAnimationLayer.add(designRegionHex);
-                jitPreview._designRegionAnimationLayer.show();
-
 
                 var period = 2000;
 
