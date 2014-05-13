@@ -332,10 +332,10 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
     config = json.load(file(os.path.join(spu_dir, app.config["SPU_CONFIG_FILE"])))
     if spu:
         print "updating spu:" + str(spu.id)
-        _update(spu, name=config['name'], cover_name=config['cover'])
+        _update(spu, name=config['name'])
         do_commit(spu)
     else:
-        spu = do_commit(SPU(name=config['name'], cover_name=config['cover']))
+        spu = do_commit(SPU(name=config['name']))
         print "created spu:" + str(spu.id)
     for ocspu_config in config["ocspus"]:
         ocspu_dir = os.path.join(spu_dir, ocspu_config["dir"])

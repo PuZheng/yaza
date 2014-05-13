@@ -4,12 +4,12 @@
         {
             "dir": "ocspu1",
             "cover": "symbol.png",
-	    "color": "白色"
+            "color": "白色"
         },
         {
             "dir": "ocspu2",
             "cover": "symbol.png",
-	    "color": "黑色"
+            "color": "黑色"
         }
     ],
     "aspects": [
@@ -48,6 +48,5 @@
                 16.53
             ]
         }
-    ],
-	"cover": "aspect1"
+    ]
 }

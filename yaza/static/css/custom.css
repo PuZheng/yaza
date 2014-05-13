@@ -119,8 +119,8 @@
     .jit-preview .thumbnail {
         margin: 3px 3px 3px 0;
         display: inline-block;
-        height: 96px;
-        width: 96px;
+        max-height: 96px;
+        max-width: 96px;
     }
 
     .jit-preview .thumbnail:first-child {

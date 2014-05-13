@@ -43,7 +43,6 @@ class SPU(db.Model):
     name = db.Column(db.String(16))
     shape = db.Column(db.String(16))
     brief = db.Column(db.String(64))
-    cover_name = db.Column(db.String(16))
 
     def __unicode__(self):
         return _(self.name)
