@@ -144,22 +144,23 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
                                     }
                                 });
-                                jitPreview.$('select[name="current-design-region"]').change();
+                                jitPreview.$('ul[name="current-design-region"] a:first').click();
                             }
                         }(this, aspect));
                     this._currentAspectName = aspect.name;
 
-                    var select = this.$('select[name="current-design-region"]');
+                    var ul = this.$('ul[name="current-design-region"]');
                     // 清除当前每个定制区的layer
-                    select.find('option').each(function () {
+                    ul.find('a').each(function () {
                         var layer = $(this).data('layer');
                         layer.remove();
                     });
-                    select.empty();
+                    ul.empty();
                     aspect.designRegionList.forEach(function (designRegion) {
+                        designRegion.aspectId = aspect.id;
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
-                            var layer = new Kinetic.Layer();
+                            layer = new Kinetic.Layer();
                             this._layerCache[designRegion.id] = layer;
                             this._stage.add(layer);
                             // 没有缓存， 产生预览
@@ -167,28 +168,29 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             this._stage.add(layer);
                             this._stage.draw();
                         }
-                        $(_.sprintf('<option value="%d">%s</option>', designRegion.id,
-                            designRegion.name)).data('design-region', designRegion).
-                            data('layer', layer).appendTo(select);
-
+                        $(_.sprintf("<a href='#' class='list-group-item'>%s</a>", designRegion.name)
+                        ).data('design-region', designRegion).data('layer', layer).appendTo(ul);
                     }.bind(this));
-                    this.$('select[name="current-design-region"]').off("change").change(
-                        function (designRegionList, jitPreview) {
-                            return function (evt) {
-                                for (var i = 0; i < designRegionList.length; ++i) {
-                                    var designRegion = designRegionList[i];
-                                    if (designRegion.id == $(this).val()) {
-                                        jitPreview._currentLayer = $(this).find("option:selected").data('layer');
-                                        jitPreview._currentLayer.show();
-                                        jitPreview._currentDesignRegion = designRegion;
-                                        jitPreview._currentDesignRegion.aspectId = aspect.id;
-                                        jitPreview._designRegionAnimate(designRegion.previewEdges);
-                                        dispatcher.trigger('design-region-selected', designRegion);
-                                        break;
-                                    }
+                    this.$('[name="current-design-region"] a').off("click").click(
+                        function (jitPreview) {
+                            return function () {
+                                // only running on changed
+                                if(jitPreview._currentDom == this) {
+                                    return;
                                 }
+                                $('[name="current-design-region"] a').removeClass("active");
+                                $(this).addClass("active");
+
+                                jitPreview._currentLayer = $(this).data('layer');
+                                jitPreview._currentLayer.show();
+                                jitPreview._currentDom = this;
+
+                                var designRegion = $(this).data("design-region");
+                                jitPreview._currentDesignRegion = designRegion;
+                                jitPreview._designRegionAnimate(designRegion.previewEdges);
+                                dispatcher.trigger('design-region-selected', designRegion);
                             }
-                        }(aspect.designRegionList, this));
+                        }(this));
                 }
             },
 
@@ -208,6 +210,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
                     if (playGroundLayer.children.length == 0) {
                         return;
+                    }
+                    if(this._currentDom) {
+                        this.$(this._currentDom).addClass("list-group-item-info");
                     }
                     var hotspotContext = this._currentLayer.getContext();
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
@@ -301,10 +306,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     name: designRegionName
                 });
                 stage.add(layer);
-                stage.draw();
+                layer.draw();
                 var thumbnailContext = layer.getContext();
                 thumbnailContext.imageSmoothEnabled = false;
                 thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
+
             },
 
             _getPreviewEdges: function (edges, ratio) {
