@@ -86,6 +86,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show aspects
                     this.$('.aspect-selector').empty();
+                    this._currentDom = null;
                     var ocspu = $(evt.currentTarget).data('ocspu');
 //                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
                     var ul = this.$('ul[name="current-design-region"]');
@@ -125,7 +126,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
                     var aspect = $(evt.currentTarget).data('aspect');
-                    var firstSet = !!this._currentAspect && this._currentAspect != aspect;
                     this._currentAspect = aspect;
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
@@ -164,7 +164,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (!jitPreview._currentAspect) {
+                                if(jitPreview._currentDom) {
+                                    var lastDom = jitPreview._currentDom;
+                                    jitPreview._currentDom = null;
+                                    jitPreview.$(lastDom).click();
+                                } else if (!jitPreview._currentAspect) {
                                     jitPreview.$('ul[name="current-design-region"] a:first').click();
                                 } else {
                                     jitPreview.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
@@ -175,17 +179,18 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         function (jitPreview) {
                             return function () {
                                 // only running on changed
-                                if (jitPreview._currentDom == this) {
+                                if(jitPreview._currentDom == this) {
                                     return;
                                 }
+
                                 $('[name="current-design-region"] a').removeClass("active");
                                 $(this).addClass("active");
+                                jitPreview._currentDom = this;
+
                                 if (jitPreview._currentAspect != $(this).data("aspect")) {
                                     jitPreview.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', $(this).data("aspect").name)).parent().click();
                                     return;
                                 }
-
-                                jitPreview._currentDom = this;
 
                                 var designRegion = $(this).data("design-region");
                                 jitPreview._currentDesignRegion = designRegion;
@@ -204,10 +209,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 dispatcher.trigger('design-region-selected', designRegion);
                             }
                         }(this));
-                    if (firstSet) {
-                        //this.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', aspect.name)).click();
-                    }
-
                 }
             },
 
@@ -231,6 +232,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
                     if (this._currentDom) {
                         this.$(this._currentDom).addClass("list-group-item-info");
+                        if(this.$(this._currentDom).find("i").size() == 0){
+                            this.$(this._currentDom).prepend(_.sprintf("<i class='fa fa-check-square-o fa-fw'></i>"))
+                        }
                     }
                     this._currentLayer.draw();
                     var hotspotContext = this._currentLayer.getContext();
