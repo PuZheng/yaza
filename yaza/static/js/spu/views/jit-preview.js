@@ -88,22 +88,45 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
 //                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
+                    var ul = this.$('ul[name="current-design-region"]');
+                    ul.find('a').each(function () {
+                        var layer = $(this).data('layer');
+                        layer.destroy();
+                    });
+                    ul.empty();
+
                     ocspu.aspectList.forEach(function (aspect) {
                         $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
                             aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+
+                        aspect.designRegionList.forEach(function (designRegion) {
+                            designRegion.aspectId = aspect.id;
+                            var layer = this._layerCache[designRegion.id];
+                            if (!layer) {
+                                layer = new Kinetic.Layer();
+                                this._layerCache[designRegion.id] = layer;
+                                this._stage.add(layer);
+                                // 没有缓存， 产生预览
+                            } else {
+                                this._stage.add(layer);
+                            }
+                            $(_.sprintf("<a href='#' class='list-group-item' aspect='%s'>%s - %s</a>", aspect.name, aspect.name, designRegion.name)
+                            ).data('design-region', designRegion).data("aspect", aspect).data('layer', layer).appendTo(ul);
+                        }.bind(this));
                     }.bind(this));
-                    if (!this._currentAspectName) {
+                    if (!this._currentAspect) {
                         this.$('.aspect-selector .thumbnail:first-child').click();
                     } else {
                         // 切换ocspu的时候，不切换面
-                        this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspectName)).parent().click();
+                        this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspect.name)).parent().click();
                     }
                 },
                 'click .aspect-selector .thumbnail': function (evt) {
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
-                    // show hotspot
                     var aspect = $(evt.currentTarget).data('aspect');
+                    var firstSet = !!this._currentAspect && this._currentAspect != aspect;
+                    this._currentAspect = aspect;
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
@@ -114,13 +137,23 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                     height: $(this).height()
                                 }).offset($(this).offset());
                                 var im = new Kinetic.Image({
-                                    image: evt.target, 
+                                    image: evt.target,
                                     width: $(this).width(),
                                     height: $(this).height()
                                 });
-                                jitPreview._backgroundLayer = new Kinetic.Layer();
+                                jitPreview._backgroundLayer = new Kinetic.Layer({
+                                    name: "background"
+                                });
                                 jitPreview._backgroundLayer.add(im);
                                 $(this).hide();
+
+                                jitPreview._stage.getChildren(function (node) {
+                                    return node.getName() == "background";
+                                }).forEach(function (node) {
+                                    node.destroy();
+                                });
+                                jitPreview._stage.draw();
+
                                 jitPreview._stage.add(jitPreview._backgroundLayer);
                                 jitPreview._backgroundLayer.moveToBottom();
                                 jitPreview._stage.width($(this).width());
@@ -131,66 +164,50 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                aspect.designRegionList.forEach(function (designRegion) {
-                                    if (!designRegion.previewEdges) {
-                                        designRegion.previewEdges = jitPreview._getPreviewEdges(
-                                            designRegion.edges,
-                                            {
-                                                x: jitPreview._stage.width() / aspect.size[0],
-                                                y: jitPreview._stage.height() / aspect.size[1],
-                                            });
-                                    }
-                                    if (!designRegion.bounds) {
-                                        designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
-                                    }
-                                });
-                                jitPreview.$('ul[name="current-design-region"] a:first').click();
+                                if (!jitPreview._currentAspect) {
+                                    jitPreview.$('ul[name="current-design-region"] a:first').click();
+                                } else {
+                                    jitPreview.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                }
                             }
                         }(this, aspect));
-                    this._currentAspectName = aspect.name;
-
-                    var ul = this.$('ul[name="current-design-region"]');
-                    // 清除当前每个定制区的layer
-                    ul.find('a').each(function () {
-                        var layer = $(this).data('layer');
-                        layer.remove();
-                    });
-                    ul.empty();
-                    aspect.designRegionList.forEach(function (designRegion) {
-                        designRegion.aspectId = aspect.id;
-                        var layer = this._layerCache[designRegion.id];
-                        if (!layer) {
-                            layer = new Kinetic.Layer();
-                            this._layerCache[designRegion.id] = layer;
-                            this._stage.add(layer);
-                            // 没有缓存， 产生预览
-                        } else {
-                            this._stage.add(layer);
-                            this._stage.draw();
-                        }
-                        $(_.sprintf("<a href='#' class='list-group-item'>%s</a>", designRegion.name)
-                        ).data('design-region', designRegion).data('layer', layer).appendTo(ul);
-                    }.bind(this));
                     this.$('[name="current-design-region"] a').off("click").click(
                         function (jitPreview) {
                             return function () {
                                 // only running on changed
-                                if(jitPreview._currentDom == this) {
+                                if (jitPreview._currentDom == this) {
                                     return;
                                 }
                                 $('[name="current-design-region"] a').removeClass("active");
                                 $(this).addClass("active");
+                                if (jitPreview._currentAspect != $(this).data("aspect")) {
+                                    jitPreview.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', $(this).data("aspect").name)).parent().click();
+                                    return;
+                                }
 
-                                jitPreview._currentLayer = $(this).data('layer');
-                                jitPreview._currentLayer.show();
                                 jitPreview._currentDom = this;
 
                                 var designRegion = $(this).data("design-region");
                                 jitPreview._currentDesignRegion = designRegion;
+                                if (!designRegion.previewEdges) {
+                                    designRegion.previewEdges = jitPreview._getPreviewEdges(designRegion.edges, {
+                                        x: jitPreview._stage.width() / aspect.size[0],
+                                        y: jitPreview._stage.height() / aspect.size[1],
+                                    });
+                                }
+                                if (!designRegion.bounds) {
+                                    designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
+                                }
+                                jitPreview._currentLayer = $(this).data('layer');
+
                                 jitPreview._designRegionAnimate(designRegion.previewEdges);
                                 dispatcher.trigger('design-region-selected', designRegion);
                             }
                         }(this));
+                    if (firstSet) {
+                        this.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', aspect.name)).click();
+                    }
+
                 }
             },
 
@@ -211,11 +228,16 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     if (playGroundLayer.children.length == 0) {
                         return;
                     }
-                    if(this._currentDom) {
+
+                    if (this._currentDom) {
                         this.$(this._currentDom).addClass("list-group-item-info");
                     }
+                    this._currentLayer.draw();
                     var hotspotContext = this._currentLayer.getContext();
-                    var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
+                    this._currentLayer.size(this._stage.size());
+                    var targetWidth = this._stage.width();
+                    var targetHeight = this._stage.height();
+                    var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
                         playGroundLayer.width(), playGroundLayer.height()).data;
                     var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
@@ -224,13 +246,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             [4, 4]);
                     }
 
-                    var targetWidth = this._currentLayer.width();
-                    var targetHeight = this._currentLayer.height();
                     var srcWidth = playGroundLayer.width();
                     var srcHeight = playGroundLayer.height();
                     var delta1 = 10;
                     var delta2 = -5;
-                    var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1, 
+                    var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1,
                         this._currentDesignRegion.maxHSVValue);
                     var test2 = this._currentDesignRegion.medianHSVValue - delta2;
                     for (var i = 0; i < targetWidth; ++i) {
@@ -239,9 +259,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
                                 var pos = (i + j * targetWidth) * 4;
                                 origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
-                                var v = getHSVValue(backgroundImageData, pos, srcImageData, 
-                                        origPos, test1, test2);
-                                        
+                                var v = getHSVValue(backgroundImageData, pos, srcImageData,
+                                    origPos, test1, test2);
+
                                 hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
                                 hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
                                 hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
@@ -502,14 +522,14 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
         function getHSVValue(imageData, pos, srcImageData, srcPos, test1, test2) {
             // see http://www.cs.rit.edu/~ncs/color/t_convert.html
-            var v = Math.max(srcImageData[srcPos], srcImageData[srcPos + 1], 
-                    srcImageData[srcPos + 2]);
+            var v = Math.max(srcImageData[srcPos], srcImageData[srcPos + 1],
+                srcImageData[srcPos + 2]);
             // 对亮图,重点展示阴影,而且原色彩越亮,阴影越明显, 对于暗图, 重点展示亮点,
             // 而且原色彩越暗, 亮点越明显. 但需要注意的是,这样会减少对比度. 所以不能
             // 做的太过
-            return (v > 127)? (imageData[pos] - test1) * (1 + v / 255): 
+            return (v > 127) ? (imageData[pos] - test1) * (1 + v / 255) :
                 (imageData[pos] - test2) * (2 - v / 255);
         }
-        
+
         return JitPreview;
     });
