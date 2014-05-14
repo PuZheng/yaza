@@ -205,7 +205,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             }
                         }(this));
                     if (firstSet) {
-                        this.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', aspect.name)).click();
+                        //this.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', aspect.name)).click();
                     }
 
                 }
