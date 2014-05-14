@@ -44,7 +44,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
 
         var PlayGround = Backbone.View.extend({
             _template: handlebars.default.compile(playGroundTemplate),
-            _initMargin: 50,
+            _initMargin: 70,
             _designRegionCache: {},
             
             // 使用currentTarget而不是target，原因：
@@ -90,15 +90,16 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                                 var im = this._draw.image(
                                     // 注意，必须保证获取整个image
                                     node.toDataURL({
-                                        x: node.x(), 
-                                        y: node.y(), 
+                                        x: node.x() - node.offsetX(), 
+                                        y: node.y() - node.offsetY(), 
                                         width: node.width(), 
                                         height: node.height(),
                                         quality: 0.5, // 不能用来直接打印生产，不用高清
                                     }), 
                                     node.width() * ratio, 
                                     node.height() * ratio)
-                                    .move(node.x() * ratio, node.y() * ratio);
+                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
+                                    .rotate(node.rotation());
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this) 
@@ -278,12 +279,16 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     }
 
                     var image = new Kinetic.Image({
-                        x: (er.width() - width) / 2,
-                        y: (er.height() - height) /2,
+                        x: er.width() / 2,
+                        y: er.height() / 2,
                         image: imageObj,
                         width: width,
                         height: height,
                         name: title, 
+                        offset: {
+                            x: width / 2,
+                            y: height / 2,
+                        },
                     });
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
@@ -291,8 +296,8 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     // 注意，group本身没有大小，位置也是固定的, 能拖动的是
                     // group里面的元素
                     var group = new Kinetic.Group({
-                        x: (er.width() - width) / 2,
-                        y: (er.height() - height) /2,
+                        x: er.width() / 2,
+                        y: er.height() / 2,
                         draggable: true,
                         name: title,
                     });
@@ -301,19 +306,17 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     });
                     group.on('dragend', function (playGround) {
                         return function() {
-                            this.moveToTop();
-                            var rect = this.find('.rect')[0];
                             image.position({
-                                x: this.position().x + rect.position().x,
-                                y: this.position().y + rect.position().y,
+                                x: group.x(),
+                                y: group.y(),
                             });
                             playGround._imageLayer.draw();
                             dispatcher.trigger('update-hotspot', playGround._imageLayer);
                         }
                     }(this));
                     var rect = new Kinetic.Rect({
-                        x: 0,
-                        y: 0,
+                        x: -width / 2,
+                        y: -height / 2,
                         stroke: 'gray',
                         strokeWidth: 1,
                         width: width,
@@ -322,11 +325,29 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         name: 'rect',
                     });
                     group.add(rect);
+                    var line = new Kinetic.Line({
+                        stroke: 'gray',
+                        strokeWidth: 1,
+                        points: [0, - (height / 2 + this._initMargin - 30), 0, 0],
+                        dash: [5, 5],
+                        name: 'handle-bar-line',
+                    });
+                    group.add(line);
+                    var circle = new Kinetic.Circle({
+                        x: 0,
+                        y: 0,
+                        fill: 'red',
+                        radius: 3,
+                        name: 'center',
+                    });
+                    group.add(circle);
                     this._controlLayer.add(group);
-                    this._addAnchor(group, 0, 0, 'topLeft');
-                    this._addAnchor(group, width, 0, 'topRight');
-                    this._addAnchor(group, width, height, 'bottomRight');
-                    this._addAnchor(group, 0, height, 'bottomLeft');
+                    this._addAnchor(group, - width / 2, -height / 2, 'topLeft');
+                    this._addAnchor(group, width / 2, -height / 2, 'topRight', width / 2, height / 2);
+                    this._addAnchor(group, width / 2, height / 2, 'bottomRight', width / 2, height / 2);
+                    this._addAnchor(group, -width / 2, height / 2, 'bottomLeft', width / 2, height / 2);
+                    this._addRotationHandleBar(group, 0,
+                            -(height / 2 + this._initMargin - 30), 'handleBar');
                     this._controlLayer.draw();
 
                     dispatcher.trigger('update-hotspot', this._imageLayer);
@@ -334,41 +355,17 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 imageObj.src = src;
             },
 
-            _addAnchor: function (group, x, y, name) {
-                var stage = group.getStage();
-                var layer = group.getLayer();
-
+            _addRotationHandleBar: function (group, x, y, name) {
                 var anchor = new Kinetic.Circle({
                     x: x,
                     y: y,
                     stroke: '#666',
-                    fill: '#ddd',
+                    fill: 'yellow',
                     strokeWidth: 2,
-                    radius: 8,
+                    radius: 6,
                     name: name,
                     draggable: true,
-                    dragOnTop: false
                 });
-
-                anchor.on('dragmove', function(playGround) {
-                    return function() {
-                        playGround._update(this);
-                        layer.draw();
-                    }
-                }(this));
-                anchor.on('mousedown touchstart', function() {
-                    group.setDraggable(false);
-                    this.moveToTop();
-                });
-                anchor.on('dragend', _.bind(function() {
-                    group.setDraggable(true);
-                    var rect = group.find('.rect')[0];
-                    var image = this._imageLayer.find('.' + group.name())[0];
-                    image.position(rect.position());
-                    image.size(rect.size());
-                    this._imageLayer.draw();
-                }, this));
-                // add hover styling
                 anchor.on('mouseover', function() {
                     var layer = this.getLayer();
                     document.body.style.cursor = 'pointer';
@@ -381,11 +378,99 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     this.strokeWidth(2);
                     layer.draw();
                 });
+                anchor.on('mousedown touchstart', function() {
+                    group.setDraggable(false);
+                    this.moveToTop();
+                });
+                anchor.on('dragmove', function (playGround) {
+                    return function() {
+                        var dx = this.x();
+                        var dy = this.y();
+                        var line = group.find('.handle-bar-line');
+                        line.points([0, -Math.sqrt(dx * dx + dy * dy), 0, 0]);
+                        var degree = Math.atan2(dx, -dy) * 180 / Math.PI;
+                        group.rotate(degree);
+                        this.rotate(-degree);
+                        var image = playGround._imageLayer.find('.' + group.name())[0];
+                        image.rotate(degree);
+                        playGround._imageLayer.draw();
+                    };
+                }(this));
+
+                anchor.on('dragend', function (playGround) {
+                    return function () {
+                        group.setDraggable(true);
+                    };
+                }(this));
+
+                group.add(anchor);
+            },
+
+            _addAnchor: function (group, x, y, name) {
+
+                var anchor = new Kinetic.Circle({
+                    x: x,
+                    y: y,
+                    stroke: '#666',
+                    fill: '#ddd',
+                    strokeWidth: 2,
+                    radius: 7,
+                    name: name,
+                    draggable: true,
+                    dragOnTop: false,
+                });
+                anchor.on('mouseover', function() {
+                    var layer = this.getLayer();
+                    document.body.style.cursor = 'pointer';
+                    this.setStrokeWidth(4);
+                    layer.draw();
+                });
+                anchor.on('mouseout', function() {
+                    var layer = this.getLayer();
+                    document.body.style.cursor = 'default';
+                    this.strokeWidth(2);
+                    layer.draw();
+                });
+                anchor.on('mousedown touchstart', function() {
+                    group.setDraggable(false);
+                    this.moveToTop();
+                });
+
+                var stage = group.getStage();
+                var layer = group.getLayer();
+                anchor.on('dragmove', function (playGround) {
+                    return function() {
+                        playGround._update(this);
+                    }
+                }(this));
+
+                var playGround = this;
+                anchor.on('dragend', function () {
+                    // 重新计算group的位置, 以保证始终能按照物理中心进行旋转 
+                    var rect = group.find('.rect')[0];
+                    var offsetX = rect.x() + rect.width() / 2;
+                    var offsetY = rect.y() + rect.height() / 2;
+                    group.move({
+                        x: offsetX,
+                        y: offsetY,
+                    });
+                    group.getChildren().each(function (node) {
+                        node.move({
+                            x: -offsetX,
+                            y: -offsetY,
+                        });
+                    })
+                    layer.draw();
+                    group.setDraggable(true);
+                });
 
                 group.add(anchor);
             },
 
             _update: function (anchor) {
+                // 这里调整group中所有元素的位置, 而不是直接移动group,
+                // 原因是, 如果移动group, 本anchor就得移动回来,这个时候和
+                // 鼠标就脱节了
                 var group = anchor.getParent();
 
                 var topLeft = group.find('.topLeft')[0];
@@ -396,32 +481,71 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 var anchorX = anchor.x();
                 var anchorY = anchor.y();
 
-                // update anchor positions
+
+                var rect = group.find('.rect')[0];
+                var image = this._imageLayer.find('.' + group.name())[0];
+                var oldWidth = rect.width();
+                var oldHeight = rect.height();
+
                 switch (anchor.name()) {
                     case 'topLeft':
+                        rect.position({
+                            x: anchorX,
+                            y: anchorY,
+                        });
                         topRight.y(anchorY);
                         bottomLeft.x(anchorX);
+
+                        var newWidth = topRight.x() - topLeft.x();
+                        var newHeight = bottomLeft.y() - topLeft.y();
+                        var offsetX = (oldWidth - newWidth) / 2;
+                        var offsetY = (oldHeight - newHeight) / 2;
                         break;
                     case 'topRight':
+                        rect.y(anchorY);
                         topLeft.y(anchorY);
                         bottomRight.x(anchorX);
+                        var newWidth = topRight.x() - topLeft.x();
+                        var newHeight = bottomLeft.y() - topLeft.y();
+                        var offsetX = -(oldWidth - newWidth) / 2;
+                        var offsetY = (oldHeight - newHeight) / 2;
                         break;
                     case 'bottomRight':
+                        topRight.x(anchorX);
                         bottomLeft.y(anchorY);
-                        topRight.x(anchorX); 
+                        var newWidth = topRight.x() - topLeft.x();
+                        var newHeight = bottomLeft.y() - topLeft.y();
+                        var offsetX = -(oldWidth - newWidth) / 2;
+                        var offsetY = -(oldHeight - newHeight) / 2;
                         break;
                     case 'bottomLeft':
+                        rect.x(anchorX);
+                        topLeft.x(anchorX);
                         bottomRight.y(anchorY);
-                        topLeft.x(anchorX); 
+                        var newWidth = topRight.x() - topLeft.x();
+                        var newHeight = bottomLeft.y() - topLeft.y();
+                        var offsetX = (oldWidth - newWidth) / 2;
+                        var offsetY = -(oldHeight - newHeight) / 2;
                         break;
                 }
 
-                var rect = group.find('.rect')[0];
-                rect.position(topLeft.position());
-
-                var width = topRight.x() - topLeft.x();
-                var height = bottomLeft.y() - topLeft.y();
-                rect.size({width:width, height: height});
+                rect.width(newWidth).height(newHeight);
+                // 注意, 移动image, x, y设定在了物理中心
+                image.size(rect.size()).move({
+                    x: offsetX,
+                    y: offsetY,
+                }).offset({
+                    x: newWidth / 2,
+                    y: newHeight / 2,
+                });
+                ['.handleBar', '.handle-bar-line', '.center'].forEach(function (nodeName) {
+                    group.find(nodeName)[0].move({
+                        x: offsetX,
+                        y: offsetY,
+                    });
+                });
+                group.getLayer().draw();
+                this._imageLayer.draw();
             }
         });
         return PlayGround;
