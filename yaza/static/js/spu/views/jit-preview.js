@@ -233,7 +233,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     if (this._currentDom) {
                         this.$(this._currentDom).addClass("list-group-item-info");
                         if(this.$(this._currentDom).find("i").size() == 0){
-                            this.$(this._currentDom).prepend(_.sprintf("<i class='fa fa-check-square-o fa-fw'></i>"))
+                            this.$(this._currentDom).append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                         }
                     }
                     this._currentLayer.draw();
