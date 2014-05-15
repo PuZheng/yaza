@@ -89,12 +89,12 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this._currentDom = null;
                     var ocspu = $(evt.currentTarget).data('ocspu');
 //                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
-                    var ul = this.$('ul[name="current-design-region"]');
-                    ul.find('a').each(function () {
+                    var designRegions = this.$('[name="current-design-region"]');
+                    designRegions.find('a').each(function () {
                         var layer = $(this).data('layer');
                         layer.destroy();
                     });
-                    ul.empty();
+                    designRegions.empty();
 
                     ocspu.aspectList.forEach(function (aspect) {
                         $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
@@ -111,8 +111,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             } else {
                                 this._stage.add(layer);
                             }
-                            $(_.sprintf("<a href='#' class='list-group-item' aspect='%s'>%s - %s</a>", aspect.name, aspect.name, designRegion.name)
-                            ).data('design-region', designRegion).data("aspect", aspect).data('layer', layer).appendTo(ul);
+                            $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.id, aspect.name, designRegion.name)
+                            ).data('design-region', designRegion).data("aspect", aspect).data('layer', layer).appendTo(designRegions);
                         }.bind(this));
                     }.bind(this));
                     if (!this._currentAspect) {
@@ -164,36 +164,30 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if(jitPreview._currentDom) {
-                                    var lastDom = jitPreview._currentDom;
-                                    jitPreview._currentDom = null;
-                                    jitPreview.$(lastDom).click();
+                                if (jitPreview._currentDesignRegion) {
+                                    jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.id + '"]').click();
                                 } else if (!jitPreview._currentAspect) {
-                                    jitPreview.$('ul[name="current-design-region"] a:first').click();
+                                    jitPreview.$('[name="current-design-region"] a:first').click();
                                 } else {
-                                    jitPreview.$(_.sprintf('ul[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                    jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
                                 }
                             }
                         }(this, aspect));
                     this.$('[name="current-design-region"] a').off("click").click(
                         function (jitPreview) {
                             return function () {
-                                // only running on changed
-                                if(jitPreview._currentDom == this) {
-                                    return;
-                                }
 
-                                $('[name="current-design-region"] a').removeClass("active");
-                                $(this).addClass("active");
-                                jitPreview._currentDom = this;
+                                $('[name="current-design-region"] a').removeClass("disabled active");
+                                $(this).addClass("active disabled");
+                                var designRegion = $(this).data("design-region");
+                                jitPreview._currentDesignRegion = designRegion;
 
                                 if (jitPreview._currentAspect != $(this).data("aspect")) {
                                     jitPreview.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', $(this).data("aspect").name)).parent().click();
                                     return;
                                 }
 
-                                var designRegion = $(this).data("design-region");
-                                jitPreview._currentDesignRegion = designRegion;
+
                                 if (!designRegion.previewEdges) {
                                     designRegion.previewEdges = jitPreview._getPreviewEdges(designRegion.edges, {
                                         x: jitPreview._stage.width() / aspect.size[0],
@@ -230,10 +224,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         return;
                     }
 
-                    if (this._currentDom) {
-                        this.$(this._currentDom).addClass("list-group-item-info");
-                        if(this.$(this._currentDom).find("i").size() == 0){
-                            this.$(this._currentDom).append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
+                    if (this._currentDesignRegion) {
+                        var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.id + '"]');
+                        dom.addClass("list-group-item-info");
+                        if (dom.find("i").size() == 0) {
+                            dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                         }
                     }
                     this._currentLayer.draw();
