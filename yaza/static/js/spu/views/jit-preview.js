@@ -111,7 +111,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             } else {
                                 this._stage.add(layer);
                             }
-                            $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.id, aspect.name, designRegion.name)
+                            $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.name, aspect.name, designRegion.name)
                             ).data('design-region', designRegion).data("aspect", aspect).data('layer', layer).appendTo(designRegions);
                         }.bind(this));
                     }.bind(this));
@@ -165,7 +165,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                     }
                                 });
                                 if (jitPreview._currentDesignRegion) {
-                                    jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.id + '"]').click();
+                                    jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                                 } else if (!jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a:first').click();
                                 } else {
@@ -225,7 +225,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     }
 
                     if (this._currentDesignRegion) {
-                        var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.id + '"]');
+                        var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
                         dom.addClass("list-group-item-info");
                         if (dom.find("i").size() == 0) {
                             dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
