@@ -211,10 +211,12 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
+                    var hotspotContext = this._currentLayer.getContext();
                     if (playGroundLayer.children.length == 0) {
+                        hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                        this._updateThumbnail(this._currentDesignRegion.aspectId, this._currentDesignRegion.id, null);
                         return;
                     }
-                    var hotspotContext = this._currentLayer.getContext();
                     var hotspotImageData = hotspotContext.createImageData(this._currentLayer.width(), this._currentLayer.height());
                     var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
                         playGroundLayer.width(), playGroundLayer.height()).data;
@@ -288,6 +290,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 var designRegionName = "design-region-" + designRegionId;
                 var stage = aspectElement.data("stage");
                 if (!stage) {
+                    if(canvasElement === null){
+                        return;
+                    }
                     var div = $("<div></div>").addClass("layer");
                     aspectElement.before(div);
                     stage = new Kinetic.Stage({
@@ -297,19 +302,24 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     });
                     aspectElement.data("stage", stage);
                 }
-                stage.getChildren(function (node) {
-                    return node.getName() == designRegionName;
-                }).forEach(function (node) {
-                    node.destroy();
-                });
-                var layer = new Kineticjs.Layer({
-                    name: designRegionName
-                });
-                stage.add(layer);
-                stage.draw();
-                var thumbnailContext = layer.getContext();
-                thumbnailContext.imageSmoothEnabled = false;
-                thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
+                if (canvasElement === null) {
+                    stage.destroyChildren();
+                    stage.draw();
+                }else{
+                    stage.getChildren(function (node) {
+                        return node.getName() == designRegionName;
+                    }).forEach(function (node) {
+                        node.destroy();
+                    });
+                    var layer = new Kineticjs.Layer({
+                        name: designRegionName
+                    });
+                    stage.add(layer);
+                    stage.draw();
+                    var thumbnailContext = layer.getContext();
+                    thumbnailContext.imageSmoothEnabled = false;
+                    thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
+                }
             },
 
             _getPreviewEdges: function (edges, ratio) {

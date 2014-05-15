@@ -1,5 +1,33 @@
 define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
     function (SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+        //获取32位长度的Guid号
+        function newGuid() {
+            var guid = getRandomString(8) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(16);
+            return guid;
+        }
+
+        function getRandomString(length) {
+            var rand = "";
+            for (i = 0; i < length; i++) {
+                if (i % 2 == 0) {
+                    rand += String.fromCharCode(randomletter());
+                }
+                else {
+                    rand += randomNumber();
+                }
+            }
+            return rand;
+        }
+
+        function randomletter() {
+            var rand = Math.floor(Math.random() * 25) + 65;
+            return rand;
+        }
+
+        function randomNumber() {
+            var rand = Math.floor(Math.random() * 9);
+            return rand;
+        }
 
         function stringToByteArray(str) {
             var array = new (window.Uint8Array !== void 0 ? Uint8Array : Array)(str.length);
@@ -46,7 +74,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
             _template: handlebars.default.compile(playGroundTemplate),
             _initMargin: 70,
             _designRegionCache: {},
-            
+
             // 使用currentTarget而不是target，原因：
             //            event.currentTarget
             //            The current DOM element within the event bubbling phase.
@@ -59,12 +87,12 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     this.$(".thumbnails .thumbnail").removeClass("selected");
                     this.$(evt.currentTarget).addClass("selected");
                     this.$('.add-img-modal').modal('hide');
-                    var $img = this.$(".thumbnail.selected img")
+                    var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
                 'click .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
-                    var $img = this.$(".thumbnail.selected img")
+                    var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
                 'click .touch-screen .btn-save': function (evt) {
@@ -72,61 +100,80 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     if (_.chain(this._designRegionCache).values().all(function (cache) {
                         return cache.imageLayer.children.length == 0;
                     }).value()) {
-                        alert('您尚未作出任何定制，请先定制!'); 
+                        alert('您尚未作出任何定制，请先定制!');
                         return;
                     }
                     var nested = null;
                     var data = {};
                     for (var name in this._designRegionCache) {
                         var imageLayer = this._designRegionCache[name].imageLayer;
-                        var offsetY = !!nested? nested.height() + 30: 0;
+                        var offsetY = !!nested ? nested.height() + 30 : 0;
                         var designRegion = this._designRegionCache[name].designRegion;
                         this._draw.clear();
                         this._draw.size(designRegion.size[0], designRegion.size[1])
                             .data('name', name);
-                        var ratio = designRegion.size[0] / imageLayer.width(); 
+                        var ratio = designRegion.size[0] / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                    // 注意，必须保证获取整个image
-                                    node.toDataURL({
-                                        x: node.x() - node.offsetX(), 
-                                        y: node.y() - node.offsetY(), 
-                                        width: node.width(), 
-                                        height: node.height(),
-                                        quality: 0.5, // 不能用来直接打印生产，不用高清
-                                    }), 
-                                    node.width() * ratio, 
-                                    node.height() * ratio)
+                                        // 注意，必须保证获取整个image
+                                        node.toDataURL({
+                                            x: node.x() - node.offsetX(),
+                                            y: node.y() - node.offsetY(),
+                                            width: node.width(),
+                                            height: node.height(),
+                                            quality: 0.5, // 不能用来直接打印生产，不用高清
+                                        }),
+                                        node.width() * ratio,
+                                        node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
                                     .rotate(node.rotation());
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
-                        }, this) 
+                        }, this)
                     }
                     $(evt.currentTarget).addClass('disabled');
                     $.ajax({
                         type: 'POST',
-                        url: '/image/design-pkg', 
+                        url: '/image/design-pkg',
                         data: data,
                     }).done(function (data) {
-                            var uri = "data:application/svg+xml;base64," + data;
-                            // 注意, $.click仅仅是调用handler，并不是真正触发事件，
-                            // 必须直接在html element上调用click, 而且注意要
-                            // 避免click扩散到父级元素
-                            $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
-                                evt.stopPropagation();
-                            })[0].click();
+                        var uri = "data:application/svg+xml;base64," + data;
+                        // 注意, $.click仅仅是调用handler，并不是真正触发事件，
+                        // 必须直接在html element上调用click, 而且注意要
+                        // 避免click扩散到父级元素
+                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
+                            evt.stopPropagation();
+                        })[0].click();
                     }).always(function () {
                         $(evt.currentTarget).removeClass('disabled');
                     });
                 },
+                'click button.close': function (evt) {
+                    function deleteChildrenByUuid(layer, name) {
+                        layer.getChildren(function (node) {
+                            return node.getAttr("uuid") == name;
+                        }).forEach(function (node) {
+                            node.destroy();
+                        });
+                        layer.draw();
+                    }
+
+                    if (confirm("确认删除该图片吗？")) {
+                        var uuid = $(evt.currentTarget).data("uuid");
+                        deleteChildrenByUuid(this._imageLayer, uuid);
+                        deleteChildrenByUuid(this._controlLayer, uuid);
+                        dispatcher.trigger('update-hotspot', this._imageLayer);
+                        $(evt.currentTarget).parent().remove();
+                    }
+                }
             },
 
             initialize: function (options) {
                 this._design_image_list = options.design_image_list;
 
                 dispatcher.on('design-region-selected', function (designRegion) {
+                    this.$("[name=custom-pics]").empty();
                     console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
                         var ts = this.$('.touch-screen');
@@ -163,6 +210,14 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         this._stage.add(this._imageLayer);
                         this._stage.add(this._controlLayer);
                         this._stage.draw();
+
+                        this._imageLayer.getChildren(function (node) {
+                            return node.getClassName() == "Image";
+                        }).sort(function (a, b) {
+                            return a.getZIndex() - b.getZIndex();
+                        }).forEach(function (node) {
+                                this._addThumbnail(node.getImage().src, node.getName(), node.getAttr("uuid"));
+                            }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
@@ -260,11 +315,17 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     $("#builtin-pics .thumbnail:first").addClass("selected");
                 }
             },
-            
+
+            _addThumbnail: function (src, title, uuid) {
+                var container = this.$('[name=custom-pics]');
+                $(_.sprintf("<a class='list-group-item'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span> <button type='button' title='删除' class='close pull-right' data-uuid='%s'><i class='fa fa-2x'>&times</i></button></a>", src, title, uuid)).prependTo(container);
+            },
+
             _addImage: function (src, title) {
                 if (!title) { // 用户自己上传的图片没有title
-                    title = (new Date()).getTime(); 
+                    title = new Date().getTime();
                 }
+                var uuid = newGuid();
                 // 将图片按比例缩小，并且放在正中
                 var er = this.$('.touch-screen .editable-region');
                 var imageObj = new Image();
@@ -273,7 +334,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
                     if (imageObj.height * width > imageObj.width * height) {
                         // portrait
-                        width = imageObj.width * height / imageObj.height; 
+                        width = imageObj.width * height / imageObj.height;
                     } else {
                         height = imageObj.height * width / imageObj.width;
                     }
@@ -284,7 +345,8 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         image: imageObj,
                         width: width,
                         height: height,
-                        name: title, 
+                        name: title,
+                        uuid: uuid,
                         offset: {
                             x: width / 2,
                             y: height / 2,
@@ -300,12 +362,13 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         y: er.height() / 2,
                         draggable: true,
                         name: title,
+                        uuid: uuid
                     });
-                    group.on('dragstart', function() {
+                    group.on('dragstart', function () {
                         this.moveToTop();
                     });
                     group.on('dragend', function (playGround) {
-                        return function() {
+                        return function () {
                             image.position({
                                 x: group.x(),
                                 y: group.y(),
@@ -328,7 +391,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     var line = new Kinetic.Line({
                         stroke: 'gray',
                         strokeWidth: 1,
-                        points: [0, - (height / 2 + this._initMargin - 30), 0, 0],
+                        points: [0, -(height / 2 + this._initMargin - 30), 0, 0],
                         dash: [5, 5],
                         name: 'handle-bar-line',
                     });
@@ -342,13 +405,15 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     });
                     group.add(circle);
                     this._controlLayer.add(group);
-                    this._addAnchor(group, - width / 2, -height / 2, 'topLeft');
+                    this._addAnchor(group, -width / 2, -height / 2, 'topLeft');
                     this._addAnchor(group, width / 2, -height / 2, 'topRight', width / 2, height / 2);
                     this._addAnchor(group, width / 2, height / 2, 'bottomRight', width / 2, height / 2);
                     this._addAnchor(group, -width / 2, height / 2, 'bottomLeft', width / 2, height / 2);
                     this._addRotationHandleBar(group, 0,
-                            -(height / 2 + this._initMargin - 30), 'handleBar');
+                        -(height / 2 + this._initMargin - 30), 'handleBar');
                     this._controlLayer.draw();
+
+                    this._addThumbnail(src, title, uuid);
 
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
@@ -366,24 +431,24 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     name: name,
                     draggable: true,
                 });
-                anchor.on('mouseover', function() {
+                anchor.on('mouseover', function () {
                     var layer = this.getLayer();
                     document.body.style.cursor = 'pointer';
                     this.setStrokeWidth(4);
                     layer.draw();
                 });
-                anchor.on('mouseout', function() {
+                anchor.on('mouseout', function () {
                     var layer = this.getLayer();
                     document.body.style.cursor = 'default';
                     this.strokeWidth(2);
                     layer.draw();
                 });
-                anchor.on('mousedown touchstart', function() {
+                anchor.on('mousedown touchstart', function () {
                     group.setDraggable(false);
                     this.moveToTop();
                 });
                 anchor.on('dragmove', function (playGround) {
-                    return function() {
+                    return function () {
                         var dx = this.x();
                         var dy = this.y();
                         var line = group.find('.handle-bar-line');
@@ -419,19 +484,19 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     draggable: true,
                     dragOnTop: false,
                 });
-                anchor.on('mouseover', function() {
+                anchor.on('mouseover', function () {
                     var layer = this.getLayer();
                     document.body.style.cursor = 'pointer';
                     this.setStrokeWidth(4);
                     layer.draw();
                 });
-                anchor.on('mouseout', function() {
+                anchor.on('mouseout', function () {
                     var layer = this.getLayer();
                     document.body.style.cursor = 'default';
                     this.strokeWidth(2);
                     layer.draw();
                 });
-                anchor.on('mousedown touchstart', function() {
+                anchor.on('mousedown touchstart', function () {
                     group.setDraggable(false);
                     this.moveToTop();
                 });
@@ -439,7 +504,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 var stage = group.getStage();
                 var layer = group.getLayer();
                 anchor.on('dragmove', function (playGround) {
-                    return function() {
+                    return function () {
                         playGround._update(this);
                     }
                 }(this));
@@ -459,7 +524,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                             x: -offsetX,
                             y: -offsetY,
                         });
-                    })
+                    });
                     layer.draw();
                     group.setDraggable(true);
                 });
