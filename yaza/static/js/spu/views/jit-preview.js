@@ -86,7 +86,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     $(evt.currentTarget).addClass("selected");
                     // show aspects
                     this.$('.aspect-selector').empty();
-                    this._currentDom = null;
                     var ocspu = $(evt.currentTarget).data('ocspu');
 //                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
                     var designRegions = this.$('[name="current-design-region"]');
