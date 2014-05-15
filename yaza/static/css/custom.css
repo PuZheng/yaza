@@ -127,8 +127,8 @@
     }
 
     .jit-preview .aspect-selector .thumbnail {
-        height: 96px;
-        width: 96px;
+        max-height: 96px;
+        max-width: 96px;
     }
 
     .jit-preview .thumbnail:first-child {
@@ -195,6 +195,11 @@
         position: absolute;
         margin: auto;
         display: block;
+    }
+
+    .design-region-selector .list-group-item {
+        padding: 6px 9px;
+
     }
 
 }
