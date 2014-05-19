@@ -100,7 +100,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
 
                         aspect.designRegionList.forEach(function (designRegion) {
-                            designRegion.aspectId = aspect.id;
+                            designRegion.aspect = aspect;
                             var layer = this._layerCache[designRegion.id];
                             if (!layer) {
                                 layer = new Kinetic.Layer();
@@ -168,7 +168,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (jitPreview._currentDesignRegion) {
+                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect == jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                                 } else if (!jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a:first').click();
@@ -301,7 +301,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         this._stage.draw();
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
-                    this._updateThumbnail(this._currentDesignRegion.aspectId, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                    this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                 }.bind(this));
             },
 
