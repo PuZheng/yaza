@@ -182,12 +182,56 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     var parent = $(evt.currentTarget).parents('.list-group-item');
                     var nextItem = parent.next('.list-group-item');
                     this._exchangeImage(parent, nextItem);
+                },
+                'dragstart .column': function (evt) {
+                    $(evt.currentTarget).addClass("moving");
+                    this._dragSrcEl = evt.currentTarget;
+                    evt.originalEvent.dataTransfer.effectAllowed = 'move';
+                    evt.originalEvent.dataTransfer.setData('text/html', $(evt.currentTarget).html());
+                    evt.originalEvent.dataTransfer.setData('text/plain', $(evt.currentTarget).data("uuid"));
+                },
+                'dragend .column': function (evt) {
+                    $(".list-group-item").removeClass("over").removeClass("moving");
+                },
+                'dragover .column': function (evt) {
+                    if(evt.preventDefault) {
+                        evt.preventDefault();
+                    }
+                    evt.originalEvent.dataTransfer.dropEffect = 'move';
+                    return false;
+                },
+                'dragleave .column': function (evt) {
+                    $(evt.currentTarget).removeClass("over");
+                },
+                'dragenter .column': function(evt) {
+                    console.log("dragenter");
+                    $(evt.currentTarget).addClass("over");
+                },
+                'drop .column': function(evt) {
+                    if(evt.stopPropagation) {
+                        evt.stopPropagation();
+                    }
+
+                    if(evt.currentTarget != this._dragSrcEl) {
+                        var currentUuid = $(evt.currentTarget).data("uuid");
+                        var targetUuid = evt.originalEvent.dataTransfer.getData("text/plain");
+                        $(this._dragSrcEl).html($(evt.currentTarget).html()).attr("data-uuid", currentUuid).data("uuid", currentUuid);
+                        $(evt.currentTarget).html(evt.originalEvent.dataTransfer.getData("text/html")).attr("data-uuid", targetUuid).data("uuid", targetUuid);
+                        this._setupButtons();
+
+                        this._exchangeNode(currentUuid, targetUuid, this._imageLayer);
+                        this._exchangeNode(currentUuid, targetUuid, this._controlLayer);
+                        dispatcher.trigger('update-hotspot', this._imageLayer);
+                    }
+
+                    return false;
                 }
+
             },
 
             _exchangeNode: function (aUuid, bUuid, layer) {
                 var a = getChildrenByUuid(layer, aUuid)[0];
-                var b = getChildrenByUuid(layer, bUuid)[0]
+                var b = getChildrenByUuid(layer, bUuid)[0];
                 var aZIndex = a.getZIndex();
                 var bZIndex = b.getZIndex();
                 a.setZIndex(bZIndex);
@@ -372,7 +416,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 var container = this.$('[name=custom-pics]');
                 var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
                 var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
-                $(_.sprintf("<a class='list-group-item' data-uuid='%s'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
+                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
                     "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
                     "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
                 this._setupButtons();
