@@ -1,5 +1,11 @@
 define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
     function (SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+        function getChildrenByUuid(layer, uuid) {
+            return layer.getChildren(function (node) {
+                return node.getAttr("uuid") == uuid;
+            })
+        }
+
         //获取32位长度的Guid号
         function newGuid() {
             var guid = getRandomString(8) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(16);
@@ -150,23 +156,69 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     });
                 },
                 'click button.close': function (evt) {
-                    function deleteChildrenByUuid(layer, name) {
-                        layer.getChildren(function (node) {
-                            return node.getAttr("uuid") == name;
-                        }).forEach(function (node) {
+                    function deleteChildrenByUuid(layer, uuid) {
+                        getChildrenByUuid(layer, uuid).forEach(function (node) {
                             node.destroy();
                         });
                         layer.draw();
                     }
 
                     if (confirm("确认删除该图片吗？")) {
-                        var uuid = $(evt.currentTarget).data("uuid");
+                        var parent = $(evt.currentTarget).parents(".list-group-item");
+                        var uuid = parent.data("uuid");
                         deleteChildrenByUuid(this._imageLayer, uuid);
                         deleteChildrenByUuid(this._controlLayer, uuid);
                         dispatcher.trigger('update-hotspot', this._imageLayer);
-                        $(evt.currentTarget).parent().remove();
+                        parent.remove();
+                        this._setupButtons();
                     }
+                },
+                'click button.up-btn': function (evt) {
+                    var parent = $(evt.currentTarget).parents('.list-group-item');
+                    var prevItem = parent.prev('.list-group-item');
+                    this._exchangeImage(parent, prevItem);
+                },
+                'click button.down-btn': function (evt) {
+                    var parent = $(evt.currentTarget).parents('.list-group-item');
+                    var nextItem = parent.next('.list-group-item');
+                    this._exchangeImage(parent, nextItem);
                 }
+            },
+
+            _exchangeNode: function (aUuid, bUuid, layer) {
+                var a = getChildrenByUuid(layer, aUuid)[0];
+                var b = getChildrenByUuid(layer, bUuid)[0]
+                var aZIndex = a.getZIndex();
+                var bZIndex = b.getZIndex();
+                a.setZIndex(bZIndex);
+                b.setZIndex(aZIndex);
+                layer.draw();
+            },
+
+            _exchangeImage: function (source, target) {
+                if (target.length == 0) {
+                    return;
+                }
+                var playGround = this;
+                var currentUuid = source.data("uuid");
+                var targetUuid = target.data("uuid");
+
+                var parentTop = source.position().top;
+                var prevItemTop = target.position().top;
+                source.css('visibility', 'hidden');
+                target.css('visibility', 'hidden');
+                source.clone().insertAfter(source).css({position: 'absolute', visibility: 'visible', top: parentTop}).animate({top: prevItemTop}, 200, function () {
+                    $(this).remove();
+                    source.insertBefore(target).css('visibility', 'visible');
+                });
+                target.clone().insertAfter(target).css({position: 'absolute', visibility: 'visible', top: prevItemTop}).animate({top: parentTop}, 200, function () {
+                    $(this).remove();
+                    target.css('visibility', 'visible');
+                    playGround._setupButtons();
+                    playGround._exchangeNode(currentUuid, targetUuid, playGround._imageLayer);
+                    playGround._exchangeNode(currentUuid, targetUuid, playGround._controlLayer);
+                    dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                });
             },
 
             initialize: function (options) {
@@ -318,9 +370,28 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
 
             _addThumbnail: function (src, title, uuid) {
                 var container = this.$('[name=custom-pics]');
-                $(_.sprintf("<a class='list-group-item'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span> <button type='button' title='删除' class='close pull-right' data-uuid='%s'><i class='fa fa-2x'>&times</i></button></a>", src, title, uuid)).prependTo(container);
+                var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
+                var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
+                $(_.sprintf("<a class='list-group-item' data-uuid='%s'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
+                    "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
+                    "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
+                this._setupButtons();
             },
 
+            _setupButtons: function () {
+                var container = this.$('[name=custom-pics]');
+
+                $(container.find("button.up-btn")).attr("disabled", false).show();
+                $(container.find("button.down-btn")).attr("disabled", false).show();
+
+                if (container.find("[name=list-group-item-buttons]").size() > 1) {
+                    $(container.find("button.up-btn:first")).attr("disabled", true);
+                    $(container.find("button.down-btn:last")).attr("disabled", true);
+                } else {
+                    $(container.find("button.up-btn")).hide();
+                    $(container.find("button.down-btn")).hide();
+                }
+            },
             _addImage: function (src, title) {
                 if (!title) { // 用户自己上传的图片没有title
                     title = new Date().getTime();
@@ -511,7 +582,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
 
                 var playGround = this;
                 anchor.on('dragend', function () {
-                    // 重新计算group的位置, 以保证始终能按照物理中心进行旋转 
+                    // 重新计算group的位置, 以保证始终能按照物理中心进行旋转
                     var rect = group.find('.rect')[0];
                     var offsetX = rect.x() + rect.width() / 2;
                     var offsetY = rect.y() + rect.height() / 2;
