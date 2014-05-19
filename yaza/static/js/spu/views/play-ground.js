@@ -204,7 +204,6 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     $(evt.currentTarget).removeClass("over");
                 },
                 'dragenter .column': function(evt) {
-                    console.log("dragenter");
                     $(evt.currentTarget).addClass("over");
                 },
                 'drop .column': function(evt) {
