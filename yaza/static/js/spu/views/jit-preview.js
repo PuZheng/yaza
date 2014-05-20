@@ -325,15 +325,12 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     });
                     aspectElement.data("stage", stage);
                 }
-                if (canvasElement === null) {
-                    stage.destroyChildren();
-                    stage.draw();
-                } else {
-                    stage.getChildren(function (node) {
-                        return node.getName() == designRegionName;
-                    }).forEach(function (node) {
-                        node.destroy();
-                    });
+                stage.getChildren(function (node) {
+                    return node.getName() == designRegionName;
+                }).forEach(function (node) {
+                    node.destroy();
+                });
+                if (canvasElement) {
                     var layer = new Kineticjs.Layer({
                         name: designRegionName
                     });
