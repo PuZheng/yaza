@@ -6,6 +6,8 @@ import zipfile
 from flask import json
 from PIL import Image
 
+from yaza import const
+
 
 ARCHIVES = ('zip', )
 
@@ -101,82 +103,52 @@ def detect_edges(im):
         'left': []
     }
 
-    lt_met = False  # left top corner
-    rt_met = False
+    corners = []
 
-    for i in xrange(im.size[0] - 1, -1, -1):
-        for j in xrange(im.size[1] - 1, -1, -1):
-            pixel = pa[(i, j)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['top'].append((i, j))
-                    if not lt_met:
-                        lt_met = True
-                    else:
-                        rt_met = True
-                else:
-                    if lt_met:
-                        edges['top'].append((i, j))
-                break
-        if rt_met:
-            break
-
-    lb_met = False
-    lt_met = False
-    for i in xrange(im.size[1] - 1, -1, -1):
-        for j in xrange(im.size[0]):
-            pixel = pa[(j, i)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['left'].append((j, i))
-                    if not lb_met:
-                        lb_met = True
-                    else:
-                        lt_met = True
-                else:
-                    if lb_met:
-                        edges['left'].append((j, i))
-                break
-        if lt_met:
-            break
-
-    lb_met = False
-    rb_met = False
+    # 先找四个角
     for i in xrange(im.size[0]):
         for j in xrange(im.size[1]):
-            pixel = pa[(i, j)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['bottom'].append((i, j))
-                    if not lb_met:
-                        lb_met = True
-                    else:
-                        rb_met = True
-                else:
-                    if lb_met:
-                        edges['bottom'].append((i, j))
-                break
-        if rb_met:
+            if marked_as_corner(pa[(i, j)]):
+                corners.append((i, j))
+                if len(corners) == 4:
+                    break
+        if len(corners) == 4:
             break
+    # 注意, 我们在这里的假设是:
+    corners.sort(key=lambda p: p[1])
+    # 上面的一定是右上角和左上角, 而右上角在左上角的右面
+    lt, rt = sorted(corners[2:], key=lambda p: p[0])
+    # 下面的一定是左下角和右下角, 而左下角在右下角的左面
+    lb, rb = sorted(corners[:2], key=lambda p: p[0])
 
-    rb_met = False
-    rt_met = False
-    for i in xrange(im.size[1]):
-        for j in xrange(im.size[0] - 1, -1, -1):
-            pixel = pa[(j, i)]
-            if pixel[3] != 0:
-                if pixel[0] == 255:
-                    edges['right'].append((j, i))
-                    if not rb_met:
-                        rb_met = True
-                    else:
-                        rt_met = True
-                else:
-                    if rb_met:
-                        edges['right'].append((j, i))
+    # top
+    edges['top'].append(rt)
+    for i in xrange(rt[0] - 1, lt[0], -1):
+        for j in xrange(im.size[1] - 1, -1, -1):
+            if pa[(i, j)][3] != 0:
+                edges['top'].append((i, j))
                 break
-        if rt_met:
-            break
+    # left
+    edges['left'].append(lt)
+    for j in xrange(lt[1] - 1, lb[1], -1):
+        for i in xrange(im.size[0]):
+            if pa[(i, j)][3] != 0:
+                edges['left'].append((i, j))
+                break
+    # bottom
+    edges['bottom'].append(lb)
+    for i in xrange(lb[0] + 1, rb[0]):
+        for j in xrange(im.size[1]):
+            if pa[(i, j)][3] != 0:
+                edges['bottom'].append((i, j))
+                break
+    # right
+    edges['right'].append(rb)
+    for j in xrange(rb[1] + 1, rt[1]):
+        for i in xrange(im.size[0] - 1, -1, -1):
+            if pa[(i, j)][3] != 0:
+                edges['right'].append((i, j))
+                break
 
     return edges
 
@@ -345,3 +317,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             _create_ocspu(ocspu_dir, cover_file, color, spu, config)
 
     return {"spu": spu, "config": config}
+
+
+def marked_as_corner(pixel):
+    return all([pixel[i] == const.CORNER_RGBA[i] for i in (0, 1, 2, 3)])
