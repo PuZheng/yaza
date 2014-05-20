@@ -201,4 +201,26 @@
 
     }
 
+    [draggable] {
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        /* Required to make elements draggable in old WebKit */
+        -khtml-user-drag: element;
+        -webkit-user-drag: element;
+    }
+
+    .column {
+        cursor: move;
+    }
+
+    .column.over {
+        border: 2px dashed #000;
+    }
+
+    .column.moving {
+        opacity: 0.25;
+        transform: scale(0.8);
+    }
 }

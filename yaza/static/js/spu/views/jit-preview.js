@@ -100,7 +100,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                             aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
 
                         aspect.designRegionList.forEach(function (designRegion) {
-                            designRegion.aspectId = aspect.id;
+                            designRegion.aspect = aspect;
                             var layer = this._layerCache[designRegion.id];
                             if (!layer) {
                                 layer = new Kinetic.Layer();
@@ -168,7 +168,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (jitPreview._currentDesignRegion) {
+                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect == jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                                 } else if (!jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a:first').click();
@@ -224,7 +224,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
+                    var hotspotContext = this._currentLayer.getContext();
                     if (playGroundLayer.children.length == 0) {
+                        hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
                         return;
                     }
 
@@ -236,7 +239,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         }
                     }
                     this._currentLayer.draw();
-                    var hotspotContext = this._currentLayer.getContext();
                     this._currentLayer.size(this._stage.size());
                     var targetWidth = this._stage.width();
                     var targetHeight = this._stage.height();
@@ -301,7 +303,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         this._stage.draw();
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
-                    this._updateThumbnail(this._currentDesignRegion.aspectId, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                    this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                 }.bind(this));
             },
 
@@ -311,6 +313,9 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 var designRegionName = "design-region-" + designRegionId;
                 var stage = aspectElement.data("stage");
                 if (!stage) {
+                    if (canvasElement === null) {
+                        return;
+                    }
                     var div = $("<div></div>").addClass("layer");
                     aspectElement.before(div);
                     stage = new Kinetic.Stage({
@@ -320,20 +325,24 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     });
                     aspectElement.data("stage", stage);
                 }
-                stage.getChildren(function (node) {
-                    return node.getName() == designRegionName;
-                }).forEach(function (node) {
-                    node.destroy();
-                });
-                var layer = new Kineticjs.Layer({
-                    name: designRegionName
-                });
-                stage.add(layer);
-                layer.draw();
-                var thumbnailContext = layer.getContext();
-                thumbnailContext.imageSmoothEnabled = false;
-                thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
-
+                if (canvasElement === null) {
+                    stage.destroyChildren();
+                    stage.draw();
+                } else {
+                    stage.getChildren(function (node) {
+                        return node.getName() == designRegionName;
+                    }).forEach(function (node) {
+                        node.destroy();
+                    });
+                    var layer = new Kineticjs.Layer({
+                        name: designRegionName
+                    });
+                    stage.add(layer);
+                    layer.draw();
+                    var thumbnailContext = layer.getContext();
+                    thumbnailContext.imageSmoothEnabled = false;
+                    thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
+                }
             },
 
             _getPreviewEdges: function (edges, ratio) {
