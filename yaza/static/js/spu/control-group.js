@@ -1,10 +1,11 @@
 define(function () {
-    function makeControlGroup(node, title) {
+    function makeControlGroup(node, title, uuid) {
         var group = new Kinetic.Group({
             x: node.x() - node.offsetX() + node.width() / 2,
             y: node.y() - node.offsetY() + node.height() / 2,
             draggable: true,
             name: title,
+            uuid: uuid
         });
         group.on('dragstart', function() {
             this.moveToTop();
