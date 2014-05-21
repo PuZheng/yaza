@@ -67,7 +67,7 @@ def font_image():
     font_size = request.form.get('font-size', type=int)
     #font_color = request.get('font-color', 'black');
     #font_alignment = request.form.get('font-alighment', 'left-alignment')
-    font = ImageFont.truetype(app.fonts_map[font_family], font_size)
+    font = ImageFont.truetype(app.config['FONTS_MAP'][font_family], font_size)
 
     width_height, left_bottom = font.font.getsize(text)
     img = Image.new("RGBA", width_height, (255,255,255, 0))

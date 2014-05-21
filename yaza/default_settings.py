@@ -36,3 +36,8 @@ FONTS_AVAILABLE = {
     u'AR PL UKai CN',
     u'腾祥铁山硬隶繁',
 }
+
+# font famliy name -> ttf file path
+FONTS_MAP = {
+    #u'文泉驿微米黑': '/usr/local/share/fonts/wqy-ywmh.ttf'
+}

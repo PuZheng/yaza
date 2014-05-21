@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+import sys
 
 from plumbum.cmd import fc_list
 
@@ -169,7 +170,6 @@ if app.debug:
 
 
 def locate_all_fonts():
-    app.fonts_map = {}
     # TODO 这里并没有处理style
     for l in fc_list[': ', 'file', 'family']().split('\n'):
         l = l.strip()
@@ -179,9 +179,11 @@ def locate_all_fonts():
             for ff in font_family_list:
                 ff = ff.strip()
                 if ff in app.config['FONTS_AVAILABLE']:
-                    app.fonts_map[ff] = font_path
+                    app.config['FONTS_MAP'][ff] = font_path
                     break
 
-    print app.fonts_map
+    print app.config['FONTS_MAP']
 
-locate_all_fonts()
+# 如果不是windows系统, 并且没有定义FONTS_MAP, 利用fc-list搜索系统的字体
+if not (sys.platform.startswith("win32") and app.config['FONTS_MAP']):
+    locate_all_fonts()
