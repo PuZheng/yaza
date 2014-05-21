@@ -223,11 +223,16 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 }.bind(this));
                 this.$('.ocspu-selector .thumbnail:first-child').click();
 
+                this._mask = this.$(".mask");
+                this._mask.css("line-height", this.$(".hotspot").height() + "px");
+                this._mask.hide();
                 dispatcher.on('update-hotspot', function (playGroundLayer) {
+                    this._mask.show();
                     var hotspotContext = this._currentLayer.getContext();
                     if (playGroundLayer.children.length == 0) {
                         hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
                         this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
+                        this._mask.hide();
                         return;
                     }
 
@@ -304,6 +309,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     }
                     hotspotContext.putImageData(hotspotImageData, 0, 0);
                     this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                    this._mask.hide();
                 }.bind(this));
             },
 
