@@ -2,8 +2,6 @@
 import os
 import sys
 
-from plumbum.cmd import fc_list
-
 from flask import Flask, render_template, request, redirect, url_for
 from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
@@ -170,6 +168,8 @@ if app.debug:
 
 
 def locate_all_fonts():
+    from plumbum.cmd import fc_list
+
     # TODO 这里并没有处理style
     for l in fc_list[': ', 'file', 'family']().split('\n'):
         l = l.strip()
