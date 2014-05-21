@@ -27,6 +27,14 @@ define(function () {
             dash: [5, 5],
             name: 'rect',
         });
+        rect.on("mouseover",function () {
+            document.body.style.cursor = 'move';
+            this.getLayer().draw();
+        }).on("mouseout", function () {
+            document.body.style.cursor = 'default';
+            this.getLayer().draw();
+        });
+
         group.add(rect);
         var line = new Kinetic.Line({
             stroke: 'gray',
@@ -45,18 +53,18 @@ define(function () {
         });
         group.add(circle);
         if (resizable) {
-            _addAnchor(group, -node.width() / 2, -node.height() / 2, 'topLeft', node);
-            _addAnchor(group, node.width() / 2, -node.height() / 2, 'topRight', node);
-            _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node);
-            _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node);
+            _addAnchor(group, -node.width() / 2, -node.height() / 2, 'topLeft', node, "nw-resize");
+            _addAnchor(group, node.width() / 2, -node.height() / 2, 'topRight', node, "ne-resize");
+            _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize");
+            _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize");
         }
         _addRotationHandleBar(group, 0,
                 -(node.height() / 2 + 50), 'handleBar', node);
 
         return group;
-    };
+    }
 
-    function _addAnchor(group, x, y, name, node) {
+    function _addAnchor(group, x, y, name, node, cursorStyle) {
 
         var anchor = new Kinetic.Circle({
             x: x,
@@ -71,8 +79,8 @@ define(function () {
         });
         anchor.on('mouseover', function () {
             var layer = this.getLayer();
-            document.body.style.cursor = 'pointer';
-            this.setStrokeWidth(4);
+            document.body.style.cursor = cursorStyle;
+            this.strokeWidth(4);
             layer.draw();
         });
         anchor.on('mouseout', function () {
@@ -240,6 +248,6 @@ define(function () {
         group.getLayer().draw();
         node.getLayer().draw();
     } 
-    
+
     return makeControlGroup;
 });
