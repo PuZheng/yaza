@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+import sys
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
@@ -164,3 +165,25 @@ assert_dir(app.config['UPLOAD_FOLDER'])
 if app.debug:
     from flask.ext.debugtoolbar import DebugToolbarExtension
     DebugToolbarExtension(app)
+
+
+def locate_all_fonts():
+    from plumbum.cmd import fc_list
+
+    # TODO 这里并没有处理style
+    for l in fc_list[': ', 'file', 'family']().split('\n'):
+        l = l.strip()
+        if l:
+            font_path, font_family = l.split(':')[:2]
+            font_family_list = font_family.strip().split(',')
+            for ff in font_family_list:
+                ff = ff.strip()
+                if ff in app.config['FONTS_AVAILABLE']:
+                    app.config['FONTS_MAP'][ff] = font_path
+                    break
+
+    print app.config['FONTS_MAP']
+
+# 如果不是windows系统, 并且没有定义FONTS_MAP, 利用fc-list搜索系统的字体
+if not (sys.platform.startswith("win32") and app.config['FONTS_MAP']):
+    locate_all_fonts()

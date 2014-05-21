@@ -1,5 +1,5 @@
-define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
-    function (SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
+    function (makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         function getChildrenByUuid(layer, uuid) {
             return layer.getChildren(function (node) {
                 return node.getAttr("uuid") == uuid;
@@ -96,10 +96,32 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
-                'click .btn-ok': function (evt) {
+                'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
+                },
+                'click .add-text-modal .btn-ok': function (evt) {
+                    var text = this.$('.add-text-modal textarea').val();
+                    if (!text) {
+                        alert('文字不能为空');
+                        return;
+                    }
+                    this.$('.add-text-modal').modal('hide');
+                    $.ajax({
+                        type: 'POST', 
+                        url: '/image/font-image',
+                        data: {
+                            text: text,
+                            'font-family': config.DEFAULT_FONT_FAMILY,
+                            // 注意, 这里已经是生产大小了
+                            'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                        },
+                    }).done(function (playGround) {
+                        return function (data) {
+                            playGround._addText(data, text);
+                        };
+                    }(this));
                 },
                 'click .touch-screen .btn-save': function (evt) {
                     this._draw.clear();
@@ -116,7 +138,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         var offsetY = !!nested ? nested.height() + 30 : 0;
                         var designRegion = this._designRegionCache[name].designRegion;
                         this._draw.clear();
-                        this._draw.size(designRegion.size[0], designRegion.size[1])
+                        this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
                             .data('name', name);
                         var ratio = designRegion.size[0] / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
@@ -415,7 +437,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 var container = this.$('[name=custom-pics]');
                 var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
                 var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
-                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
+                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;'></img> <span>%s</span>" +
                     "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
                     "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
                 this._setupButtons();
@@ -725,9 +747,48 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 });
                 group.getLayer().draw();
                 this._imageLayer.draw();
+            }, 
+
+            _addText: function (data, text) {
+                var imageObj = new Image();
+                var uuid = newGuid();
+                $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
+                    return function () {
+                        var scale = playGround._imageLayer.width() / (playGround._currentDesignRegion.size[0] * config.PPI);
+                        var width = data.width * scale;
+                        var height = data.height * scale;
+                        // 将文字放在正中
+                        var im = new Kinetic.Image({
+                            x: playGround._imageLayer.width() / 2,
+                            y: playGround._imageLayer.height() / 2,
+                            width: width,
+                            name: text,
+                            uuid: uuid,
+                            height: height,
+                            image: imageObj,
+                            offset: {
+                                x: width / 2,
+                                y: height /2,
+                            },
+                        });
+                        playGround._imageLayer.add(im);
+                        playGround._imageLayer.draw();
+                        var controlGroup = makeControlGroup(im, text, uuid).on('dragend',
+                            function (playGround) {
+                                return function () {
+                                    playGround._imageLayer.draw();
+                                    dispatcher.trigger('update-hotspot', 
+                                        playGround._imageLayer);
+                                };
+                            }(playGround));
+                        playGround._controlLayer.add(controlGroup).draw();
+
+                        playGround._addThumbnail(imageObj.src, text, uuid);
+                        dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                    }
+                }(this));
             }
+            
         });
         return PlayGround;
     });
-
-
