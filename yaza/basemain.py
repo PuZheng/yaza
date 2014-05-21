@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 import os
 
+from plumbum.cmd import fc_list
+
 from flask import Flask, render_template, request, redirect, url_for
 from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
@@ -164,3 +166,22 @@ assert_dir(app.config['UPLOAD_FOLDER'])
 if app.debug:
     from flask.ext.debugtoolbar import DebugToolbarExtension
     DebugToolbarExtension(app)
+
+
+def locate_all_fonts():
+    app.fonts_map = {}
+    # TODO 这里并没有处理style
+    for l in fc_list[': ', 'file', 'family']().split('\n'):
+        l = l.strip()
+        if l:
+            font_path, font_family = l.split(':')[:2]
+            font_family_list = font_family.strip().split(',')
+            for ff in font_family_list:
+                ff = ff.strip()
+                if ff in app.config['FONTS_AVAILABLE']:
+                    app.fonts_map[ff] = font_path
+                    break
+
+    print app.fonts_map
+
+locate_all_fonts()

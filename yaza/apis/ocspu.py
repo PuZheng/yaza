@@ -110,7 +110,7 @@ class DesignRegionWrapper(ModelWrapper):
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'edges': self.edges,
-            'size': [1754, 2480],
+            'size': [self.width, self.height],
             'name': self.name,
             'minHSVValue' if camel_case else 'min_hsv_value':
             self.min_hsv_value,
