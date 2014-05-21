@@ -119,7 +119,7 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                         },
                     }).done(function (playGround) {
                         return function (data) {
-                            playGround._addText(data);
+                            playGround._addText(data, text);
                         };
                     }(this));
                 },
@@ -437,7 +437,7 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                 var container = this.$('[name=custom-pics]');
                 var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
                 var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
-                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
+                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;'></img> <span>%s</span>" +
                     "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
                     "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
                 this._setupButtons();
@@ -506,8 +506,9 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                 imageObj.src = src;
             },
 
-            _addText: function (data) {
+            _addText: function (data, text) {
                 var imageObj = new Image();
+                var uuid = newGuid();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
                         var scale = playGround._imageLayer.width() / (playGround._currentDesignRegion.size[0] * config.PPI);
@@ -518,6 +519,8 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                             x: playGround._imageLayer.width() / 2,
                             y: playGround._imageLayer.height() / 2,
                             width: width,
+                            name: text,
+                            uuid: uuid,
                             height: height,
                             image: imageObj,
                             offset: {
@@ -527,7 +530,7 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                         });
                         playGround._imageLayer.add(im);
                         playGround._imageLayer.draw();
-                        var controlGroup = makeControlGroup(im).on('dragend', 
+                        var controlGroup = makeControlGroup(im, text, uuid).on('dragend',
                             function (playGround) {
                                 return function () {
                                     playGround._imageLayer.draw();
@@ -536,6 +539,8 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                                 };
                             }(playGround));
                         playGround._controlLayer.add(controlGroup).draw();
+
+                        playGround._addThumbnail(imageObj.src, text, uuid);
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
