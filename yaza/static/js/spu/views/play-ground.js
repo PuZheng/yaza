@@ -268,9 +268,9 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 this._design_image_list = options.design_image_list;
 
                 dispatcher.on('design-region-selected', function (designRegion) {
-                    this.$("[name=custom-pics]").empty();
                     console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
+                        this.$("[name=custom-pics]").empty();
                         var ts = this.$('.touch-screen');
                         var er = this.$('.touch-screen .editable-region');
                         if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {

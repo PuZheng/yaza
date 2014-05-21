@@ -228,6 +228,11 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     if (playGroundLayer.children.length == 0) {
                         hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
                         this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
+                        if (this._currentDesignRegion) {
+                            var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
+                            dom.removeClass("list-group-item-info");
+                            dom.find("i").remove();
+                        }
                         return;
                     }
 
