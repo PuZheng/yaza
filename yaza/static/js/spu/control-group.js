@@ -1,5 +1,4 @@
 define(function () {
-    var halfSideLength = 4;
 
     function makeControlGroup(node, title, uuid, resizable) {
 
@@ -61,19 +60,81 @@ define(function () {
             _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize");
             _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize");
 
-            _addRect(group, -halfSideLength, -node.height() / 2 - halfSideLength, 'top', node, "s-resize", function (pos) {
-                return {x: group.getX() - halfSideLength, y: pos.y};
-            });
-            _addRect(group, -node.height() / 2 - halfSideLength, -halfSideLength, 'left', node, "w-resize", function (pos) {
-                return {x: pos.x, y: group.getY() - halfSideLength};
-            });
+            _addEdgeAnchor(group, 0, -node.height() / 2, 'top', node, 
+                    "s-resize", function (pos) {
+                        // pos是绝对位置(即相对于canvas)
+                        var offsetX = (pos.x - group.x());
+                        var offsetY = (pos.y - group.y());
+                        var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
+                        // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的Y 坐标, 并沿着同一条边的y
+                        var offsetY_ = (offsetY > 0? 1: -1) * distance* Math.cos(group.rotation() / 180 * Math.PI + Math.atan(offsetX / offsetY));
+                        console.log(offsetX + ' ' + offsetY + ' ' + distance + ' ' + offsetY_);
+                        if (offsetY_ > 0) {
+                            offsetY_ = 0;
+                        }
+                        // 注意, x必须沿着0
+                        // 再次转化回屏幕坐标系
+                        return {
+                            x: group.x() + (offsetY_ * Math.sin(group.rotation() / 180 * Math.PI + Math.PI)),
+                            y: group.y() + (offsetY_ * Math.cos(group.rotation() / 180 * Math.PI)),
+                        }
+                    });
+            _addEdgeAnchor(group, -node.width() / 2, 0, 
+                    'left', node, "w-resize", function (pos) {
+                        // pos是绝对位置(即相对于canvas)
+                        var offsetX = (pos.x - group.x());
+                        var offsetY = (pos.y - group.y());
+                        var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
+                        // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的X坐标, 并沿着同一条边的x
+                        var offsetX_ = (offsetX > 0? 1: -1) * distance * Math.cos(group.rotation() / 180 * Math.PI - Math.atan(offsetY / offsetX));
+                        if (offsetX_ > 0) {
+                            offsetX_ = 0;
+                        }
+                        // 注意, y必须沿着0
+                        // 再次转化回屏幕坐标系
+                        return {
+                            x: group.x() + (offsetX_ * Math.cos(group.rotation() / 180 * Math.PI)),
+                            y: group.y() + (offsetX_ * Math.sin(group.rotation() / 180 * Math.PI)),
+                        }
+                    });
 
-            _addRect(group, -halfSideLength, node.height() / 2 - halfSideLength, 'bottom', node, "s-resize", function (pos) {
-                return {x: group.getX() - halfSideLength, y: pos.y};
-            });
-            _addRect(group, node.height() / 2 - halfSideLength, -halfSideLength, 'right', node, "w-resize", function (pos) {
-                return {x: pos.x, y: group.getY() - halfSideLength};
-            });
+            _addEdgeAnchor(group, 0, node.height() / 2, 'bottom', node, "s-resize", 
+                    function (pos) {
+                        // pos是绝对位置(即相对于canvas)
+                        var offsetX = (pos.x - group.x());
+                        var offsetY = (pos.y - group.y());
+                        var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
+                        // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的Y坐标, 并沿着同一条边的y
+                        var offsetY_ = (offsetY > 0? 1: -1) * distance * Math.cos(group.rotation() / 180 * Math.PI + Math.atan(offsetX / offsetY));
+                        console.log(offsetX + ' ' + offsetY + ' ' + distance + ' ' + offsetY_);
+                        if (offsetY_ < 0) {
+                            offsetY_ = 0;
+                        }
+                        // 注意, x必须沿着0
+                        // 再次转化回屏幕坐标系
+                        return {
+                            x: group.x() + (offsetY_ * Math.sin(group.rotation() / 180 * Math.PI + Math.PI)),
+                            y: group.y() + (offsetY_ * Math.cos(group.rotation() / 180 * Math.PI)),
+                        }
+                    });
+            _addEdgeAnchor(group, node.width() / 2, 0, 'right', node, "w-resize", 
+                    function (pos) {
+                        // pos是绝对位置(即相对于canvas)
+                        var offsetX = (pos.x - group.x());
+                        var offsetY = (pos.y - group.y());
+                        var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
+                        // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的X坐标, 并沿着同一条边的x
+                        var offsetX_ = (offsetX > 0? 1: -1) * distance * Math.cos(-group.rotation() / 180 * Math.PI + Math.atan(offsetY / offsetX));
+                        if (offsetX_ < 0) {
+                            offsetX_ = 0;
+                        }
+                        // 注意, y必须沿着0
+                        // 再次转化回屏幕坐标系
+                        return {
+                            x: group.x() + (offsetX_ * Math.cos(group.rotation() / 180 * Math.PI)),
+                            y: group.y() + (offsetX_ * Math.sin(group.rotation() / 180 * Math.PI)),
+                        }
+                    });
         }
         _addRotationHandleBar(group, 0,
             -(node.height() / 2 + 50), 'handleBar', node);
@@ -139,7 +200,7 @@ define(function () {
         group.add(anchor);
     }
 
-    function _addRect(group, x, y, name, node, cursorStyle, dragBoundFunc) {
+    function _addEdgeAnchor(group, x, y, name, node, cursorStyle, dragBoundFunc) {
         var rect = new Kinetic.Rect({
             x: x,
             y: y,
@@ -152,7 +213,11 @@ define(function () {
             radius: 7,
             draggable: true,
             dragOnTop: false,
-            dragBoundFunc: dragBoundFunc
+            dragBoundFunc: dragBoundFunc,
+            offset: {
+                x: 4,
+                y: 4,
+            }
         });
         rect.on("mouseover",function () {
             document.body.style.cursor = cursorStyle;
@@ -186,6 +251,7 @@ define(function () {
             group.setDraggable(true);
         });
         group.add(rect);
+        return rect;
     }
 
     function _addRotationHandleBar(group, x, y, name, node) {
@@ -268,11 +334,11 @@ define(function () {
                 topRight.y(anchorY);
                 bottomLeft.x(anchorX);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                top.y(topLeft.y() - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
-                left.x(topLeft.x() - halfSideLength);
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2);
+                top.y(topLeft.y());
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
+                left.x(topLeft.x());
+                left.y((topLeft.y() + bottomLeft.y()) / 2);
                 right.y(left.y());
 
                 var newWidth = topRight.x() - topLeft.x();
@@ -285,12 +351,12 @@ define(function () {
                 topLeft.y(anchorY);
                 bottomRight.x(anchorX);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                top.y(topLeft.y() - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
-                left.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2);
+                top.y(topLeft.y());
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
+                left.y((topRight.y() + bottomRight.y()) / 2);
                 right.y(left.y());
-                right.x(topRight.x() - halfSideLength);
+                right.x(topRight.x());
 
                 newWidth = topRight.x() - topLeft.x();
                 newHeight = bottomLeft.y() - topLeft.y();
@@ -301,11 +367,11 @@ define(function () {
                 topRight.x(anchorX);
                 bottomLeft.y(anchorY);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
-                bottom.y(bottomRight.y() - halfSideLength);
-                right.x(bottomRight.x() - halfSideLength);
-                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
+                bottom.y(bottomRight.y());
+                right.x(bottomRight.x());
+                right.y((topRight.y() + bottomRight.y()) / 2);
                 left.y(right.y());
 
                 newWidth = topRight.x() - topLeft.x();
@@ -318,11 +384,11 @@ define(function () {
                 topLeft.x(anchorX);
                 bottomRight.y(anchorY);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
-                bottom.y(bottomRight.y() - halfSideLength);
-                left.x(bottomLeft.x() - halfSideLength);
-                left.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
+                bottom.y(bottomRight.y());
+                left.x(bottomLeft.x());
+                left.y((topRight.y() + bottomRight.y()) / 2);
                 right.y(left.y());
 
                 newWidth = topRight.x() - topLeft.x();
@@ -331,10 +397,10 @@ define(function () {
                 offsetY = -(oldHeight - newHeight) / 2;
                 break;
             case 'right':
-                topRight.x(right.x() + halfSideLength);
-                bottomRight.x(right.x() + halfSideLength);
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                topRight.x(right.x());
+                bottomRight.x(right.x());
+                top.x((topLeft.x() + topRight.x()) / 2);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
 
                 newWidth = right.x() - left.x();
                 newHeight = oldHeight;
@@ -343,10 +409,10 @@ define(function () {
                 offsetY = 0;
                 break;
             case 'left':
-                topLeft.x(left.x() + halfSideLength);
+                topLeft.x(left.x());
                 bottomLeft.x(topLeft.x());
-                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2);
 
                 rect.x(topLeft.x());
 
@@ -357,11 +423,11 @@ define(function () {
                 offsetY = 0;
                 break;
             case 'top':
-                topLeft.y(top.y() + halfSideLength);
+                topLeft.y(top.y());
                 topRight.y(topLeft.y());
 
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
-                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
+                left.y((topLeft.y() + bottomLeft.y()) / 2);
+                right.y((topRight.y() + bottomRight.y()) / 2);
 
                 rect.y(topLeft.y());
 
@@ -373,11 +439,11 @@ define(function () {
 
                 break;
             case 'bottom':
-                bottomLeft.y(bottom.y() + halfSideLength);
+                bottomLeft.y(bottom.y());
                 bottomRight.y(bottomLeft.y());
 
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
-                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
+                left.y((topLeft.y() + bottomLeft.y()) / 2);
+                right.y((topRight.y() + bottomRight.y()) / 2);
 
                 newWidth = oldWidth;
                 newHeight = bottom.y() - top.y();
