@@ -246,8 +246,10 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                     }
 
                     return false;
+                },
+                'click .change-text-panel .btn-default': function (evt) {
+                    this.$('.change-text-panel').hide();
                 }
-
             },
 
             _exchangeNode: function (aUuid, bUuid, layer) {
@@ -536,6 +538,37 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                                     playGround._imageLayer.draw();
                                     dispatcher.trigger('update-hotspot', 
                                         playGround._imageLayer);
+                                };
+                            }(playGround));
+                        controlGroup.on('dblclick', function (playGround) {
+                                return function (evt) {
+                                    playGround.$('.change-text-panel').css({
+                                        left: controlGroup.x() - im.width() / 2 + playGround.$('.editable-region').position().left,
+                                        top: controlGroup.y() - im.height() / 2 + playGround.$('.editable-region').position().top,
+                                        position: 'absolute',
+                                    }).show();
+                                    playGround.$('.change-text-panel textarea').val(text).focus();
+                                    playGround.$('.change-text-panel .btn-primary').one('click', function () {
+                                        var text = playGround.$('.change-text-panel textarea').val();
+                                        playGround.$('.change-text-panel').hide();
+                                        // TODO should add progress bar
+                                        $.ajax({
+                                            type: 'POST', 
+                                            url: '/image/font-image',
+                                            data: {
+                                                text: text,
+                                            'font-family': config.DEFAULT_FONT_FAMILY,
+                                            // 注意, 这里已经是生产大小了
+                                            'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                            },
+                                        }).done(function (data) {
+                                            playGround._addText(data, text);
+                                            im.destroy();
+                                            controlGroup.destroy();
+                                            playGround.$('.list-group-item[data-uuid="' + uuid + '"]').remove();
+                                            // TODO restore z-index
+                                        });
+                                    });
                                 };
                             }(playGround));
                         playGround._controlLayer.add(controlGroup).draw();
