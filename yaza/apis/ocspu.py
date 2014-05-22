@@ -38,10 +38,18 @@ class AspectWrapper(ModelWrapper):
 
         return ""
 
+    @property
+    def thumbnail(self):
+        if self.thumbnail_path:
+            return url_for("image.serve", filename=self.thumbnail_path)
+
+        return ""
+
     def as_dict(self, camel_case=True):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
                 [dr.as_dict(camel_case) for dr in self.design_region_list],
             'name': self.name,
