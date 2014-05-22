@@ -1,5 +1,5 @@
 define(function () {
-    var radius = 4;
+    var halfSideLength = 4;
 
     function makeControlGroup(node, title, uuid, resizable) {
 
@@ -61,18 +61,18 @@ define(function () {
             _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize");
             _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize");
 
-            _addRect(group, -radius, -node.height() / 2 - radius, 'top', node, "s-resize", function (pos) {
-                return {x: group.getX() - radius, y: pos.y};
+            _addRect(group, -halfSideLength, -node.height() / 2 - halfSideLength, 'top', node, "s-resize", function (pos) {
+                return {x: group.getX() - halfSideLength, y: pos.y};
             });
-            _addRect(group, -node.height() / 2 - radius, -radius, 'left', node, "w-resize", function (pos) {
-                return {x: pos.x, y: group.getY() - radius};
+            _addRect(group, -node.height() / 2 - halfSideLength, -halfSideLength, 'left', node, "w-resize", function (pos) {
+                return {x: pos.x, y: group.getY() - halfSideLength};
             });
 
-            _addRect(group, -radius, node.height() / 2 - radius, 'bottom', node, "s-resize", function (pos) {
-                return {x: group.getX() - radius, y: pos.y};
+            _addRect(group, -halfSideLength, node.height() / 2 - halfSideLength, 'bottom', node, "s-resize", function (pos) {
+                return {x: group.getX() - halfSideLength, y: pos.y};
             });
-            _addRect(group, node.height() / 2 - radius, -radius, 'right', node, "w-resize", function (pos) {
-                return {x: pos.x, y: group.getY() - radius};
+            _addRect(group, node.height() / 2 - halfSideLength, -halfSideLength, 'right', node, "w-resize", function (pos) {
+                return {x: pos.x, y: group.getY() - halfSideLength};
             });
         }
         _addRotationHandleBar(group, 0,
@@ -268,11 +268,11 @@ define(function () {
                 topRight.y(anchorY);
                 bottomLeft.x(anchorX);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                top.y(topLeft.y() - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
-                left.x(topLeft.x() - radius);
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - radius);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                top.y(topLeft.y() - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                left.x(topLeft.x() - halfSideLength);
+                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
                 right.y(left.y());
 
                 var newWidth = topRight.x() - topLeft.x();
@@ -285,12 +285,12 @@ define(function () {
                 topLeft.y(anchorY);
                 bottomRight.x(anchorX);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                top.y(topLeft.y() - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
-                left.y((topRight.y() + bottomRight.y()) / 2 - radius);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                top.y(topLeft.y() - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                left.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
                 right.y(left.y());
-                right.x(topRight.x() - radius);
+                right.x(topRight.x() - halfSideLength);
 
                 newWidth = topRight.x() - topLeft.x();
                 newHeight = bottomLeft.y() - topLeft.y();
@@ -301,11 +301,11 @@ define(function () {
                 topRight.x(anchorX);
                 bottomLeft.y(anchorY);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
-                bottom.y(bottomRight.y() - radius);
-                right.x(bottomRight.x() - radius);
-                right.y((topRight.y() + bottomRight.y()) / 2 - radius);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                bottom.y(bottomRight.y() - halfSideLength);
+                right.x(bottomRight.x() - halfSideLength);
+                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
                 left.y(right.y());
 
                 newWidth = topRight.x() - topLeft.x();
@@ -318,11 +318,11 @@ define(function () {
                 topLeft.x(anchorX);
                 bottomRight.y(anchorY);
 
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
-                bottom.y(bottomRight.y() - radius);
-                left.x(bottomLeft.x() - radius);
-                left.y((topRight.y() + bottomRight.y()) / 2 - radius);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
+                bottom.y(bottomRight.y() - halfSideLength);
+                left.x(bottomLeft.x() - halfSideLength);
+                left.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
                 right.y(left.y());
 
                 newWidth = topRight.x() - topLeft.x();
@@ -331,10 +331,10 @@ define(function () {
                 offsetY = -(oldHeight - newHeight) / 2;
                 break;
             case 'right':
-                topRight.x(right.x() + radius);
-                bottomRight.x(right.x() + radius);
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
+                topRight.x(right.x() + halfSideLength);
+                bottomRight.x(right.x() + halfSideLength);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
 
                 newWidth = right.x() - left.x();
                 newHeight = oldHeight;
@@ -343,10 +343,10 @@ define(function () {
                 offsetY = 0;
                 break;
             case 'left':
-                topLeft.x(left.x() + radius);
+                topLeft.x(left.x() + halfSideLength);
                 bottomLeft.x(topLeft.x());
-                top.x((topLeft.x() + topRight.x()) / 2 - radius);
-                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - radius);
+                top.x((topLeft.x() + topRight.x()) / 2 - halfSideLength);
+                bottom.x((bottomLeft.x() + bottomRight.x()) / 2 - halfSideLength);
 
                 rect.x(topLeft.x());
 
@@ -357,11 +357,11 @@ define(function () {
                 offsetY = 0;
                 break;
             case 'top':
-                topLeft.y(top.y() + radius);
+                topLeft.y(top.y() + halfSideLength);
                 topRight.y(topLeft.y());
 
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - radius);
-                right.y((topRight.y() + bottomRight.y()) / 2 - radius);
+                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
+                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
 
                 rect.y(topLeft.y());
 
@@ -373,11 +373,11 @@ define(function () {
 
                 break;
             case 'bottom':
-                bottomLeft.y(bottom.y() + radius);
+                bottomLeft.y(bottom.y() + halfSideLength);
                 bottomRight.y(bottomLeft.y());
 
-                left.y((topLeft.y() + bottomLeft.y()) / 2 - radius);
-                right.y((topRight.y() + bottomRight.y()) / 2 - radius);
+                left.y((topLeft.y() + bottomLeft.y()) / 2 - halfSideLength);
+                right.y((topRight.y() + bottomRight.y()) / 2 - halfSideLength);
 
                 newWidth = oldWidth;
                 newHeight = bottom.y() - top.y();
