@@ -1,0 +1,173 @@
+define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
+        'text!templates/object-manager-item.hbs', 'dispatcher'], 
+        function (Backbone, handlebars, template, itemTemplate, dispatcher) {
+            var ObjectManager = Backbone.View.extend({
+                _itemTemplate: handlebars.default.compile(itemTemplate),
+                _template: handlebars.default.compile(template),
+
+                events: {
+                    'click button.remove': function (evt) {
+                        if (confirm("确认删除该图片吗？")) {
+                            var parent = $(evt.currentTarget).parents(".list-group-item");
+                            var im = parent.data('object');
+                            var controlGroup = parent.data('control-group');
+                            [im, controlGroup].forEach(function (node) {
+                                var layer = node.getLayer();
+                                node.destroy();
+                                layer.draw();
+                            })
+                            dispatcher.trigger('update-hotspot', this._imageLayer);
+                            parent.remove();
+                            this._setupButtons();
+                        }
+                    },
+                    'click button.up-btn': function (evt) {
+                        var parent = $(evt.currentTarget).parents('.list-group-item');
+                        var prevItem = parent.prev('.list-group-item');
+                        this._exchangeImage(parent, prevItem);
+                    },
+                    'click button.down-btn': function (evt) {
+                        var parent = $(evt.currentTarget).parents('.list-group-item');
+                        var nextItem = parent.next('.list-group-item');
+                        this._exchangeImage(parent, nextItem);
+                    },
+                    'dragstart .column': function (evt) {
+                        $(evt.currentTarget).addClass("moving");
+                        this._dragSrcEl = evt.currentTarget;
+                        evt.originalEvent.dataTransfer.effectAllowed = 'move';
+                    },
+                    'dragend .column': function (evt) {
+                        $(".list-group-item").removeClass("over").removeClass("moving");
+                        $(".tail-placeholder").removeClass("over").removeClass("moving").removeClass('bg-info');
+                    },
+                    'dragover .column, .tail-placeholder': function (evt) {
+                        evt.stopPropagation && evt.stopPropagation();
+                        evt.originalEvent.dataTransfer.dropEffect = 'move';
+                        return false;
+                    },
+                    'dragleave .column, .tail-placeholder': function (evt) {
+                        $(evt.currentTarget).removeClass("over").removeClass('bg-info');
+                    },
+                    'dragenter .column, .tail-placeholder': function(evt) {
+                        $(evt.currentTarget).addClass("over").addClass('bg-info');
+                    },
+                    'drop .column': function (evt) {
+                        evt.stopPropagation && evt.stopPropagation();
+
+                        if(evt.currentTarget != this._dragSrcEl) {
+                            $(evt.currentTarget).before($(this._dragSrcEl));
+                            this._setupButtons();
+                            this._orderNodes();
+                            dispatcher.trigger('update-hotspot', this._imageLayer);
+                        }
+
+                        return false;
+                    },
+                    'drop .tail-placeholder': function (evt) {
+                       evt.stopPropagation && evt.stopPropagation();
+                       if (this._dragSrcEl != this.$('.list-group-item:last')[0]) {
+                           $(evt.currentTarget).before($(this._dragSrcEl));
+                           this._orderNodes();
+                           dispatcher.trigger('update-hotspot', this._imageLayer);
+                       }
+                    }
+                },
+
+                render: function() {
+                    this.$el.append(this._template());
+                    this._$container = this.$('.list-group');
+                    return this;
+                },
+
+                add: function (im, controlGroup) {
+                    $(this._itemTemplate({
+                        src: im.getImage().src,
+                        title: im.name(),
+                    })).prependTo(this._$container).data('object', im).data('control-group', controlGroup);
+                    this._setupButtons();
+                    this._imageLayer = im.getLayer();
+                },
+
+                _setupButtons: function() {
+                    this.$("button.up-btn").attr("disabled", false).show();
+                    this.$("button.down-btn").attr("disabled", false).show();
+
+                    if (this.$(".list-group-item").size() > 1) {
+                        this.$("button.up-btn:first").attr("disabled", true);
+                        this.$("button.down-btn:last").attr("disabled", true);
+                    } else {
+                        this.$("button.up-btn").hide();
+                        this.$("button.down-btn").hide();
+                    }
+                }, 
+
+                empty: function () {
+                    this._$container.find('.list-group-item').remove();
+                },
+
+                _exchangeImage: function (source, target) {
+                    if (target.length == 0) {
+                        return;
+                    }
+                    var playGround = this;
+
+                    var sourceTop = source.position().top;
+                    var targetTop = target.position().top;
+                    // 产生交换动画, 算法是: 隐藏原有的dom element, 创建两个
+                    // clone, 这两个clone完成位置交换的动画. 动画完毕后, 
+                    // 删除clone, 并且修改html dom
+                    source.css('visibility', 'hidden');
+                    target.css('visibility', 'hidden');
+                    source.clone().insertAfter(source).css({
+                        position: 'absolute', 
+                        visibility: 'visible', 
+                        top: sourceTop,
+                        width: this._$container.width(),  // 必须设置width, 否则长度错误, 我也不知道为什么
+                    }).animate({
+                            top: targetTop
+                        }, 200, function () {
+                            $(this).remove();
+                            if (sourceTop < targetTop) {
+                                source.insertAfter(target).css('visibility', 'visible');
+                            } else {
+                                source.insertBefore(target).css('visibility', 'visible');
+                            }
+                        });
+                    target.clone().insertAfter(target).css({
+                        position: 'absolute', 
+                        visibility: 'visible', 
+                        top: targetTop,
+                        width: this._$container.width(),  // 必须设置width, 否则长度错误, 我也不知道为什么
+                    }).animate({
+                            top: sourceTop
+                        }, 200, function (objectManager) {
+                            return function () {
+                                $(this).remove();
+                                target.css('visibility', 'visible');
+                                objectManager._setupButtons();
+                                objectManager._exchangeNode(source.data('object'), 
+                                    target.data('object'));
+                                objectManager._exchangeNode(source.data('control-group'), 
+                                    target.data('control-group'));
+                                dispatcher.trigger('update-hotspot', objectManager._imageLayer);
+                            };
+                        }(this));
+                },
+
+                _exchangeNode: function (src, dest) {
+                    var temp = src.getZIndex();
+                    src.setZIndex(dest.getZIndex());
+                    dest.setZIndex(temp);
+                    src.getLayer().draw();
+                },
+
+                _orderNodes: function (src, dest) {
+                    $(this.$('.list-group-item').get().reverse()).each(function (index) {
+                        $(this).data('object').setZIndex(index);
+                        $(this).data('control-group').setZIndex(index);
+                    });
+                    this._imageLayer.draw();
+                }
+            });
+            return ObjectManager;
+        });

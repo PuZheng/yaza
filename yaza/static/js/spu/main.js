@@ -32,6 +32,7 @@ require.config({
         config: 'js/spu/config',
         'color-tools': 'js/color-tools',
         'control-group': 'js/spu/control-group',
+        'object-manager': 'js/spu/views/object-manager',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {

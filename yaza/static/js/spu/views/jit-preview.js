@@ -204,6 +204,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 jitPreview._currentLayer = $(this).data('layer');
 
                                 jitPreview._designRegionAnimate(designRegion.previewEdges);
+                                console.log('ok');
                                 dispatcher.trigger('design-region-selected', designRegion);
                             }
                         }(this));
