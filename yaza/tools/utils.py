@@ -262,21 +262,20 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
     def _create_ocspu(ocspu_dir, cover_file, color, spu, config):
         cover_path = os.path.relpath(cover_file, start_dir)
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
-        for aspect_name in os.listdir(ocspu_dir):
-            aspect_dir = os.path.join(ocspu_dir, aspect_name)
-            if os.path.isdir(aspect_dir):
-                _create_aspect(aspect_dir, config, ocspu)
-
-    def _create_aspect(aspect_dir, config, ocspu):
         aspect_configs = config["aspects"]
+        for aspect_config in aspect_configs:
+            aspect_dir = os.path.join(ocspu_dir, aspect_config["dir"])
+            if os.path.isdir(aspect_dir):
+                _create_aspect(aspect_dir,aspect_config["name"], config, ocspu)
+
+    def _create_aspect(aspect_dir, name, config, ocspu):
         for fname in os.listdir(aspect_dir):
             full_path = os.path.join(aspect_dir, fname)
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
-                    name = _get_value_from_list(aspect_configs, "name", {"dir": os.path.basename(aspect_dir)})
                     thumbnail_path = _make_thumbnail(full_path, start_dir)
-
+                    
                     aspect = do_commit(Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
