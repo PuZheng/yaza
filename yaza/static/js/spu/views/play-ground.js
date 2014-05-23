@@ -1,5 +1,5 @@
-define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
-    function (SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
+    function (makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         function getChildrenByUuid(layer, uuid) {
             return layer.getChildren(function (node) {
                 return node.getAttr("uuid") == uuid;
@@ -96,10 +96,32 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
-                'click .btn-ok': function (evt) {
+                'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
+                },
+                'click .add-text-modal .btn-ok': function (evt) {
+                    var text = this.$('.add-text-modal textarea').val();
+                    if (!text) {
+                        alert('文字不能为空');
+                        return;
+                    }
+                    this.$('.add-text-modal').modal('hide');
+                    $.ajax({
+                        type: 'POST', 
+                        url: '/image/font-image',
+                        data: {
+                            text: text,
+                            'font-family': config.DEFAULT_FONT_FAMILY,
+                            // 注意, 这里已经是生产大小了
+                            'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                        },
+                    }).done(function (playGround) {
+                        return function (data) {
+                            playGround._addText(data, text);
+                        };
+                    }(this));
                 },
                 'click .touch-screen .btn-save': function (evt) {
                     this._draw.clear();
@@ -116,7 +138,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                         var offsetY = !!nested ? nested.height() + 30 : 0;
                         var designRegion = this._designRegionCache[name].designRegion;
                         this._draw.clear();
-                        this._draw.size(designRegion.size[0], designRegion.size[1])
+                        this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
                             .data('name', name);
                         var ratio = designRegion.size[0] / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
@@ -268,9 +290,9 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 this._design_image_list = options.design_image_list;
 
                 dispatcher.on('design-region-selected', function (designRegion) {
-                    this.$("[name=custom-pics]").empty();
                     console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
+                        this.$("[name=custom-pics]").empty();
                         var ts = this.$('.touch-screen');
                         var er = this.$('.touch-screen .editable-region');
                         if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
@@ -415,7 +437,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                 var container = this.$('[name=custom-pics]');
                 var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
                 var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
-                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;max-width:36px'></img> <span>%s</span>" +
+                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;'></img> <span>%s</span>" +
                     "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
                     "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
                 this._setupButtons();
@@ -435,6 +457,7 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     $(container.find("button.down-btn")).hide();
                 }
             },
+
             _addImage: function (src, title) {
                 if (!title) { // 用户自己上传的图片没有title
                     title = new Date().getTime();
@@ -469,265 +492,60 @@ define(['svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars'
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
-                    // 注意，group本身没有大小，位置也是固定的, 能拖动的是
-                    // group里面的元素
-                    var group = new Kinetic.Group({
-                        x: er.width() / 2,
-                        y: er.height() / 2,
-                        draggable: true,
-                        name: title,
-                        uuid: uuid
-                    });
-                    group.on('dragstart', function () {
-                        this.moveToTop();
-                    });
-                    group.on('dragend', function (playGround) {
-                        return function () {
-                            image.position({
-                                x: group.x(),
-                                y: group.y(),
-                            });
-                            playGround._imageLayer.draw();
-                            dispatcher.trigger('update-hotspot', playGround._imageLayer);
-                        }
-                    }(this));
-                    var rect = new Kinetic.Rect({
-                        x: -width / 2,
-                        y: -height / 2,
-                        stroke: 'gray',
-                        strokeWidth: 1,
-                        width: width,
-                        height: height,
-                        dash: [5, 5],
-                        name: 'rect',
-                    });
-                    group.add(rect);
-                    var line = new Kinetic.Line({
-                        stroke: 'gray',
-                        strokeWidth: 1,
-                        points: [0, -(height / 2 + this._initMargin - 30), 0, 0],
-                        dash: [5, 5],
-                        name: 'handle-bar-line',
-                    });
-                    group.add(line);
-                    var circle = new Kinetic.Circle({
-                        x: 0,
-                        y: 0,
-                        fill: 'red',
-                        radius: 3,
-                        name: 'center',
-                    });
-                    group.add(circle);
-                    this._controlLayer.add(group);
-                    this._addAnchor(group, -width / 2, -height / 2, 'topLeft');
-                    this._addAnchor(group, width / 2, -height / 2, 'topRight', width / 2, height / 2);
-                    this._addAnchor(group, width / 2, height / 2, 'bottomRight', width / 2, height / 2);
-                    this._addAnchor(group, -width / 2, height / 2, 'bottomLeft', width / 2, height / 2);
-                    this._addRotationHandleBar(group, 0,
-                        -(height / 2 + this._initMargin - 30), 'handleBar');
-                    this._controlLayer.draw();
-
+                    var group = makeControlGroup(image, title, uuid, true).on('dragend', 
+                            function (playGround) {
+                                return function () {
+                                    playGround._imageLayer.draw();
+                                    dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                                };
+                            }(this));
+                    this._controlLayer.add(group).draw();
                     this._addThumbnail(src, title, uuid);
-
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
                 imageObj.src = src;
             },
 
-            _addRotationHandleBar: function (group, x, y, name) {
-                var anchor = new Kinetic.Circle({
-                    x: x,
-                    y: y,
-                    stroke: '#666',
-                    fill: 'yellow',
-                    strokeWidth: 2,
-                    radius: 6,
-                    name: name,
-                    draggable: true,
-                });
-                anchor.on('mouseover', function () {
-                    var layer = this.getLayer();
-                    document.body.style.cursor = 'pointer';
-                    this.setStrokeWidth(4);
-                    layer.draw();
-                });
-                anchor.on('mouseout', function () {
-                    var layer = this.getLayer();
-                    document.body.style.cursor = 'default';
-                    this.strokeWidth(2);
-                    layer.draw();
-                });
-                anchor.on('mousedown touchstart', function () {
-                    group.setDraggable(false);
-                    this.moveToTop();
-                });
-                anchor.on('dragmove', function (playGround) {
+            _addText: function (data, text) {
+                var imageObj = new Image();
+                var uuid = newGuid();
+                $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
-                        var dx = this.x();
-                        var dy = this.y();
-                        var line = group.find('.handle-bar-line');
-                        line.points([0, -Math.sqrt(dx * dx + dy * dy), 0, 0]);
-                        var degree = Math.atan2(dx, -dy) * 180 / Math.PI;
-                        group.rotate(degree);
-                        this.rotate(-degree);
-                        var image = playGround._imageLayer.find('.' + group.name())[0];
-                        image.rotate(degree);
+                        var scale = playGround._imageLayer.width() / (playGround._currentDesignRegion.size[0] * config.PPI);
+                        var width = data.width * scale;
+                        var height = data.height * scale;
+                        // 将文字放在正中
+                        var im = new Kinetic.Image({
+                            x: playGround._imageLayer.width() / 2,
+                            y: playGround._imageLayer.height() / 2,
+                            width: width,
+                            name: text,
+                            uuid: uuid,
+                            height: height,
+                            image: imageObj,
+                            offset: {
+                                x: width / 2,
+                                y: height /2,
+                            },
+                        });
+                        playGround._imageLayer.add(im);
                         playGround._imageLayer.draw();
-                    };
-                }(this));
+                        var controlGroup = makeControlGroup(im, text, uuid).on('dragend',
+                            function (playGround) {
+                                return function () {
+                                    playGround._imageLayer.draw();
+                                    dispatcher.trigger('update-hotspot', 
+                                        playGround._imageLayer);
+                                };
+                            }(playGround));
+                        playGround._controlLayer.add(controlGroup).draw();
 
-                anchor.on('dragend', function (playGround) {
-                    return function () {
-                        group.setDraggable(true);
-                    };
-                }(this));
-
-                group.add(anchor);
-            },
-
-            _addAnchor: function (group, x, y, name) {
-
-                var anchor = new Kinetic.Circle({
-                    x: x,
-                    y: y,
-                    stroke: '#666',
-                    fill: '#ddd',
-                    strokeWidth: 2,
-                    radius: 7,
-                    name: name,
-                    draggable: true,
-                    dragOnTop: false,
-                });
-                anchor.on('mouseover', function () {
-                    var layer = this.getLayer();
-                    document.body.style.cursor = 'pointer';
-                    this.setStrokeWidth(4);
-                    layer.draw();
-                });
-                anchor.on('mouseout', function () {
-                    var layer = this.getLayer();
-                    document.body.style.cursor = 'default';
-                    this.strokeWidth(2);
-                    layer.draw();
-                });
-                anchor.on('mousedown touchstart', function () {
-                    group.setDraggable(false);
-                    this.moveToTop();
-                });
-
-                var stage = group.getStage();
-                var layer = group.getLayer();
-                anchor.on('dragmove', function (playGround) {
-                    return function () {
-                        playGround._update(this);
+                        playGround._addThumbnail(imageObj.src, text, uuid);
+                        dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
-
-                var playGround = this;
-                anchor.on('dragend', function () {
-                    // 重新计算group的位置, 以保证始终能按照物理中心进行旋转
-                    var rect = group.find('.rect')[0];
-                    var offsetX = rect.x() + rect.width() / 2;
-                    var offsetY = rect.y() + rect.height() / 2;
-                    group.move({
-                        x: offsetX,
-                        y: offsetY,
-                    });
-                    group.getChildren().each(function (node) {
-                        node.move({
-                            x: -offsetX,
-                            y: -offsetY,
-                        });
-                    });
-                    layer.draw();
-                    group.setDraggable(true);
-                });
-
-                group.add(anchor);
-            },
-
-            _update: function (anchor) {
-                // 这里调整group中所有元素的位置, 而不是直接移动group,
-                // 原因是, 如果移动group, 本anchor就得移动回来,这个时候和
-                // 鼠标就脱节了
-                var group = anchor.getParent();
-
-                var topLeft = group.find('.topLeft')[0];
-                var topRight = group.find('.topRight')[0];
-                var bottomRight = group.find('.bottomRight')[0];
-                var bottomLeft = group.find('.bottomLeft')[0];
-
-                var anchorX = anchor.x();
-                var anchorY = anchor.y();
-
-
-                var rect = group.find('.rect')[0];
-                var image = this._imageLayer.find('.' + group.name())[0];
-                var oldWidth = rect.width();
-                var oldHeight = rect.height();
-
-                switch (anchor.name()) {
-                    case 'topLeft':
-                        rect.position({
-                            x: anchorX,
-                            y: anchorY,
-                        });
-                        topRight.y(anchorY);
-                        bottomLeft.x(anchorX);
-
-                        var newWidth = topRight.x() - topLeft.x();
-                        var newHeight = bottomLeft.y() - topLeft.y();
-                        var offsetX = (oldWidth - newWidth) / 2;
-                        var offsetY = (oldHeight - newHeight) / 2;
-                        break;
-                    case 'topRight':
-                        rect.y(anchorY);
-                        topLeft.y(anchorY);
-                        bottomRight.x(anchorX);
-                        var newWidth = topRight.x() - topLeft.x();
-                        var newHeight = bottomLeft.y() - topLeft.y();
-                        var offsetX = -(oldWidth - newWidth) / 2;
-                        var offsetY = (oldHeight - newHeight) / 2;
-                        break;
-                    case 'bottomRight':
-                        topRight.x(anchorX);
-                        bottomLeft.y(anchorY);
-                        var newWidth = topRight.x() - topLeft.x();
-                        var newHeight = bottomLeft.y() - topLeft.y();
-                        var offsetX = -(oldWidth - newWidth) / 2;
-                        var offsetY = -(oldHeight - newHeight) / 2;
-                        break;
-                    case 'bottomLeft':
-                        rect.x(anchorX);
-                        topLeft.x(anchorX);
-                        bottomRight.y(anchorY);
-                        var newWidth = topRight.x() - topLeft.x();
-                        var newHeight = bottomLeft.y() - topLeft.y();
-                        var offsetX = (oldWidth - newWidth) / 2;
-                        var offsetY = -(oldHeight - newHeight) / 2;
-                        break;
-                }
-
-                rect.width(newWidth).height(newHeight);
-                // 注意, 移动image, x, y设定在了物理中心
-                image.size(rect.size()).move({
-                    x: offsetX,
-                    y: offsetY,
-                }).offset({
-                    x: newWidth / 2,
-                    y: newHeight / 2,
-                });
-                ['.handleBar', '.handle-bar-line', '.center'].forEach(function (nodeName) {
-                    group.find(nodeName)[0].move({
-                        x: offsetX,
-                        y: offsetY,
-                    });
-                });
-                group.getLayer().draw();
-                this._imageLayer.draw();
             }
+            
         });
         return PlayGround;
     });
-
-

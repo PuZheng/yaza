@@ -13,6 +13,10 @@
           <i class="fa fa-plus"></i>
           增加图片
         </button>
+        <button class="btn btn-success add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
+          <i class="fa fa-plus"></i>
+          增加文字
+        </button>
       </div>
     </div>
   </div>
@@ -48,7 +52,6 @@
               <span>上传新图片</span>
               <input type="file" name="files[]">
             </span>
-
             <div class='uploading-progress'>
               <!-- The file uploads will be shown here -->
             </div>
@@ -62,6 +65,26 @@
     <!-- /.modal-dialog -->
   </div>
   <!-- /.modal -->
+  <div class="modal fade add-text-modal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="modal-header">
+            <h4 class="modal-title">请输入文字</h4>
+          </div>
+          <div class="modal-body">
+            <div class="text-center">
+              <textarea rows="10" cols="24"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-ok btn-primary" data-dimiss="modal">确认</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="list-group" name="custom-pics">
 

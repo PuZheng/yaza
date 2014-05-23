@@ -30,3 +30,14 @@ MAIL_DEFAULT_SENDER = 'user@foo.com'
 
 FIRST_ASPECT_FILENAME = "aa.png"
 
+FONTS_AVAILABLE = {
+    u'文泉驿微米黑',
+    u'AR PL UMing CN',
+    u'AR PL UKai CN',
+    u'腾祥铁山硬隶繁',
+}
+
+# font famliy name -> ttf file path
+FONTS_MAP = {
+    #u'文泉驿微米黑': '/usr/local/share/fonts/wqy-ywmh.ttf'
+}

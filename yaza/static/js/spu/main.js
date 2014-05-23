@@ -29,7 +29,9 @@ require.config({
         'views/app-view': 'js/spu/views/app-view',
         'views/play-ground': 'js/spu/views/play-ground',
         'views/jit-preview': 'js/spu/views/jit-preview',
-        'color-tools':'js/color-tools'
+        config: 'js/spu/config',
+        'color-tools': 'js/color-tools',
+        'control-group': 'js/spu/control-group',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
