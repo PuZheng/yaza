@@ -9,6 +9,13 @@ define(function () {
             draggable: true,
             name: title,
         });
+        // 当进入图像, 临时展示control group
+        node.on('mouseenter', function () {
+            if (group.getAttr('trasient') && !group.visible()) {
+                group.show();
+                group.getLayer().draw();
+            }
+        });
         group.on('dragstart', function () {
             this.moveToTop();
         });
@@ -21,7 +28,7 @@ define(function () {
         var rect = new Kinetic.Rect({
             x: -node.width() / 2,
             y: -node.height() / 2,
-            stroke: 'gray',
+            stroke: '#CC3333',
             strokeWidth: 1,
             width: node.width(),
             height: node.height(),
@@ -33,6 +40,10 @@ define(function () {
             this.getLayer().draw();
         }).on("mouseout", function () {
             document.body.style.cursor = 'default';
+            // 如果是临时控制组, 离开rect要隐藏 
+            if (group.getAttr('trasient')) {
+                group.hide();
+            }
             this.getLayer().draw();
         });
 

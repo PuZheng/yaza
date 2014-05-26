@@ -215,6 +215,21 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
 
+                dispatcher.on('active-object', function (controlGroup) {
+                    this._controlLayer.getChildren().forEach(function (group) {
+                        group.hide(); 
+                        group.find('.rect')[0].stroke('gray');
+                        group.setAttr('trasient', true);
+                    });
+                    controlGroup.moveToTop();
+                    if (controlGroup.getAttr('visible')) {
+                        controlGroup.show();
+                    }
+                    controlGroup.setAttr('trasient', false);
+                    controlGroup.find('.rect')[0].stroke('#CC3333');
+                    this._controlLayer.draw();
+                    this._objectManager.activeObjectIndicator(controlGroup);
+                }, this);
             },
 
             render: function () {
@@ -365,7 +380,11 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                     playGround._imageLayer.draw();
                                     dispatcher.trigger('update-hotspot', playGround._imageLayer);
                                 };
-                            }(this));
+                            }(this)).on('mousedown', function () {
+                                if (this.getAttr('trasient')) {
+                                    dispatcher.trigger('active-object', this); 
+                                }
+                            });
                     this._controlLayer.add(group).draw();
                     this._objectManager.add(image, group);
                     dispatcher.trigger('update-hotspot', this._imageLayer);
@@ -402,7 +421,11 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                     dispatcher.trigger('update-hotspot', 
                                         playGround._imageLayer);
                                 };
-                            }(playGround));
+                            }(playGround)).on('mousedown', function () {
+                                if (this.getAttr('trasient')) {
+                                    dispatcher.trigger('active-object', this); 
+                                }
+                            });
                         playGround._controlLayer.add(controlGroup).draw();
                         playGround._objectManager.add(im, controlGroup);
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
