@@ -111,6 +111,19 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     this._imageLayer = im.getLayer();
                 },
 
+                replace: function (im, controlGroup, oldIm, oldControlGroup) {
+                    var objectManager = this;
+                    this.$('.column').each(function () {
+                        if ($(this).data('object') == oldIm) {
+                            $(this).data('object', im);
+                            $(this).data('control-group', oldControlGroup);
+                            $(this).html($(objectManager._itemTemplate({
+                                src: im.getImage().src,
+                                title: im.name(),
+                            })));
+                        }
+                    });
+                },
 
                 _setupButtons: function() {
                     this.$("button.up-btn").attr("disabled", false).show();

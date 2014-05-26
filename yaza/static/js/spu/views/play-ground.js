@@ -210,6 +210,12 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     controlGroup.find('.rect')[0].stroke('#CC3333');
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
+                    this.$('.text-operators').toggle(controlGroup.getAttr('object-type') == 'text');
+                    this.$('.text-operators .btn-change-text').off('click').click(
+                        function () {
+                            controlGroup.fire('dblclick');
+                            return false;
+                        });
                 }, this);
             },
 
@@ -373,7 +379,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 imageObj.src = src;
             },
 
-            _addText: function (data, text) {
+            _addText: function (data, text, oldIm, oldControlGroup) {
                 var imageObj = new Image();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
@@ -406,11 +412,12 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                 if (this.getAttr('trasient')) {
                                     dispatcher.trigger('active-object', this); 
                                 }
-                            });
+                            }).setAttr('object-type', 'text');
 
                         controlGroup.on('dblclick', function (playGround) {
                                 return function (evt) {
                                     playGround.$('.change-text-panel').css({
+                                        // TODO chrome下, position方法有bug, 永远返回0
                                         left: controlGroup.x() - im.width() / 2 + playGround.$('.editable-region').position().left,
                                         top: controlGroup.y() - im.height() / 2 + playGround.$('.editable-region').position().top,
                                         position: 'absolute',
@@ -419,7 +426,6 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                     playGround.$('.change-text-panel .btn-primary').one('click', function () {
                                         var text = playGround.$('.change-text-panel textarea').val();
                                         playGround.$('.change-text-panel').hide();
-                                        // TODO should add progress bar
                                         $.ajax({
                                             type: 'POST', 
                                             url: '/image/font-image',
@@ -429,18 +435,31 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                             // 注意, 这里已经是生产大小了
                                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
                                             },
+                                            beforeSend: function() {
+                                                dispatcher.trigger("jitPreview-mask");
+                                            },
+                                            complete: function() {
+                                                dispatcher.trigger("jitPreview-unmask");
+                                            },
                                         }).done(function (data) {
-                                            playGround._addText(data, text);
-                                            im.destroy();
-                                            controlGroup.destroy();
-                                            playGround.$('.list-group-item[data-uuid="' + uuid + '"]').remove();
-                                            // TODO restore z-index
+                                            playGround._addText(data, text, im, 
+                                                controlGroup);
                                         });
                                     });
                                 };
                             }(playGround));
                         playGround._controlLayer.add(controlGroup).draw();
-                        playGround._objectManager.add(im, controlGroup);
+                        if (oldIm && oldControlGroup) {
+                            im.setZIndex(oldIm.getZIndex());
+                            oldIm.destroy();
+                            oldControlGroup.destroy();
+                            playGround._objectManager.replace(im, controlGroup, 
+                                    oldIm, oldControlGroup);
+                            playGround._controlLayer.draw();
+                            playGround._imageLayer.draw();
+                        } else {
+                            playGround._objectManager.add(im, controlGroup);
+                        }
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
