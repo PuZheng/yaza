@@ -1,0 +1,22 @@
+<a href="#" class="list-group-item column" draggable="true" data-src="{{src}}"
+  data-title={{title}}>
+  <img src="{{src}}" alt="{{title}}" />
+  <span>{{title}}</span>
+  <div class="pull-right">
+    <button type='button' title='是否显示' class='btn btn-link visible-btn'>
+      <span class="fa-stack">
+        <i class="fa fa-eye fa-stack-1x"></i>
+        <i class="fa fa-ban fa-stack-2x text-danger" style='display: none'></i>
+      </span>
+    </button>
+    <button type='button' title='上' class='btn btn-link up-btn'>
+      <i class='fa fa-fw fa-arrow-up'></i>
+    </button>
+    <button type='button' title='下' class='btn btn-link down-btn'>
+      <i class='fa fa-fw fa-arrow-down'></i>
+    </button>
+    <button type='button' class='btn btn-link remove' title='删除'>
+      <i class='fa fa-fw fa-2x'>&times</i>
+    </button>
+  </div>
+</a>

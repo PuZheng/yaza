@@ -1,3 +1,5 @@
+@import url('play-ground.css');
+
 @media screen and (min-width: 992px) {
     body {
         /* for nav bar */
@@ -9,36 +11,6 @@
         width: 30em;
     }
 
-    .play-ground .dashboard .upload-img-btn {
-        height: 160px;
-        width: 120px;
-    }
-
-    .play-ground .upload-img-form {
-        display: inline-block;
-        width: 80%;
-        text-align: left;
-    }
-
-    .play-ground .add-img-modal .modal-footer {
-        text-align: center !important;
-    }
-
-    .play-ground .upload-img-form .uploading-progress {
-        display: inline-block;
-        width: 80%;
-    }
-
-    .play-ground .upload-img-form .uploading-progress .progress {
-        display: inline-block;
-        width: 70%;
-        vertical-align: middle;
-        margin: auto 10px;
-    }
-
-    .play-ground .upload-img-form .uploading-progress .upload-cancel-btn {
-        margin-left: 10px;
-    }
 
     .image_picker_image {
         margin: 0 auto;
@@ -50,36 +22,6 @@
         margin: 10px;
     }
 
-    .play-ground .touch-screen {
-        border: 1px solid #ccc;
-        height: 512px;
-        max-height: 512px;
-        background-color: #ccc;
-    }
-
-    .play-ground .touch-screen .editable-region.landscape {
-        width: 100%;
-        height: auto;
-        margin-top: auto;
-        margin-bottom: auto;
-    }
-
-    .play-ground .touch-screen .editable-region.portrait {
-        height: 100%;
-        width: auto;
-        background-color: #fff;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .play-ground .touch-screen button.btn-save {
-        position: absolute !important;
-        right: 0;
-    }
-
-    .play-ground .svg-drawing svg {
-        border: 1px dashed #ccc;
-    }
 
     .jit-preview .aspect-selector {
         border: 1px dashed #ccc;
@@ -201,26 +143,9 @@
 
     }
 
-    [draggable] {
-        -moz-user-select: none;
-        -khtml-user-select: none;
-        -webkit-user-select: none;
-        user-select: none;
-        /* Required to make elements draggable in old WebKit */
-        -khtml-user-drag: element;
-        -webkit-user-drag: element;
-    }
-
-    .column {
-        cursor: move;
-    }
-
-    .column.over {
-        border: 2px dashed #000;
-    }
-
-    .column.moving {
-        opacity: 0.25;
-        transform: scale(0.8);
+    .mask {
+        width: 100%;
+        height: 100%;
     }
 }
+

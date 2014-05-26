@@ -1,51 +1,5 @@
-define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
-    function (makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
-        function getChildrenByUuid(layer, uuid) {
-            return layer.getChildren(function (node) {
-                return node.getAttr("uuid") == uuid;
-            })
-        }
-
-        //获取32位长度的Guid号
-        function newGuid() {
-            var guid = getRandomString(8) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(16);
-            return guid;
-        }
-
-        function getRandomString(length) {
-            var rand = "";
-            for (i = 0; i < length; i++) {
-                if (i % 2 == 0) {
-                    rand += String.fromCharCode(randomletter());
-                }
-                else {
-                    rand += randomNumber();
-                }
-            }
-            return rand;
-        }
-
-        function randomletter() {
-            var rand = Math.floor(Math.random() * 25) + 65;
-            return rand;
-        }
-
-        function randomNumber() {
-            var rand = Math.floor(Math.random() * 9);
-            return rand;
-        }
-
-        function stringToByteArray(str) {
-            var array = new (window.Uint8Array !== void 0 ? Uint8Array : Array)(str.length);
-            var i;
-            var il;
-
-            for (i = 0, il = str.length; i < il; ++i) {
-                array[i] = str.charCodeAt(i) & 0xff;
-            }
-
-            return array;
-        }
+define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
+    function (ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -101,6 +55,10 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
+                'click .change-text-panel .btn-default': function (evt) {
+                    this.$('.change-text-panel').hide();
+                    return false;
+                },
                 'click .add-text-modal .btn-ok': function (evt) {
                     var text = this.$('.add-text-modal textarea').val();
                     if (!text) {
@@ -109,7 +67,7 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                     }
                     this.$('.add-text-modal').modal('hide');
                     $.ajax({
-                        type: 'POST', 
+                        type: 'POST',
                         url: '/image/font-image',
                         data: {
                             text: text,
@@ -117,11 +75,17 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
                         },
+                        beforeSend: function() {
+                            dispatcher.trigger("jitPreview-mask");
+                        },
+                        complete: function() {
+                            dispatcher.trigger("jitPreview-unmask");
+                        },
                     }).done(function (playGround) {
-                        return function (data) {
-                            playGround._addText(data, text);
-                        };
-                    }(this));
+                            return function (data) {
+                                playGround._addText(data, text);
+                            };
+                        }(this));
                 },
                 'click .touch-screen .btn-save': function (evt) {
                     this._draw.clear();
@@ -177,115 +141,6 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                         $(evt.currentTarget).removeClass('disabled');
                     });
                 },
-                'click button.close': function (evt) {
-                    function deleteChildrenByUuid(layer, uuid) {
-                        getChildrenByUuid(layer, uuid).forEach(function (node) {
-                            node.destroy();
-                        });
-                        layer.draw();
-                    }
-
-                    if (confirm("确认删除该图片吗？")) {
-                        var parent = $(evt.currentTarget).parents(".list-group-item");
-                        var uuid = parent.data("uuid");
-                        deleteChildrenByUuid(this._imageLayer, uuid);
-                        deleteChildrenByUuid(this._controlLayer, uuid);
-                        dispatcher.trigger('update-hotspot', this._imageLayer);
-                        parent.remove();
-                        this._setupButtons();
-                    }
-                },
-                'click button.up-btn': function (evt) {
-                    var parent = $(evt.currentTarget).parents('.list-group-item');
-                    var prevItem = parent.prev('.list-group-item');
-                    this._exchangeImage(parent, prevItem);
-                },
-                'click button.down-btn': function (evt) {
-                    var parent = $(evt.currentTarget).parents('.list-group-item');
-                    var nextItem = parent.next('.list-group-item');
-                    this._exchangeImage(parent, nextItem);
-                },
-                'dragstart .column': function (evt) {
-                    $(evt.currentTarget).addClass("moving");
-                    this._dragSrcEl = evt.currentTarget;
-                    evt.originalEvent.dataTransfer.effectAllowed = 'move';
-                    evt.originalEvent.dataTransfer.setData('text/html', $(evt.currentTarget).html());
-                    evt.originalEvent.dataTransfer.setData('text/plain', $(evt.currentTarget).data("uuid"));
-                },
-                'dragend .column': function (evt) {
-                    $(".list-group-item").removeClass("over").removeClass("moving");
-                },
-                'dragover .column': function (evt) {
-                    if(evt.preventDefault) {
-                        evt.preventDefault();
-                    }
-                    evt.originalEvent.dataTransfer.dropEffect = 'move';
-                    return false;
-                },
-                'dragleave .column': function (evt) {
-                    $(evt.currentTarget).removeClass("over");
-                },
-                'dragenter .column': function(evt) {
-                    $(evt.currentTarget).addClass("over");
-                },
-                'drop .column': function(evt) {
-                    if(evt.stopPropagation) {
-                        evt.stopPropagation();
-                    }
-
-                    if(evt.currentTarget != this._dragSrcEl) {
-                        var currentUuid = $(evt.currentTarget).data("uuid");
-                        var targetUuid = evt.originalEvent.dataTransfer.getData("text/plain");
-                        $(this._dragSrcEl).html($(evt.currentTarget).html()).attr("data-uuid", currentUuid).data("uuid", currentUuid);
-                        $(evt.currentTarget).html(evt.originalEvent.dataTransfer.getData("text/html")).attr("data-uuid", targetUuid).data("uuid", targetUuid);
-                        this._setupButtons();
-
-                        this._exchangeNode(currentUuid, targetUuid, this._imageLayer);
-                        this._exchangeNode(currentUuid, targetUuid, this._controlLayer);
-                        dispatcher.trigger('update-hotspot', this._imageLayer);
-                    }
-
-                    return false;
-                },
-                'click .change-text-panel .btn-default': function (evt) {
-                    this.$('.change-text-panel').hide();
-                }
-            },
-
-            _exchangeNode: function (aUuid, bUuid, layer) {
-                var a = getChildrenByUuid(layer, aUuid)[0];
-                var b = getChildrenByUuid(layer, bUuid)[0];
-                var aZIndex = a.getZIndex();
-                var bZIndex = b.getZIndex();
-                a.setZIndex(bZIndex);
-                b.setZIndex(aZIndex);
-                layer.draw();
-            },
-
-            _exchangeImage: function (source, target) {
-                if (target.length == 0) {
-                    return;
-                }
-                var playGround = this;
-                var currentUuid = source.data("uuid");
-                var targetUuid = target.data("uuid");
-
-                var parentTop = source.position().top;
-                var prevItemTop = target.position().top;
-                source.css('visibility', 'hidden');
-                target.css('visibility', 'hidden');
-                source.clone().insertAfter(source).css({position: 'absolute', visibility: 'visible', top: parentTop}).animate({top: prevItemTop}, 200, function () {
-                    $(this).remove();
-                    source.insertBefore(target).css('visibility', 'visible');
-                });
-                target.clone().insertAfter(target).css({position: 'absolute', visibility: 'visible', top: prevItemTop}).animate({top: parentTop}, 200, function () {
-                    $(this).remove();
-                    target.css('visibility', 'visible');
-                    playGround._setupButtons();
-                    playGround._exchangeNode(currentUuid, targetUuid, playGround._imageLayer);
-                    playGround._exchangeNode(currentUuid, targetUuid, playGround._controlLayer);
-                    dispatcher.trigger('update-hotspot', playGround._imageLayer);
-                });
             },
 
             initialize: function (options) {
@@ -294,7 +149,7 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                 dispatcher.on('design-region-selected', function (designRegion) {
                     console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
-                        this.$("[name=custom-pics]").empty();
+                        this._objectManager.empty();
                         var ts = this.$('.touch-screen');
                         var er = this.$('.touch-screen .editable-region');
                         if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
@@ -335,16 +190,34 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                         }).sort(function (a, b) {
                             return a.getZIndex() - b.getZIndex();
                         }).forEach(function (node) {
-                                this._addThumbnail(node.getImage().src, node.getName(), node.getAttr("uuid"));
+                                this._objectManager.add(node);
                             }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
 
+                dispatcher.on('active-object', function (controlGroup) {
+                    this._controlLayer.getChildren().forEach(function (group) {
+                        group.hide(); 
+                        group.find('.rect')[0].stroke('gray');
+                        group.setAttr('trasient', true);
+                    });
+                    if (!controlGroup.getAttr('hidden')) {
+                        controlGroup.show();
+                    }
+                    controlGroup.moveToTop();
+                    controlGroup.setAttr('trasient', false);
+                    controlGroup.find('.rect')[0].stroke('#CC3333');
+                    this._controlLayer.draw();
+                    this._objectManager.activeObjectIndicator(controlGroup);
+                }, this);
             },
 
             render: function () {
                 this.$el.prepend(this._template({"design_image_list": this._design_image_list}));
+                this._objectManager = new ObjectManager({
+                    el: this.$('.object-manager'),
+                }).render();
                 this._stage = new Kinetic.Stage({
                     container: this.$('.editable-region')[0],
                 });
@@ -435,16 +308,6 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                 }
             },
 
-            _addThumbnail: function (src, title, uuid) {
-                var container = this.$('[name=custom-pics]');
-                var upButton = _.sprintf("<button type='button' title='上' class='btn btn-link up-btn'><i class='fa fa-fw fa-2x fa-arrow-up'></i></button>", uuid);
-                var downButton = _.sprintf("<button type='button' title='下' class='btn btn-link down-btn'><i class='fa fa-fw fa-2x fa-arrow-down'></i></button>", uuid);
-                $(_.sprintf("<a class='list-group-item column' data-uuid='%s' draggable='true'><img src=%s style='max-height:36px;'></img> <span>%s</span>" +
-                    "<div class='pull-right' name='list-group-item-buttons'>" + upButton + downButton +
-                    "<button type='button' title='删除' class='close'><i class='fa fa-fw fa-2x'>&times</i></button></div></a>", uuid, src, title)).prependTo(container);
-                this._setupButtons();
-            },
-
             _setupButtons: function () {
                 var container = this.$('[name=custom-pics]');
 
@@ -464,7 +327,6 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                 if (!title) { // 用户自己上传的图片没有title
                     title = new Date().getTime();
                 }
-                var uuid = newGuid();
                 // 将图片按比例缩小，并且放在正中
                 var er = this.$('.touch-screen .editable-region');
                 var imageObj = new Image();
@@ -485,7 +347,6 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                         width: width,
                         height: height,
                         name: title,
-                        uuid: uuid,
                         offset: {
                             x: width / 2,
                             y: height / 2,
@@ -494,15 +355,19 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
-                    var group = makeControlGroup(image, title, uuid, true).on('dragend', 
+                    var group = makeControlGroup(image, title, true).on('dragend', 
                             function (playGround) {
                                 return function () {
                                     playGround._imageLayer.draw();
                                     dispatcher.trigger('update-hotspot', playGround._imageLayer);
                                 };
-                            }(this));
+                            }(this)).on('mousedown', function () {
+                                if (this.getAttr('trasient')) {
+                                    dispatcher.trigger('active-object', this); 
+                                }
+                            });
                     this._controlLayer.add(group).draw();
-                    this._addThumbnail(src, title, uuid);
+                    this._objectManager.add(image, group);
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
                 imageObj.src = src;
@@ -510,7 +375,6 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
 
             _addText: function (data, text) {
                 var imageObj = new Image();
-                var uuid = newGuid();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
                         var scale = playGround._imageLayer.width() / (playGround._currentDesignRegion.size[0] * config.PPI);
@@ -522,24 +386,28 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                             y: playGround._imageLayer.height() / 2,
                             width: width,
                             name: text,
-                            uuid: uuid,
                             height: height,
                             image: imageObj,
                             offset: {
                                 x: width / 2,
-                                y: height /2,
+                                y: height / 2,
                             },
                         });
                         playGround._imageLayer.add(im);
                         playGround._imageLayer.draw();
-                        var controlGroup = makeControlGroup(im, text, uuid).on('dragend',
+                        var controlGroup = makeControlGroup(im, text).on('dragend',
                             function (playGround) {
                                 return function () {
                                     playGround._imageLayer.draw();
-                                    dispatcher.trigger('update-hotspot', 
+                                    dispatcher.trigger('update-hotspot',
                                         playGround._imageLayer);
                                 };
-                            }(playGround));
+                            }(playGround)).on('mousedown', function () {
+                                if (this.getAttr('trasient')) {
+                                    dispatcher.trigger('active-object', this); 
+                                }
+                            });
+
                         controlGroup.on('dblclick', function (playGround) {
                                 return function (evt) {
                                     playGround.$('.change-text-panel').css({
@@ -572,13 +440,12 @@ define(['control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone',
                                 };
                             }(playGround));
                         playGround._controlLayer.add(controlGroup).draw();
-
-                        playGround._addThumbnail(imageObj.src, text, uuid);
+                        playGround._objectManager.add(im, controlGroup);
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
             }
-            
+
         });
         return PlayGround;
     });
