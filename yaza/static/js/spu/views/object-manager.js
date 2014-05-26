@@ -184,7 +184,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     src.getLayer().draw();
                 },
 
-                _orderNodes: function (src, dest) {
+                _orderNodes: function () {
                     $(this.$('.list-group-item').get().reverse()).each(function (index) {
                         $(this).data('object').setZIndex(index);
                         $(this).data('control-group').setZIndex(index);
