@@ -164,7 +164,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 jitPreview._stage.height($(this).height());
                                 jitPreview._stage.children.forEach(function (node) {
                                     // 只改变当前面的所有layer的大小
-                                    if (node.nodeType === 'Layer' && node.visible) {
+                                    if (node.nodeType === 'Layer' && node.visible()) {
                                         node.size(jitPreview._stage.size());
                                     }
                                 });

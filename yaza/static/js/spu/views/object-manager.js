@@ -21,15 +21,37 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             this._setupButtons();
                         }
                     },
+                    'click button.visible-btn': function (evt) {
+                        var parent = $(evt.currentTarget).parents('.list-group-item');
+                        $(evt.currentTarget).find('.fa-ban').toggle();
+                        var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
+                        parent.data('control-group').setAttr('hidden', !visible); 
+                        parent.data('object').setAttr('hidden', !visible); 
+                        if (visible) {
+                            parent.data('control-group').show(); 
+                            parent.data('object').show(); 
+                        } else {
+                            parent.data('control-group').hide(); 
+                            parent.data('object').hide(); 
+                        }
+                        parent.data('control-group').getLayer().draw(); 
+                        parent.data('object').getLayer().draw(); 
+                        return false;
+                    },
                     'click button.up-btn': function (evt) {
                         var parent = $(evt.currentTarget).parents('.list-group-item');
                         var prevItem = parent.prev('.list-group-item');
                         this._exchangeImage(parent, prevItem);
+                        return false;
                     },
                     'click button.down-btn': function (evt) {
                         var parent = $(evt.currentTarget).parents('.list-group-item');
                         var nextItem = parent.next('.list-group-item');
                         this._exchangeImage(parent, nextItem);
+                        return false;
+                    },
+                    'click .column': function (evt) {
+                        dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                     },
                     'dragstart .column': function (evt) {
                         $(evt.currentTarget).addClass("moving");
@@ -80,10 +102,11 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 },
 
                 add: function (im, controlGroup) {
+                    // 默认新增的对象要选中
                     $(this._itemTemplate({
                         src: im.getImage().src,
                         title: im.name(),
-                    })).prependTo(this._$container).data('object', im).data('control-group', controlGroup);
+                    })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
                     this._setupButtons();
                     this._imageLayer = im.getLayer();
                 },
@@ -167,6 +190,15 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         $(this).data('control-group').setZIndex(index);
                     });
                     this._imageLayer.draw();
+                },
+
+                activeObjectIndicator: function (controlGroup) {
+                    this.$('.column').removeClass('active-object');
+                    this.$('.column').each(function () {
+                        if ($(this).data('control-group') == controlGroup) {
+                            $(this).addClass('active-object');
+                        }
+                    }); 
                 }
             });
             return ObjectManager;
