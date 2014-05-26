@@ -97,7 +97,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
 
                     ocspu.aspectList.forEach(function (aspect) {
                         $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
-                            aspect.picUrl, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+                            aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
 
                         aspect.designRegionList.forEach(function (designRegion) {
                             designRegion.aspect = aspect;
@@ -204,6 +204,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 jitPreview._currentLayer = $(this).data('layer');
 
                                 jitPreview._designRegionAnimate(designRegion.previewEdges);
+                                console.log('ok');
                                 dispatcher.trigger('design-region-selected', designRegion);
                             }
                         }(this));
