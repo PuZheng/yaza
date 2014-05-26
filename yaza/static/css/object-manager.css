@@ -20,14 +20,6 @@
     border: 2px dashed #000;
 }
 
-.tail-placeholder {
-    height: 30px;
-}
-
-.tail-placeholder.over {
-    border: 2px dashed #777;
-}
-
 .column.moving {
     opacity: 0.25;
     transform: scale(0.8);
@@ -35,4 +27,8 @@
 
 .active-object {
     border: 3px solid #CC3333;
+}
+
+.bg-info {
+    background-color: #d9edf7 !important;
 }
