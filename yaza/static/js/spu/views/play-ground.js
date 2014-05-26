@@ -1,35 +1,6 @@
 define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
     function (ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
-        //获取32位长度的Guid号
-        function newGuid() {
-            var guid = getRandomString(8) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(4) + "-" + getRandomString(16);
-            return guid;
-        }
-
-        function getRandomString(length) {
-            var rand = "";
-            for (i = 0; i < length; i++) {
-                if (i % 2 == 0) {
-                    rand += String.fromCharCode(randomletter());
-                }
-                else {
-                    rand += randomNumber();
-                }
-            }
-            return rand;
-        }
-
-        function randomletter() {
-            var rand = Math.floor(Math.random() * 25) + 65;
-            return rand;
-        }
-
-        function randomNumber() {
-            var rand = Math.floor(Math.random() * 9);
-            return rand;
-        }
-
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
                 return options.fn(this);
@@ -92,7 +63,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     }
                     this.$('.add-text-modal').modal('hide');
                     $.ajax({
-                        type: 'POST', 
+                        type: 'POST',
                         url: '/image/font-image',
                         data: {
                             text: text,
@@ -101,10 +72,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
                         },
                     }).done(function (playGround) {
-                        return function (data) {
-                            playGround._addText(data, text);
-                        };
-                    }(this));
+                            return function (data) {
+                                playGround._addText(data, text);
+                            };
+                        }(this));
                 },
                 'click .touch-screen .btn-save': function (evt) {
                     this._draw.clear();
@@ -209,8 +180,8 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         }).sort(function (a, b) {
                             return a.getZIndex() - b.getZIndex();
                         }).forEach(function (node) {
-                            this._objectManager.add(node);
-                        }.bind(this));
+                                this._objectManager.add(node);
+                            }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
@@ -359,13 +330,13 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
-                    var group = makeControlGroup(image, title, true).on('dragend', 
-                            function (playGround) {
-                                return function () {
-                                    playGround._imageLayer.draw();
-                                    dispatcher.trigger('update-hotspot', playGround._imageLayer);
-                                };
-                            }(this));
+                    var group = makeControlGroup(image, title, true).on('dragend',
+                        function (playGround) {
+                            return function () {
+                                playGround._imageLayer.draw();
+                                dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                            };
+                        }(this));
                     this._controlLayer.add(group).draw();
                     this._objectManager.add(image, group);
                     dispatcher.trigger('update-hotspot', this._imageLayer);
@@ -390,7 +361,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             image: imageObj,
                             offset: {
                                 x: width / 2,
-                                y: height /2,
+                                y: height / 2,
                             },
                         });
                         playGround._imageLayer.add(im);
@@ -399,7 +370,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             function (playGround) {
                                 return function () {
                                     playGround._imageLayer.draw();
-                                    dispatcher.trigger('update-hotspot', 
+                                    dispatcher.trigger('update-hotspot',
                                         playGround._imageLayer);
                                 };
                             }(playGround));
@@ -409,7 +380,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     }
                 }(this));
             }
-            
+
         });
         return PlayGround;
     });
