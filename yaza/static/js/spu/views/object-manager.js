@@ -25,8 +25,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         var parent = $(evt.currentTarget).parents('.list-group-item');
                         $(evt.currentTarget).find('.fa-ban').toggle();
                         var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
-                        parent.data('control-group').setAttr('visible', visible); 
-                        parent.data('object').setAttr('visible', visible); 
+                        parent.data('control-group').setAttr('hidden', !visible); 
+                        parent.data('object').setAttr('hidden', !visible); 
                         if (visible) {
                             parent.data('control-group').show(); 
                             parent.data('object').show(); 

@@ -198,10 +198,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         group.find('.rect')[0].stroke('gray');
                         group.setAttr('trasient', true);
                     });
-                    controlGroup.moveToTop();
-                    if (controlGroup.getAttr('visible')) {
+                    if (!controlGroup.getAttr('hidden')) {
                         controlGroup.show();
                     }
+                    controlGroup.moveToTop();
                     controlGroup.setAttr('trasient', false);
                     controlGroup.find('.rect')[0].stroke('#CC3333');
                     this._controlLayer.draw();
