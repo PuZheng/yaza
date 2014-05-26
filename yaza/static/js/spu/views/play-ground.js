@@ -71,6 +71,12 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
                         },
+                        beforeSend: function() {
+                            dispatcher.trigger("jitPreview-mask");
+                        },
+                        complete: function() {
+                            dispatcher.trigger("jitPreview-unmask");
+                        },
                     }).done(function (playGround) {
                             return function (data) {
                                 playGround._addText(data, text);

@@ -227,96 +227,100 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                 this._mask = this.$(".mask");
                 this._mask.css("line-height", this.$(".hotspot").height() + "px");
                 this._mask.hide();
-                dispatcher.on('update-hotspot', function (playGroundLayer) {
-                    this._mask.show();
-                    var hotspotContext = this._currentLayer.getContext();
-                    if (playGroundLayer.children.length == 0) {
-                        hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
-                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
+                dispatcher.on("jitPreview-mask", function () {
+                        this._mask.show();
+                    }.bind(this)).on("jitPreview-unmask", function () {
+                        this._mask.hide();
+                    }.bind(this)).on('update-hotspot', function (playGroundLayer) {
+                        this._mask.show();
+                        var hotspotContext = this._currentLayer.getContext();
+                        if (playGroundLayer.children.length == 0) {
+                            hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                            this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
+                            if (this._currentDesignRegion) {
+                                var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
+                                dom.removeClass("list-group-item-info");
+                                dom.find("i").remove();
+                            }
+                            this._mask.hide();
+                            return;
+                        }
+
                         if (this._currentDesignRegion) {
                             var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                            dom.removeClass("list-group-item-info");
-                            dom.find("i").remove();
-                        }
-                        this._mask.hide();
-                        return;
-                    }
-
-                    if (this._currentDesignRegion) {
-                        var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                        dom.addClass("list-group-item-info");
-                        if (dom.find("i").size() == 0) {
-                            dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
-                        }
-                    }
-                    this._currentLayer.draw();
-                    this._currentLayer.size(this._stage.size());
-                    var targetWidth = this._stage.width();
-                    var targetHeight = this._stage.height();
-                    var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
-                    var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
-                        playGroundLayer.width(), playGroundLayer.height()).data;
-                    var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
-                    if (!this._currentDesignRegion.controlPointsMap) {
-                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
-                            [4, 4]);
-                    }
-
-                    var srcWidth = playGroundLayer.width();
-                    var srcHeight = playGroundLayer.height();
-                    var delta1 = 10;
-                    var delta2 = -5;
-                    var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1,
-                        this._currentDesignRegion.maxHSVValue);
-                    var test2 = this._currentDesignRegion.medianHSVValue - delta2;
-                    for (var i = 0; i < targetWidth; ++i) {
-                        for (var j = 0; j < targetHeight; ++j) {
-                            if (this._within(i, j)) {
-                                var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
-                                var pos = (i + j * targetWidth) * 4;
-                                origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
-                                var v = getHSVValue(backgroundImageData, pos, srcImageData,
-                                    origPos, test1, test2);
-
-                                hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
-                                hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
-                                hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
-                                hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
-
+                            dom.addClass("list-group-item-info");
+                            if (dom.find("i").size() == 0) {
+                                dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                             }
                         }
-                    }
-                    if (__debug__) {
-                        var layer = new Kinetic.Layer();
-                        var data = [];
-                        this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
-                            data.push(pair[0][0]);
-                            data.push(pair[0][1]);
-                            var circle = new Kinetic.Circle({
-                                x: pair[0][0],
-                                y: pair[0][1],
-                                stroke: '#666',
-                                fill: '#ddd',
-                                strokeWidth: 2,
-                                radius: 3,
+                        this._currentLayer.draw();
+                        this._currentLayer.size(this._stage.size());
+                        var targetWidth = this._stage.width();
+                        var targetHeight = this._stage.height();
+                        var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
+                        var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
+                            playGroundLayer.width(), playGroundLayer.height()).data;
+                        var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
+                        if (!this._currentDesignRegion.controlPointsMap) {
+                            this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
+                                [4, 4]);
+                        }
+
+                        var srcWidth = playGroundLayer.width();
+                        var srcHeight = playGroundLayer.height();
+                        var delta1 = 10;
+                        var delta2 = -5;
+                        var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1,
+                            this._currentDesignRegion.maxHSVValue);
+                        var test2 = this._currentDesignRegion.medianHSVValue - delta2;
+                        for (var i = 0; i < targetWidth; ++i) {
+                            for (var j = 0; j < targetHeight; ++j) {
+                                if (this._within(i, j)) {
+                                    var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
+                                    var pos = (i + j * targetWidth) * 4;
+                                    origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
+                                    var v = getHSVValue(backgroundImageData, pos, srcImageData,
+                                        origPos, test1, test2);
+
+                                    hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
+                                    hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
+                                    hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
+                                    hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
+
+                                }
+                            }
+                        }
+                        if (__debug__) {
+                            var layer = new Kinetic.Layer();
+                            var data = [];
+                            this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                                data.push(pair[0][0]);
+                                data.push(pair[0][1]);
+                                var circle = new Kinetic.Circle({
+                                    x: pair[0][0],
+                                    y: pair[0][1],
+                                    stroke: '#666',
+                                    fill: '#ddd',
+                                    strokeWidth: 2,
+                                    radius: 3,
+                                });
+                                layer.add(circle);
+                            }.bind(this));
+                            data.push(data[0]);
+                            data.push(data[1]);
+                            var line = new Kinetic.Line({
+                                points: data,
+                                stroke: 'white',
+                                strokeWidth: 1,
                             });
-                            layer.add(circle);
-                        }.bind(this));
-                        data.push(data[0]);
-                        data.push(data[1]);
-                        var line = new Kinetic.Line({
-                            points: data,
-                            stroke: 'white',
-                            strokeWidth: 1,
-                        });
-                        layer.add(line);
-                        this._stage.add(layer);
-                        this._stage.draw();
-                    }
-                    hotspotContext.putImageData(hotspotImageData, 0, 0);
-                    this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
-                    this._mask.hide();
-                }.bind(this));
+                            layer.add(line);
+                            this._stage.add(layer);
+                            this._stage.draw();
+                        }
+                        hotspotContext.putImageData(hotspotImageData, 0, 0);
+                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                        this._mask.hide();
+                    }.bind(this));
             },
 
 
