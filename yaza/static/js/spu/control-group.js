@@ -1,6 +1,6 @@
 define(function () {
 
-    function makeControlGroup(node, title, uuid, resizable) {
+    function makeControlGroup(node, title, resizable) {
 
         resizable = !!resizable;
         var group = new Kinetic.Group({
@@ -8,7 +8,6 @@ define(function () {
             y: node.y() - node.offsetY() + node.height() / 2,
             draggable: true,
             name: title,
-            uuid: uuid
         });
         group.on('dragstart', function () {
             this.moveToTop();
