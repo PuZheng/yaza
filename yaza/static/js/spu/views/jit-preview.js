@@ -232,7 +232,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     }.bind(this)).on("jitPreview-unmask", function () {
                         this._mask.hide();
                     }.bind(this)).on('update-hotspot', function (playGroundLayer) {
-                        this._mask.show();
                         var hotspotContext = this._currentLayer.getContext();
                         if (playGroundLayer.children.length == 0) {
                             hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
@@ -242,7 +241,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 dom.removeClass("list-group-item-info");
                                 dom.find("i").remove();
                             }
-                            this._mask.hide();
                             return;
                         }
 
@@ -319,7 +317,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                         }
                         hotspotContext.putImageData(hotspotImageData, 0, 0);
                         this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
-                        this._mask.hide();
                     }.bind(this));
             },
 
