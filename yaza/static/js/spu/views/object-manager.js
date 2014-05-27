@@ -114,7 +114,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
                 var a = $("a[data-title=" + im.name() + "]");
                 //截取图片长度
-                var img_width = a.width() - a.find(".pull-right").width() - a.find("span").width();
+                var img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
                 a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
                 // 偏移文字
                 a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
