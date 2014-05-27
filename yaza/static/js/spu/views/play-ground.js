@@ -1,5 +1,5 @@
-define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
-    function (ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum'],
+    function (make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -55,13 +55,21 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     var $img = this.$(".thumbnail.selected img");
                     this._addImage($img.attr("src"), $img.data('title'));
                 },
+                'click .change-text-panel .btn-default': function (evt) {
+                    this.$('.change-text-panel').hide();
+                    this.$('.editable-region').unblock();
+                    this.$('.dashboard').unblock();
+                    this.$('.object-manager').unblock();
+                    return false;
+                },
                 'click .add-text-modal .btn-ok': function (evt) {
-                    var text = this.$('.add-text-modal textarea').val();
+                    var text = this.$('.add-text-modal textarea').val().trim();
                     if (!text) {
                         alert('文字不能为空');
                         return;
                     }
                     this.$('.add-text-modal').modal('hide');
+                    this.$('.add-text-modal textarea').val("");
                     $.ajax({
                         type: 'POST',
                         url: '/image/font-image',
@@ -70,6 +78,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             'font-family': config.DEFAULT_FONT_FAMILY,
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                            'font-color': config.DEFAULT_FONT_COLOR,
                         },
                         beforeSend: function() {
                             dispatcher.trigger("jitPreview-mask");
@@ -137,6 +146,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         $(evt.currentTarget).removeClass('disabled');
                     });
                 },
+                'click .text-operators .btn-change-text': function () {
+                    this._objectManager.activeObject().data('control-group')    .fire('dblclick');
+                    return false;
+                },
             },
 
             initialize: function (options) {
@@ -193,6 +206,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 }, this);
 
                 dispatcher.on('active-object', function (controlGroup) {
+                    console.log('active object');
                     this._controlLayer.getChildren().forEach(function (group) {
                         group.hide(); 
                         group.find('.rect')[0].stroke('gray');
@@ -206,6 +220,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     controlGroup.find('.rect')[0].stroke('#CC3333');
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
+                    this._resetDashboard(controlGroup);
                 }, this);
             },
 
@@ -271,6 +286,43 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 });
                 this._renderGallery();
                 this._draw = SVG(this.$('.svg-drawing')[0]);
+                this.$('.text-color').spectrum({
+                    showPalette: true,
+                    preferredFormat: "name",
+                    chooseText: "确定",
+                    cancelText: "取消",
+                    showInput: true,
+                    showAlpha: true,
+                    palette: make2DColorArray(10),
+                    change: (function (playGround) {
+                        return function (color) {
+                            var activeItem = playGround._objectManager.activeObject();
+                            var controlGroup = activeItem.data('control-group');
+                            var im = activeItem.data('object');
+                            controlGroup.setAttr('text-color', color.toHexString());
+                            $.ajax({
+                                type: 'POST', 
+                                url: '/image/font-image',
+                                data: {
+                                    text: im.name(),
+                                    'font-family': config.DEFAULT_FONT_FAMILY,
+                                    'font-color': color.toHexString(),
+                                    // 注意, 这里已经是生产大小了
+                                    'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                },
+                                beforeSend: function() {
+                                    dispatcher.trigger("jitPreview-mask");
+                                },
+                                complete: function() {
+                                    dispatcher.trigger("jitPreview-unmask");
+                                },
+                            }).done(function (data) {
+                                playGround._addText(data, im.name(), im, 
+                                    controlGroup);
+                            });
+                        };
+                    })(playGround),
+                });
             },
 
             _renderGallery: function () {
@@ -369,7 +421,8 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 imageObj.src = src;
             },
 
-            _addText: function (data, text) {
+            _addText: function (data, text, oldIm, oldControlGroup) {
+                console.log('add text ' + text);
                 var imageObj = new Image();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
@@ -390,7 +443,6 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             },
                         });
                         playGround._imageLayer.add(im);
-                        playGround._imageLayer.draw();
                         var controlGroup = makeControlGroup(im, text).on('dragend',
                             function (playGround) {
                                 return function () {
@@ -402,13 +454,94 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                 if (this.getAttr('trasient')) {
                                     dispatcher.trigger('active-object', this); 
                                 }
-                            });
+                            }).setAttr('object-type', 'text');
+
+                        controlGroup.off('dblclick').on('dblclick', function (playGround) {
+                                return function (evt) {
+                                    // 之所以不用position, 是因为chrome下面position方法有bug
+                                    var left = controlGroup.x() - im.width() / 2;
+                                    left += playGround.$('.editable-region').offset().left;
+                                    left -= playGround.$('.editable-region').parent().offset().left;
+                                    var top = controlGroup.y() - im.height() / 2;
+                                    top += playGround.$('.editable-region').offset().top, 
+                                    top -= playGround.$('.editable-region').parent().offset().top;
+                                    playGround.$('.change-text-panel').css({
+                                        left: left,
+                                        top: top,
+                                        position: 'absolute',
+                                    }).show();
+                                    ['.editable-region', '.object-manager', '.dashboard'].forEach(
+                                        function (className) {
+                                            playGround.$(className).block({
+                                                message: null,
+                                                overlayCSS: {
+                                                    backgroundColor: "#ccc",
+                                                opacity: 0.4,
+                                                },
+                                                baseZ: 0,
+                                            });
+                                        });
+                                    playGround.$('.change-text-panel textarea').val(im.name());
+                                    playGround.$('.change-text-panel textarea').focus();
+                                    playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
+                                        var text = playGround.$('.change-text-panel textarea').val().trim();
+                                        playGround.$('.change-text-panel').hide();
+                                        $.ajax({
+                                            type: 'POST', 
+                                            url: '/image/font-image',
+                                            data: {
+                                                text: text,
+                                                'font-family': config.DEFAULT_FONT_FAMILY,
+                                                // 注意, 这里已经是生产大小了
+                                                'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                                'font-color': controlGroup.getAttr('text-color'),
+                                            },
+                                            beforeSend: function() {
+                                                dispatcher.trigger("jitPreview-mask");
+                                            },
+                                            complete: function() {
+                                                dispatcher.trigger("jitPreview-unmask");
+                                            },
+                                        }).done(function (data) {
+                                            playGround._addText(data, text, im, 
+                                                controlGroup);
+                                        }).always(function () {
+                                            playGround.$('.editable-region ').unblock();
+                                            playGround.$('.object-manager').unblock();
+                                            playGround.$('.dashboard').unblock();
+                                        });
+                                    });
+                                };
+                            }(playGround));
+                        if (oldIm && oldControlGroup) {
+                            im.setZIndex(oldIm.getZIndex());
+                            im.position(oldIm.position());
+                            controlGroup.position(oldControlGroup.position());
+                            oldIm.destroy();
+                            oldControlGroup.destroy();
+                            playGround._objectManager.replace(im, controlGroup, 
+                                    oldIm, oldControlGroup);
+                            playGround._controlLayer.draw();
+                        } else {
+                            playGround._objectManager.add(im, controlGroup);
+                        }
                         playGround._controlLayer.add(controlGroup).draw();
-                        playGround._objectManager.add(im, controlGroup);
+                        playGround._imageLayer.draw();
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
+            },
+
+            _resetDashboard: function (controlGroup) {
+                if (controlGroup.getAttr('object-type') == 'text') {
+                    this.$('.text-operators').show();
+                    this.$('.text-operators .text-color').spectrum('set', 
+                            controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
+                } else {
+                    this.$('.text-operators').hide();
+                }
             }
+
 
         });
         return PlayGround;

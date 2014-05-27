@@ -4,6 +4,15 @@
     <a href=""></a>
   </button>
   <div class="editable-region"></div>
+  <div class="change-text-panel panel panel-default" style='display: none'>
+    <div class="panel-body">
+      <textarea rows="2" cols="24" name='change-text' ></textarea>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-default btn-xs">取消</button>
+      <button class="btn btn-primary btn-xs">确定</button>
+    </div>
+  </div>
 </div>
 <div class="dashboard">
   <div class="panel panel-default">
@@ -17,6 +26,12 @@
           <i class="fa fa-plus"></i>
           增加文字
         </button>
+      </div>
+      <div class="text-operators" style="display: none">
+        <button class="btn btn-default btn-sm btn-change-text">
+          修改文字 
+        </button>
+        <input type="" class="text-color" />
       </div>
     </div>
   </div>

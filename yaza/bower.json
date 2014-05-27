@@ -37,6 +37,8 @@
     "svg.export.js": "https://github.com/wout/svg.export.js.git#~0.1.0",
     "zlib.js": "https://github.com/imaya/zlib.js.git#~0.2.0",
     "excanvas": "*",
-    "fancybox":"latest"
+    "fancybox": "latest",
+    "blockui": "*",
+    "spectrum": "~1.3.4"
   }
 }

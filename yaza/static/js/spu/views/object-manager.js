@@ -20,7 +20,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         });
                         dispatcher.trigger('update-hotspot', this._imageLayer);
                         parent.remove();
+                        this.$('.list-group-item:first').click();
                         this._setupButtons();
+                        return false;
                     }
                 },
                 'click button.visible-btn': function (evt) {
@@ -92,6 +94,20 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 }
 
+            },
+
+            replace: function (im, controlGroup, oldIm, oldControlGroup) {
+                var objectManager = this;
+                this.$('.column').each(function () {
+                    if ($(this).data('object') == oldIm) {
+                        $(this).data('object', im);
+                        $(this).data('control-group', controlGroup);
+                        $(this).html($(objectManager._itemTemplate({
+                            src: im.getImage().src,
+                            title: im.name(),
+                        })).html());
+                    }
+                });
             },
 
             render: function () {
@@ -210,7 +226,12 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         $(this).addClass('active-object');
                     }
                 });
+            },
+
+            activeObject: function () {
+                return this.$('.list-group-item.active-object');
             }
+
         });
         return ObjectManager;
     });

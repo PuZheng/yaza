@@ -23,6 +23,8 @@ require.config({
         'select2': 'components/select2/select2.min',
         'svg': 'components/svg.js/dist/svg.min',
         'svg.export': 'components/svg.export.js/svg.export.min',
+        'block-ui': 'components/blockui/jquery.blockUI',
+        'spectrum': 'components/spectrum/spectrum',
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
@@ -33,9 +35,13 @@ require.config({
         'color-tools': 'js/color-tools',
         'control-group': 'js/spu/control-group',
         'object-manager': 'js/spu/views/object-manager',
+        colors: 'js/spu/colors',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
+        'block-ui': {
+            deps: ['jquery'],
+        },
         'underscore': {
             exports: '_',
         },
@@ -55,6 +61,10 @@ require.config({
         },
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css']
+        },
+        'spectrum': {
+            deps: ['css!components/spectrum/spectrum.css'],
+            exports: '$.fn.spectrum',
         },
         'svg': {
             exports: 'SVG',
