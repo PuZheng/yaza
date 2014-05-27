@@ -448,7 +448,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                         baseZ: 0,
                                     });
                                     playGround.$('.change-text-panel textarea').val(text).focus();
-                                    playGround.$('.change-text-panel .btn-primary').one('click', function () {
+                                    playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
                                         var text = playGround.$('.change-text-panel textarea').val();
                                         playGround.$('.change-text-panel').hide();
                                         $.ajax({
