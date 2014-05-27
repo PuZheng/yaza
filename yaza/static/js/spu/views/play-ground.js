@@ -416,10 +416,17 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
 
                         controlGroup.on('dblclick', function (playGround) {
                                 return function (evt) {
+                                    // 之所以不用position, 是因为chrome下面position方法有bug
+                                    var left = controlGroup.x() - im.width() / 2;
+                                    left += playGround.$('.editable-region').offset().left;
+                                    left -= playGround.$('.editable-region').parent().offset().left;
+                                    var top = controlGroup.y() - im.height() / 2;
+                                    top += playGround.$('.editable-region').offset().top, 
+                                    top -= playGround.$('.editable-region').parent().offset().top;
                                     playGround.$('.change-text-panel').css({
                                         // TODO chrome下, position方法有bug, 永远返回0
-                                        left: controlGroup.x() - im.width() / 2 + playGround.$('.editable-region').position().left,
-                                        top: controlGroup.y() - im.height() / 2 + playGround.$('.editable-region').position().top,
+                                        left: left,
+                                        top: top,
                                         position: 'absolute',
                                     }).show();
                                     playGround.$('.change-text-panel textarea').val(text).focus();
