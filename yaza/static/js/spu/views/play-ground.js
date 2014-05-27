@@ -380,6 +380,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
             },
 
             _addText: function (data, text, oldIm, oldControlGroup) {
+                console.log('add text ' + text);
                 var imageObj = new Image();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
@@ -400,7 +401,6 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             },
                         });
                         playGround._imageLayer.add(im);
-                        playGround._imageLayer.draw();
                         var controlGroup = makeControlGroup(im, text).on('dragend',
                             function (playGround) {
                                 return function () {
@@ -424,7 +424,6 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                     top += playGround.$('.editable-region').offset().top, 
                                     top -= playGround.$('.editable-region').parent().offset().top;
                                     playGround.$('.change-text-panel').css({
-                                        // TODO chrome下, position方法有bug, 永远返回0
                                         left: left,
                                         top: top,
                                         position: 'absolute',
@@ -455,18 +454,20 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                     });
                                 };
                             }(playGround));
-                        playGround._controlLayer.add(controlGroup).draw();
                         if (oldIm && oldControlGroup) {
                             im.setZIndex(oldIm.getZIndex());
+                            im.position(oldIm.position());
+                            controlGroup.position(oldControlGroup.position());
                             oldIm.destroy();
                             oldControlGroup.destroy();
                             playGround._objectManager.replace(im, controlGroup, 
                                     oldIm, oldControlGroup);
                             playGround._controlLayer.draw();
-                            playGround._imageLayer.draw();
                         } else {
                             playGround._objectManager.add(im, controlGroup);
                         }
+                        playGround._controlLayer.add(controlGroup).draw();
+                        playGround._imageLayer.draw();
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));

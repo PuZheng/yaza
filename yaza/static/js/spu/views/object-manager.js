@@ -97,11 +97,11 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 this.$('.column').each(function () {
                     if ($(this).data('object') == oldIm) {
                         $(this).data('object', im);
-                        $(this).data('control-group', oldControlGroup);
+                        $(this).data('control-group', controlGroup);
                         $(this).html($(objectManager._itemTemplate({
                             src: im.getImage().src,
                             title: im.name(),
-                        })));
+                        })).html());
                     }
                 });
             },
