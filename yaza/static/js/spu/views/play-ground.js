@@ -1,5 +1,6 @@
-define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum'],
+define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string'],
     function (make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+        _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -150,6 +151,35 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     this._objectManager.activeObject().data('control-group')    .fire('dblclick');
                     return false;
                 },
+                'change .text-operators select.font-size': function (evt) {
+                    var activeItem = this._objectManager.activeObject();
+                    var controlGroup = activeItem.data('control-group');
+                    var im = activeItem.data('object');
+                    controlGroup.setAttr('font-size', $(evt.currentTarget).val());
+                    $.ajax({
+                        type: 'POST', 
+                        url: '/image/font-image',
+                        data: {
+                            text: im.name(),
+                            'font-family': config.DEFAULT_FONT_FAMILY,
+                            'font-color': controlGroup.getAttr('text-color'),
+                            // 注意, 这里已经是生产大小了
+                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                        },
+                        beforeSend: function() {
+                            dispatcher.trigger("jitPreview-mask");
+                        },
+                        complete: function() {
+                            dispatcher.trigger("jitPreview-unmask");
+                        },
+                    }).done(function (playGround) {
+                        return function (data) {
+                            playGround._addText(data, im.name(), im, 
+                                controlGroup);
+                        };
+                    }(this));
+                    return false;
+                }
             },
 
             initialize: function (options) {
@@ -308,7 +338,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                     'font-family': config.DEFAULT_FONT_FAMILY,
                                     'font-color': color.toHexString(),
                                     // 注意, 这里已经是生产大小了
-                                    'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                    'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
                                 },
                                 beforeSend: function() {
                                     dispatcher.trigger("jitPreview-mask");
@@ -323,6 +353,11 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         };
                     })(playGround),
                 });
+                this.$('select.font-size').html(
+                        config.FONT_SIZE_LIST.map(
+                            function (fontSize) { 
+                                return _.sprintf('<option value="%s">%s pt</option>', fontSize, fontSize); 
+                            }).join(''));
             },
 
             _renderGallery: function () {
@@ -454,7 +489,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                 if (this.getAttr('trasient')) {
                                     dispatcher.trigger('active-object', this); 
                                 }
-                            }).setAttr('object-type', 'text');
+                            }).setAttr('object-type', 'text').setAttr(
+                                'text-color', 
+                                oldControlGroup? oldControlGroup.getAttr('text-color')
+                                : config.DEFAULT_FONT_COLOR).setAttr('font-size',
+                                    oldControlGroup? oldControlGroup.getAttr('font-size') 
+                                    : config.DEFAULT_FONT_SIZE);
 
                         controlGroup.off('dblclick').on('dblclick', function (playGround) {
                                 return function (evt) {
@@ -493,7 +533,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                                 text: text,
                                                 'font-family': config.DEFAULT_FONT_FAMILY,
                                                 // 注意, 这里已经是生产大小了
-                                                'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                                'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
                                                 'font-color': controlGroup.getAttr('text-color'),
                                             },
                                             beforeSend: function() {
@@ -537,6 +577,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     this.$('.text-operators').show();
                     this.$('.text-operators .text-color').spectrum('set', 
                             controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
+                    this.$('.text-operators select.font-size').val(controlGroup.getAttr('font-size') || config.DEFAULT_FONT_SIZE);
                 } else {
                     this.$('.text-operators').hide();
                 }

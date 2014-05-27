@@ -128,7 +128,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     title: im.name(),
                 })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).tooltip({placeholder: "auto right"}).click();
 
-                var a = $("a[data-title=" + im.name() + "]");
+                var a = $('a[data-title="' + im.name() + '"]');
                 //截取图片长度
                 var img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
                 a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
