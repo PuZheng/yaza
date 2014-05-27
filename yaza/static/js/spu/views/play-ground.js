@@ -161,7 +161,36 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         url: '/image/font-image',
                         data: {
                             text: im.name(),
-                            'font-family': config.DEFAULT_FONT_FAMILY,
+                            'font-family': controlGroup.getAttr('font-family'),
+                            'font-color': controlGroup.getAttr('text-color'),
+                            // 注意, 这里已经是生产大小了
+                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                        },
+                        beforeSend: function() {
+                            dispatcher.trigger("jitPreview-mask");
+                        },
+                        complete: function() {
+                            dispatcher.trigger("jitPreview-unmask");
+                        },
+                    }).done(function (playGround) {
+                        return function (data) {
+                            playGround._addText(data, im.name(), im, 
+                                controlGroup);
+                        };
+                    }(this));
+                    return false;
+                },
+                'change .text-operators select.font-family': function (evt) {
+                    var activeItem = this._objectManager.activeObject();
+                    var controlGroup = activeItem.data('control-group');
+                    var im = activeItem.data('object');
+                    controlGroup.setAttr('font-family', $(evt.currentTarget).val());
+                    $.ajax({
+                        type: 'POST', 
+                        url: '/image/font-image',
+                        data: {
+                            text: im.name(),
+                            'font-family': controlGroup.getAttr('font-family'),
                             'font-color': controlGroup.getAttr('text-color'),
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
@@ -335,7 +364,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                 url: '/image/font-image',
                                 data: {
                                     text: im.name(),
-                                    'font-family': config.DEFAULT_FONT_FAMILY,
+                                    'font-family': controlGroup.getAttr('font-family'),
                                     'font-color': color.toHexString(),
                                     // 注意, 这里已经是生产大小了
                                     'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
@@ -358,6 +387,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             function (fontSize) { 
                                 return _.sprintf('<option value="%s">%s pt</option>', fontSize, fontSize); 
                             }).join(''));
+                this.$('select.font-family').html(
+                        config.FONT_FAMILY_LIST.map(
+                            function (fontFamily) { 
+                                return _.sprintf('<option value="%s">%s</option>', fontFamily, fontFamily); 
+                            }).join(''));
+
             },
 
             _renderGallery: function () {
@@ -492,9 +527,13 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             }).setAttr('object-type', 'text').setAttr(
                                 'text-color', 
                                 oldControlGroup? oldControlGroup.getAttr('text-color')
-                                : config.DEFAULT_FONT_COLOR).setAttr('font-size',
+                                : config.DEFAULT_FONT_COLOR
+                                ).setAttr('font-size',
                                     oldControlGroup? oldControlGroup.getAttr('font-size') 
-                                    : config.DEFAULT_FONT_SIZE);
+                                    : config.DEFAULT_FONT_SIZE
+                                    ).setAttr('font-family',
+                                        oldControlGroup? oldControlGroup.getAttr('font-family')
+                                        : config.DEFAULT_FONT_FAMILY);
 
                         controlGroup.off('dblclick').on('dblclick', function (playGround) {
                                 return function (evt) {
@@ -531,7 +570,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                             url: '/image/font-image',
                                             data: {
                                                 text: text,
-                                                'font-family': config.DEFAULT_FONT_FAMILY,
+                                                'font-family': controlGroup.getAttr('font-family'),
                                                 // 注意, 这里已经是生产大小了
                                                 'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
                                                 'font-color': controlGroup.getAttr('text-color'),
@@ -578,6 +617,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     this.$('.text-operators .text-color').spectrum('set', 
                             controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
                     this.$('.text-operators select.font-size').val(controlGroup.getAttr('font-size') || config.DEFAULT_FONT_SIZE);
+                    this.$('.text-operators select.font-family').val(controlGroup.getAttr('font-family') || config.DEFAULT_FONT_FAMILY);
                 } else {
                     this.$('.text-operators').hide();
                 }

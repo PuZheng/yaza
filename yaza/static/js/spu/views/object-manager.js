@@ -126,7 +126,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     src: im.getImage().src,
                     name: name,
                     title: im.name(),
-                })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).tooltip({placeholder: "auto right"}).click();
+                })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
 
                 var a = $('a[data-title="' + im.name() + '"]');
                 //截取图片长度
