@@ -1,4 +1,4 @@
-define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export'],
+define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui'],
     function (ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -57,6 +57,8 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 },
                 'click .change-text-panel .btn-default': function (evt) {
                     this.$('.change-text-panel').hide();
+                    this.$('.editable-region ').unblock();
+                    this.$('.object-manager').unblock();
                     return false;
                 },
                 'click .add-text-modal .btn-ok': function (evt) {
@@ -66,6 +68,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         return;
                     }
                     this.$('.add-text-modal').modal('hide');
+                    this.$('.add-text-modal textarea').val("");
                     $.ajax({
                         type: 'POST',
                         url: '/image/font-image',
@@ -428,6 +431,22 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                         top: top,
                                         position: 'absolute',
                                     }).show();
+                                    playGround.$('.editable-region ').block({
+                                        message: null,
+                                        overlayCSS: {
+                                            backgroundColor: "#ccc",
+                                            opacity: 0.4,
+                                        },
+                                        baseZ: 0,
+                                    });
+                                    playGround.$('.object-manager').block({
+                                        message: null,
+                                        overlayCSS: {
+                                            backgroundColor: "#ccc",
+                                            opacity: 0.4,
+                                        },
+                                        baseZ: 0,
+                                    });
                                     playGround.$('.change-text-panel textarea').val(text).focus();
                                     playGround.$('.change-text-panel .btn-primary').one('click', function () {
                                         var text = playGround.$('.change-text-panel textarea').val();
@@ -450,6 +469,9 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                         }).done(function (data) {
                                             playGround._addText(data, text, im, 
                                                 controlGroup);
+                                        }).always(function () {
+                                            playGround.$('.editable-region ').unblock();
+                                            playGround.$('.object-manager').unblock();
                                         });
                                     });
                                 };

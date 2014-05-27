@@ -23,6 +23,7 @@ require.config({
         'select2': 'components/select2/select2.min',
         'svg': 'components/svg.js/dist/svg.min',
         'svg.export': 'components/svg.export.js/svg.export.min',
+        'block-ui': 'components/blockui/jquery.blockUI',
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
@@ -36,6 +37,9 @@ require.config({
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
+        'block-ui': {
+            deps: ['jquery'],
+        },
         'underscore': {
             exports: '_',
         },
