@@ -53,7 +53,6 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
-                    debugger;
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
