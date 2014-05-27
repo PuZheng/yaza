@@ -1,5 +1,5 @@
-define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui'],
-    function (ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum'],
+    function (make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
             if (target === source) {
@@ -78,6 +78,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                             'font-family': config.DEFAULT_FONT_FAMILY,
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                            'font-color': config.DEFAULT_FONT_COLOR,
                         },
                         beforeSend: function() {
                             dispatcher.trigger("jitPreview-mask");
@@ -219,7 +220,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     controlGroup.find('.rect')[0].stroke('#CC3333');
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
-                    this.$('.text-operators').toggle(controlGroup.getAttr('object-type') == 'text');
+                    this._resetDashboard(controlGroup);
                 }, this);
             },
 
@@ -285,6 +286,43 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 });
                 this._renderGallery();
                 this._draw = SVG(this.$('.svg-drawing')[0]);
+                this.$('.text-color').spectrum({
+                    showPalette: true,
+                    preferredFormat: "name",
+                    chooseText: "确定",
+                    cancelText: "取消",
+                    showInput: true,
+                    showAlpha: true,
+                    palette: make2DColorArray(10),
+                    change: (function (playGround) {
+                        return function (color) {
+                            var activeItem = playGround._objectManager.activeObject();
+                            var controlGroup = activeItem.data('control-group');
+                            var im = activeItem.data('object');
+                            controlGroup.setAttr('text-color', color.toHexString());
+                            $.ajax({
+                                type: 'POST', 
+                                url: '/image/font-image',
+                                data: {
+                                    text: im.name(),
+                                    'font-family': config.DEFAULT_FONT_FAMILY,
+                                    'font-color': color.toHexString(),
+                                    // 注意, 这里已经是生产大小了
+                                    'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                },
+                                beforeSend: function() {
+                                    dispatcher.trigger("jitPreview-mask");
+                                },
+                                complete: function() {
+                                    dispatcher.trigger("jitPreview-unmask");
+                                },
+                            }).done(function (data) {
+                                playGround._addText(data, im.name(), im, 
+                                    controlGroup);
+                            });
+                        };
+                    })(playGround),
+                });
             },
 
             _renderGallery: function () {
@@ -453,9 +491,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                             url: '/image/font-image',
                                             data: {
                                                 text: text,
-                                            'font-family': config.DEFAULT_FONT_FAMILY,
-                                            // 注意, 这里已经是生产大小了
-                                            'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                                'font-family': config.DEFAULT_FONT_FAMILY,
+                                                // 注意, 这里已经是生产大小了
+                                                'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
+                                                'font-color': controlGroup.getAttr('text-color'),
                                             },
                                             beforeSend: function() {
                                                 dispatcher.trigger("jitPreview-mask");
@@ -491,7 +530,18 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         dispatcher.trigger('update-hotspot', playGround._imageLayer);
                     }
                 }(this));
+            },
+
+            _resetDashboard: function (controlGroup) {
+                if (controlGroup.getAttr('object-type') == 'text') {
+                    this.$('.text-operators').show();
+                    this.$('.text-operators .text-color').spectrum('set', 
+                            controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
+                } else {
+                    this.$('.text-operators').hide();
+                }
             }
+
 
         });
         return PlayGround;

@@ -65,7 +65,7 @@ def font_image():
     text = request.form['text']
     font_family = request.form['font-family']
     font_size = request.form.get('font-size', type=int)
-    #font_color = request.get('font-color', 'black');
+    font_color = request.form.get('font-color', 'black');
     #font_alignment = request.form.get('font-alighment', 'left-alignment')
     font = ImageFont.truetype(app.config['FONTS_MAP'][font_family], font_size)
 
@@ -73,7 +73,7 @@ def font_image():
     img = Image.new("RGBA", width_height, (255,255,255, 0))
     draw = ImageDraw.Draw(img)
     # 这里是为了去除顶部的空白
-    draw.text((0, -left_bottom[1]), text, (0,0,0), font=font)
+    draw.text((0, -left_bottom[1]), text, fill=font_color, font=font)
     sio = StringIO()
     img.save(sio, format='png')
     return jsonify({

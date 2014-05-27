@@ -62,3 +62,8 @@
 .play-ground .svg-drawing svg {
     border: 1px dashed #ccc;
 }
+
+.sp-palette {
+    *width: 240px;
+    max-width: 240px;
+}
