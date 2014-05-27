@@ -57,7 +57,8 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 },
                 'click .change-text-panel .btn-default': function (evt) {
                     this.$('.change-text-panel').hide();
-                    this.$('.editable-region ').unblock();
+                    this.$('.editable-region').unblock();
+                    this.$('.dashboard').unblock();
                     this.$('.object-manager').unblock();
                     return false;
                 },
@@ -431,22 +432,17 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                         top: top,
                                         position: 'absolute',
                                     }).show();
-                                    playGround.$('.editable-region ').block({
-                                        message: null,
-                                        overlayCSS: {
-                                            backgroundColor: "#ccc",
-                                            opacity: 0.4,
-                                        },
-                                        baseZ: 0,
-                                    });
-                                    playGround.$('.object-manager').block({
-                                        message: null,
-                                        overlayCSS: {
-                                            backgroundColor: "#ccc",
-                                            opacity: 0.4,
-                                        },
-                                        baseZ: 0,
-                                    });
+                                    ['.editable-region', '.object-manager', '.dashboard'].forEach(
+                                        function (className) {
+                                            playGround.$(className).block({
+                                                message: null,
+                                                overlayCSS: {
+                                                    backgroundColor: "#ccc",
+                                                opacity: 0.4,
+                                                },
+                                                baseZ: 0,
+                                            });
+                                        });
                                     playGround.$('.change-text-panel textarea').val(text).focus();
                                     playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
                                         var text = playGround.$('.change-text-panel textarea').val();
@@ -472,6 +468,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                         }).always(function () {
                                             playGround.$('.editable-region ').unblock();
                                             playGround.$('.object-manager').unblock();
+                                            playGround.$('.dashboard').unblock();
                                         });
                                     });
                                 };
