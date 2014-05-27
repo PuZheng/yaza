@@ -1,6 +1,8 @@
 define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
     'text!templates/object-manager-item.hbs', 'dispatcher'],
     function (Backbone, handlebars, template, itemTemplate, dispatcher) {
+        var MAX_LENGTH = 10;
+
         var ObjectManager = Backbone.View.extend({
             _itemTemplate: handlebars.default.compile(itemTemplate),
             _template: handlebars.default.compile(template),
@@ -88,7 +90,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     }
 
                     return false;
-                },
+                }
 
             },
 
@@ -99,11 +101,23 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             },
 
             add: function (im, controlGroup) {
+                var name = im.name();
+                if (name.length > MAX_LENGTH) {
+                    name = name.substr(0, MAX_LENGTH - 3) + "...";
+                }
                 // 默认新增的对象要选中
                 $(this._itemTemplate({
                     src: im.getImage().src,
+                    name: name,
                     title: im.name(),
-                })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
+                })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).tooltip({placeholder: "auto right"}).click();
+
+                var a = $("a[data-title=" + im.name() + "]");
+                //截取图片长度
+                var img_width = a.width() - a.find(".pull-right").width() - a.find("span").width();
+                a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
+                // 偏移文字
+                a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
                 this._setupButtons();
                 this._imageLayer = im.getLayer();
             },
@@ -142,7 +156,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     position: 'absolute',
                     visibility: 'visible',
                     top: sourceTop,
-                    width: this._$container.width(),  // 必须设置width, 否则长度错误, 我也不知道为什么
+                    width: this._$container.width()  // 必须设置width, 否则长度错误, 我也不知道为什么
                 }).animate({
                     top: targetTop
                 }, 200, function () {
@@ -157,7 +171,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     position: 'absolute',
                     visibility: 'visible',
                     top: targetTop,
-                    width: this._$container.width(),  // 必须设置width, 否则长度错误, 我也不知道为什么
+                    width: this._$container.width() // 必须设置width, 否则长度错误, 我也不知道为什么
                 }).animate({
                     top: sourceTop
                 }, 200, function (objectManager) {
