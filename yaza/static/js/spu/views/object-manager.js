@@ -18,7 +18,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         });
                         dispatcher.trigger('update-hotspot', this._imageLayer);
                         parent.remove();
+                        this.$('.list-group-item:first').click();
                         this._setupButtons();
+                        return false;
                     }
                 },
                 'click button.visible-btn': function (evt) {
@@ -51,6 +53,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
+                    debugger;
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
@@ -210,7 +213,12 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         $(this).addClass('active-object');
                     }
                 });
+            },
+
+            activeObject: function () {
+                return this.$('.list-group-item.active-object');
             }
+
         });
         return ObjectManager;
     });

@@ -63,7 +63,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     return false;
                 },
                 'click .add-text-modal .btn-ok': function (evt) {
-                    var text = this.$('.add-text-modal textarea').val();
+                    var text = this.$('.add-text-modal textarea').val().trim();
                     if (!text) {
                         alert('文字不能为空');
                         return;
@@ -145,6 +145,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                         $(evt.currentTarget).removeClass('disabled');
                     });
                 },
+                'click .text-operators .btn-change-text': function () {
+                    this._objectManager.activeObject().data('control-group')    .fire('dblclick');
+                    return false;
+                },
             },
 
             initialize: function (options) {
@@ -201,6 +205,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                 }, this);
 
                 dispatcher.on('active-object', function (controlGroup) {
+                    console.log('active object');
                     this._controlLayer.getChildren().forEach(function (group) {
                         group.hide(); 
                         group.find('.rect')[0].stroke('gray');
@@ -215,11 +220,6 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
                     this.$('.text-operators').toggle(controlGroup.getAttr('object-type') == 'text');
-                    this.$('.text-operators .btn-change-text').off('click').click(
-                        function () {
-                            controlGroup.fire('dblclick');
-                            return false;
-                        });
                 }, this);
             },
 
@@ -418,7 +418,7 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                 }
                             }).setAttr('object-type', 'text');
 
-                        controlGroup.on('dblclick', function (playGround) {
+                        controlGroup.off('dblclick').on('dblclick', function (playGround) {
                                 return function (evt) {
                                     // 之所以不用position, 是因为chrome下面position方法有bug
                                     var left = controlGroup.x() - im.width() / 2;
@@ -443,9 +443,10 @@ define(['object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispat
                                                 baseZ: 0,
                                             });
                                         });
-                                    playGround.$('.change-text-panel textarea').val(text).focus();
+                                    playGround.$('.change-text-panel textarea').val(im.name());
+                                    playGround.$('.change-text-panel textarea').focus();
                                     playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                        var text = playGround.$('.change-text-panel textarea').val();
+                                        var text = playGround.$('.change-text-panel textarea').val().trim();
                                         playGround.$('.change-text-panel').hide();
                                         $.ajax({
                                             type: 'POST', 
