@@ -104,6 +104,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         $(this).data('control-group', controlGroup);
                         $(this).html($(objectManager._renderImage(im)).html());
                         objectManager._formatItem(im);
+                        objectManager._setupButtons();
                     }
                 });
             },
