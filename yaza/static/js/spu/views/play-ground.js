@@ -258,7 +258,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         }).sort(function (a, b) {
                             return a.getZIndex() - b.getZIndex();
                         }).forEach(function (node) {
-                                this._objectManager.add(node, this._controlLayer.find("." + node.getName())[0]);
+                                this._objectManager.add(node, node.getAttr("control-group"));
                             }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
@@ -457,7 +457,6 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     } else {
                         height = imageObj.height * width / imageObj.width;
                     }
-
                     var image = new Kinetic.Image({
                         x: er.width() / 2,
                         y: er.height() / 2,
@@ -473,7 +472,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
-                    var group = makeControlGroup(image, title, true).on('dragend', 
+                    var group = makeControlGroup(image, title, true).on('dragend',
                             function (playGround) {
                                 return function () {
                                     playGround._imageLayer.draw();
@@ -481,9 +480,10 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                 };
                             }(this)).on('mousedown', function () {
                                 if (this.getAttr('trasient')) {
-                                    dispatcher.trigger('active-object', this); 
+                                    dispatcher.trigger('active-object', this);
                                 }
                             });
+                    image.setAttr("control-group", group);
                     this._controlLayer.add(group).draw();
                     this._objectManager.add(image, group);
                     dispatcher.trigger('update-hotspot', this._imageLayer);
@@ -534,6 +534,8 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                     ).setAttr('font-family',
                                         oldControlGroup? oldControlGroup.getAttr('font-family')
                                         : config.DEFAULT_FONT_FAMILY);
+
+                        im.setAttr("control-group", controlGroup);
 
                         controlGroup.off('dblclick').on('dblclick', function (playGround) {
                                 return function (evt) {
