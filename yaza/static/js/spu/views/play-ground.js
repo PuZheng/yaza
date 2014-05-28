@@ -258,10 +258,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         }).sort(function (a, b) {
                             return a.getZIndex() - b.getZIndex();
                         }).forEach(function (node) {
-                                var controlGroups = this._controlLayer.getChildren(function (n) {
-                                    return n.getClassName() == "Group" && n.getName() === node.getName();
-                                });
-                                this._objectManager.add(node, controlGroups[0]);
+                                this._objectManager.add(node, this._controlLayer.find("." + node.getName())[0]);
                             }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
