@@ -102,13 +102,35 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     if ($(this).data('object') == oldIm) {
                         $(this).data('object', im);
                         $(this).data('control-group', controlGroup);
-                        $(this).html($(objectManager._itemTemplate({
-                            src: im.getImage().src,
-                            title: im.name(),
-                        })).html());
+                        $(this).html($(objectManager._renderImage(im)).html());
+                        objectManager._formatItem(im);
+                        objectManager._setupButtons();
                     }
                 });
             },
+
+            _renderImage: function(image) {
+                var name = image.name();
+                if (name.length > MAX_LENGTH) {
+                    name = name.substr(0, MAX_LENGTH - 3) + "...";
+                }
+
+                return this._itemTemplate({
+                    src: image.getImage().src,
+                    name: name,
+                    title: image.name(),
+                });
+            },
+
+            _formatItem: function(im) {
+                var a = $('a[data-title="' + im.name() + '"]');
+                //截取图片长度
+                var img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
+                a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
+                // 偏移文字
+                a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
+            },
+
 
             render: function () {
                 this.$el.append(this._template());
@@ -117,23 +139,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             },
 
             add: function (im, controlGroup) {
-                var name = im.name();
-                if (name.length > MAX_LENGTH) {
-                    name = name.substr(0, MAX_LENGTH - 3) + "...";
-                }
                 // 默认新增的对象要选中
-                $(this._itemTemplate({
-                    src: im.getImage().src,
-                    name: name,
-                    title: im.name(),
-                })).prependTo(this._$container).data('object', im).data('control-group', controlGroup).tooltip({placeholder: "auto right"}).click();
-
-                var a = $("a[data-title=" + im.name() + "]");
-                //截取图片长度
-                var img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
-                a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
-                // 偏移文字
-                a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
+                $(this._renderImage(im)).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
+                this._formatItem(im);
                 this._setupButtons();
                 this._imageLayer = im.getLayer();
             },
