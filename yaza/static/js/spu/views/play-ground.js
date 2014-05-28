@@ -84,14 +84,13 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         beforeSend: function() {
                             dispatcher.trigger("jitPreview-mask");
                         },
-                        complete: function() {
-                            dispatcher.trigger("jitPreview-unmask");
-                        },
                     }).done(function (playGround) {
                             return function (data) {
                                 playGround._addText(data, text);
                             };
-                        }(this));
+                        }(this)).always(function(){
+                            dispatcher.trigger("jitPreview-unmask");
+                    }).fail(this._fail);
                 },
                 'click .touch-screen .btn-save': function (evt) {
                     this._draw.clear();
@@ -177,7 +176,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             playGround._addText(data, im.name(), im, 
                                 controlGroup);
                         };
-                    }(this));
+                    }(this)).fail(this._fail);
                     return false;
                 },
                 'change .text-operators select.font-family': function (evt) {
@@ -198,15 +197,14 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         beforeSend: function() {
                             dispatcher.trigger("jitPreview-mask");
                         },
-                        complete: function() {
-                            dispatcher.trigger("jitPreview-unmask");
-                        },
                     }).done(function (playGround) {
                         return function (data) {
                             playGround._addText(data, im.name(), im, 
                                 controlGroup);
                         };
-                    }(this));
+                    }(this)).always(function(){
+                         dispatcher.trigger("jitPreview-unmask");
+                    }).fail(this._fail);
                     return false;
                 }
             },
@@ -372,13 +370,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                 beforeSend: function() {
                                     dispatcher.trigger("jitPreview-mask");
                                 },
-                                complete: function() {
-                                    dispatcher.trigger("jitPreview-unmask");
-                                },
                             }).done(function (data) {
                                 playGround._addText(data, im.name(), im, 
                                     controlGroup);
-                            });
+                            }).always(function(){
+                                dispatcher.trigger("jitPreview-unmask");
+                            }).fail(this._fail);
                         };
                     })(playGround),
                 });
@@ -580,13 +577,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                             beforeSend: function() {
                                                 dispatcher.trigger("jitPreview-mask");
                                             },
-                                            complete: function() {
-                                                dispatcher.trigger("jitPreview-unmask");
-                                            },
                                         }).done(function (data) {
+                                            console.log("don");
                                             playGround._addText(data, text, im, 
                                                 controlGroup);
-                                        }).always(function () {
+                                        }).fail(playGround._fail).always(function () {
+                                            dispatcher.trigger("jitPreview-unmask");
                                             playGround.$('.editable-region ').unblock();
                                             playGround.$('.object-manager').unblock();
                                             playGround.$('.dashboard').unblock();
@@ -623,8 +619,11 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                 } else {
                     this.$('.text-operators').hide();
                 }
-            }
+            },
 
+            _fail: function(jqXHR, textStatus, errorThrown) {
+                alert("服务器异常！");
+            }
 
         });
         return PlayGround;
