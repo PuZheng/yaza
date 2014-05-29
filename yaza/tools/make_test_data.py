@@ -52,13 +52,16 @@ class InitializeTestDB(Command):
             if os.path.isdir(spu_dir):
                 assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                         app.config['SPU_IMAGE_FOLDER']))
-                if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'],
+                if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'],
                                                    app.config['SPU_IMAGE_FOLDER'],
                                                    spu_name)):
-                    shutil.copytree(spu_dir,
-                                    os.path.join(app.config['UPLOAD_FOLDER'],
-                                                 app.config['SPU_IMAGE_FOLDER'],
-                                                 spu_name))
+                    shutil.rmtree(os.path.join(app.config['UPLOAD_FOLDER'],
+                                               app.config['SPU_IMAGE_FOLDER'],
+                                               spu_name))
+                shutil.copytree(spu_dir,
+                                os.path.join(app.config['UPLOAD_FOLDER'],
+                                                app.config['SPU_IMAGE_FOLDER'],
+                                                spu_name))
                 utils.create_or_update_spu(
                     os.path.join(app.config['UPLOAD_FOLDER'], app.config['SPU_IMAGE_FOLDER'], spu_name),
                     os.path.join(os.path.split(yaza.__file__)[0], app.config["UPLOAD_FOLDER"]))
