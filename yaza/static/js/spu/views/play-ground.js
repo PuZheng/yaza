@@ -592,8 +592,10 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             }(playGround));
                         if (oldIm && oldControlGroup) {
                             im.setZIndex(oldIm.getZIndex());
+                            im.rotation(oldIm.rotation());
                             im.position(oldIm.position());
                             controlGroup.position(oldControlGroup.position());
+                            controlGroup.rotation(oldControlGroup.rotation());
                             oldIm.destroy();
                             oldControlGroup.destroy();
                             playGround._objectManager.replace(im, controlGroup, 
