@@ -113,4 +113,8 @@
     ul.thumbnails.image_picker_selector li .thumbnail.selected {
         border: 2px solid #0088CC;
     }
+
+    .play-ground .change-text-panel {
+        z-index: 1000;
+    }
 }
