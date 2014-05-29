@@ -215,7 +215,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     console.log('oscpu ' + ocspu.color + '-' + ocspu.rgb + ' selected');
                     this.$('.touch-screen .editable-region').css('background-color', 
-                        '#' + ocspu.rgb);
+                        ocspu.rgb);
                 }, this);
 
                 dispatcher.on('design-region-selected', function (designRegion) {

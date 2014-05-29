@@ -58,7 +58,7 @@ class OCSPU(db.Model):
     cover_path = db.Column(db.String(64))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
     spu = db.relationship("SPU", backref='ocspu_list')
-    rgb = db.Column(db.String(6)) # rrggbb
+    rgb = db.Column(db.String(7)) # #rrggbb
 
 
 class Aspect(db.Model):
