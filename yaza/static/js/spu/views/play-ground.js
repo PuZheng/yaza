@@ -109,7 +109,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         this._draw.clear();
                         this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
                             .data('name', name);
-                        var ratio = designRegion.size[0] / imageLayer.width();
+                        var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
