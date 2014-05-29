@@ -186,5 +186,4 @@ def locate_all_fonts():
 
 # 如果不是windows系统, 并且没有定义FONTS_MAP, 利用fc-list搜索系统的字体
 if not (sys.platform.startswith("win32") and app.config['FONTS_MAP']):
-    # locate_all_fonts()
-    pass
+    locate_all_fonts()
