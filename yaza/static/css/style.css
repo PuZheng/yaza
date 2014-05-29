@@ -1,0 +1,6 @@
+@import url("../components/bootstrap/dist/css/bootstrap.min.css");
+@import url("../components/bootstrap/dist/css/bootstrap-theme.min.css");
+@import url("../components/normalize-css/normalize.css");
+@import url("../components/select2/select2.css");
+@import url("../components/font-awesome/css/font-awesome.min.css");
+@import url("custom.css");
