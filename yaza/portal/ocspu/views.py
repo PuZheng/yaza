@@ -57,6 +57,8 @@ class DesignImageModelView(ModelView):
 
     def on_record_created(self, obj):
         obj.pic_path = self.save_pic(obj.pic_upload)
+        from yaza.utils import do_commit
+        do_commit(obj)
 
     def expand_model(self, obj):
         return DesignImageWrapper(obj)
@@ -73,9 +75,10 @@ class DesignImageModelView(ModelView):
     def save_pic(self, pic_path):
         from hashlib import md5
 
-        file_name = md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1]
+        file_name = os.path.join(DesignImageWrapper.StoredDir,
+                                 md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1])
         assert_dir(DesignImageWrapper.StoredDir)
-        shutil.copy(pic_path, os.path.join(DesignImageWrapper.StoredDir, file_name))
+        shutil.copy(pic_path, file_name)
         os.unlink(pic_path)
         return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
 

@@ -104,7 +104,7 @@ class DesignImage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(32), nullable=False)
-    pic_path = db.Column(db.String(64), nullable=False)
+    pic_path = db.Column(db.String(64))
 
 
 class Permission(db.Model):

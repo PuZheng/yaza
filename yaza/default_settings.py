@@ -28,8 +28,6 @@ MAIL_USERNAME = 'username'
 MAIL_PASSWORD = 'password'
 MAIL_DEFAULT_SENDER = 'user@foo.com'
 
-FIRST_ASPECT_FILENAME = "aa.png"
-
 FONTS_AVAILABLE = {
     u'文泉驿微米黑',
     u'AR PL UMing CN',
@@ -41,3 +39,5 @@ FONTS_AVAILABLE = {
 FONTS_MAP = {
     #u'文泉驿微米黑': '/usr/local/share/fonts/wqy-ywmh.ttf'
 }
+
+UPYUN_ENABLE = True

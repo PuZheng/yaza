@@ -241,6 +241,7 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
+    from yaza.upyun_handler import upload_image
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -261,12 +262,14 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
     def _create_ocspu(ocspu_dir, cover_file, color, spu, config):
         cover_path = os.path.relpath(cover_file, start_dir)
+        upload_image(cover_file, cover_path)
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
+
         aspect_configs = config["aspects"]
         for aspect_config in aspect_configs:
             aspect_dir = os.path.join(ocspu_dir, aspect_config["dir"])
             if os.path.isdir(aspect_dir):
-                _create_aspect(aspect_dir,aspect_config["name"], config, ocspu)
+                _create_aspect(aspect_dir, aspect_config["name"], config, ocspu)
 
     def _create_aspect(aspect_dir, name, config, ocspu):
         for fname in os.listdir(aspect_dir):
@@ -274,9 +277,14 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
-                    thumbnail_path = _make_thumbnail(full_path, start_dir)
-                    
-                    aspect = do_commit(Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
+                    upload_image(full_path, pic_path)
+                    if app.config.get("UPYUN_ENABLE"):
+                        thumbnail_path = pic_path + "!small"
+                    else:
+                        thumbnail_path = _make_thumbnail(full_path, start_dir)
+
+                    aspect = do_commit(
+                        Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
                         if os.path.isdir(full_path):
@@ -294,6 +302,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
 
+                upload_image(full_path, pic_path)
                 print "progressing image: " + full_path
                 calc_design_region_image(full_path)
                 hsv_values = calc_hsv_values(Image.open(full_path))
