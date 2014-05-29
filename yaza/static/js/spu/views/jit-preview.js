@@ -87,7 +87,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
-//                    console.log('select ocspu ' + ocspu.id + ' ' + ocspu.color);
+                    dispatcher.trigger('ocspu-selected', ocspu);
                     var designRegions = this.$('[name="current-design-region"]');
                     designRegions.find('a').each(function () {
                         var layer = $(this).data('layer');

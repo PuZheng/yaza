@@ -23,6 +23,7 @@ class OCSPUWrapper(ModelWrapper):
                 [aspect.as_dict(camel_case) for aspect in self.aspect_list],
             'cover': self.cover,
             'color': self.color,
+            'rgb': self.rgb,
         }
 
 

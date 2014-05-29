@@ -212,6 +212,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
             initialize: function (options) {
                 this._design_image_list = options.design_image_list;
 
+                dispatcher.on('ocspu-selected', function (ocspu) {
+                    console.log('oscpu ' + ocspu.color + '-' + ocspu.rgb + ' selected');
+                    this.$('.touch-screen .editable-region').css('background-color', 
+                        ocspu.rgb);
+                }, this);
+
                 dispatcher.on('design-region-selected', function (designRegion) {
                     console.log('design region ' + designRegion.name + ' selected');
                     if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {

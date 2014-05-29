@@ -259,9 +259,10 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         im.save(path)
         return os.path.relpath(path, start_dir)
 
-    def _create_ocspu(ocspu_dir, cover_file, color, spu, config):
+    def _create_ocspu(ocspu_dir, cover_file, color, rgb, spu, config):
         cover_path = os.path.relpath(cover_file, start_dir)
-        ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color))
+        ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
+                                rgb=rgb))
         aspect_configs = config["aspects"]
         for aspect_config in aspect_configs:
             aspect_dir = os.path.join(ocspu_dir, aspect_config["dir"])
@@ -275,7 +276,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
                     thumbnail_path = _make_thumbnail(full_path, start_dir)
-                    
+
                     aspect = do_commit(Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
@@ -322,8 +323,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         ocspu_dir = os.path.join(spu_dir, ocspu_config["dir"])
         cover_file = os.path.join(ocspu_dir, ocspu_config["cover"])
         color = ocspu_config.get("color")
+        rgb = ocspu_config.get('rgb')
         if os.path.isdir(ocspu_dir):
-            _create_ocspu(ocspu_dir, cover_file, color, spu, config)
+            _create_ocspu(ocspu_dir, cover_file, color, rgb, spu, config)
 
     return {"spu": spu, "config": config}
 
