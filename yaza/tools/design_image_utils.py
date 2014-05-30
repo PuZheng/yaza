@@ -39,7 +39,7 @@ def convert(file_, image_folder):
         new_im.save(temp_image_name)
         with open(temp_image_name, "rb") as image_file:
             image.set_xlink_href("data:image/png;base64," + base64.b64encode(image_file.read()))
-        # os.unlink(temp_image_name)
+        os.unlink(temp_image_name)
         svg_file.save(".new".join(os.path.splitext(file_)))
 
 
