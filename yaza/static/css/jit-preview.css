@@ -1,0 +1,80 @@
+@media screen and (min-width: 992px) {
+
+    .jit-preview .aspect-selector {
+        border: 1px dashed #ccc;
+    }
+
+    .jit-preview .hotspot {
+        height: 512px;
+        background-color: #ccc;
+    }
+
+    .jit-preview .hotspot img {
+        max-height: 100%;
+        max-width: 100%;
+        background-color: #fff;
+        margin: auto;
+        display: block;
+    }
+
+    .jit-preview .hotspot div.design-region-selector {
+        position: absolute !important;
+    }
+
+    .jit-preview .hotspot .design-regions {
+        position: absolute !important;
+        max-height: 100%;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    .jit-preview .ocspu-selector {
+        border: 1px solid #ccc;
+    }
+
+    .jit-preview .thumbnail {
+        margin: 3px 3px 3px 0;
+        display: inline-block;
+    }
+
+    .jit-preview .ocspu-selector .thumbnail {
+        height: 64px;
+        width: 64px;
+    }
+
+    .jit-preview .aspect-selector .thumbnail {
+        max-height: 96px;
+        max-width: 96px;
+    }
+
+    .jit-preview .thumbnail:first-child {
+        margin-left: 3px;
+    }
+
+    .jit-preview .thumbnail img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .jit-preview .ocspu-selector .thumbnail img {
+        min-width: 100%;
+        min-height: 100%;
+    }
+    .jit-preview .aspect-selector img {
+        margin: auto;
+        display: block;
+    }
+
+    .jit-preview .aspect-selector .layer {
+        position: absolute;
+        margin: auto;
+        display: block;
+    }
+
+    .jit-preview .design-region-selector .list-group-item {
+        padding: 6px 9px;
+    }
+
+}
