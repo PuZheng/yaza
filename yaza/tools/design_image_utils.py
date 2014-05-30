@@ -5,6 +5,7 @@ import base64
 from pysvg import parser, structure
 from PIL import Image
 
+from yaza.basemain import app
 from yaza import models
 
 
