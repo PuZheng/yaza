@@ -113,17 +113,11 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                        // 注意，必须保证获取整个image
-                                        node.toDataURL({
-                                            x: node.x() - node.offsetX(),
-                                            y: node.y() - node.offsetY(),
-                                            width: node.width(),
-                                            height: node.height(),
-                                            quality: 0.5, // 不能用来直接打印生产，不用高清
-                                        }),
-                                        node.width() * ratio,
-                                        node.height() * ratio)
-                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio);
+                                    // 注意，必须保证获取整个image
+                                    node.image().src,
+                                    node.width() * ratio,
+                                    node.height() * ratio)
+                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(node.rotation());
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this)
