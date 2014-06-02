@@ -5,10 +5,9 @@ import sys
 
 from pysvg import parser, structure
 
-from yaza.basemain import app
-
 
 def convert(file_, image_folder):
+
     def setAttributes(attrs, obj):
         for attr in attrs.keys():
             if hasattr(obj, parser.calculateMethodName(attr)):
@@ -24,14 +23,17 @@ def convert(file_, image_folder):
 
     svg_file = parser.parse(file_)
     for image in svg_file.getElementsByType(structure.Image):
-        design_image_file = image.data("design-image-file")
-        content = file(os.path.join(image_folder, design_image_file)).read()
-        image.set_xlink_href("data:image/png;base64," +
-                             base64.b64encode(content))
+        design_image_file = image.getAttribute("xlink:href")
+        if design_image_file.startswith('http://'):
+            design_image_file = design_image_file.rsplit('/')[-1]
+            content = file(os.path.join(image_folder, design_image_file)).read()
+            image.set_xlink_href("data:image/png;base64," +
+                                base64.b64encode(content))
         svg_file.save(".hd".join(os.path.splitext(file_)))
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print "Usage: convert-design.py <design file> <hd image folder>"
+        print "\nUsage: convert-design.py <design file> <hd image folder>\n\n"
+        sys.exit(1)
     convert(sys.argv[1], sys.argv[2])
