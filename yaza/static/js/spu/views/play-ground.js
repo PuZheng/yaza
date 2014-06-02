@@ -118,7 +118,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .data("design-image-id", node.getAttr("design-image-id")).rotate(node.rotation());
+                                    .data("design-image-id", node.getAttr("design-image-id")).rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this)
