@@ -112,20 +112,13 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
-                                debugger
                                 var im = this._draw.image(
                                         // 注意，必须保证获取整个image
-                                        node.toDataURL({
-                                            x: node.x() - node.offsetX(),
-                                            y: node.y() - node.offsetY(),
-                                            width: node.width(),
-                                            height: node.height(),
-                                            quality: 0.5, // 不能用来直接打印生产，不用高清
-                                        }),
+                                        node.image().src,
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .data("design-image-id", node.getAttr("design-image-id")).data("rotation", node.rotation());
+                                    .data("design-image-id", node.getAttr("design-image-id")).rotate(node.rotation());
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this)
