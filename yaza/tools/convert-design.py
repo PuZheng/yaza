@@ -32,4 +32,6 @@ def convert(file_, image_folder):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print "Usage: convert-design.py <design file> <hd image folder>"
     convert(sys.argv[1], sys.argv[2])
