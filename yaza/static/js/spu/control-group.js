@@ -1,5 +1,10 @@
 define(function () {
 
+    function info(group) {
+        var rect = group.find('.rect')[0];
+        return "x: " + group.x() + '; y: ' + group.y() + '; rotation: ' + group.rotation() + "; width: " + rect.width() + "; height: " + rect.height();
+    }
+
     function makeControlGroup(node, title, resizable) {
 
         resizable = !!resizable;
@@ -24,6 +29,7 @@ define(function () {
                 x: group.x(),
                 y: group.y()
             });
+            console.log(info(group));
         });
         var rect = new Kinetic.Rect({
             x: -node.width() / 2,
@@ -205,6 +211,7 @@ define(function () {
             });
             group.getLayer().draw();
             group.setDraggable(true);
+            console.log(info(group));
         });
 
         group.add(anchor);
@@ -259,6 +266,7 @@ define(function () {
             });
             group.getLayer().draw();
             group.setDraggable(true);
+            console.log(info(group));
         });
         group.add(rect);
         return rect;
@@ -306,6 +314,7 @@ define(function () {
 
         anchor.on('dragend', function () {
             group.setDraggable(true);
+            console.log(info(group));
         });
 
         group.add(anchor);
