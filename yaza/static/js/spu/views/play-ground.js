@@ -31,6 +31,18 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
             $("#customer-pics").find(".thumbnail:first").addClass("selected");
         }
 
+        function getBase64FromImage(img) {
+
+            var canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            return canvas.toDataURL("image/png");
+        }
+
         var PlayGround = Backbone.View.extend({
             _template: handlebars.default.compile(playGroundTemplate),
             _initMargin: 70,
@@ -49,12 +61,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     this.$(evt.currentTarget).addClass("selected");
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.attr("src"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.attr("src"), $img.data('title'));
                 },
                 'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.attr("src"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.attr("src"), $img.data('title'));
                 },
                 'click .change-text-panel .btn-default': function (evt) {
                     this.$('.change-text-panel').hide();
@@ -113,12 +125,11 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                        // 注意，必须保证获取整个image
-                                        node.image().src,
+                                        getBase64FromImage(node.image()),
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .data("design-image-id", node.getAttr("design-image-id")).rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                                    .data("design-image-file", node.image().src).rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this)
@@ -438,7 +449,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                 }
             },
 
-            _addImage: function (src, title, design_image_id) {
+            _addImage: function (src, title) {
                 if (!title) { // 用户自己上传的图片没有title
                     title = new Date().getTime();
                 }
@@ -459,7 +470,6 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         y: er.height() / 2,
                         image: imageObj,
                         width: width,
-                        "design-image-id": design_image_id,
                         height: height,
                         name: title,
                         offset: {
