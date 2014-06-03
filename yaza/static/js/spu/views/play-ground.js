@@ -109,7 +109,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         this._draw.clear();
                         this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
                             .data('name', name);
-                        var ratio = designRegion.size[0] / imageLayer.width();
+                        var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
@@ -211,6 +211,12 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
             initialize: function (options) {
                 this._design_image_list = options.design_image_list;
+
+                dispatcher.on('ocspu-selected', function (ocspu) {
+                    console.log('oscpu ' + ocspu.color + '-' + ocspu.rgb + ' selected');
+                    this.$('.touch-screen .editable-region').css('background-color', 
+                        ocspu.rgb);
+                }, this);
 
                 dispatcher.on('design-region-selected', function (designRegion) {
                     console.log('design region ' + designRegion.name + ' selected');
@@ -592,8 +598,10 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             }(playGround));
                         if (oldIm && oldControlGroup) {
                             im.setZIndex(oldIm.getZIndex());
+                            im.rotation(oldIm.rotation());
                             im.position(oldIm.position());
                             controlGroup.position(oldControlGroup.position());
+                            controlGroup.rotation(oldControlGroup.rotation());
                             oldIm.destroy();
                             oldControlGroup.destroy();
                             playGround._objectManager.replace(im, controlGroup, 
