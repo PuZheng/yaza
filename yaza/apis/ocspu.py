@@ -35,6 +35,13 @@ class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
+            return parse_image(self.pic_path + app.config["UPYUN_MD_PIC_SUFFIX"]) if app.config.get(
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
+        return ""
+
+    @property
+    def hd_pic_url(self):
+        if self.pic_path:
             return parse_image(self.pic_path) if app.config.get(
                 "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
         return ""
@@ -43,10 +50,11 @@ class AspectWrapper(ModelWrapper):
     def thumbnail(self):
         if app.config.get("UPYUN_ENABLE"):
             #可能中途切换过UPYUN_ENABLE开关，所有需要额外判断
-            if self.thumbnail_path and self.thumbnail_path.endswith("!small"):
+            thumbnail_suffix = app.config.get("UPYUN_THUMBNAIL_SUFFIX") or "!sm"
+            if self.thumbnail_path and self.thumbnail_path.endswith(thumbnail_suffix):
                 return parse_image(self.thumbnail_path)
             elif self.pic_path:
-                return parse_image(self.pic_path + "!small")
+                return parse_image(self.pic_path + thumbnail_suffix)
         else:
             if self.thumbnail_path:
                 return url_for("image.serve", filename=self.thumbnail_path)
@@ -56,6 +64,7 @@ class AspectWrapper(ModelWrapper):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
                 [dr.as_dict(camel_case) for dr in self.design_region_list],
@@ -87,7 +96,7 @@ class DesignRegionWrapper(ModelWrapper):
     def pic_url(self):
         if self.pic_path:
             return parse_image(self.pic_path) if app.config.get(
-                "UPYUN_ENABLE") else  url_for("image.serve", filename=self.pic_path)
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
         return ""
 
 

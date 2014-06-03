@@ -41,3 +41,10 @@ FONTS_MAP = {
 }
 
 UPYUN_ENABLE = True
+UPYUN_BUCKETNAME = "image374new"
+UPYUN_USERNAME = "xiechao"
+UPYUN_PASSWORD = "xiechao123456"
+UPYUN_ROOTPATH = "/upload-demo"
+UPYUN_UPLOAD_PARAMS = {"x-gmkerl-type": "fix_max", "x-gmkerl-value": 960}
+UPYUN_THUMBNAIL_SUFFIX = "!sm"
+UPYUN_MD_PIC_SUFFIX = "!md"
