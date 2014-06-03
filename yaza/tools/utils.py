@@ -279,7 +279,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     pic_path = os.path.relpath(full_path, start_dir)
                     upload_image(full_path, pic_path)
                     if app.config.get("UPYUN_ENABLE"):
-                        thumbnail_path = pic_path + "!small"
+                        thumbnail_path = pic_path + app.config["UPYUN_THUMBNAIL_SUFFIX"]
                     else:
                         thumbnail_path = _make_thumbnail(full_path, start_dir)
 
