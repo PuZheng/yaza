@@ -138,6 +138,7 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                     width: $(this).width(),
                                     height: $(this).height()
                                 }).offset($(this).offset());
+                                evt.target.crossOrigin = 'anonymous';
                                 var im = new Kinetic.Image({
                                     image: evt.target,
                                     width: $(this).width(),
@@ -149,8 +150,7 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                 jitPreview._backgroundLayer.add(im).on('mouseover', function () {
                                     dispatcher.trigger('jitPreview-mask'); 
                                     var hdImageObj = new Image();
-                                    // TODO 应当使用高清图
-                                    $(hdImageObj).attr('src', jitPreview._currentAspect.picUrl).one('load', function (evt) {
+                                    $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
                                         dispatcher.trigger('jitPreview-unmask');
                                         jitPreview._backgroundLayer.hide();
                                         var im = new Kinetic.Image({
