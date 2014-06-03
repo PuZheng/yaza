@@ -129,7 +129,10 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .data("design-image-file", node.image().src).rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                                    .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                                if (node.image().src.match(/^http/)) {
+                                    im.data("design-image-file", node.image().src)
+                                }
                             }
                             data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                         }, this)
