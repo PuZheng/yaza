@@ -31,14 +31,14 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
             $("#customer-pics").find(".thumbnail:first").addClass("selected");
         }
 
-        function getBase64FromImage(img) {
+        function getBase64FromImage(node) {
 
             var canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
+            canvas.width = node.width();
+            canvas.height = node.height();
 
             var ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
+            ctx.drawImage(node.image(), 0, 0, node.width(), node.height());
 
             return canvas.toDataURL("image/png");
         }
@@ -125,7 +125,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                        getBase64FromImage(node.image()),
+                                        getBase64FromImage(node),
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
