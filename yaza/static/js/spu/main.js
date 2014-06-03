@@ -78,12 +78,6 @@ require.config({
         'buckets': {
             exports: 'buckets',
         },
-        'svg': {
-            exports: 'SVG',
-        },
-        'svg.export': {
-            deps: ['svg'],
-        },
         'zlib': {
             exports: 'Zlib',
         }

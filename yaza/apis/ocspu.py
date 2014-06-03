@@ -6,14 +6,15 @@ from werkzeug.utils import cached_property
 
 from yaza.apis import ModelWrapper
 from yaza.basemain import app
+from yaza.upyun_handler import parse_image
 
 
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
         if self.cover_path:
-            return url_for("image.serve", filename=self.cover_path)
-
+            return parse_image(self.cover_path) if app.config.get(
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.cover_path)
         return ""
 
     def as_dict(self, camel_case):
@@ -35,21 +36,36 @@ class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
-            return url_for("image.serve", filename=self.pic_path)
+            return parse_image(self.pic_path + app.config["UPYUN_MD_PIC_SUFFIX"]) if app.config.get(
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
+        return ""
 
+    @property
+    def hd_pic_url(self):
+        if self.pic_path:
+            return parse_image(self.pic_path) if app.config.get(
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
         return ""
 
     @property
     def thumbnail(self):
-        if self.thumbnail_path:
-            return url_for("image.serve", filename=self.thumbnail_path)
-
+        if app.config.get("UPYUN_ENABLE"):
+            #可能中途切换过UPYUN_ENABLE开关，所有需要额外判断
+            thumbnail_suffix = app.config.get("UPYUN_THUMBNAIL_SUFFIX") or "!sm"
+            if self.thumbnail_path and self.thumbnail_path.endswith(thumbnail_suffix):
+                return parse_image(self.thumbnail_path)
+            elif self.pic_path:
+                return parse_image(self.pic_path + thumbnail_suffix)
+        else:
+            if self.thumbnail_path:
+                return url_for("image.serve", filename=self.thumbnail_path)
         return ""
 
     def as_dict(self, camel_case=True):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
                 [dr.as_dict(camel_case) for dr in self.design_region_list],
@@ -80,7 +96,8 @@ class DesignRegionWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
-            return url_for("image.serve", filename=self.pic_path)
+            return parse_image(self.pic_path) if app.config.get(
+                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
         return ""
 
 
@@ -121,19 +138,14 @@ class DesignRegionWrapper(ModelWrapper):
             'edges': self.edges,
             'size': [self.width, self.height],
             'name': self.name,
-            'minHSVValue' if camel_case else 'min_hsv_value':
-            self.min_hsv_value,
-            'maxHSVValue' if camel_case else 'max_hsv_value':
-            self.max_hsv_value,
-            'medianHSVValue' if camel_case else 'median_hsv_value':
-            self.median_hsv_value,
+            'minHSVValue' if camel_case else 'min_hsv_value': self.min_hsv_value,
+            'maxHSVValue' if camel_case else 'max_hsv_value': self.max_hsv_value,
+            'medianHSVValue' if camel_case else 'median_hsv_value': self.median_hsv_value,
         }
 
 
 class DesignImageWrapper(ModelWrapper):
-    @classmethod
-    def _stored_dir(cls):
-        return os.path.join(app.config["UPLOAD_FOLDER"], app.config["DESIGN_IMAGE_FOLDER"])
+    StoredDir = os.path.join(app.config["UPLOAD_FOLDER"], app.config["DESIGN_IMAGE_FOLDER"])
 
     @property
     def pic_url(self):
@@ -147,6 +159,3 @@ class DesignImageWrapper(ModelWrapper):
             "title": self.title,
             'picUrl' if camel_case else 'pic_url': self.pic_url
         }
-
-
-DesignImageWrapper.StoredDir = DesignImageWrapper._stored_dir()
