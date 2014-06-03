@@ -29,12 +29,7 @@ def convert(file_, image_folder):
             design_image_file = design_image_file.replace("%5C", "/")
 
             im = Image.open(os.path.join(image_folder, design_image_file))
-
-            rotate = -float(image.data("rotation") or 0)
-
-            new_im = im.resize((int(float(image.get_width())), int(float(image.get_height()))), Image.ANTIALIAS).rotate(
-                rotate, Image.BICUBIC)
-
+            new_im = im.resize((int(float(image.get_width())), int(float(image.get_height()))), Image.ANTIALIAS)
             tmp_file = os.path.join(image_folder, ".tmp".join(os.path.splitext(design_image_file)))
             new_im.save(tmp_file)
 
