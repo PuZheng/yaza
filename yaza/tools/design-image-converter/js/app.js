@@ -80,12 +80,22 @@ $(function () {
                 var fr = new FileReader();
                 fr.onload = function (idx, image) {
                     return function (e) {
-                        href = 'data:image/png;base64,' + btoa(e.target.result);
-                        $(image).attr('xlink:href', href);
-                        images[idx] = $(image);
-                        if (++processedImages == $(svg).find('image').length) {
-                            d.resolve(images, fileName, height, width);
-                        }
+                        var img = new Image();
+                        img.src = 'data:image/png;base64,' + btoa(e.target.result);
+                        img.onload = function () {
+
+                            var canvas = document.createElement("canvas");
+                            canvas.width = $(image).attr('width');
+                            canvas.height = $(image).attr('height');
+                            var ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            href = canvas.toDataURL("image/png");
+                            $(image).attr('xlink:href', href);
+                            images[idx] = $(image);
+                            if (++processedImages == $(svg).find('image').length) {
+                                d.resolve(images, fileName, height, width);
+                            }
+                        };
                     };
                 }(idx, this);
                 var file = fileMap[href.replace(/.*\//, '')];
