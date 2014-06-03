@@ -1,0 +1,16 @@
+{
+  "name": "高清转换",
+  "description": "将svg中的低清图片替换为高清图片",
+  "version": "0.1",
+  "manifest_version": 2,
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  },
+  "icons": { "16": "logo-16.png", "128": "logo-128.png" },
+  "permissions": [
+      "storage",
+      "fileSystem"
+  ]
+}
