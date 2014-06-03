@@ -88,7 +88,13 @@ $(function () {
                         }
                     };
                 }(idx, this);
-                fr.readAsBinaryString(fileMap[href.replace(/.*\//, '')])
+                var file = fileMap[href.replace(/.*\//, '')];
+                if (file) {
+                    fr.readAsBinaryString(fileMap[href.replace(/.*\//, '')])
+                } else {
+                    $('p.error').html('错误! 找不到' + href.replace(/.*\//, '') + '对应的高清设计图!');
+                    return;
+                }
             } else {
                 images[idx] = $(this);
                 if (++processedImages == $(svg).find('image').length) {
