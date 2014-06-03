@@ -75,8 +75,8 @@ $(function () {
         d.promise().then(initDownload);
         var processedImages = 0;
         $(svg).find('image').each(function (idx) {
-            var href = $(this).attr('xlink:href');
-            if (href.match('^http:\/\/')) {
+            var href = $(this).data('design-image-file');
+            if (href) {
                 var fr = new FileReader();
                 fr.onload = function (idx, image) {
                     return function (e) {
