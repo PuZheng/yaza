@@ -4,7 +4,7 @@ import base64
 import sys
 
 from pysvg import parser, structure
-
+from PIL import Image
 
 def convert(file_, image_folder):
 
@@ -26,10 +26,18 @@ def convert(file_, image_folder):
         try:
             design_image_file = image.data("design-image-file")
             design_image_file = design_image_file.rsplit('/')[-1]
-            content = file(os.path.join(image_folder,
-                                        design_image_file)).read()
-            image.set_xlink_href("data:image/png;base64," +
-                                 base64.b64encode(content))
+            design_image_file = design_image_file.replace("%5C", "/")
+
+            im = Image.open(os.path.join(image_folder, design_image_file))
+            new_im = im.resize((int(float(image.get_width())), int(float(image.get_height()))), Image.ANTIALIAS)
+            tmp_file = os.path.join(image_folder, ".tmp".join(os.path.splitext(design_image_file)))
+            new_im.save(tmp_file)
+
+            with open(tmp_file, "rb") as f:
+                content = f.read()
+            os.unlink(tmp_file)
+            # content = file(os.path.join(image_folder, design_image_file)).read()
+            image.set_xlink_href("data:image/png;base64," + base64.b64encode(content))
         except AttributeError:
             pass
         svg_file.save(".hd".join(os.path.splitext(file_)))
