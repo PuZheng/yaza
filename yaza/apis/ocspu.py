@@ -137,9 +137,8 @@ class DesignImageWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            return url_for("image.serve", filename=self.pic_path)
-        return ""
+        # 将windows系统下的'\'转换为'/'
+        return url_for("image.serve", filename=self.pic_path).replace('%5C', '/')
 
     def as_dict(self, camel_case=True):
         return {
