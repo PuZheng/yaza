@@ -40,6 +40,7 @@ def convert(file_, image_folder):
 
             with open(tmp_file, "rb") as f:
                 content = f.read()
+            os.unlink(tmp_file)
             # content = file(os.path.join(image_folder, design_image_file)).read()
             image.set_xlink_href("data:image/png;base64," + base64.b64encode(content))
         except AttributeError:
