@@ -172,6 +172,7 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                             });
                                         }).on('mousemove', function (evt) {
                                             // firefox has no offset[XY]
+                                            // 为了防止layer[XY]为0的情况, 最后必须或上一个0
                                             var x = -(evt.evt.layerX || evt.evt.offsetX || 0); 
                                             var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
                                             zoomBackgroundLayer.position({
