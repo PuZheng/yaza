@@ -87,6 +87,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
+                    if (!ocspu.complementaryColor) {
+                        ocspu.complementaryColor = ComplementaryColors(ocspu.rgb);
+                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor);
+                    }
                     dispatcher.trigger('ocspu-selected', ocspu);
                     var designRegions = this.$('[name="current-design-region"]');
                     designRegions.find('a').each(function () {

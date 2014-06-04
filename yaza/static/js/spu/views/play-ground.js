@@ -219,11 +219,20 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
             initialize: function (options) {
                 this._design_image_list = options.design_image_list;
-
+                this._complementaryColor = "#CC3333";
                 dispatcher.on('ocspu-selected', function (ocspu) {
-                    console.log('oscpu ' + ocspu.color + '-' + ocspu.rgb + ' selected');
-                    this.$('.touch-screen .editable-region').css('background-color', 
+                    this.$('.touch-screen .editable-region').css('background-color',
                         ocspu.rgb);
+                    this._complementaryColor = ocspu.complementaryColor;
+                    if (!!this._controlLayer) {
+                        this._controlLayer.getChildren().forEach(function (group) {
+                            var rect = group.find('.rect')[0];
+                            if (rect.stroke().toLowerCase() !== "gray") {
+                                rect.stroke(this._complementaryColor)
+                            }
+                        }.bind(this));
+                        this._controlLayer.draw();
+                    }
                 }, this);
 
                 dispatcher.on('design-region-selected', function (designRegion) {
@@ -288,7 +297,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     }
                     controlGroup.moveToTop();
                     controlGroup.setAttr('trasient', false);
-                    controlGroup.find('.rect')[0].stroke('#CC3333');
+                    controlGroup.find('.rect')[0].stroke(this._complementaryColor);
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
                     this._resetDashboard(controlGroup);
