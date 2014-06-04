@@ -214,11 +214,27 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                          dispatcher.trigger("jitPreview-unmask");
                     }).fail(this._fail);
                     return false;
+                },
+                'click .btn-tag': function (evt) {
+                    if (this.$('.tags-list').is(':visible')) {
+                        this.$('.tags-list').hide();
+                    } else {
+                        this.$('.tags-list').css({
+                            width: '0px',
+                            position: 'absolute',
+                        }).show().animate({
+                            width: "100%",
+                        });
+                    }
+                },
+                'click .add-img-modal .tags-list button.close': function (evt) {
+                    this.$('.tags-list').hide();
                 }
             },
 
             initialize: function (options) {
-                this._design_image_list = options.design_image_list;
+                this.designImageList = options.designImageList;
+                this.tagList = options.tagList;
 
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     console.log('oscpu ' + ocspu.color + '-' + ocspu.rgb + ' selected');
@@ -296,7 +312,10 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
             },
 
             render: function () {
-                this.$el.prepend(this._template({"design_image_list": this._design_image_list}));
+                this.$el.prepend(this._template({
+                    "designImageList": this.designImageList,
+                    tagList: this.tagList,
+                }));
                 this._objectManager = new ObjectManager({
                     el: this.$('.object-manager'),
                 }).render();

@@ -4,10 +4,15 @@ define(['backbone', 'views/play-ground', 'views/jit-preview', 'bootstrap', 'sele
 
         initialize: function () {
             var spu = this.$('input[name="spu"]').data('val');
-            var design_image_list = this.$('input[name=design-image-list]').data('val');
-            this._playGround = new PlayGround({el: this.$('.play-ground'), spu: spu, design_image_list: design_image_list}).render();
+            var designImageList = this.$('input[name=design-image-list]').data('val');
+            var tagList = this.$('input[name=tag-list]').data('val');
+            this._playGround = new PlayGround({
+                el: this.$('.play-ground'), 
+                spu: spu, 
+                designImageList: designImageList, 
+                tagList: tagList,
+            }).render();
             this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu}).render();
-
         }
     });
     return AppView;

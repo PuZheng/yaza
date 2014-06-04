@@ -5,16 +5,15 @@
 """
 import os
 import shutil
+import json
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
-from PIL import Image
 
 import yaza
 from yaza.basemain import app
-from yaza.models import (User, Group, DesignImage)
+from yaza.models import (User, Group, DesignImage, Tag)
 from yaza.utils import do_commit, assert_dir
-from yaza.tools.utils import calc_design_region_image, calc_hsv_values
 
 
 class InitializeTestDB(Command):
@@ -35,14 +34,21 @@ class InitializeTestDB(Command):
         #change current work path
         os.chdir(os.path.split(yaza.__file__)[0])
 
+        design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
+                                        "static", "assets", 'design-images')
+        if os.path.isdir(design_image_dir):
+            self._create_design_images(design_image_dir)
+
         vendor_group = Group.query.get(const.VENDOR_GROUP)
         do_commit(User(name="vendor1",
-                       password=generate_password_hash('vendor1', 'pbkdf2:sha256'),
+                       password=generate_password_hash('vendor1',
+                                                       'pbkdf2:sha256'),
                        group=vendor_group))
         customer_group = Group.query.get(const.CUSTOMER_GROUP)
 
         do_commit(User(name="customer1",
-                       password=generate_password_hash('customer1', 'pbkdf2:sha256'),
+                       password=generate_password_hash('customer1',
+                                                       'pbkdf2:sha256'),
                        group=customer_group))
 
         spu_list_dir = os.path.join(os.path.split(yaza.__file__)[0], "static",
@@ -53,39 +59,46 @@ class InitializeTestDB(Command):
                 assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                         app.config['SPU_IMAGE_FOLDER']))
                 if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'],
-                                                   app.config['SPU_IMAGE_FOLDER'],
-                                                   spu_name)):
+                                               app.config['SPU_IMAGE_FOLDER'],
+                                               spu_name)):
                     shutil.rmtree(os.path.join(app.config['UPLOAD_FOLDER'],
                                                app.config['SPU_IMAGE_FOLDER'],
                                                spu_name))
                 shutil.copytree(spu_dir,
                                 os.path.join(app.config['UPLOAD_FOLDER'],
-                                                app.config['SPU_IMAGE_FOLDER'],
-                                                spu_name))
+                                             app.config['SPU_IMAGE_FOLDER'],
+                                             spu_name))
                 utils.create_or_update_spu(
-                    os.path.join(app.config['UPLOAD_FOLDER'], app.config['SPU_IMAGE_FOLDER'], spu_name),
-                    os.path.join(os.path.split(yaza.__file__)[0], app.config["UPLOAD_FOLDER"]))
+                    os.path.join(app.config['UPLOAD_FOLDER'],
+                                 app.config['SPU_IMAGE_FOLDER'], spu_name),
+                    os.path.join(os.path.split(yaza.__file__)[0],
+                                 app.config["UPLOAD_FOLDER"]))
 
-        design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
-                                        "static", "assets", 'design-images')
-        if os.path.isdir(design_image_dir):
-            self._create_design_images(design_image_dir)
 
     def _create_design_images(self, dir):
         assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                 app.config['DESIGN_IMAGE_FOLDER']))
-        for title, fname in ((u'李宇春', 'liyuchun.png'),
-                             (u'马丁.路德', 'martin_luther.png'),
-                             (u'小红帽', 'redhat.png'),
-                             ('python', 'pyday.png'),
-                             (u'列宁', 'lenin.png'),
-                             (u'海蒂.拉玛', 'hedylamarr.png')):
+
+        config = json.load(file(os.path.join(dir, "config.json")))
+
+        for fname, v in config.items():
             full_path = os.path.join(dir, fname)
             shutil.copy(full_path,
                         os.path.join(app.config['UPLOAD_FOLDER'],
                                      app.config['DESIGN_IMAGE_FOLDER'],
                                      fname))
+            title = v['title']
+            tags = v['tags']
+            tag_record_list = []
+            for tag in tags:
+                tag_record = Tag.query.filter(Tag.tag == tag).all()
+                if not tag_record:
+                    tag_record = do_commit(Tag(tag=tag))
+                else:
+                    tag_record = tag_record[0]
+                tag_record_list.append(tag_record)
             do_commit(DesignImage(title=title,
+                                  tags=tag_record_list,
                                   pic_path=os.path.join(
                                       app.config['DESIGN_IMAGE_FOLDER'],
                                       fname)))

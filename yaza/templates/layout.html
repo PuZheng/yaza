@@ -19,6 +19,9 @@
       <!--[if lt IE 9]>
           <script src="{{ url_for('static', filename='components/html5shiv/dist/html5shiv.js') }}"></script>
       <![endif]-->
+      {% if config.DEBUG %}
+      <script type="text/javascript" src="{{ url_for('static', filename='components/loremjs/lorem.js') }}"></script>
+      {% endif %}
       <script type="text/javascript" src="{{ url_for('static', filename='components/modernizr/modernizr.js') }}"></script>
     {% endblock %}
     {% block customized_head_block %}

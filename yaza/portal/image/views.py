@@ -6,12 +6,15 @@ import zipfile
 from contextlib import closing
 from StringIO import StringIO
 
+from PIL import Image, ImageFont, ImageDraw
 from flask import request, jsonify, url_for, send_from_directory
 
 from yaza.basemain import app
+from yaza.models import Tag
 from yaza.portal.image import image
 from yaza.utils import random_str
-from PIL import Image, ImageFont, ImageDraw
+from yaza.apis import wraps
+
 
 @image.route('/upload', methods=['POST'])
 def upload():
@@ -34,7 +37,6 @@ def serve(filename):
 @image.route("/edges/<int:design_region_id>")
 def detect_edges(design_region_id):
     from yaza.models import DesignRegion
-    from yaza.apis import wraps
 
     design_region = DesignRegion.query.get_or_404(design_region_id)
     return jsonify(wraps(design_region).edges)
@@ -43,7 +45,6 @@ def detect_edges(design_region_id):
 @image.route("/control-points/<int:design_region_id>")
 def calc_control_points(design_region_id):
     from yaza.models import DesignRegion
-    from yaza.apis import wraps
 
     design_region = DesignRegion.query.get_or_404(design_region_id)
     return jsonify(wraps(design_region).control_points)
@@ -65,12 +66,12 @@ def font_image():
     text = request.form['text']
     font_family = request.form['font-family']
     font_size = request.form.get('font-size', type=int)
-    font_color = request.form.get('font-color', 'black');
+    font_color = request.form.get('font-color', 'black')
     #font_alignment = request.form.get('font-alighment', 'left-alignment')
     font = ImageFont.truetype(app.config['FONTS_MAP'][font_family], font_size)
 
     width_height, left_bottom = font.font.getsize(text)
-    img = Image.new("RGBA", width_height, (255,255,255, 0))
+    img = Image.new("RGBA", width_height, (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
     # 这里是为了去除顶部的空白
     draw.text((0, -left_bottom[1]), text, fill=font_color, font=font)
@@ -80,4 +81,11 @@ def font_image():
         'data': base64.b64encode(sio.getvalue()),
         'width': img.size[0],
         'height': img.size[1],
+    })
+
+
+@image.route('/tag-list')
+def tags():
+    return jsonify({
+        'data': [wraps(tag).as_dict() for tag in Tag.query]
     })
