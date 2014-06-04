@@ -164,18 +164,20 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                         });
                                         zoomBackgroundLayer.on('mouseout', function () {
                                             jitPreview._backgroundLayer.show();
-                                            jitPreview._stage.find('.zoom-layer').hide();
-                                            zoomBackgroundLayer.hide();
+                                            jitPreview._stage.find('.zoom-layer').destroy();
+                                            zoomBackgroundLayer.destroy();
                                             _(jitPreview._layerCache).values().forEach(function (layer) {
                                                 layer.show();
                                             });
                                         }).on('mousemove', function (evt) {
-                                            var x = -evt.evt.offsetX; 
-                                            var y = -evt.evt.offsetY;
+                                            // firefox has no offset[XY]
+                                            var x = -(evt.evt.layerX || evt.evt.offsetX); 
+                                            var y = -(evt.evt.layerY || evt.evt.offsetY);
                                             zoomBackgroundLayer.position({
                                                 x: (config.MAGNIFY - 1) * x,
                                                 y: (config.MAGNIFY - 1) * y,
                                             }).draw();
+                                            console.log(zoomBackgroundLayer.position());
                                             // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
                                             jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
                                                 var context = zoomLayer.getContext();
