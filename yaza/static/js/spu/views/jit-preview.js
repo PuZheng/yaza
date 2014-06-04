@@ -147,9 +147,10 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                 jitPreview._backgroundLayer = new Kinetic.Layer({
                                     name: "background"
                                 });
-                                jitPreview._backgroundLayer.add(im).on('mouseover', function () {
+                                jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
                                     dispatcher.trigger('jitPreview-mask'); 
                                     var hdImageObj = new Image();
+                                    var mouseOverEvent = evt;
                                     $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
                                         dispatcher.trigger('jitPreview-unmask');
                                         jitPreview._backgroundLayer.hide();
@@ -171,8 +172,8 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                             });
                                         }).on('mousemove', function (evt) {
                                             // firefox has no offset[XY]
-                                            var x = -(evt.evt.layerX || evt.evt.offsetX); 
-                                            var y = -(evt.evt.layerY || evt.evt.offsetY);
+                                            var x = -(evt.evt.layerX || evt.evt.offsetX || 0); 
+                                            var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
                                             zoomBackgroundLayer.position({
                                                 x: (config.MAGNIFY - 1) * x,
                                                 y: (config.MAGNIFY - 1) * y,
@@ -192,7 +193,8 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                         });
                                         jitPreview._stage.add(zoomBackgroundLayer);
                                         zoomBackgroundLayer.add(im);
-                                        zoomBackgroundLayer.draw();
+                                        // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
+                                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
                                         _(jitPreview._layerCache).values().forEach(function (layer) {
                                             layer.hide();
                                             var zoomLayer = new Kinetic.Layer({
