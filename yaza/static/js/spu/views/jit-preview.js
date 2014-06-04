@@ -1,5 +1,5 @@
-define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+    function (config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -138,6 +138,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                     width: $(this).width(),
                                     height: $(this).height()
                                 }).offset($(this).offset());
+                                evt.target.crossOrigin = 'anonymous';
                                 var im = new Kinetic.Image({
                                     image: evt.target,
                                     width: $(this).width(),
@@ -146,7 +147,69 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 jitPreview._backgroundLayer = new Kinetic.Layer({
                                     name: "background"
                                 });
-                                jitPreview._backgroundLayer.add(im);
+                                jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
+                                    dispatcher.trigger('jitPreview-mask'); 
+                                    var hdImageObj = new Image();
+                                    var mouseOverEvent = evt;
+                                    $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
+                                        dispatcher.trigger('jitPreview-unmask');
+                                        jitPreview._backgroundLayer.hide();
+                                        var im = new Kinetic.Image({
+                                            image: evt.target,
+                                            width: jitPreview._backgroundLayer.width() * config.MAGNIFY,
+                                            height: jitPreview._backgroundLayer.height() * config.MAGNIFY,
+                                        });
+                                        var zoomBackgroundLayer = new Kinetic.Layer({
+                                            width: jitPreview._backgroundLayer.width(),
+                                            height: jitPreview._backgroundLayer.height(),
+                                        });
+                                        zoomBackgroundLayer.on('mouseout', function () {
+                                            jitPreview._backgroundLayer.show();
+                                            jitPreview._stage.find('.zoom-layer').destroy();
+                                            zoomBackgroundLayer.destroy();
+                                            _(jitPreview._layerCache).values().forEach(function (layer) {
+                                                layer.show();
+                                            });
+                                        }).on('mousemove', function (evt) {
+                                            // firefox has no offset[XY]
+                                            // 为了防止layer[XY]为0的情况, 最后必须或上一个0
+                                            var x = -(evt.evt.layerX || evt.evt.offsetX || 0); 
+                                            var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
+                                            zoomBackgroundLayer.position({
+                                                x: (config.MAGNIFY - 1) * x,
+                                                y: (config.MAGNIFY - 1) * y,
+                                            }).draw();
+                                            console.log(zoomBackgroundLayer.position());
+                                            // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
+                                            jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
+                                                var context = zoomLayer.getContext();
+                                                context.imageSmoothEnabled = true;
+                                                var layer = zoomLayer.getAttr('orig-layer');
+                                                context.clearRect(0, 0, layer.width(), layer.height());
+                                                context.drawImage(layer.getCanvas()._canvas, 
+                                                    -(config.MAGNIFY - 1) * x/config.MAGNIFY, -(config.MAGNIFY - 1) * y/config.MAGNIFY, 
+                                                    layer.width()/config.MAGNIFY, layer.height()/config.MAGNIFY,
+                                                    0, 0, layer.width(), layer.height());
+                                            });
+                                        });
+                                        jitPreview._stage.add(zoomBackgroundLayer);
+                                        zoomBackgroundLayer.add(im);
+                                        // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
+                                        _(jitPreview._layerCache).values().forEach(function (layer) {
+                                            layer.hide();
+                                            var zoomLayer = new Kinetic.Layer({
+                                                width: layer.width(),
+                                                height: layer.height(),
+                                                name: 'zoom-layer',
+                                            });
+                                            zoomLayer.setAttr('orig-layer', layer);
+                                            jitPreview._stage.add(zoomLayer);
+                                            zoomLayer.draw();
+                                            // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
+                                        });
+                                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
+                                    }); 
+                                });
                                 // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                                 // background layer不重叠
                                 $(this).hide();
@@ -204,7 +267,6 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                                 jitPreview._currentLayer = $(this).data('layer');
 
                                 jitPreview._designRegionAnimate(designRegion.previewEdges);
-                                console.log('ok');
                                 dispatcher.trigger('design-region-selected', designRegion);
                             }
                         }(this));
