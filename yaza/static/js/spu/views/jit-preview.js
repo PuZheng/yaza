@@ -195,7 +195,6 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                         jitPreview._stage.add(zoomBackgroundLayer);
                                         zoomBackgroundLayer.add(im);
                                         // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
-                                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
                                         _(jitPreview._layerCache).values().forEach(function (layer) {
                                             layer.hide();
                                             var zoomLayer = new Kinetic.Layer({
@@ -208,6 +207,7 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                                             zoomLayer.draw();
                                             // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
                                         });
+                                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
                                     }); 
                                 });
                                 // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
