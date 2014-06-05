@@ -89,7 +89,8 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     var ocspu = $(evt.currentTarget).data('ocspu');
                     if (!ocspu.complementaryColor) {
                         ocspu.complementaryColor = ComplementaryColors(ocspu.rgb);
-                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor);
+                        ocspu.darkerColor = getDarkerColor(ocspu.complementaryColor, 50);
+                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.darkerColor);
                     }
                     dispatcher.trigger('ocspu-selected', ocspu);
                     var designRegions = this.$('[name="current-design-region"]');
