@@ -219,8 +219,6 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
             initialize: function (options) {
                 this._design_image_list = options.design_image_list;
-                //this._complementaryColor = "#CC3333";
-                //this._hoveredComplementColor = getDarkerColor(this._complementaryColor, 50);
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     this.$('.touch-screen .editable-region').css('background-color',
                         ocspu.rgb);
