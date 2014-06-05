@@ -1,12 +1,20 @@
 #-*- coding:utf-8 -*-
-from flask import Blueprint, render_template
+from flask.ext.login import current_user
+from yaza import const
+from flask import Blueprint, render_template, request
 from flask.ext.babel import _
+from flask.ext.principal import Permission, RoleNeed
 
 from yaza.admin import views
 from yaza.basemain import data_browser
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
+
+
+@admin.before_request
+def test_permission():
+    Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
 
 def register_model_view(model_view, bp, **kwargs):
@@ -41,3 +49,17 @@ def index():
     from yaza.basemain import admin_nav_bar
 
     return render_template("admin/index.html", nav_bar=admin_nav_bar)
+
+
+@admin.route("/generator", methods=["POST"])
+def generator_ws():
+    from yaza.models import SPU
+
+    spu = SPU.query.get_or_404(request.form["id"])
+    order_id = request.form["order_id"]
+    import base64
+    import urllib2
+
+    security_str = urllib2.quote(base64.encodestring("|".join([order_id, str(current_user.id)])))
+
+    return "/spu/spu/%d?captcha=%s" % (spu.id, security_str)

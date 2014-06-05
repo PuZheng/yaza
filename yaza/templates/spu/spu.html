@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block customized_head_block %}
+{% endblock %}
+
+{% block customized_tail_block %}
+  {% if config.DEBUG %}
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+  {% else %}
+    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+  {% endif %}
+{% endblock %}
+
+{% block main %}
+  <div class="container-fluid">
+  {% if order_id %}
+    订单号: {{ order_id }}
+  {% endif %}
+    <div class="primary">
+      <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
+      <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
+      <div class="row">
+          <div class="col-sm-5">
+            <div class="play-ground">
+              <div class="row" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+                <div class="col-sm-12">
+                  <div class="svg-drawing">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-7">
+            <div class="jit-preview"></div>
+          </div>
+        </div>
+        <!--/span-->
+      </div>
+      <!--/row-->
+    </div>
+
+
+    <hr/>
+    <footer class="footer visible-md visible-lg">
+      <div class="container">
+        <div class="text-muted">
+          copyright@Yaza
+        </div>
+      </div>
+    </footer>
+  </div><!-- /.container -->
+{% endblock %}

@@ -124,7 +124,8 @@ def authenticate(name, password):
     """
     try:
         user = User.query.filter(User.name == name).one()
-        if check_password_hash(user.password, password):
+        import sys
+        if check_password_hash(user.password.encode(sys.getdefaultencoding()), password):
             return UserWrapper(user)
         raise AuthenticateFailure("用户名或者密码错误")
     except NoResultFound:
