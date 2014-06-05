@@ -38,6 +38,9 @@ require.config({
         colors: 'js/spu/colors',
         'collections/tags': 'js/spu/collections/tags',
         'models/tag': 'js/spu/models/tag',
+        'collections/design-images': 'js/spu/collections/design-images',
+        'models/design-image': 'js/spu/models/design-image',
+        'lazy-load': 'js/utils/lazy-load',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -57,6 +60,10 @@ require.config({
         'bootstrap': {
             deps: ['jquery'],
             exports: '$.fn.tooltip',
+        },
+        'lazy-load': {
+            deps: ['jquery'],
+            exports: '$.fn.lazyLoad', 
         },
         'color-tools':{
             deps:['underscore', 'jquery']

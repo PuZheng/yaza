@@ -1,5 +1,5 @@
-define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string'],
-    function (make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['collections/design-images', 'colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load'],
+    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -28,7 +28,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
         function _selectFirstCustomerImg() {
             $(".thumbnails .thumbnail").removeClass("selected");
-            $("#customer-pics").find(".thumbnail:first").addClass("selected");
+            $(".customer-pics").find(".thumbnail:first").addClass("selected");
         }
 
         function getBase64FromImage(node) {
@@ -221,15 +221,30 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     } else {
                         this.$('.tags-list').css({
                             width: '0px',
+                            height: '90px',
                             position: 'absolute',
                         }).show().animate({
                             width: "100%",
+                            height: '90px',
                         });
                     }
                 },
                 'click .add-img-modal .tags-list button.close': function (evt) {
                     this.$('.tags-list').hide();
-                }
+                },
+                'click .add-img-modal .tags-list a.tag': function (evt) {
+                    var tagId = $(evt.currentTarget).data('tag-id');
+                    this._selectTag(tagId, $(evt.currentTarget).find('b').text());
+                    return false;
+                },
+                'mouseenter .thumbnail img': function (evt) {
+                    return false;
+                },
+
+                'mouseleave .thumbnail img': function (evt) {
+                    return false;
+                },
+
             },
 
             initialize: function (options) {
@@ -313,7 +328,6 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
             render: function () {
                 this.$el.prepend(this._template({
-                    "designImageList": this.designImageList,
                     tagList: this.tagList,
                 }));
                 this._objectManager = new ObjectManager({
@@ -325,7 +339,19 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                 this.$('.nav-tabs a:first').tab('show');
 
                 var playGround = this;
-                this.$('.add-img-modal').on('show.bs.modal', this._selectFirstIfSelectedEmpty).on('shown.bs.modal', function (e) {
+                this.$('.add-img-modal').on('show.bs.modal', function () {
+                    // 动态计算一页可以展示的图片数量
+                    if (!playGround._designImagesPerPage) {
+                        var fakeImage = $('<li><div class="thumbnail"></div></li>');
+                        fakeImage = $(fakeImage.appendTo(playGround.$('ul.thumbnails'))[0]).hide();
+                        var imagesOneRow = Math.floor($(this).find('.thumbnails').width() / fakeImage.width());
+                        var imagesOneColumn = Math.ceil($(this).find('.thumbnails').height() / fakeImage.height());
+                        fakeImage.remove();
+                        playGround._designImagesPerPage = imagesOneColumn * imagesOneRow;
+                    }
+                    playGround._selectTag(playGround._currentTagId || 0);
+                    playGround._renderUserPics();
+                }).on('shown.bs.modal', function (e) {
 
                     var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
@@ -365,7 +391,7 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                             $(this).find('.uploading-progress').fadeOut(1000);
                             Cookies.set('upload-images',
                                 data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                            playGround._renderGallery();
+                            playGround._renderUserPics();
                             _selectFirstCustomerImg();
                         },
                         fail: function (e, data) {
@@ -374,7 +400,6 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                         }
                     });
                 });
-                this._renderGallery();
                 this._draw = SVG(this.$('.svg-drawing')[0]);
                 this.$('.text-color').spectrum({
                     showPalette: true,
@@ -423,9 +448,39 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                                 return _.sprintf('<option value="%s">%s</option>', fontFamily, fontFamily); 
                             }).join(''));
 
+                this.$('.thumbnails').scroll(function (playGround) {
+                    var lastScroll = 0;
+                    return function (evt) {
+                        var lastImg = $(evt.target).find('img:last');
+                        // 必须判断是否向下, 因为当最后一页的时候, 向上滚动不能触发加载图片
+                        if ($(this).scrollTop() > lastScroll && lastImg.offset().top + lastImg.height() / 2 < this.getBoundingClientRect().bottom) {
+                            if (playGround._noMoreDesignImages) {
+                                playGround.$('.toast').show();
+                                setInterval(function () {
+                                    playGround.$('.toast').fadeOut();
+                                }, 1000);
+                            } else {
+                                playGround._loadMoreDesignImages();
+                            }
+                        }
+                        lastScroll = $(this).scrollTop();
+                        return false;
+                    }
+                }(this));
+                this.$('a[data-toggle="tab"]').on('shown.bs.tab', 
+                        function (playGround) {
+                            return function (e) {
+                                if (e.target.href.match(/.*\.customer-pics$/)) {
+                                    playGround.$('.btn-tag').attr('disabled', '');
+                                    playGround.$('.tags-list').hide();
+                                } else {
+                                    playGround.$('.btn-tag').removeAttr('disabled');
+                                }
+                            };
+                        }(this));
             },
 
-            _renderGallery: function () {
+            _renderUserPics: function () {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
                 var upload_images = (Cookies.get('upload-images') || '').trim();
@@ -446,13 +501,13 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
                     }
                 }
                 var gallery = $(template(rows));
-                this.$('.add-img-modal #customer-pics').html(gallery);
+                this.$('.add-img-modal .customer-pics').html(gallery);
 
             },
 
             _selectFirstIfSelectedEmpty: function () {
-                if ($(".thumbnail.selected img").length == 0) {
-                    $("#builtin-pics .thumbnail:first").addClass("selected");
+                if (this.$("ul.thumbnails .thumbnail.selected img").length == 0) {
+                    this.$(".builtin-pics .thumbnail:first").addClass("selected");
                 }
             },
 
@@ -659,8 +714,41 @@ define(['colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs
 
             _fail: function(jqXHR, textStatus, errorThrown) {
                 alert("服务器异常！");
-            }
+            },
 
+            _selectTag: function (tagId, tag) {
+                this.$('.tags-list').fadeOut();
+                if (this._currentTagId == tagId) {
+                    return;
+                }
+                this._currentTagId = tagId;
+                this.$(".builtin-pics .thumbnails").empty();
+                this.$("span.selected-tag").text(tag || '不限标签');
+                this._loadMoreDesignImages(function () {
+                    this._selectFirstIfSelectedEmpty(); 
+                }.bind(this));
+            },
+
+            _loadMoreDesignImages: function (after) {
+                var designImages = new DesignImages(this._currentTagId, this.$('.builtin-pics .thumbnails img').length / this._designImagesPerPage, this._designImagesPerPage);
+                designImages.fetch({reset: true});
+                designImages.on('reset', function (playGround) {
+                    return function (evt) {
+                        var thumbnails = playGround.$(".builtin-pics .thumbnails");
+                        this.each(function (element, index, list) {
+                            var s = '<li><div class="thumbnail"><img src="%s" alt="%s" data-title="%s"></img></div></li>'
+                            var e = $(_.sprintf(s, element.get('thumbnail'),
+                                    element.get('title'), element.get('title')));
+                            thumbnails.append(e);
+                            $(e).find('img').lazyLoad();
+                        });
+                        if (playGround.$('.builtin-pics .thumbnails img').length >= designImages.totalCnt) {
+                            playGround._noMoreDesignImages = true;
+                        }
+                        after && after();
+                    }
+                }(this));
+            }
         });
         return PlayGround;
     });

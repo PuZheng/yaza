@@ -9,6 +9,7 @@ import json
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
+from flask import url_for
 
 import yaza
 from yaza.basemain import app
@@ -81,27 +82,33 @@ class InitializeTestDB(Command):
 
         config = json.load(file(os.path.join(dir, "config.json")))
 
-        for fname, v in config.items():
-            full_path = os.path.join(dir, fname)
-            shutil.copy(full_path,
-                        os.path.join(app.config['UPLOAD_FOLDER'],
-                                     app.config['DESIGN_IMAGE_FOLDER'],
-                                     fname))
-            title = v['title']
-            tags = v['tags']
-            tag_record_list = []
-            for tag in tags:
-                tag_record = Tag.query.filter(Tag.tag == tag).all()
-                if not tag_record:
-                    tag_record = do_commit(Tag(tag=tag))
-                else:
-                    tag_record = tag_record[0]
-                tag_record_list.append(tag_record)
-            do_commit(DesignImage(title=title,
-                                  tags=tag_record_list,
-                                  pic_path=os.path.join(
-                                      app.config['DESIGN_IMAGE_FOLDER'],
-                                      fname)))
+        with app.test_request_context():
+            for fname, v in config.items():
+                full_path = os.path.join(dir, fname)
+                shutil.copy(full_path,
+                            os.path.join(app.config['UPLOAD_FOLDER'],
+                                        app.config['DESIGN_IMAGE_FOLDER'],
+                                        fname))
+                title = v['title']
+                tags = v['tags']
+                tag_record_list = []
+                for tag in tags:
+                    tag_record = Tag.query.filter(Tag.tag == tag).all()
+                    if not tag_record:
+                        tag_record = do_commit(Tag(tag=tag))
+                    else:
+                        tag_record = tag_record[0]
+                    tag_record_list.append(tag_record)
+                pic_url = url_for('image.serve', filename=os.path.join(
+                    app.config['DESIGN_IMAGE_FOLDER'],
+                    fname,
+                ).replace('\\', '/'))
+                # 简单起见, thumbnail不压缩了
+                do_commit(DesignImage(title=title,
+                                      tags=tag_record_list,
+                                      pic_url=pic_url,
+                                      thumbnail=pic_url))
+
 
 
 if __name__ == "__main__":

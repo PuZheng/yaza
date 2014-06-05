@@ -112,9 +112,11 @@ class DesignImage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(32), nullable=False)
-    pic_path = db.Column(db.String(64))
+    pic_url = db.Column(db.String(64))
+    thumbnail = db.Column(db.String(64))
     tags = db.relationship("Tag",
-                           secondary=tag_and_design_image)
+                           secondary=tag_and_design_image,
+                           backref="design_image_list")
 
 
 class Permission(db.Model):

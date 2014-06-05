@@ -20,6 +20,6 @@ define(function () {
             'AR PL UKai CN',
             '腾祥铁山硬隶繁',
         ],
-        MAGNIFY: 1.5,
+        MAGNIFY: 1.5,  // 预览放大的倍数
     }
 });

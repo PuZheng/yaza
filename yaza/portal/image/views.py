@@ -10,7 +10,7 @@ from PIL import Image, ImageFont, ImageDraw
 from flask import request, jsonify, url_for, send_from_directory
 
 from yaza.basemain import app
-from yaza.models import Tag
+from yaza.models import Tag, DesignImage
 from yaza.portal.image import image
 from yaza.utils import random_str
 from yaza.apis import wraps
@@ -88,4 +88,24 @@ def font_image():
 def tags():
     return jsonify({
         'data': [wraps(tag).as_dict() for tag in Tag.query]
+    })
+
+
+@image.route('/design-images')
+@image.route('/design-images/<int:tag_id>')
+def design_images_view(tag_id=None):
+    page = request.args.get('page', type=int)
+    page_size = request.args.get('page_size', type=int)
+    camel_case = request.args.get('camel_case', 0, type=int)
+    q = DesignImage.query
+    if tag_id:
+        q = DesignImage.query.filter(DesignImage.tags.any(Tag.id == tag_id))
+
+    total_cnt = q.count()
+
+    if page is not None and page_size:
+        q = q.offset(page * page_size).limit(page_size)
+    return jsonify({
+        "totalCnt" if camel_case else "total_cnt": total_cnt,
+        "data": [wraps(di).as_dict(camel_case) for di in q],
     })
