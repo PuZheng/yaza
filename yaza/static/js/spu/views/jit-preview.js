@@ -1,5 +1,5 @@
-define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+    function (colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -32,7 +32,7 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
             },
 
             _colorTrans: function (obj, period) {
-                obj._colors = ColorGrads(['red', "#FFF"], 20);
+                obj._colors = colorTools.getColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
                 obj._set = function () {
@@ -87,6 +87,13 @@ define(['config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars
                     // show aspects
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
+                    if (!ocspu.complementaryColor) {
+                        // 这个颜色用于画选中状态的控制框
+                        ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
+                        // 这个颜色用于hovered状态的控制框
+                        ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
+                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.darkerColor);
+                    }
                     dispatcher.trigger('ocspu-selected', ocspu);
                     var designRegions = this.$('[name="current-design-region"]');
                     designRegions.find('a').each(function () {
