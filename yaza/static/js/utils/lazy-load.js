@@ -20,9 +20,9 @@
                 img.src = $obj.attr('src');
                 $obj.src = ""; 
                 img.onload = function () {
+                    $mask.remove();
                     $obj.src = img.src;
                     $obj.show();
-                    $mask.remove();
                 };
     		});
     	}
