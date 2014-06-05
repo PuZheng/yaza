@@ -1,5 +1,5 @@
-define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['color-tools', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+    function (colorTools, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -32,7 +32,7 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
             },
 
             _colorTrans: function (obj, period) {
-                obj._colors = ColorGrads(['red', "#FFF"], 20);
+                obj._colors = colorTools.getColorGrads(['red', "#FFF"], 20);
 
                 obj._index = 0;
                 obj._set = function () {
@@ -88,8 +88,10 @@ define(['buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!t
                     this.$('.aspect-selector').empty();
                     var ocspu = $(evt.currentTarget).data('ocspu');
                     if (!ocspu.complementaryColor) {
-                        ocspu.complementaryColor = ComplementaryColors(ocspu.rgb);
-                        ocspu.darkerColor = getDarkerColor(ocspu.complementaryColor, 50);
+                        // 这个颜色用于画选中状态的控制框
+                        ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
+                        // 这个颜色用于hovered状态的控制框
+                        ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
                         console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.darkerColor);
                     }
                     dispatcher.trigger('ocspu-selected', ocspu);
