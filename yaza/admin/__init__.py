@@ -1,15 +1,19 @@
 #-*- coding:utf-8 -*-
-from flask.ext.login import current_user
-from yaza import const
+from itsdangerous import URLSafeTimedSerializer
+
 from flask import Blueprint, render_template, request
+from flask.ext.login import current_user
 from flask.ext.babel import _
 from flask.ext.principal import Permission, RoleNeed
 
+from yaza import const
 from yaza.admin import views
-from yaza.basemain import data_browser
+from yaza.basemain import data_browser, app
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
+
+serializer = URLSafeTimedSerializer(secret_key=app.config.get('SECRET_KEY'), salt=app.config.get('SECURITY_SALT'))
 
 
 @admin.before_request
@@ -57,9 +61,7 @@ def generator_ws():
 
     spu = SPU.query.get_or_404(request.form["id"])
     order_id = request.form["order_id"]
-    import base64
-    import urllib2
 
-    security_str = urllib2.quote(base64.encodestring("|".join([order_id, str(current_user.id)])))
+    security_str = serializer.dumps([order_id, current_user.id])
 
     return "%sspu/spu/%d?captcha=%s" % (request.host_url, spu.id, security_str)
