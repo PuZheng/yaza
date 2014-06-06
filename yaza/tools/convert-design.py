@@ -26,16 +26,18 @@ def convert(file_, image_folder):
         try:
             design_image_file = image.data("design-image-file")
             design_image_file = design_image_file.rsplit('/')[-1]
+            design_image_full_path = os.path.join(image_folder, design_image_file)
 
-            im = Image.open(os.path.join(image_folder, design_image_file))
-            new_im = im.resize((int(float(image.get_width())), int(float(image.get_height()))), Image.ANTIALIAS)
-            tmp_file = os.path.join(image_folder, ".tmp".join(os.path.splitext(design_image_file)))
-            new_im.save(tmp_file)
+            if os.path.exists(design_image_full_path):
+                im = Image.open(design_image_full_path)
+                new_im = im.resize((int(float(image.get_width())), int(float(image.get_height()))), Image.ANTIALIAS)
+                tmp_file = os.path.join(image_folder, ".tmp".join(os.path.splitext(design_image_file)))
+                new_im.save(tmp_file)
 
-            with open(tmp_file, "rb") as f:
-                content = f.read()
-            os.unlink(tmp_file)
-            image.set_xlink_href("data:image/png;base64," + base64.b64encode(content))
+                with open(tmp_file, "rb") as f:
+                    content = f.read()
+                os.unlink(tmp_file)
+                image.set_xlink_href("data:image/png;base64," + base64.b64encode(content))
         except AttributeError:
             pass
         svg_file.save(".hd".join(os.path.splitext(file_)))
