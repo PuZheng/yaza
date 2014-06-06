@@ -33,15 +33,18 @@
           </div>
         </div>
         <div class="panel-body">
-          <span id="security-url"></span>
+          <p id="security-url"></p>
+          <button id="copy-button" type="button" class="btn btn-default">复制到剪切板</button>
         </div>
       </div>
     </div>
   </div>
 
   <script src="/static/components/jquery/dist/jquery.min.js"></script>
+  <script src="/static/components/zeroclipboard/dist/ZeroClipboard.min.js"></script>
   <script>
     $(function () {
+
       $("[name=generator]").click(function () {
         if (!$("#order_id").val()) {
           alert("订单号不能为空");
@@ -54,9 +57,25 @@
               }}
         ).done(function (content) {
               $("#security-url").html($("<a></a>").attr("href", content).html(content));
+            }).fail(function() {
+              $("#security-url").html($("<span></span>").text("错误"));
             });
         return true;
       });
+
+      var client = new ZeroClipboard($("#copy-button"));
+      client.on("copy", function (event) {
+        var clipboard = event.clipboardData;
+        var value = $("#security-url a").attr("href");
+        if (!!value) {
+          clipboard.setData("text/plain", value);
+          alert("复制成功");
+        }else{
+          alert("URL值为空");
+        }
+
+      });
+
     });
   </script>
 {% endblock %}

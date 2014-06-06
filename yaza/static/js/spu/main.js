@@ -25,6 +25,7 @@ require.config({
         'svg.export': 'components/svg.export.js/svg.export.min',
         'block-ui': 'components/blockui/jquery.blockUI',
         'spectrum': 'components/spectrum/spectrum',
+        'zClip':"components/zeroclipboard/dist/ZeroClipboard.min",
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',

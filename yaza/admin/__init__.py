@@ -62,4 +62,4 @@ def generator_ws():
 
     security_str = urllib2.quote(base64.encodestring("|".join([order_id, str(current_user.id)])))
 
-    return "/spu/spu/%d?captcha=%s" % (spu.id, security_str)
+    return "%sspu/spu/%d?captcha=%s" % (request.host_url, spu.id, security_str)
