@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block main %}
+
+  <div class="containers">
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <label class="col-sm-2 control-label" for="name">名称</label>
+
+        <div class="col-sm-10">
+          <input type="text" name="name" id="name" value="{{ spu.name }}" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label" for="order_id">订单号</label>
+
+        <div class="col-sm-10">
+          <input type="text" name="order_id" id="order_id" value="" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button class="btn btn-default" type="button" name="generator">生成加密的URL</button>
+        </div>
+      </div>
+      <input name="id" type="hidden" value="{{ spu.id }}"/>
+    </form>
+
+    <div class="col-sm-offset-2 col-sm-8">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="panel-title">
+            加密的URL
+          </div>
+        </div>
+        <div class="panel-body">
+          <p id="security-url"></p>
+          <button id="copy-button" type="button" class="btn btn-default">复制到剪切板</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/components/jquery/dist/jquery.min.js"></script>
+  <script src="/static/components/zeroclipboard/dist/ZeroClipboard.min.js"></script>
+  <script>
+    $(function () {
+
+      $("[name=generator]").click(function () {
+        if (!$("#order_id").val()) {
+          alert("订单号不能为空");
+          return false;
+        }
+        $.ajax({"url": "{{ url_for("admin.generator_ws") }}", "type": "POST",
+              "data": {"id": $("[name=id]").val(), "order_id": $("#order_id").val()},
+              "beforeSend": function () {
+                $("#security-url").html($("<i></i>").addClass("fa fa-spin fa-spinner"));
+              }}
+        ).done(function (content) {
+              $("#security-url").html($("<a></a>").attr("href", content).html(content));
+            }).fail(function() {
+              $("#security-url").html($("<span></span>").text("错误"));
+            });
+        return true;
+      });
+
+      var client = new ZeroClipboard($("#copy-button"));
+      client.on("copy", function (event) {
+        var clipboard = event.clipboardData;
+        var value = $("#security-url a").attr("href");
+        if (!!value) {
+          clipboard.setData("text/plain", value);
+          alert("复制成功");
+        }else{
+          alert("URL值为空");
+        }
+
+      });
+
+    });
+  </script>
+{% endblock %}
