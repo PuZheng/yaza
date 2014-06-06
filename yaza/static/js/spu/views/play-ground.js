@@ -61,12 +61,12 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this.$(evt.currentTarget).addClass("selected");
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.attr("src"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.data("pic-url"), $img.data('title'), $img.data("design-image-id"));
                 },
                 'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.attr("src"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.data("pic-url"), $img.data('title'), $img.data("design-image-id"));
                 },
                 'click .change-text-panel .btn-default': function (evt) {
                     this.$('.change-text-panel').hide();
@@ -752,9 +752,9 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return function (evt) {
                         var thumbnails = playGround.$(".builtin-pics .thumbnails");
                         this.each(function (element, index, list) {
-                            var s = '<li><div class="thumbnail"><img src="%s" alt="%s" data-title="%s"></img></div></li>'
+                            var s = '<li><div class="thumbnail"><img src="%s" alt="%s" data-title="%s" data-pic-url="%s"></img></div></li>'
                             var e = $(_.sprintf(s, element.get('thumbnail'),
-                                    element.get('title'), element.get('title')));
+                                    element.get('title'), element.get('title'), element.get('picUrl')));
                             thumbnails.append(e);
                             $(e).find('img').lazyLoad();
                         });
