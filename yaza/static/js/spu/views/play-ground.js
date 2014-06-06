@@ -351,19 +351,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this.$('.nav-tabs a:first').tab('show');
 
                 var playGround = this;
-                this.$('.add-img-modal').on('show.bs.modal', function () {
-                    //// 动态计算一页可以展示的图片数量
-                    //if (!playGround._designImagesPerPage) {
-                        //var fakeImage = $('<li><div class="thumbnail"></div></li>');
-                        //fakeImage = $(fakeImage.appendTo(playGround.$('ul.thumbnails'))[0]).hide();
-                        //var imagesOneRow = Math.floor($(this).find('.thumbnails').width() / fakeImage.width());
-                        //var imagesOneColumn = Math.ceil($(this).find('.thumbnails').height() / fakeImage.height());
-                        //fakeImage.remove();
-                        //playGround._designImagesPerPage = imagesOneColumn * imagesOneRow;
-                    //}
-                    //playGround._selectTag(playGround._currentTagId || 0);
-                    //playGround._renderUserPics();
-                }).on('shown.bs.modal', function (e) {
+                this.$('.add-img-modal').on('shown.bs.modal', function (e) {
                     if (!playGround._designImagesPerPage) {
                         var fakeImage = $('<li><div class="thumbnail"></div></li>');
                         fakeImage = $(fakeImage.appendTo(playGround.$('ul.thumbnails'))[0]).hide();
