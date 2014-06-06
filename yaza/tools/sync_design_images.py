@@ -42,6 +42,7 @@ if __name__ == '__main__':
         no_corresponding_image = DesignImage.query.filter(
             DesignImage.title == record['file_name']).count() == 0
         if no_corresponding_image:
+            print 'processing...', record
             tag_list = record['tag'].split(',')
             tag_record_list = []
             for tag in tag_list:
