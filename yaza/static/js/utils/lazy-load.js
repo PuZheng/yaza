@@ -24,6 +24,11 @@
                     $obj.src = img.src;
                     $obj.show();
                 };
+                img.onerror = function () {
+                    $mask.remove();
+                    $obj.src = img.src;
+                    $obj.show();
+                }
     		});
     	}
 	});

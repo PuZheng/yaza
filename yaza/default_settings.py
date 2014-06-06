@@ -48,3 +48,14 @@ UPYUN_ROOTPATH = "/upload-demo"
 UPYUN_UPLOAD_PARAMS = {"x-gmkerl-type": "fix_max", "x-gmkerl-value": 960}
 UPYUN_THUMBNAIL_SUFFIX = "!sm"
 UPYUN_MD_PIC_SUFFIX = "!md"
+
+QINIU_ENABLED = True
+
+QINIU_CONF = {
+    "ACCESS_KEY": "2B9o8hHxkw0PFOwUDd0Yl7TVsH_uXCrHicFeHcUI",
+    "SECRET_KEY": "hzeRwpvXzuFzqhkPaWugQLTyHGXltsjNvlvy9zHk",
+    "DESIGN_IMAGE_BUCKET": "yaza-design-images",
+    "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
+}
+
+DESIGN_IMAGE_LIST_API = "http://diancai.snsunion.cn/cloth/index.php/Uility/designimages"

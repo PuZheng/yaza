@@ -12,3 +12,4 @@ Flask-Mail>=0.9
 plumbum==1.4.1
 upyun
 requests
+qiniu

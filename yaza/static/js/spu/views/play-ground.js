@@ -352,7 +352,18 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
 
                 var playGround = this;
                 this.$('.add-img-modal').on('show.bs.modal', function () {
-                    // 动态计算一页可以展示的图片数量
+                    //// 动态计算一页可以展示的图片数量
+                    //if (!playGround._designImagesPerPage) {
+                        //var fakeImage = $('<li><div class="thumbnail"></div></li>');
+                        //fakeImage = $(fakeImage.appendTo(playGround.$('ul.thumbnails'))[0]).hide();
+                        //var imagesOneRow = Math.floor($(this).find('.thumbnails').width() / fakeImage.width());
+                        //var imagesOneColumn = Math.ceil($(this).find('.thumbnails').height() / fakeImage.height());
+                        //fakeImage.remove();
+                        //playGround._designImagesPerPage = imagesOneColumn * imagesOneRow;
+                    //}
+                    //playGround._selectTag(playGround._currentTagId || 0);
+                    //playGround._renderUserPics();
+                }).on('shown.bs.modal', function (e) {
                     if (!playGround._designImagesPerPage) {
                         var fakeImage = $('<li><div class="thumbnail"></div></li>');
                         fakeImage = $(fakeImage.appendTo(playGround.$('ul.thumbnails'))[0]).hide();
@@ -361,9 +372,12 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         fakeImage.remove();
                         playGround._designImagesPerPage = imagesOneColumn * imagesOneRow;
                     }
-                    playGround._selectTag(playGround._currentTagId || 0);
-                    playGround._renderUserPics();
-                }).on('shown.bs.modal', function (e) {
+                    if (!playGround.$('.builtin-pics img').length) {
+                        playGround._selectTag(playGround._currentTagId || 0);
+                    }
+                    if (!playGround.$('.customer-pics img').length) {
+                        playGround._renderUserPics();
+                    }
 
                     var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
@@ -545,6 +559,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 // 将图片按比例缩小，并且放在正中
                 var er = this.$('.touch-screen .editable-region');
                 var imageObj = new Image();
+                imageObj.crossOrigin = 'Anonymous';
                 imageObj.onload = _.bind(function () {
                     var width = er.width() - 2 * this._initMargin;
                     var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
