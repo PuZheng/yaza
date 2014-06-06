@@ -134,13 +134,16 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                     var aspect = $(evt.currentTarget).data('aspect');
                     this._currentAspect = aspect;
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
+                    // 切换图片时要mask
+                    dispatcher.trigger('jitPreview-mask');
                     this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
                         function (jitPreview, aspect) {
                             return function (evt) {
                                 // 其实可以不用使用本img标签,直接在backgroud layer中画,
                                 // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
                                 // 图片的大小
-                                $(this).show();
+                                dispatcher.trigger('jitPreview-unmask');
+                                $(this).show();  // 先显示为了正确获得图片的style
                                 jitPreview.$('.design-regions').css({
                                     width: $(this).width(),
                                     height: $(this).height()
