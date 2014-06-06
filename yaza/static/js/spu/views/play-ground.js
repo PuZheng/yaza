@@ -758,9 +758,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             thumbnails.append(e);
                             $(e).find('img').lazyLoad();
                         });
-                        if (playGround.$('.builtin-pics .thumbnails img').length >= designImages.totalCnt) {
-                            playGround._noMoreDesignImages = true;
-                        }
+                        playGround._noMoreDesignImages = (playGround.$('.builtin-pics .thumbnails img').length >= designImages.totalCnt);
                         after && after();
                     }
                 }(this));
