@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import posixpath
+import sys
 
 from flask import _request_ctx_stack, current_app, request, url_for
 from flask.ext import login
@@ -124,7 +125,6 @@ def authenticate(name, password):
     """
     try:
         user = User.query.filter(User.name == name).one()
-        import sys
         if check_password_hash(user.password.encode(sys.getdefaultencoding()), password):
             return UserWrapper(user)
         raise AuthenticateFailure("用户名或者密码错误")
