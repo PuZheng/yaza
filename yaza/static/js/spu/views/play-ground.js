@@ -639,6 +639,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             return function (evt) {
                                 // 之所以不用position, 是因为chrome下面position方法有bug
                                 var left = controlGroup.x() - im.width() / 2;
+                                left = Math.max(left, 0);
                                 left += playGround.$('.editable-region').offset().left;
                                 left -= playGround.$('.editable-region').parent().offset().left;
                                 var top = controlGroup.y() - im.height() / 2;
