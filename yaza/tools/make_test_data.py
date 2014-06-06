@@ -106,8 +106,7 @@ class InitializeTestDB(Command):
                 # 简单起见, thumbnail不压缩了
                 do_commit(DesignImage(title=title,
                                       tags=tag_record_list,
-                                      pic_url=pic_url,
-                                      thumbnail=pic_url))
+                                      pic_url=pic_url))
 
 
 

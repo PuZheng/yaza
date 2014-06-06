@@ -148,13 +148,18 @@ class DesignRegionWrapper(ModelWrapper):
 
 
 class DesignImageWrapper(ModelWrapper):
+
+    @property
+    def thumbnail(self):
+        # ref
+        # `http://developer.qiniu.com/docs/v6/api/reference/fop/image/imageview2.html`
+        if app.config['QINIU_ENABLED']:
+            return self.pic_url + '?imageView2/0/w/' + \
+                str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+        return self.pic_url
+
     StoredDir = os.path.join(app.config["UPLOAD_FOLDER"],
                              app.config["DESIGN_IMAGE_FOLDER"])
-
-    #@property
-    #def pic_url(self):
-        ## 将windows系统下的'\'转换为'/'
-        #return url_for("image.serve", filename=self.pic_path).replace('%5C', '/')
 
     def as_dict(self, camel_case=True):
         return {

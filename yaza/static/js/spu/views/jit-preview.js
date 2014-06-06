@@ -148,7 +148,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                                     width: $(this).width(),
                                     height: $(this).height()
                                 }).offset($(this).offset());
-                                evt.target.crossOrigin = 'anonymous';
+                                evt.target.crossOrigin = 'Anonymous';
                                 var im = new Kinetic.Image({
                                     image: evt.target,
                                     width: $(this).width(),
@@ -189,7 +189,6 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                                                 x: (config.MAGNIFY - 1) * x,
                                                 y: (config.MAGNIFY - 1) * y,
                                             }).draw();
-                                            console.log(zoomBackgroundLayer.position());
                                             // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
                                             jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
                                                 var context = zoomLayer.getContext();
