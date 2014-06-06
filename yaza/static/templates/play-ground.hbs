@@ -41,24 +41,38 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-body">
+          <div class='pull-right'>
+            <button class='btn-tag btn btn-primary'>
+              <i class="fa fa-tag"></i><span class='selected-tag'>不限标签</span>
+            </button>
+            <div class="tags-list" style='display: none'>
+              <div class="row">
+                <div class="panel panel-info col-md-10 col-md-offset-1">
+                  <div class="panel-body">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                      <a href="#" class='tag text-success' data-tag-id="0"><b>不限标签</b></a>
+                    {{#each tagList}}
+                      <a href="#" class='tag text-danger' data-tag-id="{{this.id}}"><b>{{this.tag}}</b></a>
+                    {{/each}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <ul class="nav nav-tabs">
-            <li><a data-toggle="tab" href="#builtin-pics">默认图片</a></li>
-            <li><a href="#customer-pics" data-toggle="tab">自定义图片</a></li>
+            <li><a data-toggle="tab" href=".builtin-pics">默认图片</a></li>
+            <li><a href=".customer-pics" data-toggle="tab">自定义图片</a></li>
           </ul>
           <div class="tab-content">
-            <div class="tab-pane fade" id="builtin-pics">
-              <ul class="thumbnails gallery image_picker_selector picker">
-                {{#each design_image_list}}
-                <li>
-                  <div class="thumbnail">
-                    <img class="image_picker_image" src="{{ this.pic_url }}" alt="{{ this.title }}" data-title="{{this.title}}" data-design-image-id="{{this.id}}"/>
-                  </div>
-                </li>
-                {{/each}}
-              </ul>
+            <div class="tab-pane fade builtin-pics">
+              <ul class="thumbnails gallery picker"></ul>
             </div>
-            <div class="tab-pane fade" id="customer-pics">
-
+            <div class="tab-pane fade customer-pics">
+            </div>
+            <div class="toast" style='display: none'>
+              <span>
+                没有设计图了
+              </span>
             </div>
           </div>
         </div>

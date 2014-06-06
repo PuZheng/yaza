@@ -5,6 +5,13 @@ from flask.ext.babel import _
 
 from .database import db
 
+tag_and_design_image = db.Table("TB_TAG_AND_DESIGN_IMAGE",
+                                db.Column("tag_id", db.Integer,
+                                          db.ForeignKey(
+                                              'TB_TAG.id')),
+                                db.Column("design_image_id", db.Integer,
+                                          db.ForeignKey("TB_DESIGN_IMAGE.id")))
+
 
 class User(db.Model):
     __tablename__ = 'TB_USER'
@@ -105,7 +112,11 @@ class DesignImage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(32), nullable=False)
-    pic_path = db.Column(db.String(64))
+    pic_url = db.Column(db.String(64))
+    thumbnail = db.Column(db.String(64))
+    tags = db.relationship("Tag",
+                           secondary=tag_and_design_image,
+                           backref="design_image_list")
 
 
 class Permission(db.Model):
@@ -119,9 +130,16 @@ class Permission(db.Model):
         return "<Permission: %s>" % self.name.encode("utf-8")
 
 permission_and_group_table = db.Table("TB_PERMISSION_AND_GROUP",
-                                  db.Column("permission_name",
-                                            db.String(64),
-                                            db.ForeignKey(
-                                                'TB_PERMISSION.name')),
-                                  db.Column("group_id", db.Integer,
-                                            db.ForeignKey("TB_GROUP.id")))
+                                      db.Column("permission_name",
+                                                db.String(64),
+                                                db.ForeignKey(
+                                                    'TB_PERMISSION.name')),
+                                      db.Column("group_id", db.Integer,
+                                                db.ForeignKey("TB_GROUP.id")))
+
+
+class Tag(db.Model):
+    __tablename__ = "TB_TAG"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tag = db.Column(db.String(16), nullable=False, unique=True)

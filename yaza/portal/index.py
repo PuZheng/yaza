@@ -20,8 +20,11 @@ def spu_view(id_):
 
     spu = get_or_404(models.SPU, id_)
 
-    design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
+    design_image_list = [wraps(di).as_dict(False) for di in
+                         models.DesignImage.query.all()]
+    tags = [wraps(t).as_dict() for t in models.Tag.query.limit(50)]
     return render_template('spu.html', time=time.time(), spu=spu,
+                           tag_list=json.dumps(tags),
                            design_image_list=json.dumps(design_image_list))
 
 
