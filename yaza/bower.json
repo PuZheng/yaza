@@ -39,6 +39,7 @@
     "excanvas": "*",
     "fancybox": "latest",
     "blockui": "*",
-    "spectrum": "~1.3.4"
+    "spectrum": "~1.3.4",
+    "loremjs": "*"
   }
 }

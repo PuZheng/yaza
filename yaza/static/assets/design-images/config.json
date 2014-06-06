@@ -1,0 +1,134 @@
+{
+    "1288291858.png": {
+        "title": "肖邦", 
+        "tags": ["音乐家", "人物"] 
+    },
+    "1354380821.png": {
+        "title": "ruby", 
+        "tags": ["编程"] 
+    },
+    "Anonymous_Einstein.png": {
+        "title": "爱因斯坦",
+        "tags": ["物理学家", "人物"]
+    },
+    "Archie_Che_Guevara.png": {
+        "title": "切.格瓦拉", 
+        "tags": ["革命家", "人物"]
+    },
+    "bob_marley.png": {
+        "title": "鲍勃.马利", 
+        "tags": ["音乐家", "人物"]
+    },
+    "casifish_stallman.png": {
+        "title": "理查德.马修.斯托曼", 
+        "tags": ["开源软件", "人物", "编程"]
+    },
+    "CharlieChaplin.png":{
+        "title": "卓别林", 
+        "tags": ["演员", "人物"]
+    }, 
+    "che_with_background.png": {
+        "title": "切.格瓦拉", 
+        "tags": ["革命家", "人物"]
+    },
+    "chinesedragon-fullbody.png": {
+        "title": "龙", 
+        "tags": ["中国", "动物"]
+    },
+    "hedylamarr.png": {
+        "title": "海蒂.拉玛", 
+        "tags": ["演员", "科学家", "人物"]
+    },
+    "hendrix.png": {
+        "title": "吉米.亨德里克斯", 
+        "tags": ["音乐家", "人物", "吉它"]
+    },
+    "johnny_automatic_Abraham_Lincoln.png": {
+        "title": "亚伯拉罕.林肯", 
+        "tags": ["政治家", "人物", "伟人"]
+    },
+    "johnny_automatic_Adolf_Hitler_2.png": {
+        "title": "阿道夫.希特勒", 
+        "tags": ["战犯", "人物", "独裁者"]
+    },
+    "johnny_automatic_Adolf_Hitler_3.png": {
+        "title": "阿道夫.希特勒", 
+        "tags": ["战犯", "人物", "独裁者"]
+    },
+    "kraken.png": {
+        "title": "章鱼怪", 
+        "tags": ["动物"]
+    },
+    "lenin2.png":{
+        "title": "列宁", 
+        "tags": ["革命者", "人物", "独裁者"]
+    },
+    "lenin.png": {
+        "title": "列宁", 
+        "tags": ["革命者", "人物", "独裁者"]
+    },
+    "liyuchun.png": {
+        "title": "李宇春", 
+        "tags": ["超女", "歌手", "人物"]
+    },
+    "malcomx-face.png": {
+        "title": "Malcom X",
+        "tags": ["人物", "民权斗士"]
+    },
+    "Martin-Luther-King-Jr-at-pulpit-remix.png": {
+        "title": "马丁.路德.金",
+        "tags": ["人物", "民权斗士"]
+    },
+    "martin_luther.png": {
+        "title": "马丁.路德",
+        "tags": ["人物", "宗教"]
+    },
+    "Marx_Engels_Lenin.png": {
+        "title": "马.恩.列", 
+        "tags": ["革命者", "人物"]
+    },
+    "morrison.png": {
+        "title": "吉姆·莫里森",
+        "tags": ["人物", "音乐家"]
+    },
+    "Muammar_Gaddafi.png": {
+        "title": "卡扎非",
+        "tags": ["人物", "独裁者"]
+    },
+    "pyday.png": {
+        "title": "python日",
+        "tags": ["编程", "python"]
+    },
+    "python_card.png": {
+        "title": "python",
+        "tags": ["编程", "python"]
+    },
+    "Raben_Ani.png": {
+        "title": "拥挤的小鸟",
+        "tags": ["动物"]
+    },
+    "shopin_portrait.png": {
+        "title": "肖邦", 
+        "tags": ["音乐家", "人物"]
+    },
+    "storulis.png": {
+        "title": "松鼠",
+        "tags": ["动物"]
+    },
+    "Tiananmen.png": {
+        "title": "天安门",
+        "tags": ["中国"]
+    },
+    "Tokugawa_Ieyasu.png": {
+        "title": "德川家康",
+        "tags": ["人物", "政治家"]
+    },
+    "usiiik_The_Red_X.png": {
+        "title": "red X",
+        "tags": ["标志"]
+    },
+    "warhol.png": {
+        "title": "安迪.沃霍尔", 
+        "tags": ["画家", "人物"]
+    }
+}

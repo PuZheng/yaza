@@ -4,7 +4,7 @@ import os
 from flask import url_for, json
 from werkzeug.utils import cached_property
 
-from yaza.apis import ModelWrapper
+from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
 from yaza.upyun_handler import parse_image
 
@@ -14,14 +14,15 @@ class OCSPUWrapper(ModelWrapper):
     def cover(self):
         if self.cover_path:
             return parse_image(self.cover_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve", filename=self.cover_path)
+                "UPYUN_ENABLE") else url_for("image.serve",
+                                             filename=self.cover_path)
         return ""
 
     def as_dict(self, camel_case):
         return {
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list':
-                [aspect.as_dict(camel_case) for aspect in self.aspect_list],
+            [aspect.as_dict(camel_case) for aspect in self.aspect_list],
             'cover': self.cover,
             'color': self.color,
             'rgb': self.rgb,
@@ -35,24 +36,25 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            return parse_image(self.pic_path + app.config["UPYUN_MD_PIC_SUFFIX"]) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
-        return ""
+        return parse_image(self.pic_path + app.config["UPYUN_MD_PIC_SUFFIX"]) if app.config.get(
+            "UPYUN_ENABLE") else url_for("image.serve",
+                                         filename=self.pic_path)
 
     @property
     def hd_pic_url(self):
         if self.pic_path:
             return parse_image(self.pic_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
+                "UPYUN_ENABLE") else url_for("image.serve",
+                                             filename=self.pic_path)
         return ""
 
     @property
     def thumbnail(self):
         if app.config.get("UPYUN_ENABLE"):
             #可能中途切换过UPYUN_ENABLE开关，所有需要额外判断
-            thumbnail_suffix = app.config.get("UPYUN_THUMBNAIL_SUFFIX") or "!sm"
-            if self.thumbnail_path and self.thumbnail_path.endswith(thumbnail_suffix):
+            thumbnail_suffix = app.config["UPYUN_THUMBNAIL_SUFFIX"]
+            if self.thumbnail_path and \
+               self.thumbnail_path.endswith(thumbnail_suffix):
                 return parse_image(self.thumbnail_path)
             elif self.pic_path:
                 return parse_image(self.pic_path + thumbnail_suffix)
@@ -68,7 +70,7 @@ class AspectWrapper(ModelWrapper):
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
-                [dr.as_dict(camel_case) for dr in self.design_region_list],
+            [dr.as_dict(camel_case) for dr in self.design_region_list],
             'name': self.name,
             'size': self.size,
         }
@@ -97,7 +99,8 @@ class DesignRegionWrapper(ModelWrapper):
     def pic_url(self):
         if self.pic_path:
             return parse_image(self.pic_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve", filename=self.pic_path)
+                "UPYUN_ENABLE") else url_for("image.serve",
+                                             filename=self.pic_path)
         return ""
 
 
@@ -145,16 +148,19 @@ class DesignRegionWrapper(ModelWrapper):
 
 
 class DesignImageWrapper(ModelWrapper):
-    StoredDir = os.path.join(app.config["UPLOAD_FOLDER"], app.config["DESIGN_IMAGE_FOLDER"])
+    StoredDir = os.path.join(app.config["UPLOAD_FOLDER"],
+                             app.config["DESIGN_IMAGE_FOLDER"])
 
-    @property
-    def pic_url(self):
-        # 将windows系统下的'\'转换为'/'
-        return url_for("image.serve", filename=self.pic_path).replace('%5C', '/')
+    #@property
+    #def pic_url(self):
+        ## 将windows系统下的'\'转换为'/'
+        #return url_for("image.serve", filename=self.pic_path).replace('%5C', '/')
 
     def as_dict(self, camel_case=True):
         return {
             "id": self.id,
             "title": self.title,
-            'picUrl' if camel_case else 'pic_url': self.pic_url
+            'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'thumbnail': self.thumbnail,
+            'tags': [wraps(tag).as_dict(camel_case) for tag in self.tags]
         }
