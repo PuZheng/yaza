@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import os
 import shutil
+from flask import render_template
 
 from flask.ext.databrowser import ModelView, sa, col_spec
 from flask.ext.babel import lazy_gettext, _
@@ -22,6 +23,8 @@ zip_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Plea
 
 
 class SPUAdminModelView(ModelView):
+    edit_template = "admin/spu/spu.html"
+
     def try_edit(self, processed_objs=None):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
@@ -59,6 +62,11 @@ class SPUAdminModelView(ModelView):
             raise e
 
         os.unlink(obj.spu_zip)
+
+    def edit_view(self, id_):
+        spu = self._get_one(id_)
+        self.try_edit(spu)
+        return render_template(self.edit_template, spu=spu)
 
 
 class OCSPUAdminModelView(ModelView):
