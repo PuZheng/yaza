@@ -262,7 +262,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
     def _create_ocspu(ocspu_dir, cover_file, color, rgb, spu, config):
         cover_path = os.path.relpath(cover_file, start_dir)
-        upload_image(cover_file, cover_path)
+        #upload_image(cover_file, cover_path)
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
         aspect_configs = config["aspects"]
@@ -277,7 +277,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
-                    upload_image(full_path, pic_path)
+                    #upload_image(full_path, pic_path)
                     if app.config.get("UPYUN_ENABLE"):
                         thumbnail_path = pic_path + app.config["UPYUN_THUMBNAIL_SUFFIX"]
                     else:
@@ -302,7 +302,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
 
-                upload_image(full_path, pic_path)
+                #upload_image(full_path, pic_path)
                 print "progressing image: " + full_path
                 calc_design_region_image(full_path)
                 hsv_values = calc_hsv_values(Image.open(full_path))

@@ -9,7 +9,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                     return pair[1];
                 }
             }
-            return(false);
+            return false;
         }
 
         var __debug__ = (getQueryVariable('debug') == '1');
@@ -332,7 +332,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                         var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
                         if (!this._currentDesignRegion.controlPointsMap) {
                             this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
-                                [4, 4]);
+                                [48, 48]);
                         }
 
                         var srcWidth = playGroundLayer.width();
@@ -355,7 +355,6 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                                     hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
                                     hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
                                     hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
-
                                 }
                             }
                         }
@@ -465,38 +464,65 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                     leftRight: {},
                     topBottom: {},
                 };
-                edges['bottom'].forEach(function (point) {
-                    ret.topBottom[point[0]] = {
-                        bottom: point[1],
-                        top: Number.MIN_VALUE,
-                    };
-                });
-                edges['top'].forEach(function (point) {
-                    if (!!ret.topBottom[point[0]]) {
-                        ret.topBottom[point[0]].top = point[1];
-                    } else {
-                        ret.topBottom[point[0]] = {
-                            bottom: Number.MAX_VALUE,
-                            top: point[1],
+                ['top', 'right', 'bottom', 'left'].forEach(function (edgeName) {
+                    edges[edgeName].forEach(function (point) {
+                        if (ret.topBottom[point[0]]) {
+                            ret.topBottom[point[0]].push(point[1]);
+                        } else {
+                            ret.topBottom[point[0]] = [point[1]];
                         }
-                    }
-                });
-                edges['left'].forEach(function (point) {
-                    ret.leftRight[point[1]] = {
-                        left: point[0],
-                        right: Number.MIN_VALUE,
-                    };
-                });
-                edges['right'].forEach(function (point) {
-                    if (!!ret.leftRight[point[1]]) {
-                        ret.leftRight[point[1]].right = point[0];
-                    } else {
-                        ret.leftRight[point[1]] = {
-                            left: Number.MAX_VALUE,
-                            right: point[0],
+                        if (ret.leftRight[point[1]]) {
+                            ret.leftRight[point[1]].push(point[0]);
+                        } else {
+                            ret.leftRight[point[1]] = [point[0]];
                         }
-                    }
+                    });
                 });
+
+                for (var x in ret.topBottom) {
+                    ret.topBottom[x] = {
+                        bottom: Math.min.apply(Math, ret.topBottom[x]),
+                        top: Math.max.apply(Math, ret.topBottom[x]), 
+                    }
+                }
+                for (var y in ret.leftRight) {
+                    ret.leftRight[y] = {
+                        left: Math.min.apply(Math, ret.leftRight[y]),
+                        right: Math.max.apply(Math, ret.leftRight[y]),
+                    };
+                }
+                //edges['bottom'].forEach(function (point) {
+                    //ret.topBottom[point[0]] = {
+                        //bottom: point[1],
+                        //top: Number.MIN_VALUE,
+                    //};
+                //});
+                //edges['top'].forEach(function (point) {
+                    //if (!!ret.topBottom[point[0]]) {
+                        //ret.topBottom[point[0]].top = point[1];
+                    //} else {
+                        //ret.topBottom[point[0]] = {
+                            //bottom: Number.MAX_VALUE,
+                            //top: point[1],
+                        //}
+                    //}
+                //});
+                //edges['left'].forEach(function (point) {
+                    //ret.leftRight[point[1]] = {
+                        //left: point[0],
+                        //right: Number.MIN_VALUE,
+                    //};
+                //});
+                //edges['right'].forEach(function (point) {
+                    //if (!!ret.leftRight[point[1]]) {
+                        //ret.leftRight[point[1]].right = point[0];
+                    //} else {
+                        //ret.leftRight[point[1]] = {
+                            //left: Number.MAX_VALUE,
+                            //right: point[0],
+                        //}
+                    //}
+                //});
                 return ret;
             },
 
@@ -505,14 +531,14 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                 var test = 0;
                 var leftRight = this._currentDesignRegion.bounds.leftRight[y];
                 var topBottom = this._currentDesignRegion.bounds.topBottom[x];
-                if (!(leftRight && topBottom)) {
+                if (!(leftRight && topBottom) ) {
                     return false;
                 }
-                test += (x >= leftRight.left);
-                test += (x <= leftRight.right);
-                test += (y >= topBottom.bottom);
-                test += (y <= topBottom.top);
-                return test >= 3;
+                test += (x > leftRight.left);
+                test += (x < leftRight.right);
+                test += (y > topBottom.bottom);
+                test += (y < topBottom.top);
+                return test == 4;
             },
         });
 
@@ -538,6 +564,9 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                 tan0 = Math.sqrt((1.0 - cos0) / (1.0 + cos0));
                 tan1 = Math.sqrt((1.0 - cos1) / (1.0 + cos1));
                 w = (tan0 + tan1) / Math.sqrt(Math.pow(cp1[0] - point[0], 2) + Math.pow(cp1[1] - point[1], 2));
+                if (isNaN(w)) {
+                    w = 0;
+                }
                 weights.push(w);
             }
 
