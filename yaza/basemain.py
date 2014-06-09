@@ -56,7 +56,7 @@ def register_views():
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
-    installed_apps = ['user', "image", "ocspu", "spu"]
+    installed_apps = ['user', "image", "spu"]
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])
