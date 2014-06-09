@@ -1,5 +1,5 @@
-define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+    function (cubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -332,7 +332,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                         var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, this._backgroundLayer.width(), this._backgroundLayer.height()).data;
                         if (!this._currentDesignRegion.controlPointsMap) {
                             this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
-                                [48, 48]);
+                                [16, 16]);
                         }
 
                         var srcWidth = playGroundLayer.width();
@@ -345,16 +345,63 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                         for (var i = 0; i < targetWidth; ++i) {
                             for (var j = 0; j < targetHeight; ++j) {
                                 if (this._within(i, j)) {
-                                    var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
                                     var pos = (i + j * targetWidth) * 4;
-                                    origPos = (origPoint[0] + (origPoint[1] * srcWidth)) * 4;
-                                    var v = getHSVValue(backgroundImageData, pos, srcImageData,
-                                        origPos, test1, test2);
+                                    var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
+                                    origPos = (parseInt(origPoint[0]) + 
+                                            (parseInt(origPoint[1]) * srcWidth)) * 4;
+                                    // 若是透明, 直接离开
+                                    //if (srcImageData[origPoint + 3] == 0) {
+                                        //continue;
+                                    //}
+                                    // find the 16 points
+                                    var cols = [];
+                                    var left = Math.floor(origPoint[0]) - 1;
+                                    var right = Math.ceil(origPoint[0]) + 2;
+                                    cols.push(left < 0? 0: left);
+                                    cols.push(left + 1);
+                                    cols.push(left + 2);
+                                    cols.push(left + 3 >= srcWidth? srcWidth - 1: left + 3);
+                                    var rows = [];
+                                    var bottom = Math.floor(origPoint[1]) - 1;
+                                    rows.push(bottom < 0? 0: bottom);
+                                    rows.push(bottom + 1);
+                                    rows.push(bottom + 2);
+                                    rows.push(bottom + 3 > srcHeight? srcHeight - 1: bottom + 3);
 
-                                    hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
-                                    hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
-                                    hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
-                                    hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
+                                    //var v = getHSVValue(backgroundImageData, pos, srcImageData,
+                                        //origPos, test1, test2);
+
+                                    origPoint[0] = origPoint[0] - Math.floor(origPoint[0]);
+                                    origPoint[1] = origPoint[1] - Math.floor(origPoint[1]);
+                                    hotspotImageData.data[pos] = cubic.bicubic(
+                                            composeBicubicMatrix({
+                                                rows: rows, 
+                                                cols: cols,
+                                            }, srcImageData, srcWidth, 0), origPoint[0], 
+                                            origPoint[1]);
+                                    hotspotImageData.data[pos + 1] = cubic.bicubic(
+                                            composeBicubicMatrix({
+                                                rows: rows, 
+                                                cols: cols,
+                                            }, srcImageData, srcWidth, 1), origPoint[0], 
+                                            origPoint[1]);
+                                    hotspotImageData.data[pos + 2] = cubic.bicubic(
+                                            composeBicubicMatrix({
+                                                rows: rows, 
+                                                cols: cols,
+                                            }, srcImageData, srcWidth, 2), origPoint[0], 
+                                            origPoint[1]);
+                                    hotspotImageData.data[pos + 3] = cubic.bicubic(
+                                            composeBicubicMatrix({
+                                                rows: rows, 
+                                                cols: cols,
+                                            }, srcImageData, srcWidth, 3), origPoint[0], 
+                                            origPoint[1]);
+                                    //var v = 0;
+                                    //hotspotImageData.data[pos] = Math.min(srcImageData[origPos] + v, 255);
+                                    //hotspotImageData.data[pos + 1] = Math.min(srcImageData[origPos + 1] + v, 255);
+                                    //hotspotImageData.data[pos + 2] = Math.min(srcImageData[origPos + 2] + v, 255);
+                                    //hotspotImageData.data[pos + 3] = srcImageData[origPos + 3];
                                 
                                 }
                             }
@@ -386,6 +433,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                             this._stage.add(layer);
                             this._stage.draw();
                         }
+                        hotspotContext.imageSmoothEnabled = true;
                         hotspotContext.putImageData(hotspotImageData, 0, 0);
                         this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                     }.bind(this));
@@ -538,7 +586,7 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                 tan0 = Math.sqrt((1.0 - cos0) / (1.0 + cos0));
                 tan1 = Math.sqrt((1.0 - cos1) / (1.0 + cos1));
                 w = (tan0 + tan1) / Math.sqrt(Math.pow(cp1[0] - point[0], 2) + Math.pow(cp1[1] - point[1], 2));
-                if (isNaN(w)) {
+                if (isNaN(w) || !isFinite(w)) {
                     w = 0;
                 }
                 weights.push(w);
@@ -553,8 +601,9 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
                 x += weights[i] * cpPairs[i][1][0];
                 y += weights[i] * cpPairs[i][1][1];
             }
-            return [parseInt(Math.round(x / weights_sum)),
-                parseInt(Math.round(y / weights_sum))];
+            return [x / weights_sum, y / weights_sum];
+            //return [parseInt(Math.round(x / weights_sum)),
+                //parseInt(Math.round(y / weights_sum))];
         }
 
         function calcControlPoints(edges, size, cpNum) {
@@ -625,6 +674,18 @@ define(['color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatche
             // 做的太过
             return (v > 127) ? (imageData[pos] - test1) * (1 + v / 255) :
                 (imageData[pos] - test2) * (2 - v / 255);
+        }
+
+        function composeBicubicMatrix(bounds, srcImageData, srcWidth, offset) {
+            var matrix = [];
+            bounds.rows.forEach(function (row) {
+                var p = [];
+                bounds.cols.forEach(function (col) {
+                    p.push(srcImageData[(row * srcWidth + col) * 4 + offset]);
+                });
+                matrix.push(p);
+            });
+            return matrix;
         }
 
         return JitPreview;
