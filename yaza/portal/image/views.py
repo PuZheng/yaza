@@ -3,16 +3,20 @@ import os
 import sys
 import base64
 import zipfile
+import time
+import datetime
+
 from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
 from flask import request, jsonify, url_for, send_from_directory
+from flask.ext.login import current_user
 
 from yaza.basemain import app
-from yaza.models import Tag, DesignImage
+from yaza.models import Tag, DesignImage, DesignResult
 from yaza.portal.image import image
-from yaza.utils import random_str
+from yaza.utils import random_str, do_commit, assert_dir
 from yaza.apis import wraps
 
 
@@ -62,12 +66,11 @@ def design_pkg():
 
 @image.route('/font-image', methods=['POST'])
 def font_image():
-
     text = request.form['text']
     font_family = request.form['font-family']
     font_size = request.form.get('font-size', type=int)
     font_color = request.form.get('font-color', 'black')
-    #font_alignment = request.form.get('font-alighment', 'left-alignment')
+    # font_alignment = request.form.get('font-alighment', 'left-alignment')
     font = ImageFont.truetype(app.config['FONTS_MAP'][font_family], font_size)
 
     width_height, left_bottom = font.font.getsize(text)
@@ -109,3 +112,24 @@ def design_images_view(tag_id=None):
         "totalCnt" if camel_case else "total_cnt": total_cnt,
         "data": [wraps(di).as_dict(camel_case) for di in q],
     })
+
+
+@image.route('/design-save', methods=['POST'])
+def design_save():
+    order_id = request.form.get("order_id")
+    if order_id:
+        filename = str(order_id) + ".zip"
+    else:
+        filename = str(int(time.time())) + ".zip"
+    file_path = os.path.join(app.config["DESIGNED_FILE_FOLDER"], filename)
+    assert_dir(os.path.dirname(file_path))
+    with zipfile.ZipFile(file_path, mode='w') as zip_pkg:
+        for k, v in request.form.items():
+            if k != "order_id":
+                zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
+
+    result = DesignResult(user=current_user, file_path=filename, create_time=datetime.datetime.now())
+    if order_id:
+        result.order_id = order_id
+    do_commit(result)
+    return filename

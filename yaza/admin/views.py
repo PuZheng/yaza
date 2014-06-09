@@ -1,17 +1,18 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import os
 import shutil
 from flask import render_template
 
-from flask.ext.databrowser import ModelView, sa, col_spec
+from flask.ext.databrowser import ModelView, sa, col_spec, filters
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
 from flask.ext.principal import Permission, RoleNeed
 
 from yaza import ext_validators, const
+from yaza.apis import wraps
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app
-from yaza.models import SPU, OCSPU, Aspect, DesignRegion
+from yaza.models import SPU, OCSPU, Aspect, DesignRegion, DesignResult
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
 from yaza.tools.utils import allowed_file, unzip, extract_images, create_or_update_spu
@@ -168,8 +169,41 @@ class AspectAdminModelView(ModelView):
         return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.ocspu.spu.id), str(obj.ocspu.id))
 
 
+class DesignResultModelView(ModelView):
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"),
+                col_spec.ColSpec("order_id", label=u"订单号"),
+                col_spec.ColSpec('create_time', u"创建时间",
+                                 formatter=lambda v, obj:
+                                 v.strftime('%Y-%m-%d %H:%M'))]
+
+    def try_view(self, processed_objs=None):
+        pass
+
+    @property
+    def filters(self):
+        return [filters.Contains("order_id", self, name=u"包含", label=u"订单号"),
+                filters.EqualTo("user", self, name=u"是", label=u"设计者"),
+                filters.Between("create_time", self, name=u"与", label=u"创建时间")]
+
+    @ModelView.cached
+    @property
+    def edit_columns(self):
+        return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"), col_spec.ColSpec(
+            'create_time', u"创建时间", formatter=lambda v, obj: v.strftime('%Y-%m-%d %H:%M')),
+                col_spec.HtmlSnippetColSpec("file_path",
+                                            template="admin/spu/resign-result-download-snippet.html")]
+
+    def expand_model(self, obj):
+        return wraps(obj)
+
+
 spu_model_view = SPUAdminModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
 
 ocspu_model_view = OCSPUAdminModelView(sa.SAModell(OCSPU, db, lazy_gettext("OCSPU")))
 
 aspect_model_view = AspectAdminModelView(sa.SAModell(Aspect, db, lazy_gettext("Aspect")))
+
+design_result_view = DesignResultModelView(modell=sa.SAModell(DesignResult, db, lazy_gettext("Design Result")))

@@ -142,3 +142,14 @@ class Tag(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(16), nullable=False, unique=True)
+
+
+class DesignResult(db.Model):
+
+    __tablename__ = "TB_DESIGN_RESULT"
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    user_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
+    user = db.relationship("User")
+    order_id = db.Column(db.String(16))
+    file_path = db.Column(db.String(64))

@@ -37,6 +37,7 @@ register_model_view(spu_model_view, spu)
 register_model_view(ocspu_model_view, spu)
 register_model_view(design_image_view, spu)
 
+
 @spu.before_request
 def authority():
     if "captcha" in request.args:

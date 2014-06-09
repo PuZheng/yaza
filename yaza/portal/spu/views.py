@@ -38,10 +38,10 @@ class SPUModelView(ModelView):
     def edit_view(self, id_):
         spu = self._get_one(id_)
         design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
-        params = {"time": time.time(), "spu": wraps(spu), "design_image_list": json.dumps(design_image_list)}
+        params = {"time": time.time(), "spu": wraps(spu), "design_image_list": json.dumps(design_image_list),
+                  "downloadable": app.config["DOWNLOADABLE"]}
         if "captcha" in request.args:
             params["order_id"], params["operator_id"] = serializer.loads(request.args["captcha"])
-
         return render_template(self.edit_template, **params)
 
 
