@@ -77,33 +77,36 @@ $(function () {
         $(svg).find('image').each(function (idx) {
             var href = $(this).data('design-image-file');
             if (href) {
-                var fr = new FileReader();
-                fr.onload = function (idx, image) {
-                    return function (e) {
-                        var img = new Image();
-                        img.src = 'data:image/png;base64,' + btoa(e.target.result);
-                        img.onload = function () {
-
-                            var canvas = document.createElement("canvas");
-                            canvas.width = $(image).attr('width');
-                            canvas.height = $(image).attr('height');
-                            var ctx = canvas.getContext("2d");
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            href = canvas.toDataURL("image/png");
-                            $(image).attr('xlink:href', href);
-                            images[idx] = $(image);
-                            if (++processedImages == $(svg).find('image').length) {
-                                d.resolve(images, fileName, height, width);
-                            }
-                        };
-                    };
-                }(idx, this);
                 var file = fileMap[href.replace(/.*\//, '')];
                 if (file) {
+                    var fr = new FileReader();
+                    fr.onload = function (idx, image) {
+                        return function (e) {
+                            var img = new Image();
+                            img.src = 'data:image/png;base64,' + btoa(e.target.result);
+                            img.onload = function () {
+
+                                var canvas = document.createElement("canvas");
+                                canvas.width = $(image).attr('width');
+                                canvas.height = $(image).attr('height');
+                                var ctx = canvas.getContext("2d");
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                href = canvas.toDataURL("image/png");
+                                $(image).attr('xlink:href', href);
+                                images[idx] = $(image);
+                                if (++processedImages == $(svg).find('image').length) {
+                                    d.resolve(images, fileName, height, width);
+                                }
+                            };
+                        };
+                    }(idx, this);
                     fr.readAsBinaryString(fileMap[href.replace(/.*\//, '')])
                 } else {
-                    $('p.error').html('错误! 找不到' + href.replace(/.*\//, '') + '对应的高清设计图!');
-                    return;
+                    $('p.warning').html('警告! 找不到' + href.replace(/.*\//, '') + '对应的高清设计图!');
+                    images[idx] = $(this);
+                    if (++processedImages == $(svg).find('image').length) {
+                        d.resolve(images, fileName, height, width);
+                    }
                 }
             } else {
                 images[idx] = $(this);
