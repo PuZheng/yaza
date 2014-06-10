@@ -1,5 +1,5 @@
 define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
-    'text!templates/object-manager-item.hbs', 'dispatcher'],
+        'text!templates/object-manager-item.hbs', 'dispatcher'],
     function (Backbone, handlebars, template, itemTemplate, dispatcher) {
         var MAX_LENGTH = 10;
 
@@ -109,7 +109,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 });
             },
 
-            _renderImage: function(image) {
+            _renderImage: function (image) {
                 var name = image.name();
                 if (name.length > MAX_LENGTH) {
                     name = name.substr(0, MAX_LENGTH - 3) + "...";
@@ -122,11 +122,16 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 });
             },
 
-            _formatItem: function(im) {
+            _formatItem: function (im) {
                 var a = $('a[data-title="' + im.name() + '"]');
                 //截取图片长度
-                var img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
-                a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
+                if (a.find("img").width() < 36) {
+                    var img_width = 36;
+                } else {
+                    img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
+                    a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
+                }
+
                 // 偏移文字
                 a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
             },
