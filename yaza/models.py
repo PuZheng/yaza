@@ -80,6 +80,7 @@ class Aspect(db.Model):
     pic_path = db.Column(db.String(64))
     thumbnail_path = db.Column(db.String(64))
 
+
 class DesignRegion(db.Model):
     __tablename__ = "TB_DESIGN_REGION"
     id = db.Column(db.Integer, primary_key=True)
@@ -92,6 +93,8 @@ class DesignRegion(db.Model):
     min_hsv_value = db.Column(db.Integer)
     max_hsv_value = db.Column(db.Integer)
     median_hsv_value = db.Column(db.Integer)
+    edge_file = db.Column(db.String(64))
+    control_point_file = db.Column(db.String(64))
 
 
 class SKU(db.Model):

@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import os
 import zipfile
+import hashlib
 
 from flask import json
 from PIL import Image
@@ -169,6 +170,7 @@ def calc_design_region_image(design_region_path):
               lambda data: json.dumps(
                   {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
                    k, v in dict_.iteritems()}))
+    return {edge_filename, control_point_filename}
 
 
 def calc_hsv_values(im):
@@ -210,7 +212,7 @@ def extract_images(dir_, relpath_start="", front_aspect_name="aa.png"):
 
             elif os.path.isdir(abs_path):
 
-                #design_region_list
+                # design_region_list
                 for root, walk_dirs, files in os.walk(abs_path):
                     for design_file in files:
                         if allowed_file(design_file, IMAGES):
@@ -241,7 +243,7 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
-    from yaza.upyun_handler import upload_image
+    from yaza.qiniu_handler import upload_image
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -262,7 +264,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
     def _create_ocspu(ocspu_dir, cover_file, color, rgb, spu, config):
         cover_path = os.path.relpath(cover_file, start_dir)
-        upload_image(cover_file, cover_path)
+        if app.config.get("QINIU_ENABLED"):
+            cover_path = upload_image(cover_file, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
         aspect_configs = config["aspects"]
@@ -277,12 +281,12 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
-                    upload_image(full_path, pic_path)
-                    if app.config.get("UPYUN_ENABLE"):
-                        thumbnail_path = pic_path + app.config["UPYUN_THUMBNAIL_SUFFIX"]
+                    if app.config.get("QINIU_ENABLED"):
+                        pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                        thumbnail_path = pic_path + '?imageView2/0/w/' + str(
+                            app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                     else:
-                        thumbnail_path = _make_thumbnail(full_path, start_dir)
-
+                        thumbnail_path = _make_thumbnail(pic_path, start_dir)
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
                     for fname in os.listdir(aspect_dir):
@@ -301,16 +305,18 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 width, height = _get_value_from_list(design_region_configs, "size", {"dir": design_region_name})
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
-
-                upload_image(full_path, pic_path)
+                if app.config.get("QINIU_ENABLED"):
+                    pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                 print "progressing image: " + full_path
-                calc_design_region_image(full_path)
+                edge_file, control_point_file = calc_design_region_image(full_path)
                 hsv_values = calc_hsv_values(Image.open(full_path))
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        height=height,
+                                       edge_file=edge_file,
+                                       control_point_file=control_point_file,
                                        min_hsv_value=hsv_values['min'],
                                        max_hsv_value=hsv_values['max'],
                                        median_hsv_value=hsv_values['median']))
