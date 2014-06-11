@@ -211,7 +211,7 @@ def extract_images(dir_, relpath_start="", front_aspect_name="aa.png"):
 
             elif os.path.isdir(abs_path):
 
-                # design_region_list
+                #design_region_list
                 for root, walk_dirs, files in os.walk(abs_path):
                     for design_file in files:
                         if allowed_file(design_file, IMAGES):

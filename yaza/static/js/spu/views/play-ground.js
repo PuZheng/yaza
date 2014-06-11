@@ -61,12 +61,12 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this.$(evt.currentTarget).addClass("selected");
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.data("pic-url"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.data("pic-url") || $img.attr('src'), $img.data('title'), $img.data("design-image-id"));
                 },
                 'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     var $img = this.$(".thumbnail.selected img");
-                    this._addImage($img.data("pic-url"), $img.data('title'), $img.data("design-image-id"));
+                    this._addImage($img.data("pic-url") || $img.attr('src'), $img.data('title'), $img.data("design-image-id"));
                 },
                 'click .change-text-panel .btn-default': function (evt) {
                     this.$('.change-text-panel').hide();
