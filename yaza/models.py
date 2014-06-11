@@ -92,9 +92,6 @@ class DesignRegion(db.Model):
     pic_path = db.Column(db.String(64))
     width = db.Column(db.Float, doc=u'以英寸为单位')
     height = db.Column(db.Float, doc=u'以英寸为单位')
-    min_hsv_value = db.Column(db.Integer)
-    max_hsv_value = db.Column(db.Integer)
-    median_hsv_value = db.Column(db.Integer)
     edge_file = db.Column(db.String(64))
     control_point_file = db.Column(db.String(64))
 

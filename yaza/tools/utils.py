@@ -7,6 +7,7 @@ from flask import json
 from PIL import Image
 
 from yaza import const
+from yaza.utils import random_str
 
 
 ARCHIVES = ('zip', )
@@ -172,23 +173,6 @@ def calc_design_region_image(design_region_path):
     return edge_filename, control_point_filename
 
 
-def calc_hsv_values(im):
-    pa = im.load()
-    hsv_list = []
-    for i in xrange(im.size[0]):
-        for j in xrange(im.size[1]):
-            pixel = pa[(i, j)]
-            if pixel[3] != 0:
-                hsv_list.append(max(pixel[0], pixel[1], pixel[2]))
-
-    hsv_list.sort()
-    return {
-        'min': hsv_list[0],
-        'median': hsv_list[len(hsv_list) / 2],
-        'max': hsv_list[-1]
-    }
-
-
 def _get_rel_path(file_path, relpath_start):
     rel_path = os.path.relpath(file_path, relpath_start)
     return rel_path
@@ -242,7 +226,7 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
-    from yaza.qiniu_handler import upload_image
+    from yaza.qiniu_handler import upload_image, upload_image_str
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -303,16 +287,18 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         for fname in os.listdir(design_region_dir):
             full_path = os.path.join(design_region_dir, fname)
             if os.path.isfile(full_path) and fname.split('.')[-1].lower() == 'png':
+                print "progressing image: " + full_path
                 design_region_name = fname.rsplit('.')[0]
 
                 width, height = _get_value_from_list(design_region_configs, "size", {"dir": design_region_name})
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
+                shadow_im = create_shadow_im(Image.open(full_path))
                 if app.config.get("QINIU_ENABLED"):
                     pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
-                print "progressing image: " + full_path
+                    shadow_path = upload_image_str(random_str(32),
+                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                 edge_file, control_point_file = calc_design_region_image(full_path)
-                hsv_values = calc_hsv_values(Image.open(full_path))
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
@@ -320,9 +306,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                        height=height,
                                        edge_file=edge_file,
                                        control_point_file=control_point_file,
-                                       min_hsv_value=hsv_values['min'],
-                                       max_hsv_value=hsv_values['max'],
-                                       median_hsv_value=hsv_values['median']))
+                                       shadow_path=shadow_path))
 
     def _update(spu, **kwargs):
         for key, value in kwargs.iteritems():
@@ -349,3 +333,14 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
 def marked_as_corner(pixel):
     return all([pixel[i] == const.CORNER_RGBA[i] for i in (0, 1, 2, 3)])
+
+
+def create_shadow_im(im):
+    pa = im.load()
+    dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    dest_pa = dest_im.load()
+    for i in xrange(im.size[0]):
+        for j in xrange(im.size[1]):
+            if pa[(i, j)][3]:
+                dest_pa[(i, j)] = (0, 0, 0, 255 - pa[(i, j)][0])
+    return dest_im

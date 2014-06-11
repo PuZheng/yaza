@@ -346,11 +346,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                         var srcWidth = playGroundLayer.width();
                         var srcHeight = playGroundLayer.height();
-                        var delta1 = 10;
-                        var delta2 = -5;
-                        var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1,
-                            this._currentDesignRegion.maxHSVValue);
-                        var test2 = this._currentDesignRegion.medianHSVValue - delta2;
                         for (var i = 0; i < targetWidth; ++i) {
                             for (var j = 0; j < targetHeight; ++j) {
                                 if (this._within(i, j)) {
@@ -643,18 +638,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             }
             return cpMap;
         }
-
-        function getHSVValue(imageData, pos, srcImageData, srcPos, test1, test2) {
-            // see http://www.cs.rit.edu/~ncs/color/t_convert.html
-            var v = Math.max(srcImageData[srcPos], srcImageData[srcPos + 1],
-                srcImageData[srcPos + 2]);
-            // 对亮图,重点展示阴影,而且原色彩越亮,阴影越明显, 对于暗图, 重点展示亮点,
-            // 而且原色彩越暗, 亮点越明显. 但需要注意的是,这样会减少对比度. 所以不能
-            // 做的太过
-            return (v > 127) ? (imageData[pos] - test1) * (1 + v / 255) :
-                (imageData[pos] - test2) * (2 - v / 255);
-        }
-
 
         function composeBilinearMatrix(point, srcImageData, srcWidth, offset) {
             var x0 = Math.floor(point[0]);
