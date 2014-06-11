@@ -125,6 +125,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             _formatItem: function (im) {
                 var a = $('a[data-title="' + im.name() + '"]');
                 //截取图片长度
+                // 在chrome中，即使图片已经load，但是它的width依旧是0，所以强制设置最小的width为36px
                 if (a.find("img").width() < 36) {
                     var img_width = 36;
                 } else {
