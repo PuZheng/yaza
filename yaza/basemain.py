@@ -56,7 +56,7 @@ def register_views():
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
-    installed_apps = ['user', "image", "ocspu", "spu"]
+    installed_apps = ['user', "image", "spu"]
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])
@@ -77,6 +77,10 @@ def setup_nav_bar():
     default_url = speaklater.make_lazy_string(views.ocspu_model_view.url_for_list)
     admin_nav_bar.register(admin, name=_('OCSPU'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/ocspu'))
+
+    default_url = speaklater.make_lazy_string(views.design_result_view.url_for_list)
+    admin_nav_bar.register(admin, name=_(u'定制结果'), default_url=default_url,
+                           enabler=lambda nav: request.path.startswith('/admin/design-result'))
 
 
 register_views()

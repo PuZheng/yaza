@@ -1,26 +1,34 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import os
 import shutil
 from flask import render_template
 
-from flask.ext.databrowser import ModelView, sa, col_spec
+from flask.ext.databrowser import ModelView, sa, col_spec, filters
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
-from flask.ext.principal import Permission, RoleNeed
+from flask.ext.principal import Permission, RoleNeed, PermissionDenied
 
 from yaza import ext_validators, const
-from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
+from yaza.apis import wraps
+from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignImageWrapper
 from yaza.basemain import app
-from yaza.models import SPU, OCSPU, Aspect, DesignRegion
+from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
-from yaza.tools.utils import allowed_file, unzip, extract_images, create_or_update_spu
+from yaza.tools.utils import allowed_file, unzip, create_or_update_spu
 
 
 CONTROL_POINTS_NUMBER = (4, 4)
+IMAGES = ('jpg', "jpeg", "png")
 
 zip_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Zip files"))
 
+
+def allowed_file(filename, types=IMAGES):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in types
+
+
+img_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Picture"), nullable=False)
 
 class SPUAdminModelView(ModelView):
     edit_template = "admin/spu/spu.html"
@@ -80,18 +88,7 @@ class OCSPUAdminModelView(ModelView):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        Permission(RoleNeed(const.VENDOR_GROUP)).test()
-
-    @ModelView.cached
-    @property
-    def create_columns(self):
-        def save_path(obj, filename):
-            from hashlib import md5
-
-            return os.path.join(app.config["UPLOAD_FOLDER"], md5(filename).hexdigest() + ".zip")
-
-        return ["spu", "color", col_spec.FileColSpec('pic_zip', label=_('upload zip'), save_path=save_path,
-                                                     validators=[zip_validator])]
+        raise PermissionDenied
 
     @ModelView.cached
     @property
@@ -105,42 +102,7 @@ class OCSPUAdminModelView(ModelView):
     @ModelView.cached
     @property
     def edit_columns(self):
-        return ["spu", "color", col_spec.HtmlSnippetColSpec('aspect_list', "admin/ocspu/aspects.html"),
-                col_spec.FileColSpec('pic_zip', label=_('upload zip'), validators=[zip_validator])]
-
-    def get_base_pic_folder(self, obj):
-        return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.spu.id), str(obj.id))
-
-    def save_new_pics(self, obj):
-        dir_ = self.get_base_pic_folder(obj)
-
-        assert_dir(dir_)
-        unzip(obj.pic_zip, dir_)
-
-        images_dict = extract_images(dir_, app.config["UPLOAD_FOLDER"])
-
-        for key, aspect_dict in images_dict.iteritems():
-            aspect = Aspect(ocspu=obj, pic_path=aspect_dict["file_path"], part=aspect_dict.get("path", "other"))
-            for part, design_region in aspect_dict.get("design_region_list", {}).iteritems():
-                do_commit(DesignRegion(aspect=aspect, pic_path=design_region, part=part))
-        os.unlink(obj.pic_zip)
-
-    def clear_old_pics(self, obj):
-        obj.aspect_list = []
-        do_commit(obj)
-        dir_ = self.get_base_pic_folder(obj)
-        if os.path.exists(dir_):
-            shutil.rmtree(dir_)
-
-    def on_record_created(self, obj):
-        if hasattr(obj, "pic_zip") and obj.pic_zip:
-            self.clear_old_pics(obj)
-            self.save_new_pics(obj)
-
-    def on_model_change(self, form, model):
-        if hasattr(model, "pic_zip") and model.pic_zip:
-            self.clear_old_pics(model)
-            self.save_new_pics(model)
+        return ["spu", "color", col_spec.HtmlSnippetColSpec('aspect_list', "admin/ocspu/aspects.html")]
 
 
 class AspectAdminModelView(ModelView):
@@ -164,8 +126,89 @@ class AspectAdminModelView(ModelView):
     def expand_model(self, obj):
         return AspectWrapper(obj)
 
-    def get_base_pic_folder(self, obj):
-        return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.ocspu.spu.id), str(obj.ocspu.id))
+
+class DesignResultModelView(ModelView):
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"),
+                col_spec.ColSpec("order_id", label=u"订单号"),
+                col_spec.ColSpec('create_time', u"创建时间",
+                                 formatter=lambda v, obj:
+                                 v.strftime('%Y-%m-%d %H:%M'))]
+
+    def try_view(self, processed_objs=None):
+        pass
+
+    @property
+    def filters(self):
+        return [filters.Contains("order_id", self, name=u"包含", label=u"订单号"),
+                filters.EqualTo("user", self, name=u"是", label=u"设计者"),
+                filters.Between("create_time", self, name=u"与", label=u"创建时间")]
+
+    @ModelView.cached
+    @property
+    def edit_columns(self):
+        return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"), col_spec.ColSpec(
+            'create_time', u"创建时间", formatter=lambda v, obj: v.strftime('%Y-%m-%d %H:%M')),
+                col_spec.HtmlSnippetColSpec("file_path",
+                                            template="admin/spu/resign-result-download-snippet.html")]
+
+    def expand_model(self, obj):
+        return wraps(obj)
+
+
+class DesignImageModelView(ModelView):
+    create_template = edit_template = "spu/design-image.html"
+
+    def try_edit(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_view(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_create(self):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    @ModelView.cached
+    @property
+    def create_columns(self):
+        return [col_spec.InputColSpec("title", label=u"标题"),
+                col_spec.FileColSpec("pic_upload", label=u"上传设计图", validators=[img_validator])]
+
+    def on_record_created(self, obj):
+        obj.pic_path = self.save_pic(obj.pic_upload)
+        from yaza.utils import do_commit
+
+        do_commit(obj)
+
+    def expand_model(self, obj):
+        return wraps(obj)
+
+    def on_model_change(self, form, model):
+        if hasattr(model, "pic_upload"):
+            model.pic_path = self.save_pic(model.pic_upload)
+
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return ["id", "title", col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image(Image.SMALL))]
+
+    def save_pic(self, pic_path):
+        from hashlib import md5
+
+        file_name = os.path.join(DesignImageWrapper.StoredDir,
+                                 md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1])
+        assert_dir(DesignImageWrapper.StoredDir)
+        shutil.copy(pic_path, file_name)
+        os.unlink(pic_path)
+        return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
+
+    @ModelView.cached
+    @property
+    def edit_columns(self):
+        return [col_spec.InputColSpec("title", label=u"标题"), col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
+                col_spec.FileColSpec("pic_path", label=u"上传设计图")]
 
 
 spu_model_view = SPUAdminModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
@@ -173,3 +216,7 @@ spu_model_view = SPUAdminModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
 ocspu_model_view = OCSPUAdminModelView(sa.SAModell(OCSPU, db, lazy_gettext("OCSPU")))
 
 aspect_model_view = AspectAdminModelView(sa.SAModell(Aspect, db, lazy_gettext("Aspect")))
+
+design_result_view = DesignResultModelView(modell=sa.SAModell(DesignResult, db, lazy_gettext("Design Result")))
+
+design_image_view = DesignImageModelView(modell=sa.SAModell(DesignImage, db, lazy_gettext("Design Image")))

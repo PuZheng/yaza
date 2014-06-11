@@ -1,9 +1,11 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 from flask import Blueprint
-from .views import spu_model_view
 
 from flask.ext.babel import _
+
 from yaza.basemain import data_browser
+
+from .views import spu_model_view
 
 spu = Blueprint("spu", __name__, template_folder="templates", static_folder="static")
 
