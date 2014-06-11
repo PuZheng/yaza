@@ -1,8 +1,11 @@
 # -*- coding:utf-8 -*-
 import os
+from StringIO import StringIO
 
+import requests
 from flask import url_for, json
 from werkzeug.utils import cached_property
+from PIL import Image
 
 from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
@@ -28,21 +31,19 @@ class OCSPUWrapper(ModelWrapper):
 
 
 class AspectWrapper(ModelWrapper):
-    @cached_property
-    def pic_rel_path(self):
-        return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
-
     @property
     def pic_url(self):
         if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
+            return self.pic_path + '?imageView2/0/w/' + str(
+                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+                if self.pic_path.startswith("http") else url_for("image.serve", filename=self.pic_path)
         return ""
 
     @property
     def hd_pic_url(self):
         if self.pic_path:
-            return self.pic_path if app.config.get("QINIU_ENABLED") else url_for("image.serve", filename=self.pic_path)
+            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
+                                                                                  filename=self.pic_path)
         return ""
 
     @property
@@ -66,10 +67,8 @@ class AspectWrapper(ModelWrapper):
 
     @cached_property
     def size(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
-            from PIL import Image
-
-            im = Image.open(self.pic_rel_path)
+        if self.pic_path:
+            im = Image.open(StringIO(requests.get(self.pic_url).content))
             return im.size
 
         return 0, 0
@@ -87,9 +86,8 @@ class DesignRegionWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
-            return self.pic_path + '?imageView2/0/w/' + str(
-                app.config['QINIU_CONF']['DESIGN_REGION_MD_SIZE']) if self.pic_path.startswith(
-                "http") else url_for("image.serve", filename=self.pic_path)
+            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
+                                                                                  filename=self.pic_path)
         return ""
 
     @property
@@ -128,7 +126,7 @@ class DesignImageWrapper(ModelWrapper):
         # `http://developer.qiniu.com/docs/v6/api/reference/fop/image/imageview2.html`
         if app.config['QINIU_ENABLED']:
             return self.pic_url + '?imageView2/0/w/' + \
-                str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                   str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
         return self.pic_url
 
     StoredDir = os.path.join(app.config["UPLOAD_FOLDER"],

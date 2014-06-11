@@ -47,7 +47,7 @@ QINIU_CONF = {
     "SECRET_KEY": "hzeRwpvXzuFzqhkPaWugQLTyHGXltsjNvlvy9zHk",
     "DESIGN_IMAGE_BUCKET": "yaza-design-images",
     "SPU_IMAGE_BUCKET": "yaza-spu-images",
-    "DESIGN_REGION_MD_SIZE": 960,
+    "ASPECT_MD_SIZE": 960,
     "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
 }
 
