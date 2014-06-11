@@ -1,5 +1,5 @@
-define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (cubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+    function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -29,9 +29,16 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
 
             initialize: function (options) {
                 this._spu = options.spu;
-                this._setRgba = bicubicInterpolation;
-                //this._setRgba = cubicInterpolation;
-                //this._setRgba = noInterpolation;
+                switch (config.INTERPOLATION_METHOD) {
+                    case 'bicubic': 
+                        this._setRgba = bicubicInterpolation;
+                        break; 
+                    case 'bilinear':
+                        this._setRgba = bilinearInterpolation;
+                        break;
+                    default:
+                        this._setRgba = noInterpolation;
+                }
             },
 
             _colorTrans: function (obj, period) {
@@ -334,7 +341,7 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
                             playGroundLayer.width(), playGroundLayer.height()).data;
                         if (!this._currentDesignRegion.controlPointsMap) {
                             this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
-                                [16, 16]);
+                                config.CONTROL_POINT_NUM);
                         }
 
                         var srcWidth = playGroundLayer.width();
@@ -576,8 +583,6 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
                 y += weights[i] * cpPairs[i][1][1];
             }
             return [x / weights_sum, y / weights_sum];
-            //return [parseInt(Math.round(x / weights_sum)),
-                //parseInt(Math.round(y / weights_sum))];
         }
 
         function calcControlPoints(edges, size, cpNum) {
@@ -650,24 +655,16 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
                 (imageData[pos] - test2) * (2 - v / 255);
         }
 
-        function composeBicubicMatrix(bounds, srcImageData, srcWidth, offset) {
-            var matrix = [];
-            bounds.rows.forEach(function (row) {
-                var p = [];
-                bounds.cols.forEach(function (col) {
-                    p.push(srcImageData[(row * srcWidth + col) * 4 + offset]);
-                });
-                matrix.push(p);
-            });
-            return matrix;
-        }
 
-        function composeCubicVector(points, srcImageData, srcWidth, offset) {
-            var vector = [];
-            points.forEach(function (point) {
-                vector.push(srcImageData[(point[0] + point[1] * srcWidth) * 4 + offset]); 
-            });
-            return vector;
+        function composeBilinearMatrix(point, srcImageData, srcWidth, offset) {
+            var x0 = Math.floor(point[0]);
+            var y0 = Math.floor(point[1]);
+            var pos0 = (x0 + y0 * srcWidth) * 4 + offset;
+
+            return [
+                [srcImageData[pos0], srcImageData[pos0 + 4]],
+                [srcImageData[pos0 + srcWidth * 4], srcImageData[pos0 + (srcWidth + 1) * 4]],
+            ];
         }
 
         function noInterpolation(destImageData, destPoint, destWidth, destHeight, 
@@ -684,36 +681,48 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
             destImageData.data[pos + 2] = srcImageData[pos + 2];
         }
 
-        function cubicInterpolation(destImageData, destPoint, destWidth, destHeight, 
+        function bilinearInterpolation(destImageData, destPoint, destWidth, destHeight, 
                 srcImageData, srcPoint, srcWidth, srcHeight) {
+            // find the 16 points
             var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
-            // find the 4 points
-            var cols = [];
-            var left = Math.floor(srcPoint[0]) - 1;
-            var right = Math.ceil(srcPoint[0]) + 2;
-            cols.push(left < 0? 0: left);
-            cols.push(left + 1);
-            cols.push(left + 2);
-            cols.push(left + 3 >= srcWidth? srcWidth - 1: left + 3);
-            var points = cols.map(function (x) {
-                return [x, Math.round(srcPoint[1])];
-            });
-            srcPoint[0] = srcPoint[0] - Math.floor(srcPoint[0]);
-            destImageData.data[pos + 3] = cubic.cubic(
-                composeCubicVector(points, srcImageData, srcWidth, 3), 
-                srcPoint[0]);
+
+
+            var x = srcPoint[0] - Math.floor(srcPoint[0]);
+            var y = srcPoint[1] - Math.floor(srcPoint[1]);
+            destImageData.data[pos + 3] = bilinear(
+                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 3), 
+                x, y);
             if (destImageData.data[pos + 3] == 0) {
                 return;
             }
-            destImageData.data[pos] = cubic.cubic(
-                composeCubicVector(points, srcImageData, srcWidth, 0), 
-                srcPoint[0]);
-            destImageData.data[pos + 1] = cubic.cubic(
-                composeCubicVector(points, srcImageData, srcWidth, 1), 
-                srcPoint[0]);
-            destImageData.data[pos + 2] = cubic.cubic(
-                composeCubicVector(points, srcImageData, srcWidth, 2), 
-                srcPoint[0]);
+            destImageData.data[pos] = bilinear(
+                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 0), 
+                x, y);
+            destImageData.data[pos + 1] = bilinear(
+                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 1), 
+                x, y);
+            destImageData.data[pos + 2] = bilinear(
+                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 2), 
+                x, y);
+        }
+
+        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, offset) {
+            var matrix = [];
+            var pos0 = (left + bottom * srcWidth) * 4 + offset;
+            var pos1 = pos0 + srcWidth * 4;
+            var pos2 = pos0 + (srcWidth + srcWidth) * 4;
+            var pos3 = pos0 + (srcWidth + srcWidth + (bottom + 3 > srcHeight)? srcWidth: 0) * 4;
+            var lastOffset = (left + 3 > srcWidth? 8: 12);
+            return [
+                [srcImageData[pos0], srcImageData[pos0 + 4], srcImageData[pos0 + 8], 
+                srcImageData[pos0 + lastOffset]],
+                [srcImageData[pos1], srcImageData[pos1 + 4], srcImageData[pos1 + 8], 
+                srcImageData[pos1 + lastOffset]],
+                [srcImageData[pos2], srcImageData[pos2 + 4], srcImageData[pos2 + 8], 
+                srcImageData[pos2 + lastOffset]],
+                [srcImageData[pos3], srcImageData[pos3 + 4], srcImageData[pos3 + 8], 
+                srcImageData[pos3 + lastOffset]],
+            ];
         }
 
         function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, 
@@ -721,49 +730,22 @@ define(['cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore',
             // find the 16 points
             var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
 
-            var cols = [];
             var left = Math.floor(srcPoint[0]) - 1;
-            var right = Math.ceil(srcPoint[0]) + 2;
-            cols.push(left < 0? 0: left);
-            cols.push(left + 1);
-            cols.push(left + 2);
-            cols.push(left + 3 >= srcWidth? srcWidth - 1: left + 3);
-            var rows = [];
             var bottom = Math.floor(srcPoint[1]) - 1;
-            rows.push(bottom < 0? 0: bottom);
-            rows.push(bottom + 1);
-            rows.push(bottom + 2);
-            rows.push(bottom + 3 >= srcHeight? srcHeight - 1: bottom + 3);
 
-            srcPoint[0] = srcPoint[0] - Math.floor(srcPoint[0]);
-            srcPoint[1] = srcPoint[1] - Math.floor(srcPoint[1]);
-            destImageData.data[pos + 3] = cubic.bicubic(
-                composeBicubicMatrix({
-                    rows: rows, 
-                    cols: cols,
-                }, srcImageData, srcWidth, 3), srcPoint[0], 
-            srcPoint[1]);
+            var x = srcPoint[0] - Math.floor(srcPoint[0]);
+            var y = srcPoint[1] - Math.floor(srcPoint[1]);
+            destImageData.data[pos + 3] = bicubic(
+                composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 3), x, y);
             if (destImageData.data[pos + 3] == 0) {
                 return;
             }
-            destImageData.data[pos] = cubic.bicubic(
-                composeBicubicMatrix({
-                    rows: rows, 
-                    cols: cols,
-                }, srcImageData, srcWidth, 0), srcPoint[0], 
-            srcPoint[1]);
-            destImageData.data[pos + 1] = cubic.bicubic(
-                composeBicubicMatrix({
-                    rows: rows, 
-                    cols: cols,
-                }, srcImageData, srcWidth, 1), srcPoint[0], 
-            srcPoint[1]);
-            destImageData.data[pos + 2] = cubic.bicubic(
-                composeBicubicMatrix({
-                    rows: rows, 
-                    cols: cols,
-                }, srcImageData, srcWidth, 2), srcPoint[0], 
-            srcPoint[1]);
+            destImageData.data[pos] = bicubic(composeBicubicMatrix(left, 
+                bottom, srcImageData, srcWidth, srcHeight, 0), x, y);
+            destImageData.data[pos + 1] = bicubic(composeBicubicMatrix(left, 
+                bottom, srcImageData, srcWidth, srcHeight, 1), x, y);
+            destImageData.data[pos + 2] = bicubic(composeBicubicMatrix(left, 
+                bottom, srcImageData, srcWidth, srcHeight, 2), x, y);
         }
 
         return JitPreview;

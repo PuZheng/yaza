@@ -21,5 +21,7 @@ define(function () {
             '腾祥铁山硬隶繁',
         ],
         MAGNIFY: 1.5,  // 预览放大的倍数
+        CONTROL_POINT_NUM: [32, 32],
+        INTERPOLATION_METHOD: "bicubic",
     }
 });
