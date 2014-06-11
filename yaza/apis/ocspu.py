@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import os
 
 from flask import url_for, json
@@ -6,23 +6,21 @@ from werkzeug.utils import cached_property
 
 from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
-from yaza.upyun_handler import parse_image
 
 
 class OCSPUWrapper(ModelWrapper):
     @property
     def cover(self):
         if self.cover_path:
-            return parse_image(self.cover_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve",
-                                             filename=self.cover_path)
+            return self.cover_path if self.cover_path.startswith("http") else url_for("image.serve",
+                                                                                      filename=self.cover_path)
         return ""
 
     def as_dict(self, camel_case):
         return {
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list':
-            [aspect.as_dict(camel_case) for aspect in self.aspect_list],
+                [aspect.as_dict(camel_case) for aspect in self.aspect_list],
             'cover': self.cover,
             'color': self.color,
             'rgb': self.rgb,
@@ -30,37 +28,26 @@ class OCSPUWrapper(ModelWrapper):
 
 
 class AspectWrapper(ModelWrapper):
-    @cached_property
-    def pic_rel_path(self):
-        return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
-
     @property
     def pic_url(self):
-        return parse_image(self.pic_path + app.config["UPYUN_MD_PIC_SUFFIX"]) if app.config.get(
-            "UPYUN_ENABLE") else url_for("image.serve",
-                                         filename=self.pic_path)
+        if self.pic_path:
+            return self.pic_path + '?imageView2/0/w/' + str(
+                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+                if self.pic_path.startswith("http") else url_for("image.serve", filename=self.pic_path)
+        return ""
 
     @property
     def hd_pic_url(self):
         if self.pic_path:
-            return parse_image(self.pic_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve",
-                                             filename=self.pic_path)
+            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
+                                                                                  filename=self.pic_path)
         return ""
 
     @property
     def thumbnail(self):
-        if app.config.get("UPYUN_ENABLE"):
-            #可能中途切换过UPYUN_ENABLE开关，所有需要额外判断
-            thumbnail_suffix = app.config["UPYUN_THUMBNAIL_SUFFIX"]
-            if self.thumbnail_path and \
-               self.thumbnail_path.endswith(thumbnail_suffix):
-                return parse_image(self.thumbnail_path)
-            elif self.pic_path:
-                return parse_image(self.pic_path + thumbnail_suffix)
-        else:
-            if self.thumbnail_path:
-                return url_for("image.serve", filename=self.thumbnail_path)
+        if self.thumbnail_path:
+            return self.thumbnail_path if self.thumbnail_path.startswith(
+                "http") else url_for("image.serve", filename=self.thumbnail_path)
         return ""
 
     def as_dict(self, camel_case=True):
@@ -70,20 +57,14 @@ class AspectWrapper(ModelWrapper):
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
-            [dr.as_dict(camel_case) for dr in self.design_region_list],
+                [dr.as_dict(camel_case) for dr in self.design_region_list],
             'name': self.name,
             'size': self.size,
         }
 
-    @cached_property
+    @property
     def size(self):
-        if self.pic_path and os.path.exists(self.pic_rel_path):
-            from PIL import Image
-
-            im = Image.open(self.pic_rel_path)
-            return im.size
-
-        return 0, 0
+        return self.width, self.height
 
     @property
     def spu(self):
@@ -98,11 +79,9 @@ class DesignRegionWrapper(ModelWrapper):
     @property
     def pic_url(self):
         if self.pic_path:
-            return parse_image(self.pic_path) if app.config.get(
-                "UPYUN_ENABLE") else url_for("image.serve",
-                                             filename=self.pic_path)
+            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
+                                                                                  filename=self.pic_path)
         return ""
-
 
     @property
     def spu(self):
@@ -112,27 +91,13 @@ class DesignRegionWrapper(ModelWrapper):
     def ocspu(self):
         return self.aspect.ocspu
 
-    @property
-    def serialized_edge_file(self):
-        return self.pic_rel_path.replace(
-            os.path.splitext(self.pic_path)[-1], "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
-
-    @property
-    def serialized_control_point_file(self):
-        return self.pic_rel_path.replace(
-            os.path.splitext(self.pic_path)[-1], "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
-
-    @cached_property
-    def pic_rel_path(self):
-        return os.path.join(app.config["UPLOAD_FOLDER"], self.pic_path)
-
     @cached_property
     def edges(self):
-        return json.load(file(self.serialized_edge_file))
+        return json.load(file(self.edge_file))
 
     @cached_property
     def control_points(self):
-        return json.load(file(self.serialized_control_point_file))
+        return json.load(file(self.control_point_file))
 
     def as_dict(self, camel_case):
         return {
@@ -148,14 +113,13 @@ class DesignRegionWrapper(ModelWrapper):
 
 
 class DesignImageWrapper(ModelWrapper):
-
     @property
     def thumbnail(self):
         # ref
         # `http://developer.qiniu.com/docs/v6/api/reference/fop/image/imageview2.html`
         if app.config['QINIU_ENABLED']:
             return self.pic_url + '?imageView2/0/w/' + \
-                str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                   str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
         return self.pic_url
 
     StoredDir = os.path.join(app.config["UPLOAD_FOLDER"],

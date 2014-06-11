@@ -79,6 +79,9 @@ class Aspect(db.Model):
                                                cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
     thumbnail_path = db.Column(db.String(64))
+    width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
+    height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
+
 
 class DesignRegion(db.Model):
     __tablename__ = "TB_DESIGN_REGION"
@@ -92,6 +95,8 @@ class DesignRegion(db.Model):
     min_hsv_value = db.Column(db.Integer)
     max_hsv_value = db.Column(db.Integer)
     median_hsv_value = db.Column(db.Integer)
+    edge_file = db.Column(db.String(64))
+    control_point_file = db.Column(db.String(64))
 
 
 class SKU(db.Model):
