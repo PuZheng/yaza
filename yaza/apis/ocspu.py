@@ -68,7 +68,7 @@ class AspectWrapper(ModelWrapper):
     @cached_property
     def size(self):
         if self.pic_path:
-            im = Image.open(StringIO(requests.get(self.pic_url).content))
+            im = Image.open(StringIO(requests.get(self.hd_pic_url).content))
             return im.size
 
         return 0, 0
