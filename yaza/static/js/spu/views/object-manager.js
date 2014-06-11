@@ -102,8 +102,12 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     if ($(this).data('object') == oldIm) {
                         $(this).data('object', im);
                         $(this).data('control-group', controlGroup);
-                        $(this).html($(objectManager._renderImage(im)).html());
-                        objectManager._formatItem(im);
+                        $(this).html(objectManager._renderImage(im).html());
+                        $(this).find('img').load(function (objectManager, item) {
+                            return function (evt) {
+                                objectManager._formatItem(item);
+                            }
+                        }(objectManager, $(this)));
                         objectManager._setupButtons();
                     }
                 });
@@ -115,26 +119,26 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     name = name.substr(0, MAX_LENGTH - 3) + "...";
                 }
 
-                return this._itemTemplate({
+                var ret= $(this._itemTemplate({
                     src: image.getImage().src,
                     name: name,
                     title: image.name(),
-                });
+                }));
+                return ret;
             },
 
-            _formatItem: function (im) {
-                var a = $('a[data-title="' + im.name() + '"]');
+            _formatItem: function (item) {
                 //截取图片长度
                 // 在chrome中，即使图片已经load，但是它的width依旧是0，所以强制设置最小的width为36px
-                if (a.find("img").width() < 36) {
-                    var img_width = 36;
+                if (item.find("img").width() < 10) {
+                    var imgWidth = 36;
                 } else {
-                    img_width = Math.min(a.width() - a.find(".pull-right").width() - a.find("span").width(), a.find("img").width());
-                    a.find("img").css("clip", "rect(0 " + img_width + "px 36px 0");
+                    imgWidth = Math.min(item.width() - item.find(".pull-right").width() - item.find("span").width(), item.find("img").width());
+                    item.find("img").css("clip", "rect(0 " + imgWidth + "px 36px 0");
                 }
 
                 // 偏移文字
-                a.find("span:not(.fa-stack)").css("left", (img_width + 10) + "px");
+                item.find("span:not(.fa-stack)").css("left", (imgWidth + 10) + "px");
             },
 
 
@@ -146,8 +150,13 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
             add: function (im, controlGroup) {
                 // 默认新增的对象要选中
-                $(this._renderImage(im)).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
-                this._formatItem(im);
+                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
+                item.find('img').load(function (objectManager, item) {
+                    return function (evt) {
+                        objectManager._formatItem(item);
+                    }
+                }(this, item));
+                //this._formatItem(im);
                 this._setupButtons();
                 this._imageLayer = im.getLayer();
             },
