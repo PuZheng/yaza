@@ -170,7 +170,7 @@ def calc_design_region_image(design_region_path):
               lambda data: json.dumps(
                   {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
                    k, v in dict_.iteritems()}))
-    return {edge_filename, control_point_filename}
+    return edge_filename, control_point_filename
 
 
 def calc_hsv_values(im):
