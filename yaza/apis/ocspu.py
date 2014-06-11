@@ -1,11 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
-from StringIO import StringIO
 
-import requests
 from flask import url_for, json
 from werkzeug.utils import cached_property
-from PIL import Image
 
 from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
@@ -65,13 +62,9 @@ class AspectWrapper(ModelWrapper):
             'size': self.size,
         }
 
-    @cached_property
+    @property
     def size(self):
-        if self.pic_path:
-            im = Image.open(StringIO(requests.get(self.hd_pic_url).content))
-            return im.size
-
-        return 0, 0
+        return self.width, self.height
 
     @property
     def spu(self):

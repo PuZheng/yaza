@@ -79,6 +79,8 @@ class Aspect(db.Model):
                                                cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
     thumbnail_path = db.Column(db.String(64))
+    width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
+    height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
 
 
 class DesignRegion(db.Model):

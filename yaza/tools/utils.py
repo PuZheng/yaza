@@ -2,7 +2,6 @@
 from collections import OrderedDict
 import os
 import zipfile
-import hashlib
 
 from flask import json
 from PIL import Image
@@ -287,8 +286,12 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                             app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                     else:
                         thumbnail_path = _make_thumbnail(pic_path, start_dir)
+
+                    im = Image.open(full_path)
+                    width, height = im.size
                     aspect = do_commit(
-                        Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path))
+                        Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path, width=width,
+                               height=height))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
                         if os.path.isdir(full_path):

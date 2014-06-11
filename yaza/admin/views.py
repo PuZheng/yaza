@@ -6,7 +6,7 @@ from flask import render_template
 from flask.ext.databrowser import ModelView, sa, col_spec, filters
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
-from flask.ext.principal import Permission, RoleNeed
+from flask.ext.principal import Permission, RoleNeed, PermissionDenied
 
 from yaza import ext_validators, const
 from yaza.apis import wraps
@@ -81,18 +81,7 @@ class OCSPUAdminModelView(ModelView):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        Permission(RoleNeed(const.VENDOR_GROUP)).test()
-
-    @ModelView.cached
-    @property
-    def create_columns(self):
-        def save_path(obj, filename):
-            from hashlib import md5
-
-            return os.path.join(app.config["UPLOAD_FOLDER"], md5(filename).hexdigest() + ".zip")
-
-        return ["spu", "color", col_spec.FileColSpec('pic_zip', label=_('upload zip'), save_path=save_path,
-                                                     validators=[zip_validator])]
+        raise PermissionDenied
 
     @ModelView.cached
     @property
@@ -106,42 +95,7 @@ class OCSPUAdminModelView(ModelView):
     @ModelView.cached
     @property
     def edit_columns(self):
-        return ["spu", "color", col_spec.HtmlSnippetColSpec('aspect_list', "admin/ocspu/aspects.html"),
-                col_spec.FileColSpec('pic_zip', label=_('upload zip'), validators=[zip_validator])]
-
-    def get_base_pic_folder(self, obj):
-        return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.spu.id), str(obj.id))
-
-    def save_new_pics(self, obj):
-        dir_ = self.get_base_pic_folder(obj)
-
-        assert_dir(dir_)
-        unzip(obj.pic_zip, dir_)
-
-        images_dict = extract_images(dir_, app.config["UPLOAD_FOLDER"])
-
-        for key, aspect_dict in images_dict.iteritems():
-            aspect = Aspect(ocspu=obj, pic_path=aspect_dict["file_path"], part=aspect_dict.get("path", "other"))
-            for part, design_region in aspect_dict.get("design_region_list", {}).iteritems():
-                do_commit(DesignRegion(aspect=aspect, pic_path=design_region, part=part))
-        os.unlink(obj.pic_zip)
-
-    def clear_old_pics(self, obj):
-        obj.aspect_list = []
-        do_commit(obj)
-        dir_ = self.get_base_pic_folder(obj)
-        if os.path.exists(dir_):
-            shutil.rmtree(dir_)
-
-    def on_record_created(self, obj):
-        if hasattr(obj, "pic_zip") and obj.pic_zip:
-            self.clear_old_pics(obj)
-            self.save_new_pics(obj)
-
-    def on_model_change(self, form, model):
-        if hasattr(model, "pic_zip") and model.pic_zip:
-            self.clear_old_pics(model)
-            self.save_new_pics(model)
+        return ["spu", "color", col_spec.HtmlSnippetColSpec('aspect_list', "admin/ocspu/aspects.html")]
 
 
 class AspectAdminModelView(ModelView):
@@ -164,9 +118,6 @@ class AspectAdminModelView(ModelView):
 
     def expand_model(self, obj):
         return AspectWrapper(obj)
-
-    def get_base_pic_folder(self, obj):
-        return os.path.join(app.config["UPLOAD_FOLDER"], "ocspu", str(obj.ocspu.spu.id), str(obj.ocspu.id))
 
 
 class DesignResultModelView(ModelView):
