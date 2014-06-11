@@ -4,10 +4,9 @@ import os
 import zipfile
 
 from flask import json
-from PIL import Image
+from PIL import Image, ImageColor
 
 from yaza import const
-from yaza.utils import random_str
 
 
 ARCHIVES = ('zip', )
@@ -226,7 +225,7 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
-    from yaza.qiniu_handler import upload_image, upload_image_str
+    from yaza.qiniu_handler import upload_image
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -279,10 +278,10 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
                         if os.path.isdir(full_path):
-                            _create_design_region(full_path, config, aspect)
+                            _create_design_region(full_path, config, aspect, ocspu.rgb)
                     return
 
-    def _create_design_region(design_region_dir, config, aspect):
+    def _create_design_region(design_region_dir, config, aspect, color):
         design_region_configs = config['designRegions']
         for fname in os.listdir(design_region_dir):
             full_path = os.path.join(design_region_dir, fname)
@@ -293,10 +292,14 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 width, height = _get_value_from_list(design_region_configs, "size", {"dir": design_region_name})
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
-                shadow_im = create_shadow_im(Image.open(full_path))
+                shadow_im = create_shadow_im(Image.open(full_path), color)
+                shadow_full_path = os.path.join(design_region_dir,
+                                                fname + '.shadow.png')
+                shadow_im.save(shadow_full_path)
+                shadow_path = os.path.relpath(shadow_full_path, start_dir)
                 if app.config.get("QINIU_ENABLED"):
                     pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
-                    shadow_path = upload_image_str(random_str(32),
+                    shadow_path = upload_image(shadow_full_path,
                                                    app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                 edge_file, control_point_file = calc_design_region_image(full_path)
                 do_commit(DesignRegion(aspect=aspect,
@@ -335,12 +338,19 @@ def marked_as_corner(pixel):
     return all([pixel[i] == const.CORNER_RGBA[i] for i in (0, 1, 2, 3)])
 
 
-def create_shadow_im(im):
+def create_shadow_im(im, color):
+
+    im = im.convert('LA')
     pa = im.load()
+    v = max(ImageColor.getrgb(color))
+
     dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
     dest_pa = dest_im.load()
     for i in xrange(im.size[0]):
         for j in xrange(im.size[1]):
-            if pa[(i, j)][3]:
-                dest_pa[(i, j)] = (0, 0, 0, 255 - pa[(i, j)][0])
+            if pa[(i, j)][1]:
+                if v > 127:
+                    dest_pa[(i, j)] = (0, 0, 0, 255 - pa[(i, j)][0])
+                else:
+                    dest_pa[(i, j)] = (255, 255, 255, pa[(i, j)][0])
     return dest_im

@@ -90,6 +90,7 @@ class DesignRegion(db.Model):
     aspect = db.relationship("Aspect", backref=db.backref("design_region_list", cascade="all, delete-orphan"))
     name = db.Column(db.String(16))
     pic_path = db.Column(db.String(64))
+    shadow_path = db.Column(db.String(64))
     width = db.Column(db.Float, doc=u'以英寸为单位')
     height = db.Column(db.Float, doc=u'以英寸为单位')
     edge_file = db.Column(db.String(64))

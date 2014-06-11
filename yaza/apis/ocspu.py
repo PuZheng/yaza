@@ -84,6 +84,11 @@ class DesignRegionWrapper(ModelWrapper):
         return ""
 
     @property
+    def shadow_url(self):
+        return self.shadow_path if self.shadow_path.startswith("http") else \
+                url_for('image.serve', filename=self.shadow_path)
+
+    @property
     def spu(self):
         return self.aspect.ocspu.spu
 
@@ -106,9 +111,7 @@ class DesignRegionWrapper(ModelWrapper):
             'edges': self.edges,
             'size': [self.width, self.height],
             'name': self.name,
-            'minHSVValue' if camel_case else 'min_hsv_value': self.min_hsv_value,
-            'maxHSVValue' if camel_case else 'max_hsv_value': self.max_hsv_value,
-            'medianHSVValue' if camel_case else 'median_hsv_value': self.median_hsv_value,
+            'shadowUrl' if camel_case else 'shadow_url': self.shadow_url,
         }
 
 
