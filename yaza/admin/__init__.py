@@ -1,7 +1,7 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 from itsdangerous import URLSafeTimedSerializer
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, send_from_directory
 from flask.ext.login import current_user
 from flask.ext.babel import _
 from flask.ext.principal import Permission, RoleNeed
@@ -44,7 +44,8 @@ def register_model_view(model_view, bp, **kwargs):
     data_browser.register_model_view(model_view, bp, extra_params)
 
 
-for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view]:
+for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view, views.design_result_view,
+          views.design_image_view]:
     register_model_view(v, admin)
 
 
@@ -64,4 +65,10 @@ def generator_ws():
 
     security_str = serializer.dumps([order_id, current_user.id])
 
+    # TODO 应该使用公网IP
     return "%sspu/spu/%d?captcha=%s" % (request.host_url, spu.id, security_str)
+
+
+@admin.route("/design-result-download/<path:file>")
+def design_result_download(file):
+    return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)

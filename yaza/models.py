@@ -79,6 +79,9 @@ class Aspect(db.Model):
                                                cascade="all, delete-orphan"))
     pic_path = db.Column(db.String(64))
     thumbnail_path = db.Column(db.String(64))
+    width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
+    height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
+
 
 class DesignRegion(db.Model):
     __tablename__ = "TB_DESIGN_REGION"
@@ -92,6 +95,8 @@ class DesignRegion(db.Model):
     min_hsv_value = db.Column(db.Integer)
     max_hsv_value = db.Column(db.Integer)
     median_hsv_value = db.Column(db.Integer)
+    edge_file = db.Column(db.String(64))
+    control_point_file = db.Column(db.String(64))
 
 
 class SKU(db.Model):
@@ -142,3 +147,14 @@ class Tag(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(16), nullable=False, unique=True)
+
+
+class DesignResult(db.Model):
+
+    __tablename__ = "TB_DESIGN_RESULT"
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    user_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
+    user = db.relationship("User")
+    order_id = db.Column(db.String(16))
+    file_path = db.Column(db.String(64))

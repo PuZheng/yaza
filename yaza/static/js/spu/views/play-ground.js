@@ -138,6 +138,57 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         }, this)
                     }
                     $(evt.currentTarget).addClass('disabled');
+                    if($("[name=order_id]").val()){
+                        data["order_id"] = $("[name=order_id]").val();
+                    }
+                    $(evt.currentTarget).addClass('disabled');
+                    $.ajax({
+                        type: 'POST',
+                        url: '/image/design-save',
+                        data: data,
+                    }).done(function (content) {
+                        alert("保存成功: " + content);
+                    }).always(function () {
+                        $(evt.currentTarget).removeClass('disabled');
+                    }).fail(function (jqXHR) {
+                        alert(jqXHR.responseText);
+                    });
+                },
+
+                'click .touch-screen .btn-download': function (evt) {
+                    this._draw.clear();
+                    if (_.chain(this._designRegionCache).values().all(function (cache) {
+                        return cache.imageLayer.children.length == 0;
+                    }).value()) {
+                        alert('您尚未作出任何定制，请先定制!');
+                        return;
+                    }
+                    var nested = null;
+                    var data = {};
+                    for (var name in this._designRegionCache) {
+                        var imageLayer = this._designRegionCache[name].imageLayer;
+                        var offsetY = !!nested ? nested.height() + 30 : 0;
+                        var designRegion = this._designRegionCache[name].designRegion;
+                        this._draw.clear();
+                        this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
+                            .data('name', name);
+                        var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
+                        _.each(imageLayer.children, function (node) {
+                            if (node.className === "Image") {
+                                var im = this._draw.image(
+                                        getBase64FromImage(node),
+                                        node.width() * ratio,
+                                        node.height() * ratio)
+                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
+                                    .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                                if (node.image().src.match(/^http/)) {
+                                    im.data("design-image-file", node.image().src)
+                                }
+                            }
+                            data[designRegion.name] = this._draw.exportSvg({whitespace: true});
+                        }, this)
+                    }
+
                     $.ajax({
                         type: 'POST',
                         url: '/image/design-pkg',
@@ -348,6 +399,13 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._stage = new Kinetic.Stage({
                     container: this.$('.editable-region')[0],
                 });
+
+                if ($("[name=downloadable]").val() === "true") {
+                    this.$("button.btn-download").show();
+                } else {
+                    this.$("button.btn-download").hide();
+                }
+
                 this.$('.nav-tabs a:first').tab('show');
 
                 var playGround = this;
