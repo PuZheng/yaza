@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 from itsdangerous import URLSafeTimedSerializer
 
 from flask import Blueprint, render_template, request, send_from_directory
@@ -44,7 +44,8 @@ def register_model_view(model_view, bp, **kwargs):
     data_browser.register_model_view(model_view, bp, extra_params)
 
 
-for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view, views.design_result_view]:
+for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view, views.design_result_view,
+          views.design_image_view]:
     register_model_view(v, admin)
 
 

@@ -1,15 +1,11 @@
 # -*- coding:utf-8 -*-
-from flask import Blueprint, request
-from flask.ext.login import current_user
-from flask.ext.principal import PermissionDenied, Permission, RoleNeed
+from flask import Blueprint
 
 from flask.ext.babel import _
 
 from yaza.basemain import data_browser
-from yaza.admin import serializer
-from yaza import const
 
-from .views import spu_model_view, ocspu_model_view, design_image_view
+from .views import spu_model_view
 
 spu = Blueprint("spu", __name__, template_folder="templates", static_folder="static")
 
@@ -34,19 +30,3 @@ def register_model_view(model_view, bp, **kwargs):
 
 
 register_model_view(spu_model_view, spu)
-register_model_view(ocspu_model_view, spu)
-register_model_view(design_image_view, spu)
-
-
-@spu.before_request
-def authority():
-    if "captcha" in request.args:
-        try:
-            serializer.loads(request.args["captcha"])
-        except Exception:
-            raise PermissionDenied
-    else:
-        if current_user.is_authenticated():
-            Permission(RoleNeed(const.VENDOR_GROUP)).test()
-        else:
-            raise PermissionDenied
