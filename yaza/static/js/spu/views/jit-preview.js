@@ -102,7 +102,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
                         // 这个颜色用于hovered状态的控制框
                         ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
-                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.darkerColor);
+                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.hoveredComplementColor);
                     }
                     dispatcher.trigger('ocspu-selected', ocspu);
                     var designRegions = this.$('[name="current-design-region"]');
@@ -250,7 +250,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect == jitPreview._currentAspect) {
+                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
                                     jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                                 } else if (!jitPreview._currentAspect) {
                                     jitPreview.$('[name="current-design-region"] a:first').click();
