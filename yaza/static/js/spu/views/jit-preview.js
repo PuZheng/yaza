@@ -283,6 +283,21 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 if (!designRegion.bounds) {
                                     designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
                                 }
+                                if (!designRegion.shadowImageData) {
+                                    var imgObj = new Image();
+                                    imgObj.src = designRegion.shadowUrl;
+                                    $(imgObj).load(function (designRegion) {
+                                        return function () {
+                                            var canvas = document.createElement("canvas");
+                                            canvas.width = jitPreview._stage.width();
+                                            canvas.height = jitPreview._stage.height();
+                                            var ctx = canvas.getContext("2d");
+                                            ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+                                            designRegion.shadowImageData = ctx.getImageData(0, 0, canvas.width, 
+                                                canvas.height).data
+                                        }
+                                    }(this));
+                                }
                                 jitPreview._currentLayer = $(this).data('layer');
 
                                 jitPreview._designRegionAnimate(designRegion.previewEdges);
