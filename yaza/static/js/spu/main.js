@@ -42,6 +42,8 @@ require.config({
         'collections/design-images': 'js/spu/collections/design-images',
         'models/design-image': 'js/spu/models/design-image',
         'lazy-load': 'js/utils/lazy-load',
+        'cubic-interpolation': 'js/spu/core/cubic-interpolation',
+        'linear-interpolation': 'js/spu/core/linear-interpolation',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
