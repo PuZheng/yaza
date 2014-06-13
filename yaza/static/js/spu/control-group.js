@@ -46,7 +46,7 @@ define(["config"], function (config) {
             this.getLayer().draw();
         }).on("mouseout", function () {
             document.body.style.cursor = 'default';
-            // 如果是临时控制组, 离开rect要隐藏 
+            // 如果是临时控制组, 离开rect要隐藏
             if (group.getAttr('trasient')) {
                 group.hide();
             }
@@ -71,10 +71,26 @@ define(["config"], function (config) {
         });
         group.add(circle);
         if (resizable) {
-            _addAnchor(group, -node.width() / 2, -node.height() / 2, 'topLeft', node, "nw-resize");
-            _addAnchor(group, node.width() / 2, -node.height() / 2, 'topRight', node, "ne-resize");
-            _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize");
-            _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize");
+            _addAnchor(group, -node.width() / 2, -node.height() / 2, 'topLeft', node, "nw-resize", function (pos) {
+                var offsetX = pos.x - group.x();
+                var degree = 90 - group.rotation() - Math.atan(node.height() / node.width()) * 180 / Math.PI;
+                return {x: pos.x, y: group.y() + offsetX / Math.tan(degree / 180 * Math.PI)};
+            });
+            _addAnchor(group, node.width() / 2, -node.height() / 2, 'topRight', node, "ne-resize", function (pos) {
+                var offsetX = pos.x - group.x();
+                var degree = Math.atan(node.height() / node.width()) * 180 / Math.PI - group.rotation();
+                return {x: pos.x, y: group.y() - offsetX * Math.tan(degree / 180 * Math.PI)};
+            });
+            _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize", function (pos) {
+                var offsetX = pos.x - group.x();
+                var degree = 90 - group.rotation() - Math.atan(node.height() / node.width()) * 180 / Math.PI;
+                return {x: pos.x, y: group.y() + offsetX / Math.tan(degree / 180 * Math.PI)};
+            });
+            _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize", function (pos) {
+                var offsetX = pos.x - group.x();
+                var degree = Math.atan(node.height() / node.width()) * 180 / Math.PI - group.rotation();
+                return {x: pos.x, y: group.y() - offsetX * Math.tan(degree / 180 * Math.PI)};
+            });
 
             if (config.DISPROPORTIONATE) {
                 _addEdgeAnchor(group, 0, -node.height() / 2, 'top', node,
@@ -160,7 +176,7 @@ define(["config"], function (config) {
         return group;
     }
 
-    function _addAnchor(group, x, y, name, node, cursorStyle) {
+    function _addAnchor(group, x, y, name, node, cursorStyle, dragBoundFunc) {
 
         var anchor = new Kinetic.Circle({
             x: x,
@@ -171,7 +187,8 @@ define(["config"], function (config) {
             radius: 7,
             name: name,
             draggable: true,
-            dragOnTop: false
+            dragOnTop: false,
+            dragBoundFunc: dragBoundFunc
         });
         anchor.on('mouseover', function () {
             var layer = this.getLayer();
