@@ -17,27 +17,31 @@ def _md5sum(file, blocksize=65536):
 
 
 def upload_image(file_path, bucket):
-    filename = _md5sum(file_path) + os.path.splitext(file_path)[-1]
+    key = _md5sum(file_path) + os.path.splitext(file_path)[-1]
+    return upload_image_str(key, open(file_path, "rb").read(), bucket)
+
+
+def upload_image_str(key, data, bucket):
     qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
     qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
-    qiniu.rs.Client().delete(bucket, filename)
+    qiniu.rs.Client().delete(bucket, key)
 
     policy = qiniu.rs.PutPolicy(bucket)
     uptoken = policy.token()
     extra = qiniu.io.PutExtra()
     extra.mime_type = "image/png"
 
-    data = StringIO(open(file_path, "rb").read())
-    ret, err = qiniu.io.put(uptoken, filename, data, extra)
+    data = StringIO(data)
+    ret, err = qiniu.io.put(uptoken, key, data, extra)
     if err is not None:
         app.logger.error('error: %s ' % err)
-        raise UploadException(err, filename)
-    return "http://" + bucket + '.qiniudn.com/' + filename
+        raise UploadException(err, key)
+    return "http://" + bucket + '.qiniudn.com/' + key
 
 
 class UploadException(Exception):
     def __init__(self, err, filename):
-        self.msg = "error: %s, when uploading %s" %(err, filename)
+        self.msg = "error: %s, when uploading %s" % (err, filename)
 
     def __str__(self):
         return repr(self.msg)

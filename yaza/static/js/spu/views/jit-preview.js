@@ -257,6 +257,34 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 } else {
                                     jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
                                 }
+                                if (!aspect.blackShadowImageData) {
+                                    var blackImageObj = new Image();
+                                    blackImageObj.crossOrigin = "Anonymous";
+                                    blackImageObj.onload = function () {
+                                        var canvas = document.createElement("canvas");
+                                        canvas.width = jitPreview._stage.width();
+                                        canvas.height = jitPreview._stage.height();
+                                        var ctx = canvas.getContext("2d");
+                                        ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
+                                        aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width, 
+                                        canvas.height).data;
+                                    }
+                                    blackImageObj.src = aspect.blackShadowUrl;
+                                }
+                                if (!aspect.whiteShadowImageData) {
+                                    var whiteImageObj = new Image();
+                                    whiteImageObj.crossOrigin = "Anonymous";
+                                    whiteImageObj.onload = function () {
+                                        var canvas = document.createElement("canvas");
+                                        canvas.width = jitPreview._stage.width();
+                                        canvas.height = jitPreview._stage.height();
+                                        var ctx = canvas.getContext("2d");
+                                        ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
+                                        aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width, 
+                                        canvas.height).data;
+                                    }
+                                    whiteImageObj.src = aspect.whiteShadowUrl;
+                                }
                             }
                         }(this, aspect));
                     this.$('[name="current-design-region"] a').off("click").click(
@@ -346,20 +374,33 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                         var srcWidth = playGroundLayer.width();
                         var srcHeight = playGroundLayer.height();
-                        var delta1 = 10;
-                        var delta2 = -5;
-                        var test1 = Math.min(this._currentDesignRegion.medianHSVValue + delta1,
-                            this._currentDesignRegion.maxHSVValue);
-                        var test2 = this._currentDesignRegion.medianHSVValue - delta2;
+                        var blackShadowImageData = this._currentAspect.blackShadowImageData;
+                        var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
+                        var controlPointsMap = this._currentDesignRegion.controlPointsMap;
                         for (var i = 0; i < targetWidth; ++i) {
                             for (var j = 0; j < targetHeight; ++j) {
                                 if (this._within(i, j)) {
-                                    var origPoint = mvc([i, j], this._currentDesignRegion.controlPointsMap);
+                                    var origPoint = mvc([i, j], controlPointsMap);
                                     origPos = (parseInt(origPoint[0]) + 
                                         (parseInt(origPoint[1]) * srcWidth)) * 4;
                                     this._setRgba(hotspotImageData, [i, j], 
                                         targetWidth, targetHeight, srcImageData, 
                                         origPoint, srcWidth, srcHeight);
+                                    var pos = (j * targetWidth + i) * 4;
+                                    if (hotspotImageData.data[pos + 3]) {
+                                        if (Math.max(hotspotImageData.data[pos], hotspotImageData.data[pos + 1], hotspotImageData.data[pos + 2]) > 127) {
+                                            var shadowImageData = blackShadowImageData;
+                                        } else {
+                                            var shadowImageData = whiteShadowImageData;
+                                        }
+                                        var alpha = shadowImageData[pos + 3] / 255;
+                                        hotspotImageData.data[pos] = shadowImageData[pos] * alpha + 
+                                            hotspotImageData.data[pos] * (1  - alpha);
+                                        hotspotImageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + 
+                                            hotspotImageData.data[pos + 1] * (1  - alpha);
+                                        hotspotImageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + 
+                                            hotspotImageData.data[pos + 2] * (1  - alpha);
+                                    }
                                 }
                             }
                         }
@@ -643,18 +684,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             }
             return cpMap;
         }
-
-        function getHSVValue(imageData, pos, srcImageData, srcPos, test1, test2) {
-            // see http://www.cs.rit.edu/~ncs/color/t_convert.html
-            var v = Math.max(srcImageData[srcPos], srcImageData[srcPos + 1],
-                srcImageData[srcPos + 2]);
-            // 对亮图,重点展示阴影,而且原色彩越亮,阴影越明显, 对于暗图, 重点展示亮点,
-            // 而且原色彩越暗, 亮点越明显. 但需要注意的是,这样会减少对比度. 所以不能
-            // 做的太过
-            return (v > 127) ? (imageData[pos] - test1) * (1 + v / 255) :
-                (imageData[pos] - test2) * (2 - v / 255);
-        }
-
 
         function composeBilinearMatrix(point, srcImageData, srcWidth, offset) {
             var x0 = Math.floor(point[0]);
