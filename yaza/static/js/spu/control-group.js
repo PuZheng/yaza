@@ -7,6 +7,8 @@ define(["config"], function (config) {
 
     function makeControlGroup(node, title, resizable) {
 
+        console.log(node.x() + ' ' + node.y());
+
         resizable = !!resizable;
         var group = new Kinetic.Group({
             x: node.x() - node.offsetX() + node.width() / 2,
@@ -101,7 +103,6 @@ define(["config"], function (config) {
                         var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
                         // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的Y 坐标, 并沿着同一条边的y
                         var offsetY_ = (offsetY > 0 ? 1 : -1) * distance * Math.cos(group.rotation() / 180 * Math.PI + Math.atan(offsetX / offsetY));
-                        console.log(offsetX + ' ' + offsetY + ' ' + distance + ' ' + offsetY_);
                         if (offsetY_ > 0) {
                             offsetY_ = 0;
                         }
@@ -328,6 +329,7 @@ define(["config"], function (config) {
             group.rotate(degree);
             this.rotate(-degree);
             node.rotate(degree);
+
             node.getLayer().draw();
         });
 
@@ -504,9 +506,12 @@ define(["config"], function (config) {
 
         rect.width(newWidth).height(newHeight);
         // 注意, 移动node, x, y设定在了物理中心
+        var angle = node.rotation();
+        var d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+        var angle = node.rotation() / 180 * Math.PI + Math.atan(newHeight/newWidth); 
         node.size(rect.size()).move({
-            x: offsetX,
-            y: offsetY
+            x: d * Math.cos(angle),
+            y: d * Math.sin(angle),
         }).offset({
             x: newWidth / 2,
             y: newHeight / 2
