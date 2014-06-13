@@ -44,6 +44,16 @@ class AspectWrapper(ModelWrapper):
         return ""
 
     @property
+    def black_shadow_url(self):
+        return self.black_shadow_path if self.black_shadow_path.startswith("http") else \
+                url_for('image.serve', filename=self.black_shadow_path)
+
+    @property
+    def white_shadow_url(self):
+        return self.white_shadow_path if self.white_shadow_path.startswith("http") else \
+                url_for('image.serve', filename=self.white_shadow_path)
+
+    @property
     def thumbnail(self):
         if self.thumbnail_path:
             return self.thumbnail_path if self.thumbnail_path.startswith(
@@ -56,6 +66,8 @@ class AspectWrapper(ModelWrapper):
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
+            'blackShadowUrl' if camel_case else 'black_shadow_url': self.black_shadow_url,
+            'whiteShadowUrl' if camel_case else 'white_shadow_url': self.white_shadow_url,
             'designRegionList' if camel_case else 'design_region_list':
                 [dr.as_dict(camel_case) for dr in self.design_region_list],
             'name': self.name,
@@ -83,6 +95,7 @@ class DesignRegionWrapper(ModelWrapper):
                                                                                   filename=self.pic_path)
         return ""
 
+
     @property
     def spu(self):
         return self.aspect.ocspu.spu
@@ -106,9 +119,6 @@ class DesignRegionWrapper(ModelWrapper):
             'edges': self.edges,
             'size': [self.width, self.height],
             'name': self.name,
-            'minHSVValue' if camel_case else 'min_hsv_value': self.min_hsv_value,
-            'maxHSVValue' if camel_case else 'max_hsv_value': self.max_hsv_value,
-            'medianHSVValue' if camel_case else 'median_hsv_value': self.median_hsv_value,
         }
 
 

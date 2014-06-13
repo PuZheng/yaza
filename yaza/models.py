@@ -81,6 +81,8 @@ class Aspect(db.Model):
     thumbnail_path = db.Column(db.String(64))
     width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
     height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
+    black_shadow_path = db.Column(db.String(64))
+    white_shadow_path = db.Column(db.String(64))
 
 
 class DesignRegion(db.Model):
@@ -92,9 +94,6 @@ class DesignRegion(db.Model):
     pic_path = db.Column(db.String(64))
     width = db.Column(db.Float, doc=u'以英寸为单位')
     height = db.Column(db.Float, doc=u'以英寸为单位')
-    min_hsv_value = db.Column(db.Integer)
-    max_hsv_value = db.Column(db.Integer)
-    median_hsv_value = db.Column(db.Integer)
     edge_file = db.Column(db.String(64))
     control_point_file = db.Column(db.String(64))
 
