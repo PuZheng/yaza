@@ -9,8 +9,10 @@ from yaza.tools.utils import create_shadow_im
 if __name__ == '__main__':
 
     im = Image.open(sys.argv[1])
-    dest_im = create_shadow_im(im, sys.argv[2])
-    if len(sys.argv) == 4:
-        dest_im.save(sys.argv[3])
+    black_dest_im, white_dest_im = create_shadow_im(im, sys.argv[2])
+    if len(sys.argv) == 5:
+        black_dest_im.save(sys.argv[3])
+        white_dest_im.save(sys.argv[4])
     else:
-        dest_im.show()
+        black_dest_im.show()
+        white_dest_im.show()

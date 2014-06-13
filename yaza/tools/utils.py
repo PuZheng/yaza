@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import os
 import zipfile
+import itertools
 
 from flask import json
 from PIL import Image, ImageColor
@@ -263,10 +264,23 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
+                    black_shadow_im, white_shadow_im = create_shadow_im(Image.open(full_path), ocspu.rgb)
+                    black_shadow_full_path = os.path.join(aspect_dir,
+                                                    fname + '.black_shadow.png')
+                    white_shadow_full_path = os.path.join(aspect_dir,
+                                                    fname + '.white_shadow.png')
+                    black_shadow_im.save(black_shadow_full_path)
+                    white_shadow_im.save(white_shadow_full_path)
+                    black_shadow_path = os.path.relpath(black_shadow_full_path, start_dir)
+                    white_shadow_path = os.path.relpath(white_shadow_full_path, start_dir)
                     if app.config.get("QINIU_ENABLED"):
                         pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                         thumbnail_path = pic_path + '?imageView2/0/w/' + str(
                             app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                        black_shadow_path = upload_image(black_shadow_full_path,
+                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                        white_shadow_path = upload_image(white_shadow_full_path,
+                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                     else:
                         thumbnail_path = _make_thumbnail(pic_path, start_dir)
 
@@ -274,14 +288,15 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     width, height = im.size
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu, thumbnail_path=thumbnail_path, width=width,
-                               height=height))
+                               height=height, black_shadow_path=black_shadow_path,
+                               white_shadow_path=white_shadow_path))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
                         if os.path.isdir(full_path):
-                            _create_design_region(full_path, config, aspect, ocspu.rgb)
+                            _create_design_region(full_path, config, aspect)
                     return
 
-    def _create_design_region(design_region_dir, config, aspect, color):
+    def _create_design_region(design_region_dir, config, aspect):
         design_region_configs = config['designRegions']
         for fname in os.listdir(design_region_dir):
             full_path = os.path.join(design_region_dir, fname)
@@ -292,15 +307,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 width, height = _get_value_from_list(design_region_configs, "size", {"dir": design_region_name})
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
-                shadow_im = create_shadow_im(Image.open(full_path), color)
-                shadow_full_path = os.path.join(design_region_dir,
-                                                fname + '.shadow.png')
-                shadow_im.save(shadow_full_path)
-                shadow_path = os.path.relpath(shadow_full_path, start_dir)
                 if app.config.get("QINIU_ENABLED"):
                     pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
-                    shadow_path = upload_image(shadow_full_path,
-                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                 edge_file, control_point_file = calc_design_region_image(full_path)
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
@@ -308,8 +316,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                        width=width,
                                        height=height,
                                        edge_file=edge_file,
-                                       control_point_file=control_point_file,
-                                       shadow_path=shadow_path))
+                                       control_point_file=control_point_file))
 
     def _update(spu, **kwargs):
         for key, value in kwargs.iteritems():
@@ -344,13 +351,24 @@ def create_shadow_im(im, color):
     pa = im.load()
     v = max(ImageColor.getrgb(color))
 
-    dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    dest_pa = dest_im.load()
+    black_dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    black_dest_pa = black_dest_im.load()
+    white_dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    white_dest_pa = white_dest_im.load()
+    color_list = list(pixel[0] for pixel in (pa[p] for p in itertools.product(xrange(im.size[0]),
+                                                                             xrange(im.size[1]))) if pixel[1])
+    avg_color = sum(color_list) / len(color_list)
+
+    enhance = 20  # 让反差更明显一些
+
     for i in xrange(im.size[0]):
         for j in xrange(im.size[1]):
             if pa[(i, j)][1]:
                 if v > 127:
-                    dest_pa[(i, j)] = (0, 0, 0, 255 - pa[(i, j)][0])
+                    black_dest_pa[(i, j)] = (0, 0, 0, 255 - pa[(i, j)][0])
+                    white_dest_pa[(i, j)] = (255, 255, 255, max(pa[(i, j)][0] - avg_color, 0) + enhance)
                 else:
-                    dest_pa[(i, j)] = (255, 255, 255, pa[(i, j)][0])
-    return dest_im
+                    white_dest_pa[(i, j)] = (255, 255, 255, pa[(i, j)][0])
+                    black_dest_pa[(i, j)] = (0, 0, 0, max(pa[(i, j)][0] - avg_color, 0) + enhance)
+
+    return black_dest_im, white_dest_im
