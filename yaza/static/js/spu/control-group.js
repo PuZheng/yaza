@@ -73,24 +73,60 @@ define(["config"], function (config) {
         group.add(circle);
         if (resizable) {
             _addAnchor(group, -node.width() / 2, -node.height() / 2, 'topLeft', node, "nw-resize", function (pos) {
-                var offsetX = pos.x - group.x();
-                var degree = 90 - group.rotation() - Math.atan(node.height() / node.width()) * 180 / Math.PI;
-                return {x: pos.x, y: group.y() + offsetX / Math.tan(degree / 180 * Math.PI)};
+                if (Math.tan(group.rotation() / 180 * Math.PI) > 0) {
+                    var angle = Math.PI / 2 - group.rotation() / 180 * Math.PI - Math.atan(node.height() / node.width());
+                    var offsetY = pos.y - group.y();
+                    return {x: group.x() + offsetY * Math.tan(angle), y: pos.y};
+                } else {
+                    var angle = Math.PI / 2 - group.rotation() / 180 * Math.PI - Math.atan(node.height() / node.width());
+                    var offsetX = pos.x - group.x();
+                    return {x: pos.x, y: group.y() + offsetX / Math.tan(angle)};
+                }
             });
             _addAnchor(group, node.width() / 2, -node.height() / 2, 'topRight', node, "ne-resize", function (pos) {
-                var offsetX = pos.x - group.x();
-                var degree = Math.atan(node.height() / node.width()) * 180 / Math.PI - group.rotation();
-                return {x: pos.x, y: group.y() - offsetX * Math.tan(degree / 180 * Math.PI)};
+                if (Math.tan(group.rotation() / 180 * Math.PI) > 0) {
+                    var offsetX = pos.x - group.x();
+                    var angle = Math.atan(node.height() / node.width()) - group.rotation() / 180 * Math.PI;
+                    return {
+                        x: pos.x, 
+                        y: group.y() - offsetX * Math.tan(angle)
+                    };
+                } else {
+                    var angle = Math.atan(node.height() / node.width()) - group.rotation() / 180 * Math.PI;
+                    var offsetY = pos.y - group.y();
+                    return {
+                        x: group.x() - offsetY / Math.tan(angle), 
+                        y: pos.y
+                    };
+                }
             });
             _addAnchor(group, node.width() / 2, node.height() / 2, 'bottomRight', node, "nw-resize", function (pos) {
-                var offsetX = pos.x - group.x();
-                var degree = 90 - group.rotation() - Math.atan(node.height() / node.width()) * 180 / Math.PI;
-                return {x: pos.x, y: group.y() + offsetX / Math.tan(degree / 180 * Math.PI)};
+                if (Math.tan(group.rotation() / 180 * Math.PI) > 0) {
+                    var angle = Math.PI / 2 - group.rotation() / 180 * Math.PI - Math.atan(node.height() / node.width());
+                    var offsetY = pos.y - group.y();
+                    return {x: group.x() + offsetY * Math.tan(angle), y: pos.y};
+                } else {
+                    var angle = Math.PI / 2 - group.rotation() / 180 * Math.PI - Math.atan(node.height() / node.width());
+                    var offsetX = pos.x - group.x();
+                    return {x: pos.x, y: group.y() + offsetX / Math.tan(angle)};
+                }
             });
             _addAnchor(group, -node.width() / 2, node.height() / 2, 'bottomLeft', node, "ne-resize", function (pos) {
-                var offsetX = pos.x - group.x();
-                var degree = Math.atan(node.height() / node.width()) * 180 / Math.PI - group.rotation();
-                return {x: pos.x, y: group.y() - offsetX * Math.tan(degree / 180 * Math.PI)};
+                if (Math.tan(group.rotation() / 180 * Math.PI) > 0) {
+                    var offsetX = pos.x - group.x();
+                    var angle = Math.atan(node.height() / node.width()) - group.rotation() / 180 * Math.PI;
+                    return {
+                        x: pos.x, 
+                        y: group.y() - offsetX * Math.tan(angle)
+                    };
+                } else {
+                    var angle = Math.atan(node.height() / node.width()) - group.rotation() / 180 * Math.PI;
+                    var offsetY = pos.y - group.y();
+                    return {
+                        x: group.x() - offsetY / Math.tan(angle), 
+                        y: pos.y
+                    };
+                }
             });
 
             if (config.DISPROPORTIONATE) {
