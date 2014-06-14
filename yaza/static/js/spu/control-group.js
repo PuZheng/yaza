@@ -31,7 +31,6 @@ define(["config"], function (config) {
                 x: group.x(),
                 y: group.y()
             });
-            console.log(info(group));
         });
         var rect = new Kinetic.Rect({
             x: -node.width() / 2,
@@ -219,9 +218,22 @@ define(["config"], function (config) {
             var rect = group.find('.rect')[0];
             var offsetX = rect.x() + rect.width() / 2;
             var offsetY = rect.y() + rect.height() / 2;
+
+            if (offsetX * offsetY > 0) {
+                var angle = node.rotation() / 180 * Math.PI + Math.atan(rect.height() / rect.width()) + ((offsetX > 0)? 0: Math.PI); 
+            } else if (offsetX * offsetY < 0) {
+                var angle = node.rotation() / 180 * Math.PI - Math.atan(rect.height() / rect.width()) + ((offsetX > 0)? 0: Math.PI); 
+            } else if (offsetX == 0) {
+                var angle = -Math.PI / 2 + node.rotation() / 180 * Math.PI + (offsetY < 0? 0: Math.PI);
+            } else {
+                var angle = node.rotation() / 180 * Math.PI + (offsetX > 0? 0: Math.PI);
+            }
+
+            var d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+
             group.move({
-                x: offsetX,
-                y: offsetY
+                x: d * Math.cos(angle),
+                y: d * Math.sin(angle),
             });
             group.getChildren().each(function (node) {
                 node.move({
@@ -231,7 +243,6 @@ define(["config"], function (config) {
             });
             group.getLayer().draw();
             group.setDraggable(true);
-            console.log(info(group));
         });
 
         group.add(anchor);
@@ -270,13 +281,25 @@ define(["config"], function (config) {
         }).on('dragmove', function () {
             _updateControlGroup(this, node);
         }).on('dragend', function () {
-            // 重新计算group的位置, 以保证始终能按照物理中心进行旋转
             var rect = group.find('.rect')[0];
             var offsetX = rect.x() + rect.width() / 2;
             var offsetY = rect.y() + rect.height() / 2;
+
+            if (offsetX * offsetY > 0) {
+                var angle = node.rotation() / 180 * Math.PI + Math.atan(rect.height() / rect.width()) + ((offsetX > 0)? 0: Math.PI); 
+            } else if (offsetX * offsetY < 0) {
+                var angle = node.rotation() / 180 * Math.PI - Math.atan(rect.height() / rect.width()) + ((offsetX > 0)? 0: Math.PI); 
+            } else if (offsetX == 0) {
+                var angle = -Math.PI / 2 + node.rotation() / 180 * Math.PI + (offsetY < 0? 0: Math.PI);
+            } else {
+                var angle = node.rotation() / 180 * Math.PI + (offsetX > 0? 0: Math.PI);
+            }
+
+            var d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+
             group.move({
-                x: offsetX,
-                y: offsetY
+                x: d * Math.cos(angle),
+                y: d * Math.sin(angle),
             });
             group.getChildren().each(function (node) {
                 node.move({
@@ -286,7 +309,6 @@ define(["config"], function (config) {
             });
             group.getLayer().draw();
             group.setDraggable(true);
-            console.log(info(group));
         });
         group.add(rect);
         return rect;
@@ -335,7 +357,6 @@ define(["config"], function (config) {
 
         anchor.on('dragend', function () {
             group.setDraggable(true);
-            console.log(info(group));
         });
 
         group.add(anchor);
@@ -389,6 +410,8 @@ define(["config"], function (config) {
                 var newHeight = bottomLeft.y() - topLeft.y();
                 var offsetX = (oldWidth - newWidth) / 2;
                 var offsetY = (oldHeight - newHeight) / 2;
+                var angle = node.rotation() / 180 * Math.PI + Math.atan(newHeight / newWidth) + ((offsetX > 0)? 0: Math.PI); 
+
                 break;
             case 'topRight':
                 rect.y(anchorY);
@@ -408,6 +431,7 @@ define(["config"], function (config) {
                 newHeight = bottomLeft.y() - topLeft.y();
                 offsetX = -(oldWidth - newWidth) / 2;
                 offsetY = (oldHeight - newHeight) / 2;
+                var angle = node.rotation() / 180 * Math.PI - Math.atan(newHeight / newWidth) + ((offsetX > 0)? 0: Math.PI); 
                 break;
             case 'bottomRight':
                 topRight.x(anchorX);
@@ -426,6 +450,7 @@ define(["config"], function (config) {
                 newHeight = bottomLeft.y() - topLeft.y();
                 offsetX = -(oldWidth - newWidth) / 2;
                 offsetY = -(oldHeight - newHeight) / 2;
+                var angle = node.rotation() / 180 * Math.PI + Math.atan(newHeight / newWidth) + ((offsetX > 0)? 0: Math.PI); 
                 break;
             case 'bottomLeft':
                 rect.x(anchorX);
@@ -445,6 +470,7 @@ define(["config"], function (config) {
                 newHeight = bottomLeft.y() - topLeft.y();
                 offsetX = (oldWidth - newWidth) / 2;
                 offsetY = -(oldHeight - newHeight) / 2;
+                var angle = node.rotation() / 180 * Math.PI - Math.atan(newHeight / newWidth) + ((offsetX > 0)? 0: Math.PI); 
                 break;
             case 'right':
                 topRight.x(right.x());
@@ -457,6 +483,7 @@ define(["config"], function (config) {
 
                 offsetX = (newWidth - oldWidth) / 2;
                 offsetY = 0;
+                var angle = node.rotation() / 180 * Math.PI + (offsetX > 0? 0: Math.PI);
                 break;
             case 'left':
                 topLeft.x(left.x());
@@ -471,6 +498,7 @@ define(["config"], function (config) {
 
                 offsetX = (oldWidth - newWidth) / 2;
                 offsetY = 0;
+                var angle = node.rotation() / 180 * Math.PI + (offsetX > 0? 0: Math.PI);
                 break;
             case 'top':
                 topLeft.y(top.y());
@@ -487,6 +515,7 @@ define(["config"], function (config) {
                 offsetX = 0;
                 offsetY = (oldHeight - newHeight) / 2;
 
+                var angle = -Math.PI / 2 + node.rotation() / 180 * Math.PI + (offsetY < 0? 0: Math.PI);
                 break;
             case 'bottom':
                 bottomLeft.y(bottom.y());
@@ -500,15 +529,14 @@ define(["config"], function (config) {
 
                 offsetX = 0;
                 offsetY = (newHeight - oldHeight ) / 2;
+                var angle = -Math.PI / 2 + node.rotation() / 180 * Math.PI + (offsetY < 0? 0: Math.PI);
 
                 break;
         }
 
         rect.width(newWidth).height(newHeight);
         // 注意, 移动node, x, y设定在了物理中心
-        var angle = node.rotation();
         var d = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
-        var angle = node.rotation() / 180 * Math.PI + Math.atan(newHeight/newWidth); 
         node.size(rect.size()).move({
             x: d * Math.cos(angle),
             y: d * Math.sin(angle),

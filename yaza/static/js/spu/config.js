@@ -23,6 +23,6 @@ define(function () {
         MAGNIFY: 1.5,  // 预览放大的倍数
         CONTROL_POINT_NUM: [64, 64],
         INTERPOLATION_METHOD: "bicubic",
-        DISPROPORTIONATE: false
+        DISPROPORTIONATE: true,
     }
 });
