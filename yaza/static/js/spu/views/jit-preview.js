@@ -735,27 +735,71 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 x, y);
         }
 
-        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, offset) {
+        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 
+            backgrounColor, ret) {
             var matrix = [];
-            var pos0 = (left + bottom * srcWidth) * 4 + offset;
-            var pos1 = pos0 + srcWidth * 4;
-            var pos2 = pos0 + (srcWidth + srcWidth) * 4;
-            var pos3 = pos0 + (srcWidth + srcWidth + (bottom + 3 > srcHeight)? srcWidth: 0) * 4;
-            var lastOffset = (left + 3 > srcWidth? 8: 12);
+            var pos0 = (left + bottom * srcWidth) * 4;
+            // 在大多数情况下， 点不会在边界上
+            if (left > 0 && left + 3 < srcWidth && bottom > 0 && bottom + 3 < srcHeight) {
+                for (var i = 0; i < 4; ++i) {
+                    for (var j = 0; j < 4; ++j) {
+                        for (var k = 0; k < 4; ++k) {
+                            ret[i][j][k] = srcImageData[pos0 + j * srcWidth + k * 4 + i]; 
+                        }
+                    }
+                }
+                return ret;
+            }
+            if (left < 0 || bottom < 0) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][0] = backgrounColor[offset]; 
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][0] = srcImageData[pos0 + offset]; 
+                }
+            }
+
+            var byte_
+            if (bottom >= 0) {
+            } else {
+                ret[0][0][1] = backgrounColor[0];
+                ret[0][0][2] = backgrounColor[0];
+            }
+            for (var offset = 0; offset < 4; ++offset) {
+                ret[offset][0][1] = srcImageData[pos0 + 4];
+                ret[offset][0][2] = srcImageData[pos0 + 8];
+            }
+            ret[0][0][3] = (left + 3 >= srcWidth)? srcImageData[pos0 + 12]: backgrounColor[0];
+            // g
+            ret[1][0][0] = (left < 0)? backgrounColor[1]: srcImageData[pos0 + 1];
+            ret[1][0][1] = srcImageData[pos0 + 4];
+            ret[1][0][2] = srcImageData[pos0 + 8];
+            } else {
+                ret[1][0][1] = backgrounColor[0];
+                ret[1][0][2] = backgrounColor[0];
+            }
+            ret[0][0][3] = (left + 3 >= srcWidth)? srcImageData[pos0 + 12]: backgrounColor[0];
+            // b
+            // a
+
             return [
-                [srcImageData[pos0], srcImageData[pos0 + 4], srcImageData[pos0 + 8], 
-                srcImageData[pos0 + lastOffset]],
+                [
+                    srcImageData[pos0], srcImageData[pos0 + 4], srcImageData[pos0 + 8], 
+                    srcImageData[pos0 + 8]
+                ],
                 [srcImageData[pos1], srcImageData[pos1 + 4], srcImageData[pos1 + 8], 
-                srcImageData[pos1 + lastOffset]],
+                srcImageData[pos1 + 8]],
                 [srcImageData[pos2], srcImageData[pos2 + 4], srcImageData[pos2 + 8], 
-                srcImageData[pos2 + lastOffset]],
+                srcImageData[pos2 + 8]],
                 [srcImageData[pos3], srcImageData[pos3 + 4], srcImageData[pos3 + 8], 
-                srcImageData[pos3 + lastOffset]],
+                srcImageData[pos3 + 8]],
             ];
+            return ret;
         }
 
         function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, 
-                srcImageData, srcPoint, srcWidth, srcHeight) {
+                srcImageData, srcPoint, srcWidth, srcHeight, backgrounColor) {
             // find the 16 points
             var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
 
@@ -765,16 +809,16 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             var x = srcPoint[0] - Math.floor(srcPoint[0]);
             var y = srcPoint[1] - Math.floor(srcPoint[1]);
             destImageData.data[pos + 3] = bicubic(
-                composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 3), x, y);
+                composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, backgrounColor, 3), x, y);
             if (destImageData.data[pos + 3] == 0) {
                 return;
             }
             destImageData.data[pos] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 0), x, y);
+                bottom, srcImageData, srcWidth, srcHeight, backgrounColor, 0), x, y);
             destImageData.data[pos + 1] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 1), x, y);
+                bottom, srcImageData, srcWidth, srcHeight, backgrounColor, 1), x, y);
             destImageData.data[pos + 2] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 2), x, y);
+                bottom, srcImageData, srcWidth, srcHeight, backgrounColor, 2), x, y);
         }
 
         return JitPreview;
