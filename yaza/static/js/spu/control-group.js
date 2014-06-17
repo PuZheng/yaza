@@ -209,6 +209,24 @@ define(["config"], function (config) {
         _addRotationHandleBar(group, 0,
             -(node.height() / 2 + 50), 'handleBar', node);
 
+        group.snap = function (x, y, snapTolerance) {
+            var centerX = this.x();
+            var centerY = this.y();
+
+            var cXs = Math.abs(centerX - x) <= snapTolerance;
+            var cYs = Math.abs(centerY - y) <= snapTolerance;
+
+            console.log(cXs + " " + cYs);
+
+            if (cXs) {
+                this.x(x);
+            }
+            if (cYs) {
+                this.y(y);
+            }
+
+        };
+
         return group;
     }
 
