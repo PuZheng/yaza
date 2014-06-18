@@ -1,8 +1,13 @@
 define([], function () {
 
     function bilinear(p, x, y) {
-        return (x * p[0][0] + (1 - x) * p[0][1]) * y + 
-        (x * p[1][0] + (1 - x) * p[1][1] ) * (1 - y);
+        var sum = 0;
+        for (var i = 0; i < 3; ++i) {
+            for (var j = 0; j < 3; ++j) {
+                sum += p[i][j];
+            }
+        }
+        return sum/9;
     }
 
     return bilinear;
