@@ -695,7 +695,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             }
                         }(this)).on("dragmove", function (playGround) {
                             return function () {
-                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 20);
+                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 5);
                             }
                         }(this));
                     image.setAttr("control-group", group);

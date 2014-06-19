@@ -24,5 +24,6 @@ define(function () {
         CONTROL_POINT_NUM: [64, 64],
         INTERPOLATION_METHOD: "bicubic",
         DISPROPORTIONATE: true,
+        MAGNET_TOLERANCE: 5,  // 磁力吸附生效距离
     }
 });
