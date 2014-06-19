@@ -12,42 +12,38 @@
 {% endblock %}
 
 {% block main %}
-  <div class="container-fluid">
-  {% if order_id %}
-    订单号: {{ order_id }}
-    <input name="order_id" type="hidden" value="{{ order_id }}"/>
-  {% endif %}
+  <div class="container">
+    {% if order_id %}
+      订单号: {{ order_id }}
+      <input name="order_id" type="hidden" value="{{ order_id }}"/>
+    {% endif %}
     <div class="primary">
       <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
       <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
+
       <div class="row">
-          <div class="col-sm-5">
-            <div class="play-ground">
-              <div class="row" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
-                <div class="col-sm-12">
-                  <div class="svg-drawing">
-                  </div>
-                </div>
-              </div>
+        <div class="jit-preview"></div>
+        <br/>
+        <div class="play-ground">
+          <div class="row" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+            <div class="svg-drawing">
             </div>
           </div>
-          <div class="col-sm-7">
-            <div class="jit-preview"></div>
-          </div>
         </div>
-        <!--/span-->
       </div>
-      <!--/row-->
+      <!--/span-->
     </div>
+    <!--/row-->
+  </div>
 
 
-    <hr/>
-    <footer class="footer visible-md visible-lg">
-      <div class="container">
-        <div class="text-muted">
-          copyright@Yaza
-        </div>
+  <hr/>
+  <footer class="footer visible-md visible-lg">
+    <div class="container">
+      <div class="text-muted">
+        copyright@Yaza
       </div>
-    </footer>
-  </div><!-- /.container -->
+    </div>
+  </footer>
+  <!-- /.container -->
 {% endblock %}
