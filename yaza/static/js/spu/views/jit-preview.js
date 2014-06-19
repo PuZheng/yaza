@@ -29,16 +29,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
             initialize: function (options) {
                 this._spu = options.spu;
-                switch (config.INTERPOLATION_METHOD) {
-                    case 'bicubic': 
-                        this._setRgba = bicubicInterpolation;
-                        break; 
-                    case 'bilinear':
-                        this._setRgba = bilinearInterpolation;
-                        break;
-                    default:
-                        this._setRgba = noInterpolation;
-                }
             },
 
             _colorTrans: function (obj, period) {
@@ -142,6 +132,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
                     var aspect = $(evt.currentTarget).data('aspect');
+                    console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
                     this._currentAspect = aspect;
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     // 切换图片时要mask
@@ -250,13 +241,23 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                    jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                } else if (!jitPreview._currentAspect) {
-                                    jitPreview.$('[name="current-design-region"] a:first').click();
-                                } else {
-                                    jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                }
+                                // 只有当纹理图片都加载完毕才能开始产生预览
+                                var d = function () {
+                                    var ret = $.Deferred();
+                                    var l = [];
+                                    ret.progress(function (arg) {
+                                        l.push(arg); 
+                                        if (l.length == 2) {
+                                            // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                                            if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                                                jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
+                                            } else {
+                                                jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                            }
+                                        }
+                                    });
+                                    return ret; 
+                                }();
                                 if (!aspect.blackShadowImageData) {
                                     var blackImageObj = new Image();
                                     blackImageObj.crossOrigin = "Anonymous";
@@ -268,8 +269,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width, 
                                         canvas.height).data;
+                                        d.notify('black');
                                     }
                                     blackImageObj.src = aspect.blackShadowUrl;
+                                } else {
+                                    d.notify('black');
                                 }
                                 if (!aspect.whiteShadowImageData) {
                                     var whiteImageObj = new Image();
@@ -282,8 +286,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width, 
                                         canvas.height).data;
+                                        d.notify('white');
                                     }
                                     whiteImageObj.src = aspect.whiteShadowUrl;
+                                } else {
+                                    d.notify('white');
                                 }
                             }
                         }(this, aspect));
@@ -367,6 +374,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
                         var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
                             playGroundLayer.width(), playGroundLayer.height()).data;
+                        var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, targetWidth, targetHeight).data;
                         if (!this._currentDesignRegion.controlPointsMap) {
                             this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
                                 config.CONTROL_POINT_NUM);
@@ -377,15 +385,48 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var blackShadowImageData = this._currentAspect.blackShadowImageData;
                         var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
                         var controlPointsMap = this._currentDesignRegion.controlPointsMap;
+                        var pointsMatrix = [
+                            [
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                            ],  // R
+                            [
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                            ], // G
+                            [
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                            ], // B
+                            [
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                                new Array(4),
+                            ] // A
+                        ];
+                        var rgba = this._getCurrentRgb().substr(1);
+                        rgba = [
+                            parseInt('0x' + rgba.substr(0, 2)),
+                            parseInt('0x' + rgba.substr(2, 2)),
+                            parseInt('0x' + rgba.substr(4, 2)),
+                            255,
+                        ];
                         for (var i = 0; i < targetWidth; ++i) {
                             for (var j = 0; j < targetHeight; ++j) {
                                 if (this._within(i, j)) {
                                     var origPoint = mvc([i, j], controlPointsMap);
                                     origPos = (parseInt(origPoint[0]) + 
                                         (parseInt(origPoint[1]) * srcWidth)) * 4;
-                                    this._setRgba(hotspotImageData, [i, j], 
+                                    bicubicInterpolation(hotspotImageData, [i, j], 
                                         targetWidth, targetHeight, srcImageData, 
-                                        origPoint, srcWidth, srcHeight);
+                                        origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
                                     var pos = (j * targetWidth + i) * 4;
                                     if (hotspotImageData.data[pos + 3]) {
                                         if (Math.max(hotspotImageData.data[pos], hotspotImageData.data[pos + 1], hotspotImageData.data[pos + 2]) > 127) {
@@ -404,6 +445,73 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 }
                             }
                         }
+                        // for each point on edges, do anti alias (sampling around itself)
+                        this._currentDesignRegion.previewEdges['bottom'].forEach(function (point) {
+                            // 若对象已经超出边界
+                            if (hotspotImageData.data[(point[0] + (point[1] + 1) * targetWidth) * 4 + 4]) {
+                                [
+                                    [point[0], point[1] + 1],
+                                    point, 
+                                    [point[0], point[1] - 1],
+                                    [point[0] + 1, point[1] + 1],
+                                    [point[0] + 1, point[1]],
+                                    [point[0] + 1, point[1] - 1],
+                                    ].forEach(function (point) {
+                                        edgeInterpolation(hotspotImageData, point,
+                                            targetWidth, targetHeight, 
+                                            backgroundImageData,
+                                            pointsMatrix);
+                                    }.bind(this));
+                            }
+                        });
+                        this._currentDesignRegion.previewEdges['right'].forEach(function (point) {
+                            if (hotspotImageData.data[(point[0] - 1 + point[1] * targetWidth) * 4 + 4]) {
+                                [
+                                    [point[0] - 1, point[1]],
+                                    point, 
+                                    [point[0] + 1, point[1]],
+                                    [point[0] - 1, point[1] + 1],
+                                    [point[0], point[1] + 1],
+                                    [point[0] + 1, point[1] + 1],
+                                    ].forEach(function (point) {
+                                        edgeInterpolation(hotspotImageData, point,
+                                            targetWidth, targetHeight, backgroundImageData,
+                                            pointsMatrix);
+                                    }.bind(this));
+                            }
+                        });
+                        this._currentDesignRegion.previewEdges['top'].forEach(function (point) {
+                            if (hotspotImageData.data[(point[0] + (point[1] - 1) * targetWidth) * 4 + 4]) {
+                                [
+                                    [point[0], point[1] - 1],
+                                    point, 
+                                    [point[0], point[1] + 1],
+                                    [point[0] - 1, point[1] - 1],
+                                    [point[0] - 1, point[1]],
+                                    [point[0] - 1, point[1] + 1],
+                                    ].forEach(function (point) {
+                                        edgeInterpolation(hotspotImageData, point,
+                                            targetWidth, targetHeight, backgroundImageData,
+                                            pointsMatrix);
+                                    }.bind(this));
+                            }
+                        });
+                        this._currentDesignRegion.previewEdges['left'].forEach(function (point) {
+                            if (hotspotImageData.data[(point[0] + 1 + point[1] * targetWidth) * 4 + 4]) {
+                                [
+                                    [point[0] + 1, point[1]],
+                                    point, 
+                                    [point[0] - 1, point[1]],
+                                    [point[0] + 1, point[1] - 1],
+                                    [point[0], point[1] - 1],
+                                    [point[0] - 1, point[1] - 1],
+                                    ].forEach(function (point) {
+                                        edgeInterpolation(hotspotImageData, point,
+                                            targetWidth, targetHeight, backgroundImageData,
+                                            pointsMatrix);
+                                    }.bind(this));
+                            }
+                        });
                         if (__debug__) {
                             var layer = new Kinetic.Layer();
                             var data = [];
@@ -507,6 +615,10 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     edgeSet.add(p);
                 });
                 return edgeSet;
+            },
+
+            _getCurrentRgb: function () {
+                return this.$('.ocspu-selector .thumbnail.selected').data('ocspu').rgb;
             },
 
             _getBounds: function (edges) {
@@ -696,66 +808,127 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             ];
         }
 
-        function noInterpolation(destImageData, destPoint, destWidth, destHeight, 
-            srcImageData, srcPoint, srcWidth, srcHeight) {
-            var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
-            var srcPos = (parseInt(srcPoint[0]) + 
-                (parseInt(srcPoint[1]) * srcWidth)) * 4;
-            destImageData.data[pos + 3] = srcImageData[srcPos + 3];
-            if (destImageData.data[pos + 3] == 0) {
-                return;
+
+        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 
+            backgrounColor, ret) {
+            var pos0 = (left + bottom * srcWidth) * 4;
+            // 在大多数情况下， 点不会在边界上
+            if (left > 0 && left + 3 < srcWidth && bottom > 0 && bottom + 3 < srcHeight) {
+                for (var i = 0; i < 4; ++i) {
+                    for (var j = 0; j < 4; ++j) {
+                        for (var k = 0; k < 4; ++k) {
+                            ret[i][j][k] = srcImageData[pos0 + (j * srcWidth + k) * 4 + i]; 
+                        }
+                    }
+                }
+                return ret;
             }
-            destImageData.data[pos] = srcImageData[srcPos];
-            destImageData.data[pos + 1] = srcImageData[srcPos + 1];
-            destImageData.data[pos + 2] = srcImageData[pos + 2];
-        }
 
-        function bilinearInterpolation(destImageData, destPoint, destWidth, destHeight, 
-                srcImageData, srcPoint, srcWidth, srcHeight) {
-            // find the 16 points
-            var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
-
-
-            var x = srcPoint[0] - Math.floor(srcPoint[0]);
-            var y = srcPoint[1] - Math.floor(srcPoint[1]);
-            destImageData.data[pos + 3] = bilinear(
-                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 3), 
-                x, y);
-            if (destImageData.data[pos + 3] == 0) {
-                return;
+            // 第一行， 需要考虑left在边界外， bottom在边界外， left+3在边界外的情况
+            if (left < 0 || bottom < 0) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][0] = backgrounColor[offset]; 
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][0] = srcImageData[pos0 + offset]; 
+                }
             }
-            destImageData.data[pos] = bilinear(
-                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 0), 
-                x, y);
-            destImageData.data[pos + 1] = bilinear(
-                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 1), 
-                x, y);
-            destImageData.data[pos + 2] = bilinear(
-                composeBilinearMatrix(srcPoint, srcImageData, srcWidth, 2), 
-                x, y);
-        }
 
-        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, offset) {
-            var matrix = [];
-            var pos0 = (left + bottom * srcWidth) * 4 + offset;
+            if (bottom < 0) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][1] = backgrounColor[offset];
+                    ret[offset][0][2] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][1] = srcImageData[pos0 + 4 + offset];
+                    ret[offset][0][2] = srcImageData[pos0 + 8 + offset]
+                }
+            }
+
+            if (left + 3 >= srcWidth || bottom < 0) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][3] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][0][3] = srcImageData[pos0 + 12 + offset];
+                }
+            }
+
+            // 第2, 3行， 需要考虑left在边界外, left + 3在边界外
+
             var pos1 = pos0 + srcWidth * 4;
-            var pos2 = pos0 + (srcWidth + srcWidth) * 4;
-            var pos3 = pos0 + (srcWidth + srcWidth + (bottom + 3 > srcHeight)? srcWidth: 0) * 4;
-            var lastOffset = (left + 3 > srcWidth? 8: 12);
-            return [
-                [srcImageData[pos0], srcImageData[pos0 + 4], srcImageData[pos0 + 8], 
-                srcImageData[pos0 + lastOffset]],
-                [srcImageData[pos1], srcImageData[pos1 + 4], srcImageData[pos1 + 8], 
-                srcImageData[pos1 + lastOffset]],
-                [srcImageData[pos2], srcImageData[pos2 + 4], srcImageData[pos2 + 8], 
-                srcImageData[pos2 + lastOffset]],
-                [srcImageData[pos3], srcImageData[pos3 + 4], srcImageData[pos3 + 8], 
-                srcImageData[pos3 + lastOffset]],
-            ];
+            var pos2 = pos1 + srcWidth * 4;
+            if (left < 0) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][1][0] = backgrounColor[offset];
+                    ret[offset][2][0] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][1][0] = srcImageData[pos1 + offset];
+                    ret[offset][2][0] = srcImageData[pos2 + offset];
+                }
+            }
+            for (var offset = 0; offset < 4; ++offset) {
+                ret[offset][1][1] = srcImageData[pos1 + 4 +offset];
+                ret[offset][1][2] = srcImageData[pos1 + 8 +offset]
+                ret[offset][2][1] = srcImageData[pos2 + 4 +offset];
+                ret[offset][2][2] = srcImageData[pos2 + 8 +offset]
+            }
+            if (left + 3 >= srcWidth) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][1][3] = backgrounColor[offset];
+                    ret[offset][2][3] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][1][3] = srcImageData[pos1 + 12 + offset];
+                    ret[offset][2][3] = srcImageData[pos2 + 12 + offset];
+                }
+            }
+
+            // 第4行， 需要考虑left在边界外， bottom + 3在边界外， left+3在边界外的情况
+            var pos3 = pos2 + srcWidth * 4;
+            if (left < 0 || bottom + 3 >= srcHeight) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][0] = backgrounColor[offset]; 
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][0] = srcImageData[pos3 + offset]; 
+                }
+            }
+
+            if (bottom + 3 >= srcHeight) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][1] = backgrounColor[offset];
+                    ret[offset][3][2] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][1] = srcImageData[pos3 + 4 +offset];
+                    ret[offset][3][2] = srcImageData[pos3 + 8 +offset]
+                }
+            }
+
+            if (left + 3 >= srcWidth || bottom + 3 >= srcHeight) {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][3] = backgrounColor[offset];
+                }
+            } else {
+                for (var offset = 0; offset < 4; ++offset) {
+                    ret[offset][3][3] = srcImageData[pos3 + 12 + offset];
+                }
+            }
+
+            return ret;
         }
 
         function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, 
-                srcImageData, srcPoint, srcWidth, srcHeight) {
+                srcImageData, srcPoint, srcWidth, srcHeight, backgrounColor, pointsMatrix) {
             // find the 16 points
             var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
 
@@ -764,18 +937,57 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
             var x = srcPoint[0] - Math.floor(srcPoint[0]);
             var y = srcPoint[1] - Math.floor(srcPoint[1]);
-            destImageData.data[pos + 3] = bicubic(
-                composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 3), x, y);
+            composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, backgrounColor, pointsMatrix);
+            destImageData.data[pos + 3] = bicubic(pointsMatrix[3], x, y);
             if (destImageData.data[pos + 3] == 0) {
                 return;
             }
-            destImageData.data[pos] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 0), x, y);
-            destImageData.data[pos + 1] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 1), x, y);
-            destImageData.data[pos + 2] = bicubic(composeBicubicMatrix(left, 
-                bottom, srcImageData, srcWidth, srcHeight, 2), x, y);
+            destImageData.data[pos] = bicubic(pointsMatrix[0], x, y);
+            destImageData.data[pos + 1] = bicubic(pointsMatrix[1], x, y);
+            destImageData.data[pos + 2] = bicubic(pointsMatrix[2], x, y);
         }
 
+        function composeEdgeMatrix(left, bottom, imageData, srcWidth, srcHeight, complementImageData, ret) {
+            // 若是发现某个点是透明的， 拿背景图去填
+            var pos0 = (left + bottom * srcWidth) * 4;
+            for (var i = 0; i < 3; ++i) {
+                for (var j = 0; j < 3; ++j) {
+                    if ((ret[3][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 3]) != 0) {
+                        ret[0][i][j] = imageData[pos0 + (i * srcWidth + j) * 4]; 
+                        ret[1][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 1]; 
+                        ret[2][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 2]; 
+                    } else {
+                        ret[0][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4];
+                        ret[1][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4 + 1];
+                        ret[2][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4 + 2];
+                        ret[3][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4 + 3];
+                    }
+                }
+            }
+            return ret;
+        
+        }
+
+        function edgeInterpolation(imageData, point, width, height, 
+                backgroundImageData, pointsMatrix) {
+            var pos = (point[0] +  point[1] * width) * 4; 
+
+            var left = point[0] - 1;
+            var bottom = point[1] - 1;
+
+            composeEdgeMatrix(left, bottom, imageData.data, width, height, backgroundImageData, pointsMatrix);
+            // 不知道为什么bicubic效果很差
+            imageData.data[pos + 3] = bilinear(pointsMatrix[3]);
+            if (imageData.data[pos + 3] == 0) {
+                return;
+            }
+            imageData.data[pos] = bilinear(pointsMatrix[0]);
+            imageData.data[pos + 1] = bilinear(pointsMatrix[1]);
+            imageData.data[pos + 2] = bilinear(pointsMatrix[2]);
+            console.log(imageData.data[pos] + ' ' +
+            imageData.data[pos + 1] + ' ' +
+            imageData.data[pos + 2] + ' ' +
+            imageData.data[pos + 3]);
+        }
         return JitPreview;
     });
