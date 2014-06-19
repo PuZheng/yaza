@@ -369,6 +369,6 @@ def create_shadow_im(im, color):
                     white_dest_pa[(i, j)] = (255, 255, 255, max(pa[(i, j)][0] - avg_color, 0) + enhance)
                 else:
                     white_dest_pa[(i, j)] = (255, 255, 255, pa[(i, j)][0])
-                    black_dest_pa[(i, j)] = (0, 0, 0, max(pa[(i, j)][0] - avg_color, 0) + enhance)
+                    black_dest_pa[(i, j)] = (0, 0, 0, max(-pa[(i, j)][0] + avg_color, 0) + enhance)
 
     return black_dest_im, white_dest_im

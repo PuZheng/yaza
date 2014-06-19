@@ -132,6 +132,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
                     var aspect = $(evt.currentTarget).data('aspect');
+                    console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
                     this._currentAspect = aspect;
                     // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     // 切换图片时要mask
@@ -240,13 +241,23 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         node.size(jitPreview._stage.size());
                                     }
                                 });
-                                if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                    jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                } else if (!jitPreview._currentAspect) {
-                                    jitPreview.$('[name="current-design-region"] a:first').click();
-                                } else {
-                                    jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                }
+                                // 只有当纹理图片都加载完毕才能开始产生预览
+                                var d = function () {
+                                    var ret = $.Deferred();
+                                    var l = [];
+                                    ret.progress(function (arg) {
+                                        l.push(arg); 
+                                        if (l.length == 2) {
+                                            // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                                            if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                                                jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
+                                            } else {
+                                                jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                            }
+                                        }
+                                    });
+                                    return ret; 
+                                }();
                                 if (!aspect.blackShadowImageData) {
                                     var blackImageObj = new Image();
                                     blackImageObj.crossOrigin = "Anonymous";
@@ -258,8 +269,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width, 
                                         canvas.height).data;
+                                        d.notify('black');
                                     }
                                     blackImageObj.src = aspect.blackShadowUrl;
+                                } else {
+                                    d.notify('black');
                                 }
                                 if (!aspect.whiteShadowImageData) {
                                     var whiteImageObj = new Image();
@@ -272,8 +286,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width, 
                                         canvas.height).data;
+                                        d.notify('white');
                                     }
                                     whiteImageObj.src = aspect.whiteShadowUrl;
+                                } else {
+                                    d.notify('white');
                                 }
                             }
                         }(this, aspect));
