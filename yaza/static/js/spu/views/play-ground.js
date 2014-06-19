@@ -101,10 +101,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             dispatcher.trigger("jitPreview-mask");
                         },
                     }).done(function (playGround) {
-                            return function (data) {
-                                playGround._addText(data, text);
-                            };
-                        }(this)).always(function () {
+                        return function (data) {
+                            playGround._addText(data, text);
+                        };
+                    }(this)).always(function () {
                         dispatcher.trigger("jitPreview-unmask");
                     }).fail(this._fail);
                 },
@@ -129,7 +129,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                        getBase64FromImage(node),
+                                    getBase64FromImage(node),
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
@@ -142,7 +142,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         }, this)
                     }
                     $(evt.currentTarget).addClass('disabled');
-                    if($("[name=order_id]").val()){
+                    if ($("[name=order_id]").val()) {
                         data["order_id"] = $("[name=order_id]").val();
                     }
                     $(evt.currentTarget).addClass('disabled');
@@ -180,7 +180,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         _.each(imageLayer.children, function (node) {
                             if (node.className === "Image") {
                                 var im = this._draw.image(
-                                        getBase64FromImage(node),
+                                    getBase64FromImage(node),
                                         node.width() * ratio,
                                         node.height() * ratio)
                                     .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
@@ -235,11 +235,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             dispatcher.trigger("jitPreview-unmask");
                         },
                     }).done(function (playGround) {
-                            return function (data) {
-                                playGround._addText(data, im.name(), im,
-                                    controlGroup);
-                            };
-                        }(this)).fail(this._fail);
+                        return function (data) {
+                            playGround._addText(data, im.name(), im,
+                                controlGroup);
+                        };
+                    }(this)).fail(this._fail);
                     return false;
                 },
                 'change .text-operators select.font-family': function (evt) {
@@ -261,11 +261,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             dispatcher.trigger("jitPreview-mask");
                         },
                     }).done(function (playGround) {
-                            return function (data) {
-                                playGround._addText(data, im.name(), im,
-                                    controlGroup);
-                            };
-                        }(this)).always(function () {
+                        return function (data) {
+                            playGround._addText(data, im.name(), im,
+                                controlGroup);
+                        };
+                    }(this)).always(function () {
                         dispatcher.trigger("jitPreview-unmask");
                     }).fail(this._fail);
                     return false;
@@ -301,6 +301,43 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 },
 
             },
+
+            _drawCrossLines: function () {
+
+                var width = this._stage.width();
+                var height = this._stage.height();
+                if (!this._crossLayer) {
+                    this._crossLayer = new Kinetic.Layer();
+
+                    var verticalLine = new Kinetic.Line({
+                        points: [width / 2, 0, width / 2, height],
+                        stroke: 'pink',
+                        strokeWidth: 1,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        name: "vertical"
+                    });
+                    var horizontalLine = new Kinetic.Line({
+                        points: [0, height / 2, width, height / 2],
+                        stroke: 'pink',
+                        strokeWidth: 1,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        name: "horizontal"
+                    });
+                    this._crossLayer.add(verticalLine);
+                    this._crossLayer.add(horizontalLine);
+                    this._stage.add(this._crossLayer);
+                } else {
+                    verticalLine = this._crossLayer.find(".vertical")[0];
+                    verticalLine.points([width / 2, 0, width / 2, height]);
+
+                    horizontalLine = this._crossLayer.find(".horizontal")[0];
+                    horizontalLine.points([0, height / 2, width, height / 2]);
+                }
+                this._crossLayer.draw();
+            },
+
 
             initialize: function (options) {
                 this.tagList = options.tagList;
@@ -338,6 +375,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         }
                         this._stage.width(er.width());
                         this._stage.height(er.height());
+
+                        this._drawCrossLines();
+                        this._crossLayer.hide();
+
                         this._currentDesignRegion = designRegion;
                         var cache = this._designRegionCache[designRegion.name];
                         !!this._imageLayer && this._imageLayer.remove();
@@ -367,8 +408,8 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         }).sort(function (a, b) {
                             return a.getZIndex() - b.getZIndex();
                         }).forEach(function (node) {
-                                this._objectManager.add(node, node.getAttr("control-group"));
-                            }.bind(this));
+                            this._objectManager.add(node, node.getAttr("control-group"));
+                        }.bind(this));
                     }
                     dispatcher.trigger('update-hotspot', this._imageLayer);
                 }, this);
@@ -403,7 +444,6 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._stage = new Kinetic.Stage({
                     container: this.$('.editable-region')[0],
                 });
-
                 if ($("[name=downloadable]").val() === "true") {
                     this.$("button.btn-download").show();
                 } else {
@@ -466,7 +506,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             $(this).find('.uploading-progress').html(templateSuccess());
                             $(this).find('.uploading-progress').fadeOut(1000);
                             Cookies.set('upload-images',
-                                data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                    data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
                             playGround._renderUserPics();
                             _selectFirstCustomerImg();
                         },
@@ -543,17 +583,17 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         return false;
                     }
                 }(this));
-                this.$('a[data-toggle="tab"]').on('shown.bs.tab', 
-                        function (playGround) {
-                            return function (e) {
-                                if (e.target.href.match(/.*\.customer-pics$/)) {
-                                    playGround.$('.btn-tag').attr('disabled', '');
-                                    playGround.$('.tags-list').hide();
-                                } else {
-                                    playGround.$('.btn-tag').removeAttr('disabled');
-                                }
-                            };
-                        }(this));
+                this.$('a[data-toggle="tab"]').on('shown.bs.tab',
+                    function (playGround) {
+                        return function (e) {
+                            if (e.target.href.match(/.*\.customer-pics$/)) {
+                                playGround.$('.btn-tag').attr('disabled', '');
+                                playGround.$('.tags-list').hide();
+                            } else {
+                                playGround.$('.btn-tag').removeAttr('disabled');
+                            }
+                        };
+                    }(this));
             },
 
             _renderUserPics: function () {
@@ -636,16 +676,28 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._imageLayer.draw();
 
                     var group = makeControlGroup(image, title, true).on('dragend',
-                            function (playGround) {
-                                return function () {
-                                    playGround._imageLayer.draw();
-                                    dispatcher.trigger('update-hotspot', playGround._imageLayer);
-                                };
-                            }(this)).on('mousedown', function () {
-                            if (this.getAttr('trasient')) {
-                                dispatcher.trigger('active-object', this);
+                        function (playGround) {
+                            return function () {
+                                playGround._crossLayer.hide();
+                                playGround._crossLayer.moveToBottom();
+                                playGround._stage.draw();
+                                dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                            };
+                        }(this)).on('mousedown', function (playGround) {
+                            return function () {
+                                playGround._crossLayer.show();
+                                playGround._crossLayer.moveToTop();
+                                playGround._stage.draw();
+
+                                if (this.getAttr('trasient')) {
+                                    dispatcher.trigger('active-object', this);
+                                }
                             }
-                        });
+                        }(this)).on("dragmove", function (playGround) {
+                            return function () {
+                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 5);
+                            }
+                        }(this));
                     image.setAttr("control-group", group);
                     this._controlLayer.add(group).draw();
                     this._objectManager.add(image, group);
@@ -677,26 +729,32 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         });
                         playGround._imageLayer.add(im);
                         var controlGroup = makeControlGroup(im, text).on('dragend',
-                                function (playGround) {
-                                    return function () {
-                                        playGround._imageLayer.draw();
-                                        dispatcher.trigger('update-hotspot',
-                                            playGround._imageLayer);
-                                    };
-                                }(playGround)).on('mousedown',function () {
+                            function () {
+                                playGround._crossLayer.hide();
+                                playGround._controlLayer.moveToBottom();
+                                playGround._stage.draw();
+                                dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                            }.bind(playGround)).on('mousedown', function () {
+                                playGround._crossLayer.show();
+                                playGround._crossLayer.moveToTop();
+                                playGround._stage.draw();
                                 if (this.getAttr('trasient')) {
                                     dispatcher.trigger('active-object', this);
                                 }
-                            }).setAttr('object-type', 'text').setAttr(
-                                'text-color',
-                                oldControlGroup ? oldControlGroup.getAttr('text-color')
-                                    : config.DEFAULT_FONT_COLOR
-                            ).setAttr('font-size',
-                                oldControlGroup ? oldControlGroup.getAttr('font-size')
-                                    : config.DEFAULT_FONT_SIZE
-                            ).setAttr('font-family',
-                                oldControlGroup ? oldControlGroup.getAttr('font-family')
-                                    : config.DEFAULT_FONT_FAMILY);
+                            }.bind(playGround)).on("dragmove", function (playGround) {
+                                return function () {
+                                    this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 20);
+                                }
+                            }(this)).setAttr('object-type', 'text').setAttr(
+                            'text-color',
+                            oldControlGroup ? oldControlGroup.getAttr('text-color')
+                                : config.DEFAULT_FONT_COLOR
+                        ).setAttr('font-size',
+                            oldControlGroup ? oldControlGroup.getAttr('font-size')
+                                : config.DEFAULT_FONT_SIZE
+                        ).setAttr('font-family',
+                            oldControlGroup ? oldControlGroup.getAttr('font-family')
+                                : config.DEFAULT_FONT_FAMILY);
 
                         im.setAttr("control-group", controlGroup);
 
@@ -782,7 +840,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 if (controlGroup.getAttr('object-type') == 'text') {
                     this.$('.text-operators').show();
                     this.$('.text-operators .text-color').spectrum('set',
-                        controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
+                            controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);
                     this.$('.text-operators select.font-size').val(controlGroup.getAttr('font-size') || config.DEFAULT_FONT_SIZE);
                     this.$('.text-operators select.font-family').val(controlGroup.getAttr('font-family') || config.DEFAULT_FONT_FAMILY);
                 } else {
@@ -803,7 +861,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this.$(".builtin-pics .thumbnails").empty();
                 this.$("span.selected-tag").text(tag || '不限标签');
                 this._loadMoreDesignImages(function () {
-                    this._selectFirstIfSelectedEmpty(); 
+                    this._selectFirstIfSelectedEmpty();
                 }.bind(this));
             },
 
@@ -816,7 +874,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         this.each(function (element, index, list) {
                             var s = '<li><div class="thumbnail"><img src="%s" alt="%s" data-title="%s" data-pic-url="%s"></img></div></li>'
                             var e = $(_.sprintf(s, element.get('thumbnail'),
-                                    element.get('title'), element.get('title'), element.get('picUrl')));
+                                element.get('title'), element.get('title'), element.get('picUrl')));
                             thumbnails.append(e);
                             $(e).find('img').lazyLoad();
                         });
