@@ -257,6 +257,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
             },
 
             _setupAspects: function (ocspu) {
+                this.$('.aspect-selector').empty();
                 var designRegions = this.$('[name="current-design-region"]');
                 designRegions.empty();
 
