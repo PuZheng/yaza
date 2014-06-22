@@ -44,11 +44,6 @@
         width: 64px;
     }
 
-    .jit-preview .aspect-selector .thumbnail {
-        max-height: 96px;
-        max-width: 96px;
-    }
-
     .jit-preview .thumbnail:first-child {
         margin-left: 3px;
     }
@@ -61,20 +56,6 @@
     .jit-preview .ocspu-selector .thumbnail img {
         min-width: 100%;
         min-height: 100%;
-    }
-    .jit-preview .aspect-selector img {
-        margin: auto;
-        display: block;
-    }
-
-    .jit-preview .aspect-selector .layer {
-        position: absolute;
-        margin: auto;
-        display: block;
-    }
-
-    .jit-preview .design-region-selector .list-group-item {
-        padding: 6px 9px;
     }
 
 }

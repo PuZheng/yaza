@@ -10,12 +10,6 @@
         width: 120px;
     }
 
-    .play-ground .touch-screen button.btn-download {
-        position: absolute !important;
-        top: 30px;
-        right: 0;
-    }
-
     .play-ground .upload-img-form {
         display: inline-block;
         width: 80%;
@@ -62,11 +56,6 @@
         background-color: #fff;
         margin-left: auto;
         margin-right: auto;
-    }
-
-    .play-ground .touch-screen button.btn-save {
-        position: absolute !important;
-        right: 0;
     }
 
     .play-ground .svg-drawing svg {
@@ -158,4 +147,34 @@
         border-radius: 0.5em;
         color: #ccc;
     }
+
+    .play-ground div.design-region-selector {
+        position: absolute !important;
+    }
+
+    .play-ground .thumbnail {
+        margin: 3px 3px 3px 0;
+        display: inline-block;
+    }
+
+    .play-ground .aspect-selector .thumbnail {
+        max-height: 96px;
+        max-width: 96px;
+    }
+
+     .play-ground .aspect-selector img {
+        margin: auto;
+        display: block;
+    }
+
+    .play-ground .aspect-selector .layer {
+        position: absolute;
+        margin: auto;
+        display: block;
+    }
+
+    .play-ground .design-region-selector .list-group-item {
+        padding: 6px 9px;
+    }
+
 }

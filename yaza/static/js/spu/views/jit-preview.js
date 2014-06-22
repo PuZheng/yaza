@@ -24,326 +24,198 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
         });
 
         var JitPreview = Backbone.View.extend({
-            _template: Handlebars.default.compile(jitPreviewTemplate),
-            _layerCache: {},
+                _template: Handlebars.default.compile(jitPreviewTemplate),
+                _layerCache: {},
 
-            initialize: function (options) {
-                this._spu = options.spu;
-            },
+                initialize: function (options) {
+                    this._spu = options.spu;
+                    dispatcher.on("aspect-selected", function (aspect) {
+                        var jitPreview = this;
+                        console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
+                        // 切换图片时要mask
+                        dispatcher.trigger('jitPreview-mask');
 
-            _colorTrans: function (obj, period) {
-                obj._colors = colorTools.getColorGrads(['red', "#FFF"], 20);
+                        jitPreview._currentAspect = aspect;
 
-                obj._index = 0;
-                obj._set = function () {
-                    var color = obj._colors[Math.min(Math.max(0, obj._index), obj._colors.length - 1)];
-                    obj.stroke("rgb(" + color.join(",") + ")");
-                    obj.draw();
-                };
+                        // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
+                        jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
+                            dispatcher.trigger('jitPreview-unmask');
 
-                obj.transIn = function () {
-                    obj._index++;
-                    obj._set();
-                    if (obj._index < obj._colors.length - 1) {
-                        obj._timer = setTimeout(_.bind(obj.transIn, obj), period);
-                    } else {
-                        obj._timer = setTimeout(function () {
-                            var layer = obj.getLayer();
-                            obj.destroy();
-                            layer.draw();
-                        }, period);
-                    }
-                };
-            },
-
-            _designRegionAnimate: function (edges) {
-                var jitPreview = this;
-                var data = [];
-                ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                    edges[position].forEach(function (point) {
-                        data.push(point[0]);
-                        data.push(point[1]);
-                    });
-                });
-                var designRegionHex = new Kinetic.Line({
-                    points: data,
-                    stroke: 'red',
-                    strokeWidth: 1,
-                    name: 'highlight-frame',
-                });
-
-                jitPreview._designRegionAnimationLayer.add(designRegionHex);
-
-                var period = 2000;
-
-                jitPreview._colorTrans(designRegionHex, period / 100);
-                designRegionHex.transIn();
-            },
-
-            events: {
-                'click .ocspu-selector .thumbnail': function (evt) {
-                    this.$(".ocspu-selector .thumbnail").removeClass("selected");
-                    $(evt.currentTarget).addClass("selected");
-                    // show aspects
-                    this.$('.aspect-selector').empty();
-                    var ocspu = $(evt.currentTarget).data('ocspu');
-                    if (!ocspu.complementaryColor) {
-                        // 这个颜色用于画选中状态的控制框
-                        ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
-                        // 这个颜色用于hovered状态的控制框
-                        ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
-                        console.log(ocspu.rgb + " - " + ocspu.complementaryColor + " - " + ocspu.hoveredComplementColor);
-                    }
-                    dispatcher.trigger('ocspu-selected', ocspu);
-                    var designRegions = this.$('[name="current-design-region"]');
-                    designRegions.find('a').each(function () {
-                        var layer = $(this).data('layer');
-                        layer.destroy();
-                    });
-                    designRegions.empty();
-
-                    ocspu.aspectList.forEach(function (aspect) {
-                        $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
-                            aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
-
-                        aspect.designRegionList.forEach(function (designRegion) {
-                            designRegion.aspect = aspect;
-                            var layer = this._layerCache[designRegion.id];
-                            if (!layer) {
-                                layer = new Kinetic.Layer();
-                                this._layerCache[designRegion.id] = layer;
-                                this._stage.add(layer);
-                                // 没有缓存， 产生预览
-                            } else {
-                                this._stage.add(layer);
-                            }
-                            $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.name, aspect.name, designRegion.name)
-                            ).data('design-region', designRegion).data("aspect", aspect).data('layer', layer).appendTo(designRegions);
-                        }.bind(this));
-                    }.bind(this));
-                    if (!this._currentAspect) {
-                        this.$('.aspect-selector .thumbnail:first-child').click();
-                    } else {
-                        // 切换ocspu的时候，不切换面
-                        this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspect.name)).parent().click();
-                    }
-                },
-                'click .aspect-selector .thumbnail': function (evt) {
-                    this.$(".aspect-selector .thumbnail").removeClass("selected");
-                    $(evt.currentTarget).addClass("selected");
-                    var aspect = $(evt.currentTarget).data('aspect');
-                    console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
-                    this._currentAspect = aspect;
-                    // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
-                    // 切换图片时要mask
-                    dispatcher.trigger('jitPreview-mask');
-                    this.$('.hotspot img').attr('src', aspect.picUrl).one('load',
-                        function (jitPreview, aspect) {
-                            return function (evt) {
-                                // 其实可以不用使用本img标签,直接在backgroud layer中画,
-                                // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
-                                // 图片的大小
-                                dispatcher.trigger('jitPreview-unmask');
-                                $(this).show();  // 先显示为了正确获得图片的style
-                                jitPreview.$('.design-regions').css({
-                                    width: $(this).width(),
-                                    height: $(this).height()
-                                }).offset($(this).offset());
-                                evt.target.crossOrigin = 'Anonymous';
-                                var im = new Kinetic.Image({
-                                    image: evt.target,
-                                    width: $(this).width(),
-                                    height: $(this).height()
-                                });
-                                jitPreview._backgroundLayer = new Kinetic.Layer({
-                                    name: "background"
-                                });
-                                jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                                    dispatcher.trigger('jitPreview-mask'); 
-                                    var hdImageObj = new Image();
-                                    var mouseOverEvent = evt;
-                                    $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
-                                        dispatcher.trigger('jitPreview-unmask');
-                                        jitPreview._backgroundLayer.hide();
-                                        var im = new Kinetic.Image({
-                                            image: evt.target,
-                                            width: jitPreview._backgroundLayer.width() * config.MAGNIFY,
-                                            height: jitPreview._backgroundLayer.height() * config.MAGNIFY,
-                                        });
-                                        var zoomBackgroundLayer = new Kinetic.Layer({
-                                            width: jitPreview._backgroundLayer.width(),
-                                            height: jitPreview._backgroundLayer.height(),
-                                        });
-                                        zoomBackgroundLayer.on('mouseout', function () {
-                                            jitPreview._backgroundLayer.show();
-                                            jitPreview._stage.find('.zoom-layer').destroy();
-                                            zoomBackgroundLayer.destroy();
-                                            _(jitPreview._layerCache).values().forEach(function (layer) {
-                                                layer.show();
-                                            });
-                                        }).on('mousemove', function (evt) {
-                                            // firefox has no offset[XY]
-                                            // 为了防止layer[XY]为0的情况, 最后必须或上一个0
-                                            var x = -(evt.evt.layerX || evt.evt.offsetX || 0); 
-                                            var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
-                                            zoomBackgroundLayer.position({
-                                                x: (config.MAGNIFY - 1) * x,
-                                                y: (config.MAGNIFY - 1) * y,
-                                            }).draw();
-                                            // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
-                                            jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
-                                                var context = zoomLayer.getContext();
-                                                context.imageSmoothEnabled = true;
-                                                var layer = zoomLayer.getAttr('orig-layer');
-                                                context.clearRect(0, 0, layer.width(), layer.height());
-                                                context.drawImage(layer.getCanvas()._canvas, 
-                                                    -(config.MAGNIFY - 1) * x/config.MAGNIFY, -(config.MAGNIFY - 1) * y/config.MAGNIFY, 
-                                                    layer.width()/config.MAGNIFY, layer.height()/config.MAGNIFY,
-                                                    0, 0, layer.width(), layer.height());
-                                            });
-                                        });
-                                        jitPreview._stage.add(zoomBackgroundLayer);
-                                        zoomBackgroundLayer.add(im);
-                                        // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
+                            // 其实可以不用使用本img标签,直接在backgroud layer中画,
+                            // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
+                            // 图片的大小
+                            $(this).show();  // 先显示为了正确获得图片的style
+                            jitPreview.$('.design-regions').css({
+                                width: $(this).width(),
+                                height: $(this).height()
+                            }).offset($(this).offset());
+                            evt.target.crossOrigin = 'Anonymous';
+                            var im = new Kinetic.Image({
+                                image: evt.target,
+                                width: $(this).width(),
+                                height: $(this).height()
+                            });
+                            jitPreview._backgroundLayer = new Kinetic.Layer({
+                                name: "background"
+                            });
+                            jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
+                                dispatcher.trigger('jitPreview-mask');
+                                var hdImageObj = new Image();
+                                var mouseOverEvent = evt;
+                                $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
+                                    dispatcher.trigger('jitPreview-unmask');
+                                    jitPreview._backgroundLayer.hide();
+                                    var im = new Kinetic.Image({
+                                        image: evt.target,
+                                        width: jitPreview._backgroundLayer.width() * config.MAGNIFY,
+                                        height: jitPreview._backgroundLayer.height() * config.MAGNIFY
+                                    });
+                                    var zoomBackgroundLayer = new Kinetic.Layer({
+                                        width: jitPreview._backgroundLayer.width(),
+                                        height: jitPreview._backgroundLayer.height()
+                                    });
+                                    zoomBackgroundLayer.on('mouseout', function () {
+                                        jitPreview._backgroundLayer.show();
+                                        jitPreview._stage.find('.zoom-layer').destroy();
+                                        zoomBackgroundLayer.destroy();
                                         _(jitPreview._layerCache).values().forEach(function (layer) {
-                                            layer.hide();
-                                            var zoomLayer = new Kinetic.Layer({
-                                                width: layer.width(),
-                                                height: layer.height(),
-                                                name: 'zoom-layer',
-                                            });
-                                            zoomLayer.setAttr('orig-layer', layer);
-                                            jitPreview._stage.add(zoomLayer);
-                                            zoomLayer.draw();
-                                            // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
+                                            layer.show();
                                         });
-                                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
-                                    }); 
+                                    }).on('mousemove', function (evt) {
+                                        // firefox has no offset[XY]
+                                        // 为了防止layer[XY]为0的情况, 最后必须或上一个0
+                                        var x = -(evt.evt.layerX || evt.evt.offsetX || 0);
+                                        var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
+                                        zoomBackgroundLayer.position({
+                                            x: (config.MAGNIFY - 1) * x,
+                                            y: (config.MAGNIFY - 1) * y
+                                        }).draw();
+                                        // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
+                                        jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
+                                            var context = zoomLayer.getContext();
+                                            context.imageSmoothEnabled = true;
+                                            var layer = zoomLayer.getAttr('orig-layer');
+                                            context.clearRect(0, 0, layer.width(), layer.height());
+                                            context.drawImage(layer.getCanvas()._canvas,
+                                                    -(config.MAGNIFY - 1) * x / config.MAGNIFY, -(config.MAGNIFY - 1) * y / config.MAGNIFY,
+                                                    layer.width() / config.MAGNIFY, layer.height() / config.MAGNIFY,
+                                                0, 0, layer.width(), layer.height());
+                                        });
+                                    });
+                                    jitPreview._stage.add(zoomBackgroundLayer);
+                                    zoomBackgroundLayer.add(im);
+                                    // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
+                                    _(jitPreview._layerCache).values().forEach(function (layer) {
+                                        layer.hide();
+                                        var zoomLayer = new Kinetic.Layer({
+                                            width: layer.width(),
+                                            height: layer.height(),
+                                            name: 'zoom-layer'
+                                        });
+                                        zoomLayer.setAttr('orig-layer', layer);
+                                        jitPreview._stage.add(zoomLayer);
+                                        zoomLayer.draw();
+                                        // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
+                                    });
+                                    zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
                                 });
-                                // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
-                                // background layer不重叠
-                                $(this).hide();
+                            });
+                            // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
+                            // background layer不重叠
+                            $(this).hide();
 
-                                jitPreview._stage.getChildren(function (node) {
-                                    return node.getName() == "background";
-                                }).forEach(function (node) {
-                                    node.destroy();
-                                });
-                                jitPreview._stage.draw();
+                            jitPreview._stage.getChildren(function (node) {
+                                return node.getName() == "background";
+                            }).forEach(function (node) {
+                                node.destroy();
+                            });
+                            jitPreview._stage.draw();
 
-                                jitPreview._stage.add(jitPreview._backgroundLayer);
-                                jitPreview._backgroundLayer.moveToBottom();
-                                jitPreview._stage.width($(this).width());
-                                jitPreview._stage.height($(this).height());
-                                jitPreview._stage.children.forEach(function (node) {
-                                    // 只改变当前面的所有layer的大小
-                                    if (node.nodeType === 'Layer' && node.visible()) {
-                                        node.size(jitPreview._stage.size());
-                                    }
-                                });
-                                // 只有当纹理图片都加载完毕才能开始产生预览
-                                var d = function () {
-                                    var ret = $.Deferred();
-                                    var l = [];
-                                    ret.progress(function (arg) {
-                                        l.push(arg); 
-                                        if (l.length == 2) {
-                                            // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
-                                            if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                                jitPreview.$('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                            } else {
-                                                jitPreview.$(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                            }
+                            jitPreview._stage.add(jitPreview._backgroundLayer);
+                            jitPreview._backgroundLayer.moveToBottom();
+                            jitPreview._stage.width($(this).width());
+                            jitPreview._stage.height($(this).height());
+                            jitPreview._stage.children.forEach(function (node) {
+                                // 只改变当前面的所有layer的大小
+                                if (node.nodeType === 'Layer' && node.visible()) {
+                                    node.size(jitPreview._stage.size());
+                                }
+                            });
+                            // 只有当纹理图片都加载完毕才能开始产生预览
+
+                            var d = function () {
+                                var ret = $.Deferred();
+                                var l = [];
+                                ret.progress(function (arg) {
+                                    l.push(arg);
+                                    if (l.length == 2) {
+                                        // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                                        if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                                            $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
+                                        } else {
+                                            $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
                                         }
-                                    });
-                                    return ret; 
-                                }();
-                                if (!aspect.blackShadowImageData) {
-                                    var blackImageObj = new Image();
-                                    blackImageObj.crossOrigin = "Anonymous";
-                                    blackImageObj.onload = function () {
-                                        var canvas = document.createElement("canvas");
-                                        canvas.width = jitPreview._stage.width();
-                                        canvas.height = jitPreview._stage.height();
-                                        var ctx = canvas.getContext("2d");
-                                        ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
-                                        aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width, 
-                                        canvas.height).data;
-                                        d.notify('black');
                                     }
-                                    blackImageObj.src = aspect.blackShadowUrl;
-                                } else {
+                                });
+                                return ret;
+                            }();
+                            if (!aspect.blackShadowImageData) {
+                                var blackImageObj = new Image();
+                                blackImageObj.crossOrigin = "Anonymous";
+                                blackImageObj.onload = function () {
+                                    var canvas = document.createElement("canvas");
+                                    canvas.width = jitPreview._stage.width();
+                                    canvas.height = jitPreview._stage.height();
+                                    var ctx = canvas.getContext("2d");
+                                    ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
+                                    aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width,
+                                        canvas.height).data;
                                     d.notify('black');
-                                }
-                                if (!aspect.whiteShadowImageData) {
-                                    var whiteImageObj = new Image();
-                                    whiteImageObj.crossOrigin = "Anonymous";
-                                    whiteImageObj.onload = function () {
-                                        var canvas = document.createElement("canvas");
-                                        canvas.width = jitPreview._stage.width();
-                                        canvas.height = jitPreview._stage.height();
-                                        var ctx = canvas.getContext("2d");
-                                        ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
-                                        aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width, 
+                                };
+                                blackImageObj.src = aspect.blackShadowUrl;
+                            } else {
+                                d.notify('black');
+                            }
+                            if (!aspect.whiteShadowImageData) {
+                                var whiteImageObj = new Image();
+                                whiteImageObj.crossOrigin = "Anonymous";
+                                whiteImageObj.onload = function () {
+                                    var canvas = document.createElement("canvas");
+                                    canvas.width = jitPreview._stage.width();
+                                    canvas.height = jitPreview._stage.height();
+                                    var ctx = canvas.getContext("2d");
+                                    ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
+                                    aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width,
                                         canvas.height).data;
-                                        d.notify('white');
-                                    }
-                                    whiteImageObj.src = aspect.whiteShadowUrl;
-                                } else {
                                     d.notify('white');
-                                }
+                                };
+                                whiteImageObj.src = aspect.whiteShadowUrl;
+                            } else {
+                                d.notify('white');
                             }
-                        }(this, aspect));
-                    this.$('[name="current-design-region"] a').off("click").click(
-                        function (jitPreview) {
-                            return function () {
-
-                                $('[name="current-design-region"] a').removeClass("disabled active");
-                                $(this).addClass("active disabled");
-                                var designRegion = $(this).data("design-region");
-                                jitPreview._currentDesignRegion = designRegion;
-
-                                if (jitPreview._currentAspect != $(this).data("aspect")) {
-                                    jitPreview.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', $(this).data("aspect").name)).parent().click();
-                                    return;
-                                }
-
-
-                                if (!designRegion.previewEdges) {
-                                    designRegion.previewEdges = jitPreview._getPreviewEdges(designRegion.edges, {
-                                        x: jitPreview._stage.width() / aspect.size[0],
-                                        y: jitPreview._stage.height() / aspect.size[1],
-                                    });
-                                }
-                                if (!designRegion.bounds) {
-                                    designRegion.bounds = jitPreview._getBounds(designRegion.previewEdges);
-                                }
-                                jitPreview._currentLayer = $(this).data('layer');
-
-                                jitPreview._designRegionAnimate(designRegion.previewEdges);
-                                dispatcher.trigger('design-region-selected', designRegion);
-                            }
-                        }(this));
-                }
-            },
-
-            render: function () {
-                this.$el.append(this._template({spu: this._spu}));
-                this._stage = new Kinetic.Stage({
-                    container: this.$('.design-regions')[0]
-                });
-                this._designRegionAnimationLayer = new Kinetic.Layer();
-                this._stage.add(this._designRegionAnimationLayer);
-
-                this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
-                    $(e).data('ocspu', this._spu.ocspuList[idx]);
-                }.bind(this));
-                this.$('.ocspu-selector .thumbnail:first-child').click();
-
-                this._mask = this.$(".mask");
-                this._mask.css("line-height", this.$(".hotspot").height() + "px");
-                this._mask.hide();
-                dispatcher.on("jitPreview-mask", function () {
+                        });
+                    }.bind(this)).on("design-region-selected", function (designRegion) {
+                        console.log("design region selected, " + designRegion.name);
+                        if (!designRegion.previewEdges) {
+                            designRegion.previewEdges = this._getPreviewEdges(designRegion.edges, {
+                                x: this._stage.width() / designRegion.aspect.size[0],
+                                y: this._stage.height() / designRegion.aspect.size[1]
+                            });
+                        }
+                        if (!designRegion.bounds) {
+                            designRegion.bounds = this._getBounds(designRegion.previewEdges);
+                        }
+                        var layer = this._layerCache[designRegion.id];
+                        if (!layer) {
+                            layer = new Kinetic.Layer();
+                            this._layerCache[designRegion.id] = layer;
+                            this._stage.add(layer);
+                            // 没有缓存， 产生预览
+                        }
+                        this._currentLayer = layer;
+                        this._currentDesignRegion = designRegion;
+                        this._designRegionAnimate(designRegion.previewEdges);
+                    }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
                         this._mask.hide();
@@ -353,7 +225,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
                             this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
                             if (this._currentDesignRegion) {
-                                var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
+                                var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
                                 dom.removeClass("list-group-item-info");
                                 dom.find("i").remove();
                             }
@@ -361,7 +233,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         }
 
                         if (this._currentDesignRegion) {
-                            var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
+                            var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
                             dom.addClass("list-group-item-info");
                             if (dom.find("i").size() == 0) {
                                 dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
@@ -390,25 +262,25 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 new Array(4),
                                 new Array(4),
                                 new Array(4),
-                                new Array(4),
+                                new Array(4)
                             ],  // R
                             [
                                 new Array(4),
                                 new Array(4),
                                 new Array(4),
-                                new Array(4),
+                                new Array(4)
                             ], // G
                             [
                                 new Array(4),
                                 new Array(4),
                                 new Array(4),
-                                new Array(4),
+                                new Array(4)
                             ], // B
                             [
                                 new Array(4),
                                 new Array(4),
                                 new Array(4),
-                                new Array(4),
+                                new Array(4)
                             ] // A
                         ];
                         var rgba = this._getCurrentRgb().substr(1);
@@ -416,31 +288,31 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             parseInt('0x' + rgba.substr(0, 2)),
                             parseInt('0x' + rgba.substr(2, 2)),
                             parseInt('0x' + rgba.substr(4, 2)),
-                            255,
+                            255
                         ];
                         for (var i = 0; i < targetWidth; ++i) {
                             for (var j = 0; j < targetHeight; ++j) {
                                 if (this._within(i, j)) {
                                     var origPoint = mvc([i, j], controlPointsMap);
-                                    origPos = (parseInt(origPoint[0]) + 
+                                    origPos = (parseInt(origPoint[0]) +
                                         (parseInt(origPoint[1]) * srcWidth)) * 4;
-                                    bicubicInterpolation(hotspotImageData, [i, j], 
-                                        targetWidth, targetHeight, srcImageData, 
+                                    bicubicInterpolation(hotspotImageData, [i, j],
+                                        targetWidth, targetHeight, srcImageData,
                                         origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
                                     var pos = (j * targetWidth + i) * 4;
                                     if (hotspotImageData.data[pos + 3]) {
                                         if (Math.max(hotspotImageData.data[pos], hotspotImageData.data[pos + 1], hotspotImageData.data[pos + 2]) > 127) {
                                             var shadowImageData = blackShadowImageData;
                                         } else {
-                                            var shadowImageData = whiteShadowImageData;
+                                            shadowImageData = whiteShadowImageData;
                                         }
                                         var alpha = shadowImageData[pos + 3] / 255;
-                                        hotspotImageData.data[pos] = shadowImageData[pos] * alpha + 
-                                            hotspotImageData.data[pos] * (1  - alpha);
-                                        hotspotImageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + 
-                                            hotspotImageData.data[pos + 1] * (1  - alpha);
-                                        hotspotImageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + 
-                                            hotspotImageData.data[pos + 2] * (1  - alpha);
+                                        hotspotImageData.data[pos] = shadowImageData[pos] * alpha +
+                                            hotspotImageData.data[pos] * (1 - alpha);
+                                        hotspotImageData.data[pos + 1] = shadowImageData[pos + 1] * alpha +
+                                            hotspotImageData.data[pos + 1] * (1 - alpha);
+                                        hotspotImageData.data[pos + 2] = shadowImageData[pos + 2] * alpha +
+                                            hotspotImageData.data[pos + 2] * (1 - alpha);
                                     }
                                 }
                             }
@@ -451,14 +323,14 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             if (hotspotImageData.data[(point[0] + (point[1] + 1) * targetWidth) * 4 + 4]) {
                                 [
                                     [point[0], point[1] + 1],
-                                    point, 
+                                    point,
                                     [point[0], point[1] - 1],
                                     [point[0] + 1, point[1] + 1],
                                     [point[0] + 1, point[1]],
-                                    [point[0] + 1, point[1] - 1],
-                                    ].forEach(function (point) {
+                                    [point[0] + 1, point[1] - 1]
+                                ].forEach(function (point) {
                                         edgeInterpolation(hotspotImageData, point,
-                                            targetWidth, targetHeight, 
+                                            targetWidth, targetHeight,
                                             backgroundImageData,
                                             pointsMatrix);
                                     }.bind(this));
@@ -468,12 +340,12 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             if (hotspotImageData.data[(point[0] - 1 + point[1] * targetWidth) * 4 + 4]) {
                                 [
                                     [point[0] - 1, point[1]],
-                                    point, 
+                                    point,
                                     [point[0] + 1, point[1]],
                                     [point[0] - 1, point[1] + 1],
                                     [point[0], point[1] + 1],
-                                    [point[0] + 1, point[1] + 1],
-                                    ].forEach(function (point) {
+                                    [point[0] + 1, point[1] + 1]
+                                ].forEach(function (point) {
                                         edgeInterpolation(hotspotImageData, point,
                                             targetWidth, targetHeight, backgroundImageData,
                                             pointsMatrix);
@@ -484,12 +356,12 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             if (hotspotImageData.data[(point[0] + (point[1] - 1) * targetWidth) * 4 + 4]) {
                                 [
                                     [point[0], point[1] - 1],
-                                    point, 
+                                    point,
                                     [point[0], point[1] + 1],
                                     [point[0] - 1, point[1] - 1],
                                     [point[0] - 1, point[1]],
-                                    [point[0] - 1, point[1] + 1],
-                                    ].forEach(function (point) {
+                                    [point[0] - 1, point[1] + 1]
+                                ].forEach(function (point) {
                                         edgeInterpolation(hotspotImageData, point,
                                             targetWidth, targetHeight, backgroundImageData,
                                             pointsMatrix);
@@ -500,12 +372,12 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             if (hotspotImageData.data[(point[0] + 1 + point[1] * targetWidth) * 4 + 4]) {
                                 [
                                     [point[0] + 1, point[1]],
-                                    point, 
+                                    point,
                                     [point[0] - 1, point[1]],
                                     [point[0] + 1, point[1] - 1],
                                     [point[0], point[1] - 1],
-                                    [point[0] - 1, point[1] - 1],
-                                    ].forEach(function (point) {
+                                    [point[0] - 1, point[1] - 1]
+                                ].forEach(function (point) {
                                         edgeInterpolation(hotspotImageData, point,
                                             targetWidth, targetHeight, backgroundImageData,
                                             pointsMatrix);
@@ -524,7 +396,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                     stroke: '#666',
                                     fill: '#ddd',
                                     strokeWidth: 2,
-                                    radius: 3,
+                                    radius: 3
                                 });
                                 layer.add(circle);
                             }.bind(this));
@@ -533,7 +405,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             var line = new Kinetic.Line({
                                 points: data,
                                 stroke: 'white',
-                                strokeWidth: 1,
+                                strokeWidth: 1
                             });
                             layer.add(line);
                             this._stage.add(layer);
@@ -543,146 +415,248 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         hotspotContext.putImageData(hotspotImageData, 0, 0);
                         this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                     }.bind(this));
-            },
+                },
 
+                _colorTrans: function (obj, period) {
+                    obj._colors = colorTools.getColorGrads(['red', "#FFF"], 20);
 
-            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                var aspectElement = this.$('[data-aspectId=' + aspectId + "]");
-                var designRegionName = "design-region-" + designRegionId;
-                var stage = aspectElement.data("stage");
-                if (!stage) {
-                    if (canvasElement === null) {
-                        return;
-                    }
-                    var div = $("<div></div>").addClass("layer");
-                    aspectElement.before(div);
-                    stage = new Kinetic.Stage({
-                        container: div[0],
-                        width: aspectElement.width(),
-                        height: aspectElement.height()
-                    });
-                    aspectElement.data("stage", stage);
-                }
-                stage.getChildren(function (node) {
-                    return node.getName() == designRegionName;
-                }).forEach(function (node) {
-                    node.destroy();
-                });
-                if (canvasElement) {
-                    var layer = new Kineticjs.Layer({
-                        name: designRegionName
-                    });
-                    stage.add(layer);
-                    layer.draw();
-                    var thumbnailContext = layer.getContext();
-                    thumbnailContext.imageSmoothEnabled = false;
-                    thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
-                }
-            },
-
-            _getPreviewEdges: function (edges, ratio) {
-                var ret = {};
-                // 这里必须要去重，否则边界计算错误
-                // 而且需要注意的是， 缩放过的线段可能会产生锯齿. 
-                // 比如一种典型的情况是： top上， 有两个点x一样， y相邻, 
-                // 这样会给判断点是否在边界上带来麻烦
-                var set = new buckets.Set();
-                ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                    ret[position] = [];
-                    edges[position].forEach(function (point) {
-                        var p = [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
-                        if (!set.contains(p)) {
-                            set.add(p);
-                            ret[position].push(p);
-                        }
-                    });
-                });
-                return ret;
-            },
-
-            _getEdgeSet: function (edges) {
-                var edgeSet = new buckets.Set();
-                edges['left'].forEach(function (p) {
-                    edgeSet.add(p);
-                });
-                edges['right'].forEach(function (p) {
-                    edgeSet.add(p);
-                });
-                edges['top'].forEach(function (p) {
-                    edgeSet.add(p);
-                });
-                edges['bottom'].forEach(function (p) {
-                    edgeSet.add(p);
-                });
-                return edgeSet;
-            },
-
-            _getCurrentRgb: function () {
-                return this.$('.ocspu-selector .thumbnail.selected').data('ocspu').rgb;
-            },
-
-            _getBounds: function (edges) {
-                // 注意, 投射区域中, 不是说top边上的任何一个点都在left的右边, 也不是
-                // 都在bottom的上面. 这里唯一要求的是, 这四个边组成了一个封闭区域.
-                // 那么我们就要将四个边放在一起考虑, 给定任何一个y, 左右边界是什么,
-                // 给定任何一个x, 上下边界是什么 
-                var ret = {
-                    leftRight: {},
-                    topBottom: {},
-                };
-                ['top', 'right', 'bottom', 'left'].forEach(function (edgeName) {
-                    edges[edgeName].forEach(function (point) {
-                        if (ret.topBottom[point[0]]) {
-                            ret.topBottom[point[0]].push(point[1]);
-                        } else {
-                            ret.topBottom[point[0]] = [point[1]];
-                        }
-                        if (ret.leftRight[point[1]]) {
-                            ret.leftRight[point[1]].push(point[0]);
-                        } else {
-                            ret.leftRight[point[1]] = [point[0]];
-                        }
-                    });
-                });
-
-                for (var x in ret.topBottom) {
-                    ret.topBottom[x] = {
-                        bottom: Math.min.apply(Math, ret.topBottom[x]),
-                        top: Math.max.apply(Math, ret.topBottom[x]), 
-                        innerPoints: ret.topBottom[x].sort().slice(1, -1),
-                    }
-                }
-                for (var y in ret.leftRight) {
-                    ret.leftRight[y] = {
-                        left: Math.min.apply(Math, ret.leftRight[y]),
-                        right: Math.max.apply(Math, ret.leftRight[y]),
-                        innerPoints: ret.leftRight[y].sort().slice(1, -1),
+                    obj._index = 0;
+                    obj._set = function () {
+                        var color = obj._colors[Math.min(Math.max(0, obj._index), obj._colors.length - 1)];
+                        obj.stroke("rgb(" + color.join(",") + ")");
+                        obj.draw();
                     };
-                }
-                return ret;
-            },
 
-            // 测试一个点是否在边界内
-            _within: function (x, y) {
-                var test = 0;
-                var leftRight = this._currentDesignRegion.bounds.leftRight[y];
-                var topBottom = this._currentDesignRegion.bounds.topBottom[x];
-                if (!(leftRight && topBottom) ) {
-                    return false;
+                    obj.transIn = function () {
+                        obj._index++;
+                        obj._set();
+                        if (obj._index < obj._colors.length - 1) {
+                            obj._timer = setTimeout(_.bind(obj.transIn, obj), period);
+                        } else {
+                            obj._timer = setTimeout(function () {
+                                var layer = obj.getLayer();
+                                obj.destroy();
+                                layer.draw();
+                            }, period);
+                        }
+                    };
+                },
+
+                _designRegionAnimate: function (edges) {
+                    var jitPreview = this;
+                    var data = [];
+                    ['top', 'left', 'bottom', 'right'].forEach(function (position) {
+                        edges[position].forEach(function (point) {
+                            data.push(point[0]);
+                            data.push(point[1]);
+                        });
+                    });
+                    var designRegionHex = new Kinetic.Line({
+                        points: data,
+                        stroke: 'red',
+                        strokeWidth: 1,
+                        name: 'highlight-frame'
+                    });
+
+                    jitPreview._designRegionAnimationLayer.add(designRegionHex);
+
+                    var period = 2000;
+
+                    jitPreview._colorTrans(designRegionHex, period / 100);
+                    designRegionHex.transIn();
+                },
+
+                events: {
+                    'click .ocspu-selector .thumbnail': function (evt) {
+                        this.$(".ocspu-selector .thumbnail").removeClass("selected");
+                        $(evt.currentTarget).addClass("selected");
+                        var ocspu = $(evt.currentTarget).data('ocspu');
+                        if (!ocspu.complementaryColor) {
+                            // 这个颜色用于画选中状态的控制框
+                            ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
+                            // 这个颜色用于hovered状态的控制框
+                            ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
+                        }
+                        // 删除已有的上次所有designRegion的canvas
+                        if (this._currentAspect) {
+                            var layerCache = this._layerCache;
+                            this._currentAspect.designRegionList.forEach(function (designRegion) {
+                                var layer = layerCache[designRegion.id];
+                                if (layer) {
+                                    layer.destroy();
+                                }
+                            });
+                        }
+
+                        dispatcher.trigger('ocspu-selected', ocspu);
+                    },
+                    'click .btn-save': function (evt) {
+                        dispatcher.trigger("design-save", evt);
+                    },
+
+                    'click .btn-download': function (evt) {
+                        dispatcher.trigger("design-download", evt);
+                    }
+                },
+
+                render: function () {
+                    this.$el.append(this._template({spu: this._spu}));
+                    this._stage = new Kinetic.Stage({
+                        container: this.$('.design-regions')[0]
+                    });
+                    this._designRegionAnimationLayer = new Kinetic.Layer();
+                    this._stage.add(this._designRegionAnimationLayer);
+
+                    this._mask = this.$(".mask");
+                    this._mask.css("line-height", this.$(".hotspot").height() + "px");
+                    this._mask.hide();
+
+                    this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
+                        $(e).data('ocspu', this._spu.ocspuList[idx]);
+                    }.bind(this));
+
+                    this.$('.ocspu-selector .thumbnail:first-child').click();
+                },
+
+
+                _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
+                    var aspectElement = $('[data-aspectId=' + aspectId + "]");
+                    var designRegionName = "design-region-" + designRegionId;
+                    var stage = aspectElement.data("stage");
+                    if (!stage) {
+                        if (canvasElement === null) {
+                            return;
+                        }
+                        var div = $("<div></div>").addClass("layer");
+                        aspectElement.before(div);
+                        stage = new Kinetic.Stage({
+                            container: div[0],
+                            width: aspectElement.width(),
+                            height: aspectElement.height()
+                        });
+                        aspectElement.data("stage", stage);
+                    }
+                    stage.getChildren(function (node) {
+                        return node.getName() == designRegionName;
+                    }).forEach(function (node) {
+                        node.destroy();
+                    });
+                    if (canvasElement) {
+                        var layer = new Kineticjs.Layer({
+                            name: designRegionName
+                        });
+                        stage.add(layer);
+                        layer.draw();
+                        var thumbnailContext = layer.getContext();
+                        thumbnailContext.imageSmoothEnabled = false;
+                        thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
+                    }
+                },
+
+                _getPreviewEdges: function (edges, ratio) {
+                    var ret = {};
+                    // 这里必须要去重，否则边界计算错误
+                    // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
+                    // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
+                    // 这样会给判断点是否在边界上带来麻烦
+                    var set = new buckets.Set();
+                    ['top', 'left', 'bottom', 'right'].forEach(function (position) {
+                        ret[position] = [];
+                        edges[position].forEach(function (point) {
+                            var p = [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
+                            if (!set.contains(p)) {
+                                set.add(p);
+                                ret[position].push(p);
+                            }
+                        });
+                    });
+                    return ret;
+                },
+
+                _getEdgeSet: function (edges) {
+                    var edgeSet = new buckets.Set();
+                    edges['left'].forEach(function (p) {
+                        edgeSet.add(p);
+                    });
+                    edges['right'].forEach(function (p) {
+                        edgeSet.add(p);
+                    });
+                    edges['top'].forEach(function (p) {
+                        edgeSet.add(p);
+                    });
+                    edges['bottom'].forEach(function (p) {
+                        edgeSet.add(p);
+                    });
+                    return edgeSet;
+                },
+
+                _getCurrentRgb: function () {
+                    return this.$('.ocspu-selector .thumbnail.selected').data('ocspu').rgb;
+                },
+
+                _getBounds: function (edges) {
+                    // 注意, 投射区域中, 不是说top边上的任何一个点都在left的右边, 也不是
+                    // 都在bottom的上面. 这里唯一要求的是, 这四个边组成了一个封闭区域.
+                    // 那么我们就要将四个边放在一起考虑, 给定任何一个y, 左右边界是什么,
+                    // 给定任何一个x, 上下边界是什么
+                    var ret = {
+                        leftRight: {},
+                        topBottom: {}
+                    };
+                    ['top', 'right', 'bottom', 'left'].forEach(function (edgeName) {
+                        edges[edgeName].forEach(function (point) {
+                            if (ret.topBottom[point[0]]) {
+                                ret.topBottom[point[0]].push(point[1]);
+                            } else {
+                                ret.topBottom[point[0]] = [point[1]];
+                            }
+                            if (ret.leftRight[point[1]]) {
+                                ret.leftRight[point[1]].push(point[0]);
+                            } else {
+                                ret.leftRight[point[1]] = [point[0]];
+                            }
+                        });
+                    });
+
+                    for (var x in ret.topBottom) {
+                        ret.topBottom[x] = {
+                            bottom: Math.min.apply(Math, ret.topBottom[x]),
+                            top: Math.max.apply(Math, ret.topBottom[x]),
+                            innerPoints: ret.topBottom[x].sort().slice(1, -1)
+                        }
+                    }
+                    for (var y in ret.leftRight) {
+                        ret.leftRight[y] = {
+                            left: Math.min.apply(Math, ret.leftRight[y]),
+                            right: Math.max.apply(Math, ret.leftRight[y]),
+                            innerPoints: ret.leftRight[y].sort().slice(1, -1)
+                        };
+                    }
+                    return ret;
+                },
+
+// 测试一个点是否在边界内
+                _within: function (x, y) {
+                    var test = 0;
+                    var leftRight = this._currentDesignRegion.bounds.leftRight[y];
+                    var topBottom = this._currentDesignRegion.bounds.topBottom[x];
+                    if (!(leftRight && topBottom)) {
+                        return false;
+                    }
+                    // 必须在四个边界中
+                    test += (x > leftRight.left);
+                    test += (x < leftRight.right);
+                    test += (y > topBottom.bottom);
+                    test += (y < topBottom.top);
+                    // 必须不能在边界上
+                    return test == 4 && !leftRight.innerPoints.some(function (x_) {
+                        return x_ == x;
+                    }) && !topBottom.innerPoints.some(function (y_) {
+                        return y_ == y;
+                    });
                 }
-                // 必须在四个边界中
-                test += (x > leftRight.left);
-                test += (x < leftRight.right);
-                test += (y > topBottom.bottom);
-                test += (y < topBottom.top);
-                // 必须不能在边界上
-                return test == 4 && !leftRight.innerPoints.some(function (x_) {
-                    return x_ == x; 
-                }) && !topBottom.innerPoints.some(function (y_) {
-                    return y_ == y;
-                });
-            },
-        });
+            })
+            ;
 
         function getCos(p, p1, p2) {
             var a = Math.pow(p1[0] - p[0], 2) + Math.pow(p1[1] - p[1], 2);
@@ -752,7 +726,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             for (var i = cpNum[0] - 2; i > 0; --i) {
                 cpMap.push([
                     top[parseInt(Math.round(i * step1))],
-                    [parseInt(Math.round(i * step2)), height - 1],
+                    [parseInt(Math.round(i * step2)), height - 1]
                 ]);
             }
 
@@ -778,7 +752,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             for (var i = 1; i < cpNum[0] - 1; ++i) {
                 cpMap.push([
                     bottom[parseInt(Math.round(i * step1))],
-                    [parseInt(Math.round(i * step2)), 0],
+                    [parseInt(Math.round(i * step2)), 0]
                 ]);
             }
 
@@ -791,7 +765,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             for (var i = 1; i < cpNum[1] - 1; ++i) {
                 cpMap.push([
                     right[parseInt(Math.round(i * step1))],
-                    [width - 1, parseInt(Math.round(i * step2))],
+                    [width - 1, parseInt(Math.round(i * step2))]
                 ]);
             }
             return cpMap;
@@ -804,20 +778,19 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
             return [
                 [srcImageData[pos0], srcImageData[pos0 + 4]],
-                [srcImageData[pos0 + srcWidth * 4], srcImageData[pos0 + (srcWidth + 1) * 4]],
+                [srcImageData[pos0 + srcWidth * 4], srcImageData[pos0 + (srcWidth + 1) * 4]]
             ];
         }
 
 
-        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, 
-            backgrounColor, ret) {
+        function composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, backgroundColor, ret) {
             var pos0 = (left + bottom * srcWidth) * 4;
             // 在大多数情况下， 点不会在边界上
             if (left > 0 && left + 3 < srcWidth && bottom > 0 && bottom + 3 < srcHeight) {
                 for (var i = 0; i < 4; ++i) {
                     for (var j = 0; j < 4; ++j) {
                         for (var k = 0; k < 4; ++k) {
-                            ret[i][j][k] = srcImageData[pos0 + (j * srcWidth + k) * 4 + i]; 
+                            ret[i][j][k] = srcImageData[pos0 + (j * srcWidth + k) * 4 + i];
                         }
                     }
                 }
@@ -827,18 +800,18 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             // 第一行， 需要考虑left在边界外， bottom在边界外， left+3在边界外的情况
             if (left < 0 || bottom < 0) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][0][0] = backgrounColor[offset]; 
+                    ret[offset][0][0] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][0][0] = srcImageData[pos0 + offset]; 
+                    ret[offset][0][0] = srcImageData[pos0 + offset];
                 }
             }
 
             if (bottom < 0) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][0][1] = backgrounColor[offset];
-                    ret[offset][0][2] = backgrounColor[offset];
+                    ret[offset][0][1] = backgroundColor[offset];
+                    ret[offset][0][2] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
@@ -849,7 +822,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
             if (left + 3 >= srcWidth || bottom < 0) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][0][3] = backgrounColor[offset];
+                    ret[offset][0][3] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
@@ -863,8 +836,8 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             var pos2 = pos1 + srcWidth * 4;
             if (left < 0) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][1][0] = backgrounColor[offset];
-                    ret[offset][2][0] = backgrounColor[offset];
+                    ret[offset][1][0] = backgroundColor[offset];
+                    ret[offset][2][0] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
@@ -873,15 +846,15 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 }
             }
             for (var offset = 0; offset < 4; ++offset) {
-                ret[offset][1][1] = srcImageData[pos1 + 4 +offset];
-                ret[offset][1][2] = srcImageData[pos1 + 8 +offset]
-                ret[offset][2][1] = srcImageData[pos2 + 4 +offset];
-                ret[offset][2][2] = srcImageData[pos2 + 8 +offset]
+                ret[offset][1][1] = srcImageData[pos1 + 4 + offset];
+                ret[offset][1][2] = srcImageData[pos1 + 8 + offset]
+                ret[offset][2][1] = srcImageData[pos2 + 4 + offset];
+                ret[offset][2][2] = srcImageData[pos2 + 8 + offset]
             }
             if (left + 3 >= srcWidth) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][1][3] = backgrounColor[offset];
-                    ret[offset][2][3] = backgrounColor[offset];
+                    ret[offset][1][3] = backgroundColor[offset];
+                    ret[offset][2][3] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
@@ -894,29 +867,29 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             var pos3 = pos2 + srcWidth * 4;
             if (left < 0 || bottom + 3 >= srcHeight) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][3][0] = backgrounColor[offset]; 
+                    ret[offset][3][0] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][3][0] = srcImageData[pos3 + offset]; 
+                    ret[offset][3][0] = srcImageData[pos3 + offset];
                 }
             }
 
             if (bottom + 3 >= srcHeight) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][3][1] = backgrounColor[offset];
-                    ret[offset][3][2] = backgrounColor[offset];
+                    ret[offset][3][1] = backgroundColor[offset];
+                    ret[offset][3][2] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][3][1] = srcImageData[pos3 + 4 +offset];
-                    ret[offset][3][2] = srcImageData[pos3 + 8 +offset]
+                    ret[offset][3][1] = srcImageData[pos3 + 4 + offset];
+                    ret[offset][3][2] = srcImageData[pos3 + 8 + offset]
                 }
             }
 
             if (left + 3 >= srcWidth || bottom + 3 >= srcHeight) {
                 for (var offset = 0; offset < 4; ++offset) {
-                    ret[offset][3][3] = backgrounColor[offset];
+                    ret[offset][3][3] = backgroundColor[offset];
                 }
             } else {
                 for (var offset = 0; offset < 4; ++offset) {
@@ -927,10 +900,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             return ret;
         }
 
-        function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, 
-                srcImageData, srcPoint, srcWidth, srcHeight, backgrounColor, pointsMatrix) {
+        function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, srcImageData, srcPoint, srcWidth, srcHeight, backgrounColor, pointsMatrix) {
             // find the 16 points
-            var pos = (destPoint[0] +  destPoint[1] * destWidth) * 4; 
+            var pos = (destPoint[0] + destPoint[1] * destWidth) * 4;
 
             var left = Math.floor(srcPoint[0]) - 1;
             var bottom = Math.floor(srcPoint[1]) - 1;
@@ -953,9 +925,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             for (var i = 0; i < 3; ++i) {
                 for (var j = 0; j < 3; ++j) {
                     if ((ret[3][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 3]) != 0) {
-                        ret[0][i][j] = imageData[pos0 + (i * srcWidth + j) * 4]; 
-                        ret[1][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 1]; 
-                        ret[2][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 2]; 
+                        ret[0][i][j] = imageData[pos0 + (i * srcWidth + j) * 4];
+                        ret[1][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 1];
+                        ret[2][i][j] = imageData[pos0 + (i * srcWidth + j) * 4 + 2];
                     } else {
                         ret[0][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4];
                         ret[1][i][j] = complementImageData[pos0 + (i * srcWidth + j) * 4 + 1];
@@ -965,12 +937,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 }
             }
             return ret;
-        
+
         }
 
-        function edgeInterpolation(imageData, point, width, height, 
-                backgroundImageData, pointsMatrix) {
-            var pos = (point[0] +  point[1] * width) * 4; 
+        function edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix) {
+            var pos = (point[0] + point[1] * width) * 4;
 
             var left = point[0] - 1;
             var bottom = point[1] - 1;
@@ -985,9 +956,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
             imageData.data[pos + 1] = bilinear(pointsMatrix[1]);
             imageData.data[pos + 2] = bilinear(pointsMatrix[2]);
             console.log(imageData.data[pos] + ' ' +
-            imageData.data[pos + 1] + ' ' +
-            imageData.data[pos + 2] + ' ' +
-            imageData.data[pos + 3]);
+                imageData.data[pos + 1] + ' ' +
+                imageData.data[pos + 2] + ' ' +
+                imageData.data[pos + 3]);
         }
+
         return JitPreview;
-    });
+    })
+;

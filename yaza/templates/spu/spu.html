@@ -12,10 +12,13 @@
 {% endblock %}
 
 {% block main %}
-  <div class="container">
+  <div class="container-fluid">
     {% if order_id %}
-      订单号: {{ order_id }}
-      <input name="order_id" type="hidden" value="{{ order_id }}"/>
+      <div class="panel panel-primary">
+      <div class="panel-heading">
+        订单号 {{ order_id }}
+      </div>
+      <div class="panel-body">
     {% endif %}
     <div class="primary">
       <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
@@ -24,16 +27,20 @@
       <div class="row">
         <div class="jit-preview"></div>
         <br/>
+
         <div class="play-ground">
-          <div class="row" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
-            <div class="svg-drawing">
-            </div>
-          </div>
+          <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
         </div>
       </div>
-      <!--/span-->
     </div>
-    <!--/row-->
+    </div>
+    <!--/span-->
+    </div>
+    {% if order_id %}
+      </div>
+      </div>
+    {% endif %}
+  <!--/row-->
   </div>
 
 

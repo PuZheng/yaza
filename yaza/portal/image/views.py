@@ -127,8 +127,12 @@ def design_save():
         for k, v in request.form.items():
             if k != "order_id":
                 zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
+    if current_user.is_authenticated():
+        user = current_user
+    else:
+        user = None
 
-    result = DesignResult(user=current_user, file_path=filename, create_time=datetime.datetime.now())
+    result = DesignResult(user=user, file_path=filename, create_time=datetime.datetime.now())
     if order_id:
         result.order_id = order_id
     do_commit(result)

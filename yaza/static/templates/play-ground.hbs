@@ -1,22 +1,30 @@
 <div class="row">
-  <div class="touch-screen col-sm-7" style="position: relative">
-    <button class="btn btn-xs btn-save btn-primary">
-      <i class="fa fa-save"></i>
-    </button>
+  <div class="col-sm-7">
+    <div class="touch-screen" style="position: relative">
+      <div class="design-region-selector">
+        <div name="current-design-region" class="list-group">
+        </div>
+      </div>
+      <!--<button class="btn btn-xs btn-save btn-primary">-->
+      <!--<i class="fa fa-save"></i>-->
+      <!--</button>-->
 
-    <button class="btn btn-xs btn-download btn-primary">
-      <i class="fa fa-download"></i>
-      <a href=""></a>
-    </button>
-    <div class="editable-region"></div>
-    <div class="change-text-panel panel panel-default" style='display: none'>
-      <div class="panel-body">
-        <textarea rows="2" cols="24" name='change-text'></textarea>
+      <!--<button class="btn btn-xs btn-download btn-primary">-->
+      <!--<i class="fa fa-download"></i>-->
+      <!--<a href=""></a>-->
+      <!--</button>-->
+      <div class="editable-region"></div>
+      <div class="change-text-panel panel panel-default" style='display: none'>
+        <div class="panel-body">
+          <textarea rows="2" cols="24" name='change-text'></textarea>
+        </div>
+        <div class="panel-footer">
+          <button class="btn btn-default btn-xs">取消</button>
+          <button class="btn btn-primary btn-xs">确定</button>
+        </div>
       </div>
-      <div class="panel-footer">
-        <button class="btn btn-default btn-xs">取消</button>
-        <button class="btn btn-primary btn-xs">确定</button>
-      </div>
+    </div>
+    <div class="aspect-selector">
     </div>
   </div>
   <div class="dashboard col-sm-5">
@@ -42,9 +50,9 @@
           <select class="font-size"></select>
           <select class="font-family"></select>
         </div>
-        <div class="object-manager">
-        </div>
       </div>
+    </div>
+    <div class="object-manager">
     </div>
   </div>
 </div>
