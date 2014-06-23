@@ -510,7 +510,11 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     this._mask = this.$(".mask");
                     this._mask.css("line-height", this.$(".hotspot").height() + "px");
                     this._mask.hide();
-
+                    if (config.DOWNLOADABLE) {
+                        this.$("button.btn-download").show();
+                    } else {
+                        this.$("button.btn-download").hide();
+                    }
                     this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                         $(e).data('ocspu', this._spu.ocspuList[idx]);
                     }.bind(this));

@@ -462,11 +462,6 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._stage = new Kinetic.Stage({
                     container: this.$('.editable-region')[0]
                 });
-                if ($("[name=downloadable]").val() === "true") {
-                    this.$("button.btn-download").show();
-                } else {
-                    this.$("button.btn-download").hide();
-                }
 
                 this.$('.nav-tabs a:first').tab('show');
 
