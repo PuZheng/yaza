@@ -59,6 +59,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 name: "background"
                             });
                             jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
+                                console.log('mouseover');
                                 dispatcher.trigger('jitPreview-mask');
                                 var hdImageObj = new Image();
                                 var mouseOverEvent = evt;
@@ -72,24 +73,27 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                     });
                                     var zoomBackgroundLayer = new Kinetic.Layer({
                                         width: jitPreview._backgroundLayer.width(),
-                                        height: jitPreview._backgroundLayer.height()
+                                        height: jitPreview._backgroundLayer.height(),
                                     });
                                     zoomBackgroundLayer.on('mouseout', function () {
-                                        jitPreview._backgroundLayer.show();
+                                        console.log('mouseout');
                                         jitPreview._stage.find('.zoom-layer').destroy();
                                         zoomBackgroundLayer.destroy();
+                                        jitPreview._backgroundLayer.show();
                                         _(jitPreview._layerCache).values().forEach(function (layer) {
                                             layer.show();
                                         });
                                     }).on('mousemove', function (evt) {
-                                        // firefox has no offset[XY]
+                                        // firefox has no offset[XY], chrome has both offset[XY] and layer[XY], but
+                                        // layer[XY] is incorrect in chrome
                                         // 为了防止layer[XY]为0的情况, 最后必须或上一个0
-                                        var x = -(evt.evt.layerX || evt.evt.offsetX || 0);
-                                        var y = -(evt.evt.layerY || evt.evt.offsetY || 0);
-                                        zoomBackgroundLayer.position({
+                                        var x = -(evt.evt.offsetX || evt.evt.layerX || 0);
+                                        var y = -(evt.evt.offsetY || evt.evt.layerY || 0);
+                                        im.position({
                                             x: (config.MAGNIFY - 1) * x,
                                             y: (config.MAGNIFY - 1) * y
-                                        }).draw();
+                                        });
+                                        zoomBackgroundLayer.draw();
                                         // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
                                         jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
                                             var context = zoomLayer.getContext();
