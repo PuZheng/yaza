@@ -1,5 +1,5 @@
-define(['collections/design-images', 'colors', 'object-manager', 'control-group', 'config', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load'],
-    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['collections/design-images', 'colors', 'object-manager', 'control-group', 'config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load'],
+    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -52,23 +52,23 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
             //            event.currentTarget
             //            The current DOM element within the event bubbling phase.
             events: {
-                'click .thumbnails .thumbnail': function (evt) {
-                    this.$(".thumbnails .thumbnail").removeClass("selected");
+                'click .gallery .thumbnail': function (evt) {
+                    this.$(".gallery .thumbnail").removeClass("selected");
                     this.$(evt.currentTarget).addClass("selected");
                 },
-                'dblclick .thumbnails .thumbnail': function (evt) {
-                    this.$(".thumbnails .thumbnail").removeClass("selected");
+                'dblclick .gallery .thumbnail': function (evt) {
+                    this.$(".gallery .thumbnail").removeClass("selected");
                     this.$(evt.currentTarget).addClass("selected");
                     this.$('.add-img-modal').modal('hide');
                     this.$('.add-img-modal').one('hidden.bs.modal', function () {
-                        var $img = this.$(".thumbnail.selected img");
+                        var $img = this.$(".gallery .thumbnail.selected img");
                         this._addImage($img.data("pic-url") || $img.attr('src'), $img.data('title'), $img.data("design-image-id"));
                     }.bind(this));
                 },
                 'click .add-img-modal .btn-ok': function (evt) {
                     this.$('.add-img-modal').modal('hide');
                     this.$('.add-img-modal').one('hidden.bs.modal', function () {
-                        var $img = this.$(".thumbnail.selected img");
+                        var $img = this.$(".gallery .thumbnail.selected img");
                         this._addImage($img.data("pic-url") || $img.attr('src'), $img.data('title'), $img.data("design-image-id"));
                     }.bind(this));
                 },
@@ -95,11 +95,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             'font-family': config.DEFAULT_FONT_FAMILY,
                             // 注意, 这里已经是生产大小了
                             'font-size': parseInt(config.DEFAULT_FONT_SIZE * config.PPI / 72),
-                            'font-color': config.DEFAULT_FONT_COLOR,
+                            'font-color': config.DEFAULT_FONT_COLOR
                         },
                         beforeSend: function () {
                             dispatcher.trigger("jitPreview-mask");
-                        },
+                        }
                     }).done(function (playGround) {
                         return function (data) {
                             playGround._addText(data, text);
@@ -107,107 +107,6 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     }(this)).always(function () {
                         dispatcher.trigger("jitPreview-unmask");
                     }).fail(this._fail);
-                },
-                'click .touch-screen .btn-save': function (evt) {
-                    this._draw.clear();
-                    if (_.chain(this._designRegionCache).values().all(function (cache) {
-                        return cache.imageLayer.children.length == 0;
-                    }).value()) {
-                        alert('您尚未作出任何定制，请先定制!');
-                        return;
-                    }
-                    var nested = null;
-                    var data = {};
-                    for (var name in this._designRegionCache) {
-                        var imageLayer = this._designRegionCache[name].imageLayer;
-                        var offsetY = !!nested ? nested.height() + 30 : 0;
-                        var designRegion = this._designRegionCache[name].designRegion;
-                        this._draw.clear();
-                        this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
-                            .data('name', name);
-                        var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
-                        _.each(imageLayer.children, function (node) {
-                            if (node.className === "Image") {
-                                var im = this._draw.image(
-                                    getBase64FromImage(node),
-                                        node.width() * ratio,
-                                        node.height() * ratio)
-                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
-                                if (node.image().src.match(/^http/)) {
-                                    im.data("design-image-file", node.image().src)
-                                }
-                            }
-                            data[designRegion.name] = this._draw.exportSvg({whitespace: true});
-                        }, this)
-                    }
-                    $(evt.currentTarget).addClass('disabled');
-                    if ($("[name=order_id]").val()) {
-                        data["order_id"] = $("[name=order_id]").val();
-                    }
-                    $(evt.currentTarget).addClass('disabled');
-                    $.ajax({
-                        type: 'POST',
-                        url: '/image/design-save',
-                        data: data,
-                    }).done(function (content) {
-                        alert("保存成功: " + content);
-                    }).always(function () {
-                        $(evt.currentTarget).removeClass('disabled');
-                    }).fail(function (jqXHR) {
-                        alert(jqXHR.responseText);
-                    });
-                },
-
-                'click .touch-screen .btn-download': function (evt) {
-                    this._draw.clear();
-                    if (_.chain(this._designRegionCache).values().all(function (cache) {
-                        return cache.imageLayer.children.length == 0;
-                    }).value()) {
-                        alert('您尚未作出任何定制，请先定制!');
-                        return;
-                    }
-                    var nested = null;
-                    var data = {};
-                    for (var name in this._designRegionCache) {
-                        var imageLayer = this._designRegionCache[name].imageLayer;
-                        var offsetY = !!nested ? nested.height() + 30 : 0;
-                        var designRegion = this._designRegionCache[name].designRegion;
-                        this._draw.clear();
-                        this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
-                            .data('name', name);
-                        var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
-                        _.each(imageLayer.children, function (node) {
-                            if (node.className === "Image") {
-                                var im = this._draw.image(
-                                    getBase64FromImage(node),
-                                        node.width() * ratio,
-                                        node.height() * ratio)
-                                    .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                    .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
-                                if (node.image().src.match(/^http/)) {
-                                    im.data("design-image-file", node.image().src)
-                                }
-                            }
-                            data[designRegion.name] = this._draw.exportSvg({whitespace: true});
-                        }, this)
-                    }
-
-                    $.ajax({
-                        type: 'POST',
-                        url: '/image/design-pkg',
-                        data: data,
-                    }).done(function (data) {
-                        var uri = "data:application/svg+xml;base64," + data;
-                        // 注意, $.click仅仅是调用handler，并不是真正触发事件，
-                        // 必须直接在html element上调用click, 而且注意要
-                        // 避免click扩散到父级元素
-                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
-                            evt.stopPropagation();
-                        })[0].click();
-                    }).always(function () {
-                        $(evt.currentTarget).removeClass('disabled');
-                    });
                 },
                 'click .text-operators .btn-change-text': function () {
                     this._objectManager.activeObject().data('control-group').fire('dblclick');
@@ -226,14 +125,14 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             'font-family': controlGroup.getAttr('font-family'),
                             'font-color': controlGroup.getAttr('text-color'),
                             // 注意, 这里已经是生产大小了
-                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72)
                         },
                         beforeSend: function () {
                             dispatcher.trigger("jitPreview-mask");
                         },
                         complete: function () {
                             dispatcher.trigger("jitPreview-unmask");
-                        },
+                        }
                     }).done(function (playGround) {
                         return function (data) {
                             playGround._addText(data, im.name(), im,
@@ -255,11 +154,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             'font-family': controlGroup.getAttr('font-family'),
                             'font-color': controlGroup.getAttr('text-color'),
                             // 注意, 这里已经是生产大小了
-                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                            'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72)
                         },
                         beforeSend: function () {
                             dispatcher.trigger("jitPreview-mask");
-                        },
+                        }
                     }).done(function (playGround) {
                         return function (data) {
                             playGround._addText(data, im.name(), im,
@@ -277,10 +176,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         this.$('.tags-list').css({
                             width: '0px',
                             height: '90px',
-                            position: 'absolute',
+                            position: 'absolute'
                         }).show().animate({
                             width: "100%",
-                            height: '90px',
+                            height: '90px'
                         });
                     }
                 },
@@ -299,7 +198,26 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 'mouseleave .thumbnail img': function (evt) {
                     return false;
                 },
+                'click .aspect-selector .thumbnail': function (evt) {
+                    this.$(".aspect-selector .thumbnail").removeClass("selected");
+                    $(evt.currentTarget).addClass("selected");
+                    var aspect = $(evt.currentTarget).data('aspect');
+                    console.log("aspect click:", aspect.name);
+                    this._currentAspect = aspect;
+                    dispatcher.trigger("aspect-selected", aspect);
+                },
+                'click [name=current-design-region] a': function (evt) {
+                    $('[name="current-design-region"] a').removeClass("disabled active");
+                    $(evt.currentTarget).addClass("active disabled");
+                    var designRegion = $(evt.currentTarget).data("design-region");
 
+                    if (this._currentAspect != designRegion.aspect) {
+                        this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', designRegion.aspect.name)).parent().click();
+                        return;
+                    }
+                    dispatcher.trigger("design-region-selected", designRegion);
+                    this._setDesignRegion(designRegion);
+                }
             },
 
             _drawCrossLines: function () {
@@ -338,6 +256,23 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._crossLayer.draw();
             },
 
+            _setupAspects: function (ocspu) {
+                this.$('.aspect-selector').empty();
+                var designRegions = this.$('[name="current-design-region"]');
+                designRegions.empty();
+
+                ocspu.aspectList.forEach(function (aspect) {
+                    $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
+                        aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+
+                    aspect.designRegionList.forEach(function (designRegion) {
+                        designRegion.aspect = aspect;
+
+                        $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.name, aspect.name, designRegion.name)
+                        ).data('design-region', designRegion).appendTo(designRegions);
+                    }.bind(this));
+                }.bind(this));
+            },
 
             initialize: function (options) {
                 this.tagList = options.tagList;
@@ -358,63 +293,14 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         }.bind(this));
                         this._controlLayer.draw();
                     }
-                }, this);
-
-                dispatcher.on('design-region-selected', function (designRegion) {
-                    console.log('design region ' + designRegion.name + ' selected');
-                    if (!this._currentDesignRegion || this._currentDesignRegion.name != designRegion.name) {
-                        this._objectManager.empty();
-                        var ts = this.$('.touch-screen');
-                        var er = this.$('.touch-screen .editable-region');
-                        if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
-                            er.addClass('portrait').removeClass('landspace');
-                            er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
-                        } else {
-                            er.addClass('landspace').removeClass('portrait');
-                            er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
-                        }
-                        this._stage.width(er.width());
-                        this._stage.height(er.height());
-
-                        this._drawCrossLines();
-                        this._crossLayer.hide();
-
-                        this._currentDesignRegion = designRegion;
-                        var cache = this._designRegionCache[designRegion.name];
-                        !!this._imageLayer && this._imageLayer.remove();
-                        !!this._controlLayer && this._controlLayer.remove();
-                        if (cache) {
-                            this._controlLayer = cache.controlLayer;
-                            this._imageLayer = cache.imageLayer;
-                        } else {
-                            this._controlLayer = new Kinetic.Layer();
-                            this._imageLayer = new Kinetic.Layer();
-                            this._designRegionCache[this._currentDesignRegion.name] = {
-                                imageLayer: this._imageLayer,
-                                controlLayer: this._controlLayer,
-                                designRegion: designRegion,
-                            }
-                        }
-                        this._imageLayer.width(this._stage.width());
-                        this._imageLayer.height(this._stage.height());
-                        this._controlLayer.width(this._stage.width());
-                        this._controlLayer.height(this._stage.height());
-                        this._stage.add(this._imageLayer);
-                        this._stage.add(this._controlLayer);
-                        this._stage.draw();
-
-                        this._imageLayer.getChildren(function (node) {
-                            return node.getClassName() == "Image";
-                        }).sort(function (a, b) {
-                            return a.getZIndex() - b.getZIndex();
-                        }).forEach(function (node) {
-                            this._objectManager.add(node, node.getAttr("control-group"));
-                        }.bind(this));
+                    this._setupAspects(ocspu);
+                    if (!this._currentAspect) {
+                        this.$('.aspect-selector .thumbnail:first-child').click();
+                    } else {
+                        // 切换ocspu的时候，不切换面
+                        this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspect.name)).parent().click();
                     }
-                    dispatcher.trigger('update-hotspot', this._imageLayer);
-                }, this);
-
-                dispatcher.on('active-object', function (controlGroup) {
+                }, this).on('active-object', function (controlGroup) {
                     console.log('active object');
                     this._controlLayer.getChildren().forEach(function (group) {
                         group.hide();
@@ -431,24 +317,151 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._controlLayer.draw();
                     this._objectManager.activeObjectIndicator(controlGroup);
                     this._resetDashboard(controlGroup);
-                }, this);
+                }, this).on("design-save", function (evt) {
+                    if (_.chain(this._designRegionCache).values().all(function (cache) {
+                        return cache.imageLayer.children.length == 0;
+                    }).value()) {
+                        alert('您尚未作出任何定制，请先定制!');
+                        return;
+                    }
+                    $(evt.currentTarget).addClass('disabled');
+
+                    var data = this._getDesignData();
+                    if ($("[name=order_id]").val()) {
+                        data["order_id"] = $("[name=order_id]").val();
+                    }
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/image/design-save',
+                        data: data
+                    }).done(function (content) {
+                        alert("保存成功: " + content);
+                    }).always(function () {
+                        $(evt.currentTarget).removeClass('disabled');
+                    }).fail(function (jqXHR) {
+                        alert(jqXHR.responseText);
+                    });
+                }.bind(this)).on("design-download", function (evt) {
+                    if (_.chain(this._designRegionCache).values().all(function (cache) {
+                        return cache.imageLayer.children.length == 0;
+                    }).value()) {
+                        alert('您尚未作出任何定制，请先定制!');
+                        return;
+                    }
+                    $(evt.currentTarget).addClass('disabled');
+
+                    var data = this._getDesignData();
+                    $.ajax({
+                        type: 'POST',
+                        url: '/image/design-pkg',
+                        data: data,
+                    }).done(function (data) {
+                        var uri = "data:application/svg+xml;base64," + data;
+                        // 注意, $.click仅仅是调用handler，并不是真正触发事件，
+                        // 必须直接在html element上调用click, 而且注意要
+                        // 避免click扩散到父级元素
+                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
+                            evt.stopPropagation();
+                        })[0].click();
+                    }).always(function () {
+                        $(evt.currentTarget).removeClass('disabled');
+                    });
+                }.bind(this));
             },
 
+            _getDesignData: function () {
+                this._draw.clear();
+                var nested = null;
+                var data = {};
+                for (var name in this._designRegionCache) {
+                    var imageLayer = this._designRegionCache[name].imageLayer;
+                    var offsetY = !!nested ? nested.height() + 30 : 0;
+                    var designRegion = this._designRegionCache[name].designRegion;
+                    this._draw.clear();
+                    this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
+                        .data('name', name);
+                    var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
+                    _.each(imageLayer.children, function (node) {
+                        if (node.className === "Image") {
+                            var im = this._draw.image(
+                                getBase64FromImage(node),
+                                    node.width() * ratio,
+                                    node.height() * ratio)
+                                .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
+                                .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                            if (node.image().src.match(/^http/)) {
+                                im.data("design-image-file", node.image().src)
+                            }
+                        }
+                        data[designRegion.name] = this._draw.exportSvg({whitespace: true});
+                    }, this)
+                }
+                return data;
+            },
+
+            _setDesignRegion: function (designRegion) {
+                this._currentDesignRegion = designRegion;
+
+                this._objectManager.empty();
+                var ts = this.$('.touch-screen');
+                var er = this.$('.touch-screen .editable-region');
+                if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
+                    er.addClass('portrait').removeClass('landspace');
+                    er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
+                } else {
+                    er.addClass('landspace').removeClass('portrait');
+                    er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
+                }
+                this._stage.width(er.width());
+                this._stage.height(er.height());
+
+                this._drawCrossLines();
+                this._crossLayer.hide();
+
+                var cache = this._designRegionCache[designRegion.name];
+                !!this._imageLayer && this._imageLayer.remove();
+                !!this._controlLayer && this._controlLayer.remove();
+                if (cache) {
+                    this._controlLayer = cache.controlLayer;
+                    this._imageLayer = cache.imageLayer;
+                } else {
+                    this._controlLayer = new Kinetic.Layer();
+                    this._imageLayer = new Kinetic.Layer();
+                    this._designRegionCache[this._currentDesignRegion.name] = {
+                        imageLayer: this._imageLayer,
+                        controlLayer: this._controlLayer,
+                        designRegion: designRegion
+                    }
+                }
+                this._imageLayer.width(this._stage.width());
+                this._imageLayer.height(this._stage.height());
+                this._controlLayer.width(this._stage.width());
+                this._controlLayer.height(this._stage.height());
+                this._stage.add(this._imageLayer);
+                this._stage.add(this._controlLayer);
+                this._stage.draw();
+
+                this._imageLayer.getChildren(function (node) {
+                    return node.getClassName() == "Image";
+                }).sort(function (a, b) {
+                    return a.getZIndex() - b.getZIndex();
+                }).forEach(function (node) {
+                    this._objectManager.add(node, node.getAttr("control-group"));
+                }.bind(this));
+
+                dispatcher.trigger('update-hotspot', this._imageLayer);
+            },
             render: function () {
                 this.$el.prepend(this._template({
-                    tagList: this.tagList,
+                    tagList: this.tagList
                 }));
                 this._objectManager = new ObjectManager({
-                    el: this.$('.object-manager'),
+                    el: this.$('.object-manager')
                 }).render();
                 this._stage = new Kinetic.Stage({
-                    container: this.$('.editable-region')[0],
+                    container: this.$('.editable-region')[0]
                 });
-                if ($("[name=downloadable]").val() === "true") {
-                    this.$("button.btn-download").show();
-                } else {
-                    this.$("button.btn-download").hide();
-                }
 
                 this.$('.nav-tabs a:first').tab('show');
 
@@ -479,7 +492,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             $('.nav-tabs a:last').tab('show');
                             $(this).find('.uploading-progress').html(
                                 templateProgress({
-                                    fileSize: formatFileSize(data.files[0].size),
+                                    fileSize: formatFileSize(data.files[0].size)
                                 })).show();
                             var reader = new FileReader();
                             reader.onload = _.bind(function (e) {
@@ -539,11 +552,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                     'font-family': controlGroup.getAttr('font-family'),
                                     'font-color': color.toHexString(),
                                     // 注意, 这里已经是生产大小了
-                                    'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                                    'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72)
                                 },
                                 beforeSend: function () {
                                     dispatcher.trigger("jitPreview-mask");
-                                },
+                                }
                             }).done(function (data) {
                                 playGround._addText(data, im.name(), im,
                                     controlGroup);
@@ -551,7 +564,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                 dispatcher.trigger("jitPreview-unmask");
                             }).fail(this._fail);
                         };
-                    })(playGround),
+                    })(playGround)
                 });
                 this.$('select.font-size').html(
                     config.FONT_SIZE_LIST.map(
@@ -669,8 +682,8 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         name: title,
                         offset: {
                             x: width / 2,
-                            y: height / 2,
-                        },
+                            y: height / 2
+                        }
                     });
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
@@ -724,8 +737,8 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                             image: imageObj,
                             offset: {
                                 x: width / 2,
-                                y: height / 2,
-                            },
+                                y: height / 2
+                            }
                         });
                         playGround._imageLayer.add(im);
                         var controlGroup = makeControlGroup(im, text).on('dragend',
@@ -771,7 +784,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                 playGround.$('.change-text-panel').css({
                                     left: left,
                                     top: top,
-                                    position: 'absolute',
+                                    position: 'absolute'
                                 }).show();
                                 ['.editable-region', '.object-manager', '.dashboard'].forEach(
                                     function (className) {
@@ -779,9 +792,9 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                             message: null,
                                             overlayCSS: {
                                                 backgroundColor: "#ccc",
-                                                opacity: 0.4,
+                                                opacity: 0.4
                                             },
-                                            baseZ: 0,
+                                            baseZ: 0
                                         });
                                     });
                                 playGround.$('.change-text-panel textarea').val(im.name());
@@ -797,15 +810,14 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                             'font-family': controlGroup.getAttr('font-family'),
                                             // 注意, 这里已经是生产大小了
                                             'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
-                                            'font-color': controlGroup.getAttr('text-color'),
+                                            'font-color': controlGroup.getAttr('text-color')
                                         },
                                         beforeSend: function () {
                                             dispatcher.trigger("jitPreview-mask");
-                                        },
+                                        }
                                     }).done(function (data) {
                                         console.log("don");
-                                        playGround._addText(data, text, im,
-                                            controlGroup);
+                                        playGround._addText(data, text, im, controlGroup);
                                     }).fail(playGround._fail).always(function () {
                                         dispatcher.trigger("jitPreview-unmask");
                                         playGround.$('.editable-region ').unblock();

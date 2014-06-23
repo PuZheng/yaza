@@ -34,8 +34,7 @@ class SPUModelView(ModelView):
 
         spu = self._get_one(id_)
         design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
-        params = {"time": time.time(), "spu": wraps(spu), "design_image_list": json.dumps(design_image_list),
-                  "downloadable": app.config["DOWNLOADABLE"]}
+        params = {"time": time.time(), "spu": wraps(spu), "design_image_list": json.dumps(design_image_list)}
         if order_id:
             params["order_id"], params["operator_id"] = order_id, operator_id
         return render_template(self.edit_template, **params)

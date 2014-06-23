@@ -1,10 +1,6 @@
 <div class="row">
-  <div class="col-sm-12">
+  <div class="col-sm-7">
     <div class="hotspot">
-      <div class="design-region-selector">
-        <div name="current-design-region" class="list-group">
-        </div>
-      </div>
       <div class="design-regions">
       </div>
       <img src="" alt="" crossorigin="anonymous"/>  
@@ -14,9 +10,7 @@
       </div>
     </div>
   </div>
-</div>
-<div class="row">
-  <div class="col-sm-6">
+  <div class="col-sm-5">
     <div class="ocspu-selector">
         {{#each spu.ocspuList }}
           <div class="thumbnail">
@@ -24,9 +18,21 @@
           </div>
         {{/each}}
     </div>
-  </div>
-  <div class="col-sm-6">
-    <div class="aspect-selector">
+    <br/>
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <p>
+              <button class="btn btn-primary btn-save btn-lg">
+                <i class="fa fa-save fa-fw"></i>提交
+              </button>
+            </p>
+          <p>
+            <button class="btn btn-default btn-download btn-lg">
+              <i class="fa fa-download fa-fw"></i>下载
+              <a href=""></a>
+            </button>
+          </p>
+        </div>
     </div>
   </div>
 </div>
