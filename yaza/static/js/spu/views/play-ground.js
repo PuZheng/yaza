@@ -696,18 +696,16 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                 playGround._stage.draw();
                                 dispatcher.trigger('update-hotspot', playGround._imageLayer);
                             };
-                        }(this)).on('mousedown', function (playGround) {
+                        }(this)).on('mousedown', function () {
+                            if (this.getAttr('trasient')) {
+                                dispatcher.trigger('active-object', this);
+                            }
+                        }).on("dragmove", function (playGround) {
                             return function () {
                                 playGround._crossLayer.show();
                                 playGround._crossLayer.moveToTop();
                                 playGround._stage.draw();
 
-                                if (this.getAttr('trasient')) {
-                                    dispatcher.trigger('active-object', this);
-                                }
-                            }
-                        }(this)).on("dragmove", function (playGround) {
-                            return function () {
                                 this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 5);
                             }
                         }(this));
@@ -884,8 +882,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return function (evt) {
                         var thumbnails = playGround.$(".builtin-pics .thumbnails");
                         this.each(function (element, index, list) {
-                            var s = '<li><div class="thumbnail"><img src="%s" alt="%s" data-title="%s" data-pic-url="%s"></img></div></li>'
-                            var e = $(_.sprintf(s, element.get('thumbnail'),
+                            var s = '<li><div class="thumbnail" style="background-color:%s">' +
+                                '<img src="%s" alt="%s" data-title="%s" data-pic-url="%s"></img>' +
+                                '</div></li>';
+                            var e = $(_.sprintf(s, element.get("backgroundColor"), element.get('thumbnail'),
                                 element.get('title'), element.get('title'), element.get('picUrl')));
                             thumbnails.append(e);
                             $(e).find('img').lazyLoad();

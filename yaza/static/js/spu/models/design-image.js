@@ -5,7 +5,8 @@ define(['backbone'], function (Backbone) {
             thumbnail: '',
             picUrl: '',
             title: '',
-            tags: []
+            tags: [],
+            backgroundColor: '',
         }
     });
     return DesignImage;

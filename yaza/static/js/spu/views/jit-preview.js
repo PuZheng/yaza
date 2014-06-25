@@ -471,12 +471,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         this.$(".ocspu-selector .thumbnail").removeClass("selected");
                         $(evt.currentTarget).addClass("selected");
                         var ocspu = $(evt.currentTarget).data('ocspu');
-                        if (!ocspu.complementaryColor) {
-                            // 这个颜色用于画选中状态的控制框
-                            ocspu.complementaryColor = colorTools.getComlementColor(ocspu.rgb);
-                            // 这个颜色用于hovered状态的控制框
-                            ocspu.hoveredComplementColor = colorTools.getDarkerColor(ocspu.complementaryColor, 50);
-                        }
                         // 删除已有的上次所有designRegion的canvas
                         if (this._currentAspect) {
                             var layerCache = this._layerCache;
