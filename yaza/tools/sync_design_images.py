@@ -12,18 +12,19 @@ import qiniu.rs
 from yaza.basemain import app
 from yaza.models import Tag, DesignImage
 from yaza.utils import do_commit
+from yaza.tools import color_tools
 
 
 def push_to_qiniu(url, file_name, uptoken, extra):
-
     data = StringIO(urllib.urlopen(url).read())
+    dominant_color = color_tools.dominant_colorz(data, 1)[0]
     ret, err = qiniu.io.put(uptoken, file_name + ".png", data, extra)
     if err is not None:
         sys.stderr.write('error: %s ' % err)
-        return
+        return None, None
 
     return "http://" + app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"] + \
-        '.qiniudn.com/' + file_name + ".png"
+           '.qiniudn.com/' + file_name + ".png", dominant_color
 
 if __name__ == '__main__':
 
@@ -53,9 +54,10 @@ if __name__ == '__main__':
                     tag_record = do_commit(Tag(tag=tag))
                 tag_record_list.append(tag_record)
             # push img to qiniu
-            pic_url = push_to_qiniu(record['url'], record['file_name'],
-                                    uptoken, extra)
+            pic_url, dominant_color = push_to_qiniu(record['url'], record['file_name'],
+                                                    uptoken, extra)
             if pic_url:
                 do_commit(DesignImage(title=record['file_name'],
                                       pic_url=pic_url,
+                                      dominant_color=dominant_color,
                                       tags=tag_record_list))

@@ -1,11 +1,13 @@
 # -*- coding:utf-8 -*-
 import os
+import colorsys
 
 from flask import url_for, json
 from werkzeug.utils import cached_property
 
 from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
+from yaza.tools.color_tools import contrast_color, darker_color
 
 
 class OCSPUWrapper(ModelWrapper):
@@ -16,13 +18,22 @@ class OCSPUWrapper(ModelWrapper):
                                                                                       filename=self.cover_path)
         return ""
 
+    @property
+    def complementary_color(self):
+        return contrast_color(self.rgb)
+
+    @property
+    def hovered_complement_color(self):
+        return darker_color(self.complementary_color)
+
     def as_dict(self, camel_case):
         return {
             'id': self.id,
-            'aspectList' if camel_case else 'aspect_list':
-                [aspect.as_dict(camel_case) for aspect in self.aspect_list],
+            'aspectList' if camel_case else 'aspect_list': [aspect.as_dict(camel_case) for aspect in self.aspect_list],
             'cover': self.cover,
             'color': self.color,
+            "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
+            "hoveredComplementColor" if camel_case else "hovered_complement_color": self.hovered_complement_color,
             'rgb': self.rgb,
         }
 
@@ -46,12 +57,12 @@ class AspectWrapper(ModelWrapper):
     @property
     def black_shadow_url(self):
         return self.black_shadow_path if self.black_shadow_path.startswith("http") else \
-                url_for('image.serve', filename=self.black_shadow_path)
+            url_for('image.serve', filename=self.black_shadow_path)
 
     @property
     def white_shadow_url(self):
         return self.white_shadow_path if self.white_shadow_path.startswith("http") else \
-                url_for('image.serve', filename=self.white_shadow_path)
+            url_for('image.serve', filename=self.white_shadow_path)
 
     @property
     def thumbnail(self):
@@ -123,6 +134,8 @@ class DesignRegionWrapper(ModelWrapper):
 
 
 class DesignImageWrapper(ModelWrapper):
+    background_colorz = ["#FFFFFF", "#808080"]  # white, dimgray
+
     @property
     def thumbnail(self):
         # ref
@@ -131,6 +144,15 @@ class DesignImageWrapper(ModelWrapper):
             return self.pic_url + '?imageView2/0/w/' + \
                    str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
         return self.pic_url
+
+    @property
+    def background_color(self):
+        red = int(self.dominant_color[1:3], 16)
+        green = int(self.dominant_color[3:5], 16)
+        blue = int(self.dominant_color[5:7], 16)
+
+        hsv = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+        return self.background_colorz[hsv[2] > 0.8]
 
     StoredDir = os.path.join(app.config["UPLOAD_FOLDER"],
                              app.config["DESIGN_IMAGE_FOLDER"])
@@ -141,5 +163,6 @@ class DesignImageWrapper(ModelWrapper):
             "title": self.title,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
             'thumbnail': self.thumbnail,
-            'tags': [wraps(tag).as_dict(camel_case) for tag in self.tags]
+            'tags': [wraps(tag).as_dict(camel_case) for tag in self.tags],
+            'backgroundColor' if camel_case else "background_color": self.background_color
         }

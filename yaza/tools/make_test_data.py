@@ -15,6 +15,7 @@ import yaza
 from yaza.basemain import app
 from yaza.models import (User, Group, DesignImage, Tag)
 from yaza.utils import do_commit, assert_dir
+from yaza.tools import color_tools
 
 
 class InitializeTestDB(Command):
@@ -32,7 +33,7 @@ class InitializeTestDB(Command):
 
         build_db.build_db()
 
-        #change current work path
+        # change current work path
         os.chdir(os.path.split(yaza.__file__)[0])
 
         design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
@@ -87,8 +88,8 @@ class InitializeTestDB(Command):
                 full_path = os.path.join(dir, fname)
                 shutil.copy(full_path,
                             os.path.join(app.config['UPLOAD_FOLDER'],
-                                        app.config['DESIGN_IMAGE_FOLDER'],
-                                        fname))
+                                         app.config['DESIGN_IMAGE_FOLDER'],
+                                         fname))
                 title = v['title']
                 tags = v['tags']
                 tag_record_list = []
@@ -103,11 +104,13 @@ class InitializeTestDB(Command):
                     app.config['DESIGN_IMAGE_FOLDER'],
                     fname,
                 ).replace('\\', '/'))
+
+                dominant_color = color_tools.dominant_colorz(full_path, 1)[0]
                 # 简单起见, thumbnail不压缩了
                 do_commit(DesignImage(title=title,
                                       tags=tag_record_list,
-                                      pic_url=pic_url))
-
+                                      pic_url=pic_url,
+                                      dominant_color=dominant_color))
 
 
 if __name__ == "__main__":

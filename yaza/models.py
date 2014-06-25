@@ -120,7 +120,7 @@ class DesignImage(db.Model):
     tags = db.relationship("Tag",
                            secondary=tag_and_design_image,
                            backref="design_image_list")
-
+    dominant_color = db.Column(db.String(7))  # "#rrggbb"
 
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"

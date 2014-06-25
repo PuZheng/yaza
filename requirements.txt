@@ -13,3 +13,4 @@ plumbum==1.4.1
 upyun
 requests
 qiniu
+pillow
