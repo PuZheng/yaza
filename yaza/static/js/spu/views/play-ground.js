@@ -1,4 +1,4 @@
-define(['collections/design-images', 'colors', 'object-manager', 'control-group', 'config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load'],
+define(['collections/design-images', 'colors', 'object-manager', 'control-group', 'config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo"],
     function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         _.mixin(_.str.exports());
 
@@ -404,21 +404,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._currentDesignRegion = designRegion;
 
                 this._objectManager.empty();
-                var ts = this.$('.touch-screen');
+                var mix_size = 512;
+
+                var ts = this.$(".touch-screen");
                 var er = this.$('.touch-screen .editable-region');
-                if (designRegion.size[1] * ts.width() > ts.height() * designRegion.size[0]) {
-                    er.addClass('portrait').removeClass('landspace');
-                    er.css('width', designRegion.size[0] * ts.height() / designRegion.size[1]);
-                } else {
-                    er.addClass('landspace').removeClass('portrait');
-                    er.css('height', designRegion.size[1] * ts.width() / designRegion.size[0]);
-                }
-                this._stage.width(er.width());
-                this._stage.height(er.height());
-
-                this._drawCrossLines();
-                this._crossLayer.hide();
-
                 var cache = this._designRegionCache[designRegion.name];
                 !!this._imageLayer && this._imageLayer.remove();
                 !!this._controlLayer && this._controlLayer.remove();
@@ -434,10 +423,23 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         designRegion: designRegion
                     }
                 }
-                this._imageLayer.width(this._stage.width() - 2 * config.EXTRA_LENGTH);
-                this._imageLayer.height(this._stage.height() - 2 * config.EXTRA_LENGTH);
+
+                if (designRegion.size[1] > designRegion.size[0]) {
+                    er.addClass('portrait').removeClass('landspace');
+                    this._imageLayer.width(mix_size).height(600 * designRegion.size[1] / designRegion.size[0]);
+                } else {
+                    er.addClass('landspace').removeClass('portrait');
+                    this._imageLayer.height(mix_size).width(600 * designRegion.size[0] / designRegion.size[1]);
+                }
+                er.width(this._imageLayer.width() + 2 * config.PLAYGROUND_MARGIN).height(this._imageLayer.height() + 2 * config.PLAYGROUND_MARGIN);
                 this._controlLayer.width(this._imageLayer.width());
                 this._controlLayer.height(this._imageLayer.height());
+                this._stage.width(er.width());
+                this._stage.height(er.height());
+
+                this._drawCrossLines();
+                this._crossLayer.hide();
+
                 this._stage.add(this._imageLayer);
                 this._stage.add(this._controlLayer);
                 this._addBoard();
@@ -451,6 +453,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._objectManager.add(node, node.getAttr("control-group"));
                 }.bind(this));
 
+                ts.scrollTo(config.PLAYGROUND_MARGIN - 35, config.PLAYGROUND_MARGIN - 15);
                 dispatcher.trigger('update-hotspot', this._imageLayer);
             },
             render: function () {
@@ -610,7 +613,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     }(this));
             },
 
-            _addBoard: function(){
+            _addBoard: function () {
                 this._stage.find(".board-layer").forEach(function (node) {
                     node.destroy();
                 });
@@ -618,24 +621,24 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     name: "board-layer"
                 });
                 boardLayer.add(new Kinetic.Rect({
-                    x:0,
-                    y:0,
+                    x: 0,
+                    y: 0,
                     width: this._stage.width(),
                     height: this._stage.height(),
-                    fill:  this.$('.touch-screen .editable-region').data("board-color")
+                    fill: this.$('.touch-screen .editable-region').data("board-color")
                 }));
                 boardLayer.add(new Kinetic.Rect({
-                        x: config.EXTRA_LENGTH,
-                        y: config.EXTRA_LENGTH,
-                        width: this._imageLayer.width(),
-                        height: this._imageLayer.height(),
-                        fill: this.$('.touch-screen .editable-region').css("background-color")
-                    }));
+                    x: config.PLAYGROUND_MARGIN,
+                    y: config.PLAYGROUND_MARGIN,
+                    width: this._imageLayer.width(),
+                    height: this._imageLayer.height(),
+                    fill: this.$('.touch-screen .editable-region').css("background-color")
+                }));
                 this._stage.add(boardLayer);
 
                 if (this._imageLayer.x() === 0) {
                     // 说明该 _imageLayer还没有移动过
-                    this._imageLayer.move({x: config.EXTRA_LENGTH, y: config.EXTRA_LENGTH});
+                    this._imageLayer.move({x: config.PLAYGROUND_MARGIN, y: config.PLAYGROUND_MARGIN});
                 }
 
                 boardLayer.moveToBottom();

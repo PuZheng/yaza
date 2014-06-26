@@ -11,8 +11,8 @@ define(["config"], function (config) {
 
         resizable = !!resizable;
         var group = new Kinetic.Group({
-            x: node.x() - node.offsetX() + node.width() / 2 + config.EXTRA_LENGTH,
-            y: node.y() - node.offsetY() + node.height() / 2 + config.EXTRA_LENGTH,
+            x: node.x() - node.offsetX() + node.width() / 2 + config.PLAYGROUND_MARGIN,
+            y: node.y() - node.offsetY() + node.height() / 2 + config.PLAYGROUND_MARGIN,
             draggable: true,
             name: title,
         });
@@ -28,8 +28,8 @@ define(["config"], function (config) {
         });
         group.on('dragend', function () {
             node.position({
-                x: group.x() - config.EXTRA_LENGTH,
-                y: group.y() - config.EXTRA_LENGTH
+                x: group.x() - config.PLAYGROUND_MARGIN,
+                y: group.y() - config.PLAYGROUND_MARGIN
             });
         });
         var rect = new Kinetic.Rect({

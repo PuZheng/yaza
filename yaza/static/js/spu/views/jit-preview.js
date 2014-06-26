@@ -224,7 +224,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     }.bind(this)).on("jitPreview-unmask", function () {
                         this._mask.hide();
                     }.bind(this)).on('update-hotspot', function (playGroundLayer) {
-                        debugger;
                         var hotspotContext = this._currentLayer.getContext();
                         if (playGroundLayer.children.length == 0) {
                             hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());

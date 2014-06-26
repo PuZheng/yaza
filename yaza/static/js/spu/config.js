@@ -25,6 +25,6 @@ define(function () {
         DISPROPORTIONATE: true,
         MAGNET_TOLERANCE: 5,  // 磁力吸附生效距离
         DOWNLOADABLE : false, // 是否可以下载定制结果,
-        EXTRA_LENGTH: 20 // 留空部分大小
+        PLAYGROUND_MARGIN: 180 // 留空部分大小
     }
 });
