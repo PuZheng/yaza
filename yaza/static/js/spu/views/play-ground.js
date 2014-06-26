@@ -279,7 +279,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
 
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     this.$('.touch-screen .editable-region').css('background-color',
-                        ocspu.rgb).data("board-color", ocspu.hoveredComplementColor);
+                        ocspu.rgb).data("margin-color", ocspu.hoveredComplementColor).data('padding-color', ocspu.complementaryColor);
                     this._complementaryColor = ocspu.complementaryColor;
                     this._hoveredComplementColor = ocspu.hoveredComplementColor;
                     if (!!this._controlLayer) {
@@ -404,7 +404,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 this._currentDesignRegion = designRegion;
 
                 this._objectManager.empty();
-                var mix_size = 512;
+                var mix_size = 360;
 
                 var ts = this.$(".touch-screen");
                 var er = this.$('.touch-screen .editable-region');
@@ -424,18 +424,23 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     }
                 }
 
-                if (designRegion.size[1] > designRegion.size[0]) {
+                if (designRegion.size[1] / designRegion.size[0] > ts.height() / ts.width()) {
+                    // 一开始image layer+padding， 正好占据整个ts大小
+                    this._imageLayer.height(ts.height() - 2 * config.PLAYGROUND_PADDING);
+                    this._imageLayer.width(Math.round(this._imageLayer.height() * designRegion.size[0] / designRegion.size[1]));
                     er.addClass('portrait').removeClass('landspace');
-                    this._imageLayer.width(mix_size).height(600 * designRegion.size[1] / designRegion.size[0]);
                 } else {
+                    this._imageLayer.width(ts.width() - 2 * config.PLAYGROUND_PADDING);
+                    this._imageLayer.width(Math.round(this._imageLayer.width() * designRegion.size[1] / designRegion.size[0]));
                     er.addClass('landspace').removeClass('portrait');
-                    this._imageLayer.height(mix_size).width(600 * designRegion.size[0] / designRegion.size[1]);
                 }
-                er.width(this._imageLayer.width() + 2 * config.PLAYGROUND_MARGIN).height(this._imageLayer.height() + 2 * config.PLAYGROUND_MARGIN);
+                // er的大小需要包含margin
+                er.width(this._imageLayer.width() + 2 * (config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING)).height(this._imageLayer.height() + 2 * (config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING));
                 this._controlLayer.width(this._imageLayer.width());
                 this._controlLayer.height(this._imageLayer.height());
                 this._stage.width(er.width());
                 this._stage.height(er.height());
+                this._imageLayer.x(config.PLAYGROUND_PADDING + config.PLAYGROUND_MARGIN).y(config.PLAYGROUND_PADDING + config.PLAYGROUND_MARGIN);
 
                 this._drawCrossLines();
                 this._crossLayer.hide();
@@ -453,7 +458,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._objectManager.add(node, node.getAttr("control-group"));
                 }.bind(this));
 
-                ts.scrollTo(config.PLAYGROUND_MARGIN - 35, config.PLAYGROUND_MARGIN - 15);
+                ts.scrollTo(config.PLAYGROUND_MARGIN, config.PLAYGROUND_MARGIN);
                 dispatcher.trigger('update-hotspot', this._imageLayer);
             },
             render: function () {
@@ -625,21 +630,28 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     y: 0,
                     width: this._stage.width(),
                     height: this._stage.height(),
-                    fill: this.$('.touch-screen .editable-region').data("board-color")
+                    fill: this.$('.touch-screen .editable-region').data("margin-color")
                 }));
                 boardLayer.add(new Kinetic.Rect({
                     x: config.PLAYGROUND_MARGIN,
                     y: config.PLAYGROUND_MARGIN,
+                    width: this._imageLayer.width() + 2 * config.PLAYGROUND_PADDING,
+                    height: this._imageLayer.height() + 2 * config.PLAYGROUND_PADDING,
+                    fill: this.$('.touch-screen .editable-region').data("padding-color")
+                }));
+                boardLayer.add(new Kinetic.Rect({
+                    x: config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+                    y: config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
                     width: this._imageLayer.width(),
                     height: this._imageLayer.height(),
                     fill: this.$('.touch-screen .editable-region').css("background-color")
                 }));
                 this._stage.add(boardLayer);
 
-                if (this._imageLayer.x() === 0) {
-                    // 说明该 _imageLayer还没有移动过
-                    this._imageLayer.move({x: config.PLAYGROUND_MARGIN, y: config.PLAYGROUND_MARGIN});
-                }
+                //if (this._imageLayer.x() === 0) {
+                    //// 说明该 _imageLayer还没有移动过
+                    //this._imageLayer.move({x: config.PLAYGROUND_MARGIN, y: config.PLAYGROUND_MARGIN});
+                //}
 
                 boardLayer.moveToBottom();
             },

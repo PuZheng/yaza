@@ -637,7 +637,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     return ret;
                 },
 
-// 测试一个点是否在边界内
+                // 测试一个点是否在边界内
                 _within: function (x, y) {
                     var test = 0;
                     var leftRight = this._currentDesignRegion.bounds.leftRight[y];
