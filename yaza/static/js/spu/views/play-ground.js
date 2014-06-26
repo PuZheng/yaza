@@ -279,7 +279,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
 
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     this.$('.touch-screen .editable-region').css('background-color',
-                        ocspu.rgb);
+                        ocspu.rgb).data("board-color", ocspu.hoveredComplementColor);
                     this._complementaryColor = ocspu.complementaryColor;
                     this._hoveredComplementColor = ocspu.hoveredComplementColor;
                     if (!!this._controlLayer) {
@@ -355,7 +355,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     $.ajax({
                         type: 'POST',
                         url: '/image/design-pkg',
-                        data: data,
+                        data: data
                     }).done(function (data) {
                         var uri = "data:application/svg+xml;base64," + data;
                         // 注意, $.click仅仅是调用handler，并不是真正触发事件，
@@ -434,12 +434,13 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         designRegion: designRegion
                     }
                 }
-                this._imageLayer.width(this._stage.width());
-                this._imageLayer.height(this._stage.height());
-                this._controlLayer.width(this._stage.width());
-                this._controlLayer.height(this._stage.height());
+                this._imageLayer.width(this._stage.width() - 2 * config.EXTRA_LENGTH);
+                this._imageLayer.height(this._stage.height() - 2 * config.EXTRA_LENGTH);
+                this._controlLayer.width(this._imageLayer.width());
+                this._controlLayer.height(this._imageLayer.height());
                 this._stage.add(this._imageLayer);
                 this._stage.add(this._controlLayer);
+                this._addBoard();
                 this._stage.draw();
 
                 this._imageLayer.getChildren(function (node) {
@@ -609,6 +610,36 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     }(this));
             },
 
+            _addBoard: function(){
+                this._stage.find(".board-layer").forEach(function (node) {
+                    node.destroy();
+                });
+                var boardLayer = new Kinetic.Layer({
+                    name: "board-layer"
+                });
+                boardLayer.add(new Kinetic.Rect({
+                    x:0,
+                    y:0,
+                    width: this._stage.width(),
+                    height: this._stage.height(),
+                    fill:  this.$('.touch-screen .editable-region').data("board-color")
+                }));
+                boardLayer.add(new Kinetic.Rect({
+                        x: config.EXTRA_LENGTH,
+                        y: config.EXTRA_LENGTH,
+                        width: this._imageLayer.width(),
+                        height: this._imageLayer.height(),
+                        fill: this.$('.touch-screen .editable-region').css("background-color")
+                    }));
+                this._stage.add(boardLayer);
+
+                if (this._imageLayer.x() === 0) {
+                    // 说明该 _imageLayer还没有移动过
+                    this._imageLayer.move({x: config.EXTRA_LENGTH, y: config.EXTRA_LENGTH});
+                }
+
+                boardLayer.moveToBottom();
+            },
             _renderUserPics: function () {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
@@ -660,7 +691,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     title = new Date().getTime();
                 }
                 // 将图片按比例缩小，并且放在正中
-                var er = this.$('.touch-screen .editable-region');
+                var er = this._imageLayer;
                 var imageObj = new Image();
                 imageObj.crossOrigin = 'Anonymous';
                 imageObj.onload = _.bind(function () {

@@ -39,7 +39,6 @@
     .play-ground .touch-screen {
         border: 1px solid #ccc;
         height: 512px;
-        max-height: 512px;
         background-color: #ccc;
     }
 
@@ -150,6 +149,7 @@
 
     .play-ground div.design-region-selector {
         position: absolute !important;
+        z-index: 1;
     }
 
     .play-ground .thumbnail {
