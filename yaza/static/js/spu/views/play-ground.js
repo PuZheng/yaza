@@ -706,7 +706,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                 playGround._crossLayer.moveToTop();
                                 playGround._stage.draw();
 
-                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 5);
+                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, config.MAGNET_TOLERANCE);
                             }
                         }(this));
                     image.setAttr("control-group", group);
@@ -742,7 +742,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         var controlGroup = makeControlGroup(im, text).on('dragend',
                             function () {
                                 playGround._crossLayer.hide();
-                                playGround._controlLayer.moveToBottom();
+                                //playGround._controlLayer.moveToBottom();
                                 playGround._stage.draw();
                                 dispatcher.trigger('update-hotspot', playGround._imageLayer);
                             }.bind(playGround)).on('mousedown', function () {
@@ -752,11 +752,11 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                 if (this.getAttr('trasient')) {
                                     dispatcher.trigger('active-object', this);
                                 }
-                            }.bind(playGround)).on("dragmove", function (playGround) {
+                            }).on("dragmove", function (playGround) {
                                 return function () {
-                                    this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, 20);
+                                    this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, config.MAGNET_TOLERANCE);
                                 }
-                            }(this)).setAttr('object-type', 'text').setAttr(
+                            }(playGround)).setAttr('object-type', 'text').setAttr(
                             'text-color',
                             oldControlGroup ? oldControlGroup.getAttr('text-color')
                                 : config.DEFAULT_FONT_COLOR
