@@ -248,7 +248,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var targetWidth = this._stage.width();
                         var targetHeight = this._stage.height();
                         var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
-                        var srcImageData = playGroundLayer.getContext().getImageData(0, 0,
+                        var srcImageData = playGroundLayer.getContext().getImageData(playGroundLayer.x(), playGroundLayer.y(),
                             playGroundLayer.width(), playGroundLayer.height()).data;
                         var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, targetWidth, targetHeight).data;
                         if (!this._currentDesignRegion.controlPointsMap) {
@@ -637,7 +637,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     return ret;
                 },
 
-// 测试一个点是否在边界内
+                // 测试一个点是否在边界内
                 _within: function (x, y) {
                     var test = 0;
                     var leftRight = this._currentDesignRegion.bounds.leftRight[y];

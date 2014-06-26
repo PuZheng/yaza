@@ -39,8 +39,8 @@
     .play-ground .touch-screen {
         border: 1px solid #ccc;
         height: 512px;
-        max-height: 512px;
         background-color: #ccc;
+        overflow: scroll;
     }
 
     .play-ground .touch-screen .editable-region.landscape {
@@ -150,6 +150,7 @@
 
     .play-ground div.design-region-selector {
         position: absolute !important;
+        z-index: 1;
     }
 
     .play-ground .thumbnail {

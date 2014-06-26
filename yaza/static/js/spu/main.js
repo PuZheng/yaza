@@ -26,6 +26,7 @@ require.config({
         'block-ui': 'components/blockui/jquery.blockUI',
         'spectrum': 'components/spectrum/spectrum',
         'zClip':"components/zeroclipboard/dist/ZeroClipboard.min",
+        "jquery.scrollTo": "components/jquery.scrollTo/jquery.scrollTo.min",
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
@@ -92,6 +93,9 @@ require.config({
         },
         'zlib': {
             exports: 'Zlib',
+        },
+        'jquery.scrollTo': {
+            deps: ['jquery']
         }
     }
 });
