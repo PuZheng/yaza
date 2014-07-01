@@ -29,6 +29,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                 initialize: function (options) {
                     this._spu = options.spu;
+                    this._orderId = options.orderId;
                     dispatcher.on("aspect-selected", function (aspect) {
                         var jitPreview = this;
                         console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
@@ -126,7 +127,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             });
                             // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                             // background layer不重叠
-                            $(this).hide();
 
                             jitPreview._stage.getChildren(function (node) {
                                 return node.getName() == "background";
@@ -139,6 +139,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             jitPreview._backgroundLayer.moveToBottom();
                             jitPreview._stage.width($(this).width());
                             jitPreview._stage.height($(this).height());
+                            $(this).hide();
                             jitPreview._stage.children.forEach(function (node) {
                                 // 只改变当前面的所有layer的大小
                                 if (node.nodeType === 'Layer' && node.visible()) {
@@ -498,7 +499,10 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 },
 
                 render: function () {
-                    this.$el.append(this._template({spu: this._spu}));
+                    this.$el.append(this._template({
+                        spu: this._spu,
+                        orderId: this._orderId,
+                    }));
                     this._stage = new Kinetic.Stage({
                         container: this.$('.design-regions')[0]
                     });

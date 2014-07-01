@@ -458,7 +458,8 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._objectManager.add(node, node.getAttr("control-group"));
                 }.bind(this));
 
-                ts.scrollTo(config.PLAYGROUND_MARGIN, config.PLAYGROUND_MARGIN);
+                // TODO 这里没有考虑landscape的情况
+                ts.scrollTo({left: (er.width() - ts.width()) / 2, top: config.PLAYGROUND_MARGIN});
                 dispatcher.trigger('update-hotspot', this._imageLayer);
             },
             render: function () {

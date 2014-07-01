@@ -5,8 +5,10 @@
     }
 
     .jit-preview .hotspot {
-        height: 512px;
-        background-color: #ccc;
+        height: 400px;
+        background-color: #eee;
+        margin: 15px 0px 0px 15px;
+        border-radius: 5px;
     }
 
     .jit-preview .hotspot img {
@@ -15,6 +17,28 @@
         background-color: #fff;
         margin: auto;
         display: block;
+    }
+
+    .jit-preview aside {
+        padding-top: 15px; 
+        padding-right: 20px;
+    }
+
+
+    .jit-preview aside .logo img {
+        max-width: 100%;
+    }
+
+    .jit-preview aside .order {
+        padding: 5px;
+        border-radius: 5px;
+    }
+
+
+    .jit-preview aside .order p {
+        text-align: center;
+        color: white;
+        font-size: 2.5em;
     }
 
     .jit-preview .hotspot div.design-region-selector {
@@ -31,7 +55,10 @@
     }
 
     .jit-preview .ocspu-selector {
-        border: 1px solid #ccc;
+        border: 1px dashed gray;
+        margin-top: 10px;
+        height: 200px;
+        border-radius: 3px;
     }
 
     .jit-preview .thumbnail {
@@ -56,6 +83,15 @@
     .jit-preview .ocspu-selector .thumbnail img {
         min-width: 100%;
         min-height: 100%;
+    }
+
+    .jit-preview .buttons {
+        width: 70%;
+        margin: 10px auto auto;
+    }
+
+    .jit-preview .buttons button {
+        width: 100%;
     }
 
 }

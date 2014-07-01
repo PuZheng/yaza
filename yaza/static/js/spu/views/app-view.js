@@ -5,12 +5,13 @@ define(['backbone', 'views/play-ground', 'views/jit-preview', 'bootstrap', 'sele
         initialize: function () {
             var spu = this.$('input[name="spu"]').data('val');
             var tagList = this.$('input[name=tag-list]').data('val');
+            var orderId = this.$('input[name=order-id]').data('val');;
             this._playGround = new PlayGround({
                 el: this.$('.play-ground'), 
                 spu: spu, 
                 tagList: tagList,
             }).render();
-            this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu}).render();
+            this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu, orderId: orderId}).render();
         }
     });
     return AppView;
