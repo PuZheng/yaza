@@ -45,7 +45,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
 
         var PlayGround = Backbone.View.extend({
             _template: handlebars.default.compile(playGroundTemplate),
-            _initMargin: 70,
+            _initMargin: 30,
             _designRegionCache: {},
 
             // 使用currentTarget而不是target，原因：
@@ -80,13 +80,13 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return false;
                 },
                 'click .add-text-modal .btn-ok': function (evt) {
-                    var text = this.$('.add-text-modal textarea').val().trim();
+                    var text = this.$('.add-text-modal input').val().trim();
                     if (!text) {
                         alert('文字不能为空');
                         return;
                     }
                     this.$('.add-text-modal').modal('hide');
-                    this.$('.add-text-modal textarea').val("");
+                    this.$('.add-text-modal input').val("");
                     $.ajax({
                         type: 'POST',
                         url: '/image/font-image',
@@ -268,10 +268,17 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     aspect.designRegionList.forEach(function (designRegion) {
                         designRegion.aspect = aspect;
 
-                        $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.name, aspect.name, designRegion.name)
+                        $(_.sprintf("<a href='#' class='list-group-item btn btn-warning' aspect='%s' design-region='%s'>%s</a>", aspect.name, designRegion.name, designRegion.name)
                         ).data('design-region', designRegion).appendTo(designRegions);
                     }.bind(this));
                 }.bind(this));
+                if(_.all(ocspu.aspectList, function (aspect) {
+                    return aspect.designRegionList.length == 1;
+                })){
+                    designRegions.hide();
+                }else{
+                    designRegions.show();
+                }
             },
 
             initialize: function (options) {
@@ -842,10 +849,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                             baseZ: 0
                                         });
                                     });
-                                playGround.$('.change-text-panel textarea').val(im.name());
-                                playGround.$('.change-text-panel textarea').focus();
+                                playGround.$('.change-text-panel input').val(im.name());
+                                playGround.$('.change-text-panel input').focus();
                                 playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                    var text = playGround.$('.change-text-panel textarea').val().trim();
+                                    var text = playGround.$('.change-text-panel input').val().trim();
                                     playGround.$('.change-text-panel').hide();
                                     $.ajax({
                                         type: 'POST',

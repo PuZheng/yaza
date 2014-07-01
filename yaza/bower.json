@@ -19,7 +19,7 @@
     "bootstrap": "~3.1.1",
     "buckets": "git://github.com/mauriciosantos/buckets",
     "backbone": "~1.1.2",
-    "font-awesome": "~4.0.3",
+    "font-awesome": "4.1.0",
     "requirejs": "~2.1.11",
     "jquery-knob": "~1.2.3",
     "blueimp-file-upload": "git://github.com/blueimp/jQuery-File-Upload.git#~9.5.7",

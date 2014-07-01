@@ -130,12 +130,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             _formatItem: function (item) {
                 //截取图片长度
                 // 在chrome中，即使图片已经load，但是它的width依旧是0，所以强制设置最小的width为36px
-                if (item.find("img").width() < 10) {
-                    var imgWidth = 36;
-                } else {
-                    imgWidth = Math.min(item.width() - item.find(".pull-right").width() - item.find("span").width(), item.find("img").width());
-                    item.find("img").css("clip", "rect(0 " + imgWidth + "px 36px 0");
-                }
+                imgWidth = Math.min(item.width() - item.find(".pull-right").width() - item.find("span").width(), item.find("img").width());
+                item.find("img").css("clip", "rect(0 " + imgWidth + "px 36px 0");
 
                 // 偏移文字
                 item.find("span:not(.fa-stack)").css("left", (imgWidth + 10) + "px");

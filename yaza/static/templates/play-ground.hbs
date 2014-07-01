@@ -1,14 +1,18 @@
 <div class="row">
   <div class="col-sm-7">
-    <div class="design-region-selector">
-      <div name="current-design-region" class="list-group">
+    <aside>
+      <div class="design-region-selector">
+        <div name="current-design-region" class="list-group">
+        </div>
       </div>
-    </div>
+      <div class="aspect-selector">
+      </div>
+    </aside>
     <div class="touch-screen" style="position: relative">
       <div class="editable-region"></div>
       <div class="change-text-panel panel panel-default" style='display: none'>
         <div class="panel-body">
-          <textarea rows="2" cols="24" name='change-text'></textarea>
+          <input rows="2" cols="24" name='change-text' />
         </div>
         <div class="panel-footer">
           <button class="btn btn-default btn-xs">取消</button>
@@ -16,34 +20,47 @@
         </div>
       </div>
     </div>
-    <div class="aspect-selector">
-    </div>
   </div>
   <div class="dashboard col-sm-5">
-    <div class="panel panel-default">
-      <div class="panel-body bg-info">
-        <p>
-          <button class="btn btn-success add-img-btn btn-lg" data-toggle='modal' data-target='.add-img-modal'>
-            <i class="fa fa-plus"></i>
-            增加图片
-          </button>
-        </p>
-        <p>
-          <button class="btn btn-success add-text-btn btn-lg" data-toggle='modal' data-target='.add-text-modal'>
-            <i class="fa fa-plus"></i>
-            增加文字
-          </button>
-        </p>
-        <div class="text-operators" style="display: none">
-          <button class="btn btn-default btn-sm btn-change-text">
-            修改文字
-          </button>
-          <input type="" class="text-color"/>
-          <select class="font-size"></select>
-          <select class="font-family"></select>
+    <div class="row">
+      <div class="col-sm-6">
+        <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+          <i class="fa fa-file-image-o"></i>
+          增加图片
+        </button>
+      </div>
+      <div class="col-sm-6">
+        <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
+          <i class="fa fa-pencil-square"></i>
+          增加文字
+        </button>
+      </div> 
+    </div>
+
+    <div class='row'>
+      <div class="text-operators" style="display: none">
+        <div class="row">
+          <div class="col-sm-6">
+            <button class="btn btn-primary btn-sm btn-change-text">
+              修改文字
+            </button>
+          </div>
+          <div class="col-sm-6">
+            <input type="" class="text-color bg-primary"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">
+            <select class="font-size bg-primary"></select>
+          </div>
+          <div class="col-sm-6">
+            <select class="font-family bg-primary"></select>
+          </div>
         </div>
       </div>
     </div>
+
     <div class="object-manager">
     </div>
   </div>
@@ -118,7 +135,7 @@
         </div>
         <div class="modal-body">
           <div class="text-center">
-            <textarea rows="10" cols="24"></textarea>
+            <input text="input text here..." />
           </div>
         </div>
         <div class="modal-footer">

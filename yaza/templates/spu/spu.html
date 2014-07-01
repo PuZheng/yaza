@@ -15,15 +15,15 @@
 <div class="container-fluid">
   <div class="primary">
 
-    <div class="row">
-      <div class="jit-preview"></div>
-      <br/>
+    <div class="jit-preview">
+      <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}> </div>
+    </div>
 
-      <div class="play-ground">
-        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
-        </div>
+    <div class="play-ground">
+      <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
       </div>
     </div>
+
     <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
     <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
     <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
