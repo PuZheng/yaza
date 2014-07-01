@@ -41,6 +41,6 @@
     "spectrum": "~1.3.4",
     "loremjs": "*",
     "zeroclipboard": "latest",
-    "jquery.scrollTo": "latest",
+    "jquery.scrollTo": "latest"
   }
 }
