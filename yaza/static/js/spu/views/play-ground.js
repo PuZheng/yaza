@@ -272,6 +272,13 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                         ).data('design-region', designRegion).appendTo(designRegions);
                     }.bind(this));
                 }.bind(this));
+                if(_.all(ocspu.aspectList, function (aspect) {
+                    return aspect.designRegionList.length == 1;
+                })){
+                    designRegions.hide();
+                }else{
+                    designRegions.show();
+                }
             },
 
             initialize: function (options) {
