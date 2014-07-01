@@ -58,71 +58,8 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             jitPreview._backgroundLayer = new Kinetic.Layer({
                                 name: "background"
                             });
-                            jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                                console.log('mouseover');
-                                dispatcher.trigger('jitPreview-mask');
-                                var hdImageObj = new Image();
-                                var mouseOverEvent = evt;
-                                $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
-                                    dispatcher.trigger('jitPreview-unmask');
-                                    jitPreview._backgroundLayer.hide();
-                                    var im = new Kinetic.Image({
-                                        image: evt.target,
-                                        width: jitPreview._backgroundLayer.width() * config.MAGNIFY,
-                                        height: jitPreview._backgroundLayer.height() * config.MAGNIFY
-                                    });
-                                    var zoomBackgroundLayer = new Kinetic.Layer({
-                                        width: jitPreview._backgroundLayer.width(),
-                                        height: jitPreview._backgroundLayer.height(),
-                                    });
-                                    zoomBackgroundLayer.on('mouseout', function () {
-                                        console.log('mouseout');
-                                        jitPreview._stage.find('.zoom-layer').destroy();
-                                        zoomBackgroundLayer.destroy();
-                                        jitPreview._backgroundLayer.show();
-                                        _(jitPreview._layerCache).values().forEach(function (layer) {
-                                            layer.show();
-                                        });
-                                    }).on('mousemove', function (evt) {
-                                        // firefox has no offset[XY], chrome has both offset[XY] and layer[XY], but
-                                        // layer[XY] is incorrect in chrome
-                                        // 为了防止layer[XY]为0的情况, 最后必须或上一个0
-                                        var x = -(evt.evt.offsetX || evt.evt.layerX || 0);
-                                        var y = -(evt.evt.offsetY || evt.evt.layerY || 0);
-                                        im.position({
-                                            x: (config.MAGNIFY - 1) * x,
-                                            y: (config.MAGNIFY - 1) * y
-                                        });
-                                        zoomBackgroundLayer.draw();
-                                        // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
-                                        jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
-                                            var context = zoomLayer.getContext();
-                                            context.imageSmoothEnabled = true;
-                                            var layer = zoomLayer.getAttr('orig-layer');
-                                            context.clearRect(0, 0, layer.width(), layer.height());
-                                            context.drawImage(layer.getCanvas()._canvas,
-                                                    -(config.MAGNIFY - 1) * x / config.MAGNIFY, -(config.MAGNIFY - 1) * y / config.MAGNIFY,
-                                                    layer.width() / config.MAGNIFY, layer.height() / config.MAGNIFY,
-                                                0, 0, layer.width(), layer.height());
-                                        });
-                                    });
-                                    jitPreview._stage.add(zoomBackgroundLayer);
-                                    zoomBackgroundLayer.add(im);
-                                    // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
-                                    _(jitPreview._layerCache).values().forEach(function (layer) {
-                                        layer.hide();
-                                        var zoomLayer = new Kinetic.Layer({
-                                            width: layer.width(),
-                                            height: layer.height(),
-                                            name: 'zoom-layer'
-                                        });
-                                        zoomLayer.setAttr('orig-layer', layer);
-                                        jitPreview._stage.add(zoomLayer);
-                                        zoomLayer.draw();
-                                        // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
-                                    });
-                                    zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
-                                });
+                            jitPreview._backgroundLayer.add(im).on('mouseover', function(evt){
+                                jitPreview._onMouseover(evt, jitPreview);
                             });
                             // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                             // background layer不重叠
@@ -211,7 +148,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         }
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
-                            layer = new Kinetic.Layer();
+                            layer = new Kinetic.Layer({
+                                name: designRegion.name
+                            });
                             this._layerCache[designRegion.id] = layer;
                             this._stage.add(layer);
                             // 没有缓存， 产生预览
@@ -243,182 +182,256 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                             }
                         }
-                        this._currentLayer.draw();
                         this._currentLayer.size(this._stage.size());
                         var targetWidth = this._stage.width();
                         var targetHeight = this._stage.height();
-                        var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
-                        var srcImageData = playGroundLayer.getContext().getImageData(playGroundLayer.x(), playGroundLayer.y(),
-                            playGroundLayer.width(), playGroundLayer.height()).data;
-                        var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, targetWidth, targetHeight).data;
-                        if (!this._currentDesignRegion.controlPointsMap) {
-                            this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
-                                config.CONTROL_POINT_NUM);
-                        }
 
-                        var srcWidth = playGroundLayer.width();
-                        var srcHeight = playGroundLayer.height();
-                        var blackShadowImageData = this._currentAspect.blackShadowImageData;
-                        var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
-                        var controlPointsMap = this._currentDesignRegion.controlPointsMap;
-                        var pointsMatrix = [
-                            [
-                                new Array(4),
-                                new Array(4),
-                                new Array(4),
-                                new Array(4)
-                            ],  // R
-                            [
-                                new Array(4),
-                                new Array(4),
-                                new Array(4),
-                                new Array(4)
-                            ], // G
-                            [
-                                new Array(4),
-                                new Array(4),
-                                new Array(4),
-                                new Array(4)
-                            ], // B
-                            [
-                                new Array(4),
-                                new Array(4),
-                                new Array(4),
-                                new Array(4)
-                            ] // A
-                        ];
-                        var rgba = this._getCurrentRgb().substr(1);
-                        rgba = [
-                            parseInt('0x' + rgba.substr(0, 2)),
-                            parseInt('0x' + rgba.substr(2, 2)),
-                            parseInt('0x' + rgba.substr(4, 2)),
-                            255
-                        ];
-                        for (var i = 0; i < targetWidth; ++i) {
-                            for (var j = 0; j < targetHeight; ++j) {
-                                if (this._within(i, j)) {
-                                    var origPoint = mvc([i, j], controlPointsMap);
-                                    origPos = (parseInt(origPoint[0]) +
-                                        (parseInt(origPoint[1]) * srcWidth)) * 4;
-                                    bicubicInterpolation(hotspotImageData, [i, j],
-                                        targetWidth, targetHeight, srcImageData,
-                                        origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
-                                    var pos = (j * targetWidth + i) * 4;
-                                    if (hotspotImageData.data[pos + 3]) {
-                                        if (Math.max(hotspotImageData.data[pos], hotspotImageData.data[pos + 1], hotspotImageData.data[pos + 2]) > 127) {
-                                            var shadowImageData = blackShadowImageData;
-                                        } else {
-                                            shadowImageData = whiteShadowImageData;
-                                        }
-                                        var alpha = shadowImageData[pos + 3] / 255;
-                                        hotspotImageData.data[pos] = shadowImageData[pos] * alpha +
-                                            hotspotImageData.data[pos] * (1 - alpha);
-                                        hotspotImageData.data[pos + 1] = shadowImageData[pos + 1] * alpha +
-                                            hotspotImageData.data[pos + 1] * (1 - alpha);
-                                        hotspotImageData.data[pos + 2] = shadowImageData[pos + 2] * alpha +
-                                            hotspotImageData.data[pos + 2] * (1 - alpha);
+                        this._currentLayer.find(".design-image").destroy();
+                        var image = new Kinetic.Image({
+                            name: "design-image",
+                            x: 0,
+                            y: 0,
+                            width: this._currentLayer.width(),
+                            height: this._currentLayer.height()
+                        });
+
+                        image.sceneFunc(function (context) {
+                            var hotspotImageData = context.createImageData(targetWidth, targetHeight);
+                            this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
+                            if (__debug__) {
+                                var layer = new Kinetic.Layer();
+                                var data = [];
+                                this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                                    data.push(pair[0][0]);
+                                    data.push(pair[0][1]);
+                                    var circle = new Kinetic.Circle({
+                                        x: pair[0][0],
+                                        y: pair[0][1],
+                                        stroke: '#666',
+                                        fill: '#ddd',
+                                        strokeWidth: 2,
+                                        radius: 3
+                                    });
+                                    layer.add(circle);
+                                }.bind(this));
+                                data.push(data[0]);
+                                data.push(data[1]);
+                                var line = new Kinetic.Line({
+                                    points: data,
+                                    stroke: 'white',
+                                    strokeWidth: 1
+                                });
+                                layer.add(line);
+                                this._stage.add(layer);
+                                this._stage.draw();
+                            }
+                            context.imageSmoothEnabled = true;
+                            context.putImageData(hotspotImageData, 0, 0);
+                        }.bind(this));
+                        this._currentLayer.add(image);
+
+                        // 添加了Image对象后，this._backgroundLayer不能再监听到mouseover事件，所以改由 this._currentLayer监听
+                        this._currentLayer.off("mouseover").on("mouseover", function (evt) {
+                            this._onMouseover(evt, this);
+                        }.bind(this));
+                        this._currentLayer.draw();
+                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                    }.bind(this));
+                },
+
+                _calcImageData: function (imageData, playGroundLayer, width, height) {
+                    var srcImageData = playGroundLayer.getContext().getImageData(playGroundLayer.x(), playGroundLayer.y(),
+                        playGroundLayer.width(), playGroundLayer.height()).data;
+
+                    var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, width, height).data;
+                    if (!this._currentDesignRegion.controlPointsMap) {
+                        this._currentDesignRegion.controlPointsMap = calcControlPoints(this._currentDesignRegion.previewEdges, playGroundLayer.size(),
+                            config.CONTROL_POINT_NUM);
+                    }
+
+                    var srcWidth = playGroundLayer.width();
+                    var srcHeight = playGroundLayer.height();
+                    var blackShadowImageData = this._currentAspect.blackShadowImageData;
+                    var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
+                    var controlPointsMap = this._currentDesignRegion.controlPointsMap;
+                    var pointsMatrix = [
+                        [
+                            new Array(4),
+                            new Array(4),
+                            new Array(4),
+                            new Array(4)
+                        ],  // R
+                        [
+                            new Array(4),
+                            new Array(4),
+                            new Array(4),
+                            new Array(4)
+                        ], // G
+                        [
+                            new Array(4),
+                            new Array(4),
+                            new Array(4),
+                            new Array(4)
+                        ], // B
+                        [
+                            new Array(4),
+                            new Array(4),
+                            new Array(4),
+                            new Array(4)
+                        ] // A
+                    ];
+                    var rgba = this._getCurrentRgb().substr(1);
+                    rgba = [
+                        parseInt('0x' + rgba.substr(0, 2)),
+                        parseInt('0x' + rgba.substr(2, 2)),
+                        parseInt('0x' + rgba.substr(4, 2)),
+                        255
+                    ];
+                    for (var i = 0; i < width; ++i) {
+                        for (var j = 0; j < height; ++j) {
+                            if (this._within(i, j)) {
+                                var origPoint = mvc([i, j], controlPointsMap);
+                                bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
+                                var pos = (j * width + i) * 4;
+                                if (imageData.data[pos + 3]) {
+                                    if (Math.max(imageData.data[pos], imageData.data[pos + 1], imageData.data[pos + 2]) > 127) {
+                                        var shadowImageData = blackShadowImageData;
+                                    } else {
+                                        shadowImageData = whiteShadowImageData;
                                     }
+                                    var alpha = shadowImageData[pos + 3] / 255;
+                                    imageData.data[pos] = shadowImageData[pos] * alpha + imageData.data[pos] * (1 - alpha);
+                                    imageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + imageData.data[pos + 1] * (1 - alpha);
+                                    imageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + imageData.data[pos + 2] * (1 - alpha);
                                 }
                             }
                         }
-                        // for each point on edges, do anti alias (sampling around itself)
-                        this._currentDesignRegion.previewEdges['bottom'].forEach(function (point) {
-                            // 若对象已经超出边界
-                            if (hotspotImageData.data[(point[0] + (point[1] + 1) * targetWidth) * 4 + 4]) {
-                                [
-                                    [point[0], point[1] + 1],
-                                    point,
-                                    [point[0], point[1] - 1],
-                                    [point[0] + 1, point[1] + 1],
-                                    [point[0] + 1, point[1]],
-                                    [point[0] + 1, point[1] - 1]
-                                ].forEach(function (point) {
-                                        edgeInterpolation(hotspotImageData, point,
-                                            targetWidth, targetHeight,
-                                            backgroundImageData,
-                                            pointsMatrix);
-                                    }.bind(this));
-                            }
-                        });
-                        this._currentDesignRegion.previewEdges['right'].forEach(function (point) {
-                            if (hotspotImageData.data[(point[0] - 1 + point[1] * targetWidth) * 4 + 4]) {
-                                [
-                                    [point[0] - 1, point[1]],
-                                    point,
-                                    [point[0] + 1, point[1]],
-                                    [point[0] - 1, point[1] + 1],
-                                    [point[0], point[1] + 1],
-                                    [point[0] + 1, point[1] + 1]
-                                ].forEach(function (point) {
-                                        edgeInterpolation(hotspotImageData, point,
-                                            targetWidth, targetHeight, backgroundImageData,
-                                            pointsMatrix);
-                                    }.bind(this));
-                            }
-                        });
-                        this._currentDesignRegion.previewEdges['top'].forEach(function (point) {
-                            if (hotspotImageData.data[(point[0] + (point[1] - 1) * targetWidth) * 4 + 4]) {
-                                [
-                                    [point[0], point[1] - 1],
-                                    point,
-                                    [point[0], point[1] + 1],
-                                    [point[0] - 1, point[1] - 1],
-                                    [point[0] - 1, point[1]],
-                                    [point[0] - 1, point[1] + 1]
-                                ].forEach(function (point) {
-                                        edgeInterpolation(hotspotImageData, point,
-                                            targetWidth, targetHeight, backgroundImageData,
-                                            pointsMatrix);
-                                    }.bind(this));
-                            }
-                        });
-                        this._currentDesignRegion.previewEdges['left'].forEach(function (point) {
-                            if (hotspotImageData.data[(point[0] + 1 + point[1] * targetWidth) * 4 + 4]) {
-                                [
-                                    [point[0] + 1, point[1]],
-                                    point,
-                                    [point[0] - 1, point[1]],
-                                    [point[0] + 1, point[1] - 1],
-                                    [point[0], point[1] - 1],
-                                    [point[0] - 1, point[1] - 1]
-                                ].forEach(function (point) {
-                                        edgeInterpolation(hotspotImageData, point,
-                                            targetWidth, targetHeight, backgroundImageData,
-                                            pointsMatrix);
-                                    }.bind(this));
-                            }
-                        });
-                        if (__debug__) {
-                            var layer = new Kinetic.Layer();
-                            var data = [];
-                            this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
-                                data.push(pair[0][0]);
-                                data.push(pair[0][1]);
-                                var circle = new Kinetic.Circle({
-                                    x: pair[0][0],
-                                    y: pair[0][1],
-                                    stroke: '#666',
-                                    fill: '#ddd',
-                                    strokeWidth: 2,
-                                    radius: 3
+                    }
+                    // for each point on edges, do anti alias (sampling around itself)
+                    this._currentDesignRegion.previewEdges['bottom'].forEach(function (point) {
+                        // 若对象已经超出边界
+                        if (imageData.data[(point[0] + (point[1] + 1) * width) * 4 + 4]) {
+                            [
+                                [point[0], point[1] + 1],
+                                point,
+                                [point[0], point[1] - 1],
+                                [point[0] + 1, point[1] + 1],
+                                [point[0] + 1, point[1]],
+                                [point[0] + 1, point[1] - 1]
+                            ].forEach(function (point) {
+                                    edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
                                 });
-                                layer.add(circle);
-                            }.bind(this));
-                            data.push(data[0]);
-                            data.push(data[1]);
-                            var line = new Kinetic.Line({
-                                points: data,
-                                stroke: 'white',
-                                strokeWidth: 1
-                            });
-                            layer.add(line);
-                            this._stage.add(layer);
-                            this._stage.draw();
                         }
-                        hotspotContext.imageSmoothEnabled = true;
-                        hotspotContext.putImageData(hotspotImageData, 0, 0);
-                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
-                    }.bind(this));
+                    });
+                    this._currentDesignRegion.previewEdges['right'].forEach(function (point) {
+                        if (imageData.data[(point[0] - 1 + point[1] * width) * 4 + 4]) {
+                            [
+                                [point[0] - 1, point[1]],
+                                point,
+                                [point[0] + 1, point[1]],
+                                [point[0] - 1, point[1] + 1],
+                                [point[0], point[1] + 1],
+                                [point[0] + 1, point[1] + 1]
+                            ].forEach(function (point) {
+                                    edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                                });
+                        }
+                    });
+                    this._currentDesignRegion.previewEdges['top'].forEach(function (point) {
+                        if (imageData.data[(point[0] + (point[1] - 1) * width) * 4 + 4]) {
+                            [
+                                [point[0], point[1] - 1],
+                                point,
+                                [point[0], point[1] + 1],
+                                [point[0] - 1, point[1] - 1],
+                                [point[0] - 1, point[1]],
+                                [point[0] - 1, point[1] + 1]
+                            ].forEach(function (point) {
+                                    edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                                });
+                        }
+                    });
+                    this._currentDesignRegion.previewEdges['left'].forEach(function (point) {
+                        if (imageData.data[(point[0] + 1 + point[1] * width) * 4 + 4]) {
+                            [
+                                [point[0] + 1, point[1]],
+                                point,
+                                [point[0] - 1, point[1]],
+                                [point[0] + 1, point[1] - 1],
+                                [point[0], point[1] - 1],
+                                [point[0] - 1, point[1] - 1]
+                            ].forEach(function (point) {
+                                    edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                                });
+                        }
+                    });
+                },
+
+                _onMouseover: function (evt, jitPreview) {
+                    console.log('mouseover');
+                    dispatcher.trigger('jitPreview-mask');
+                    var hdImageObj = new Image();
+                    var mouseOverEvent = evt;
+                    $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
+                        dispatcher.trigger('jitPreview-unmask');
+                        jitPreview._backgroundLayer.hide();
+                        var im = new Kinetic.Image({
+                            image: evt.target,
+                            width: jitPreview._backgroundLayer.width() * config.MAGNIFY,
+                            height: jitPreview._backgroundLayer.height() * config.MAGNIFY
+                        });
+                        var zoomBackgroundLayer = new Kinetic.Layer({
+                            width: jitPreview._backgroundLayer.width(),
+                            height: jitPreview._backgroundLayer.height()
+                        });
+                        zoomBackgroundLayer.on('mouseout', function () {
+                            console.log('mouseout');
+                            jitPreview._stage.find('.zoom-layer').destroy();
+                            zoomBackgroundLayer.destroy();
+                            jitPreview._backgroundLayer.show();
+                            _(jitPreview._layerCache).values().forEach(function (layer) {
+                                layer.show();
+                            });
+                        }).on('mousemove', function (evt) {
+                            // firefox has no offset[XY], chrome has both offset[XY] and layer[XY], but
+                            // layer[XY] is incorrect in chrome
+                            // 为了防止layer[XY]为0的情况, 最后必须或上一个0
+                            var x = -(evt.evt.offsetX || evt.evt.layerX || 0);
+                            var y = -(evt.evt.offsetY || evt.evt.layerY || 0);
+                            im.position({
+                                x: (config.MAGNIFY - 1) * x,
+                                y: (config.MAGNIFY - 1) * y
+                            });
+                            zoomBackgroundLayer.draw();
+                            // TODO 从效果展现上来说, 最好是在放大的图像上, 重新生成预览
+                            jitPreview._stage.find('.zoom-layer').forEach(function (zoomLayer) {
+                                var context = zoomLayer.getContext();
+                                context.imageSmoothEnabled = true;
+                                var layer = zoomLayer.getAttr('orig-layer');
+                                context.clearRect(0, 0, layer.width(), layer.height());
+                                context.drawImage(layer.getCanvas()._canvas,
+                                        -(config.MAGNIFY - 1) * x / config.MAGNIFY, -(config.MAGNIFY - 1) * y / config.MAGNIFY,
+                                        layer.width() / config.MAGNIFY, layer.height() / config.MAGNIFY,
+                                    0, 0, layer.width(), layer.height());
+                            });
+                        });
+                        jitPreview._stage.add(zoomBackgroundLayer);
+                        zoomBackgroundLayer.add(im);
+                        // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
+                        _(jitPreview._layerCache).values().forEach(function (layer) {
+                            layer.hide();
+                            var zoomLayer = new Kinetic.Layer({
+                                width: layer.width(),
+                                height: layer.height(),
+                                name: 'zoom-layer'
+                            });
+                            zoomLayer.setAttr('orig-layer', layer);
+                            jitPreview._stage.add(zoomLayer);
+                            zoomLayer.draw();
+                            // TODO 产生一个两倍大的不可见的layer, 在这个layer上生成了高清预览图, 用这个layer来画clip的效果图
+                        });
+                        zoomBackgroundLayer.fire('mousemove', mouseOverEvent);
+                    });
                 },
 
                 _colorTrans: function (obj, period) {
@@ -494,6 +507,33 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                     'click .btn-download': function (evt) {
                         dispatcher.trigger("design-download", evt);
+                    },
+                    'click .btn-download-preview': function (evt) {
+                        if (_.chain(this._layerCache).values().all(function (cache) {
+                            return cache.width() === 0 && cache.height() === 0;
+                        }).value()) {
+                            alert('您尚未作出任何定制，请先定制!');
+                            return;
+                        }
+                        this._draw.clear();
+                        this._draw.size(this._stage.width(), this._stage.height());
+                        var _draw = this._draw;
+                        this._stage.toDataURL({
+                            callback: function (image) {
+                                _draw.image(image, _draw.width(), _draw.height());
+                                var data = {};
+                                var svg = _draw.exportSvg({whitespace: true});
+                                if ($("[name=order_id]").val()) {
+                                    data[$("[name=order_id]").val()] = svg
+                                } else {
+                                    data[new Date().getTime()] = svg;
+                                }
+                                var uri = 'data:application/svg+xml;base64,' + btoa(svg);
+                                $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".svg").click(function (evt) {
+                                    evt.stopPropagation();
+                                })[0].click();
+                            }
+                        });
                     }
                 },
 
@@ -502,12 +542,16 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     this._stage = new Kinetic.Stage({
                         container: this.$('.design-regions')[0]
                     });
-                    this._designRegionAnimationLayer = new Kinetic.Layer();
+                    this._designRegionAnimationLayer = new Kinetic.Layer({
+                        name: "design-region-animation-layer"
+                    });
                     this._stage.add(this._designRegionAnimationLayer);
 
                     this._mask = this.$(".mask");
                     this._mask.css("line-height", this.$(".hotspot").height() + "px");
                     this._mask.hide();
+
+                    this._draw = SVG(this.$('.svg-drawing')[0]);
                     if (config.DOWNLOADABLE) {
                         this.$("button.btn-download").show();
                     } else {

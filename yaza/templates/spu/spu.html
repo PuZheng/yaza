@@ -25,14 +25,17 @@
       <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
 
       <div class="row">
-        <div class="jit-preview"></div>
+        <div class="jit-preview">
+          <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+          </div>
+        </div>
         <br/>
 
         <div class="play-ground">
           <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+          </div>
         </div>
       </div>
-    </div>
     </div>
     <!--/span-->
     </div>
