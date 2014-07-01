@@ -175,6 +175,7 @@
     .play-ground .aspect-selector {
         position: absolute;
         bottom: 20px;
+        width: 86px;
     }
 
     .play-ground .aspect-selector .thumbnail {
@@ -186,6 +187,8 @@
      .play-ground .aspect-selector img {
         margin: auto;
         display: block;
+        max-height: 68px;
+        max-width: 68px;
     }
 
     .play-ground .aspect-selector .layer {
