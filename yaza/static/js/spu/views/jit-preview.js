@@ -175,7 +175,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
                             if (this._currentDesignRegion) {
                                 var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                                dom.removeClass("list-group-item-info");
                                 dom.find("i").remove();
                             }
                             return;
@@ -183,7 +182,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                         if (this._currentDesignRegion) {
                             var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                            dom.addClass("list-group-item-info");
                             if (dom.find("i").size() == 0) {
                                 dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                             }

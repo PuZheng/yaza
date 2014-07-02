@@ -158,15 +158,6 @@
         height: 100%;
     }
 
-    .play-ground .design-region-selector a {
-        color: #fe9a04;
-    }
-
-
-    .play-ground .design-region-selector a.active {
-        color: white;
-    }
-
     .play-ground .thumbnail {
         margin: 3px 3px 3px 0;
         display: inline-block;
