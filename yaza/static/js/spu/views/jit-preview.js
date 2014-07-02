@@ -38,9 +38,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                         jitPreview._currentAspect = aspect;
 
+                        // 
                         $.get(aspect.picUrl, function () {
                             jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
-                                dispatcher.trigger('jitPreview-unmask');
 
                                 // 其实可以不用使用本img标签,直接在backgroud layer中画,
                                 // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
@@ -91,6 +91,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                     ret.progress(function (arg) {
                                         l.push(arg);
                                         if (l.length == 2) {
+                                            dispatcher.trigger('jitPreview-unmask');
                                             // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
                                             if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
                                                 $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
@@ -114,7 +115,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         canvas.height).data;
                                         d.notify('black');
                                     };
-                                    blackImageObj.src = aspect.blackShadowUrl;
+                                    $.get(aspect.blackShadowUrl, function () {
+                                        blackImageObj.src = aspect.blackShadowUrl;
+                                    });
                                 } else {
                                     d.notify('black');
                                 }
@@ -131,7 +134,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                         canvas.height).data;
                                         d.notify('white');
                                     };
-                                    whiteImageObj.src = aspect.whiteShadowUrl;
+                                    $.get(aspect.whiteShadowUrl, function () {
+                                        whiteImageObj.src = aspect.whiteShadowUrl;
+                                    });
                                 } else {
                                     d.notify('white');
                                 }
