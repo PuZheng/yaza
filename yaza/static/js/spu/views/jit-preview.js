@@ -147,6 +147,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         if (!designRegion.bounds) {
                             designRegion.bounds = this._getBounds(designRegion.previewEdges);
                         }
+
+                        !!this._currentLayer && this._currentLayer.remove();
+
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
                             layer = new Kinetic.Layer({
@@ -159,6 +162,8 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         this._currentLayer = layer;
                         this._currentDesignRegion = designRegion;
                         this._designRegionAnimate(designRegion.previewEdges);
+                        this._stage.add(this._currentLayer);
+                        this._stage.draw();
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
