@@ -29,6 +29,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                 initialize: function (options) {
                     this._spu = options.spu;
+                    this._orderId = options.orderId;
                     dispatcher.on("aspect-selected", function (aspect) {
                         var jitPreview = this;
                         console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
@@ -63,7 +64,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             });
                             // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                             // background layer不重叠
-                            $(this).hide();
 
                             jitPreview._stage.getChildren(function (node) {
                                 return node.getName() == "background";
@@ -76,6 +76,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             jitPreview._backgroundLayer.moveToBottom();
                             jitPreview._stage.width($(this).width());
                             jitPreview._stage.height($(this).height());
+                            $(this).hide();
                             jitPreview._stage.children.forEach(function (node) {
                                 // 只改变当前面的所有layer的大小
                                 if (node.nodeType === 'Layer' && node.visible()) {
@@ -146,6 +147,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         if (!designRegion.bounds) {
                             designRegion.bounds = this._getBounds(designRegion.previewEdges);
                         }
+
+                        !!this._currentLayer && this._currentLayer.remove();
+
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
                             layer = new Kinetic.Layer({
@@ -158,6 +162,8 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         this._currentLayer = layer;
                         this._currentDesignRegion = designRegion;
                         this._designRegionAnimate(designRegion.previewEdges);
+                        this._stage.add(this._currentLayer);
+                        this._stage.draw();
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
@@ -538,7 +544,10 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 },
 
                 render: function () {
-                    this.$el.append(this._template({spu: this._spu}));
+                    this.$el.append(this._template({
+                        spu: this._spu,
+                        orderId: this._orderId,
+                    }));
                     this._stage = new Kinetic.Stage({
                         container: this.$('.design-regions')[0]
                     });
@@ -566,37 +575,36 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
 
                 _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                    var aspectElement = $('[data-aspectId=' + aspectId + "]");
+                    if (canvasElement === null) {
+                        return;
+                    }
+                    var $image = $('img[data-aspectId=' + aspectId + ']');
                     var designRegionName = "design-region-" + designRegionId;
-                    var stage = aspectElement.data("stage");
+                    var stage =$image.data("stage");
                     if (!stage) {
-                        if (canvasElement === null) {
-                            return;
-                        }
-                        var div = $("<div></div>").addClass("layer");
-                        aspectElement.before(div);
+                        var div = $('<div class="layer"></div>').insertBefore($image);
                         stage = new Kinetic.Stage({
                             container: div[0],
-                            width: aspectElement.width(),
-                            height: aspectElement.height()
+                            width: $image.width(),
+                            height: $image.height(),
+                            x: $image.position().left,
+                            y: $image.position().top,
                         });
-                        aspectElement.data("stage", stage);
+                        $image.data("stage", stage);
                     }
                     stage.getChildren(function (node) {
                         return node.getName() == designRegionName;
                     }).forEach(function (node) {
                         node.destroy();
                     });
-                    if (canvasElement) {
-                        var layer = new Kineticjs.Layer({
-                            name: designRegionName
-                        });
-                        stage.add(layer);
-                        layer.draw();
-                        var thumbnailContext = layer.getContext();
-                        thumbnailContext.imageSmoothEnabled = false;
-                        thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
-                    }
+                    var layer = new Kineticjs.Layer({
+                        name: designRegionName
+                    });
+                    stage.add(layer);
+                    layer.draw();
+                    var thumbnailContext = layer.getContext();
+                    thumbnailContext.imageSmoothEnabled = false;
+                    thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
                 },
 
                 _getPreviewEdges: function (edges, ratio) {

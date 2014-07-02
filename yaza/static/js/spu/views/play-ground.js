@@ -45,7 +45,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
 
         var PlayGround = Backbone.View.extend({
             _template: handlebars.default.compile(playGroundTemplate),
-            _initMargin: 70,
+            _initMargin: 30,
             _designRegionCache: {},
 
             // 使用currentTarget而不是target，原因：
@@ -80,13 +80,13 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return false;
                 },
                 'click .add-text-modal .btn-ok': function (evt) {
-                    var text = this.$('.add-text-modal textarea').val().trim();
+                    var text = this.$('.add-text-modal input').val().trim();
                     if (!text) {
                         alert('文字不能为空');
                         return;
                     }
                     this.$('.add-text-modal').modal('hide');
-                    this.$('.add-text-modal textarea').val("");
+                    this.$('.add-text-modal input').val("");
                     $.ajax({
                         type: 'POST',
                         url: '/image/font-image',
@@ -199,9 +199,12 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return false;
                 },
                 'click .aspect-selector .thumbnail': function (evt) {
+                    var aspect = $(evt.currentTarget).data('aspect');
+                    if (!!this._currentAspect && this._currentAspect.id == aspect.id) {
+                        return;                        
+                    }
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
-                    var aspect = $(evt.currentTarget).data('aspect');
                     console.log("aspect click:", aspect.name);
                     this._currentAspect = aspect;
                     dispatcher.trigger("aspect-selected", aspect);
@@ -268,7 +271,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     aspect.designRegionList.forEach(function (designRegion) {
                         designRegion.aspect = aspect;
 
-                        $(_.sprintf("<a href='#' class='list-group-item btn btn-default' aspect='%s' design-region='%s'>%s - %s</a>", aspect.name, designRegion.name, aspect.name, designRegion.name)
+                        $(_.sprintf("<a href='#' class='list-group-item btn btn-warning' aspect='%s' design-region='%s'>%s</a>", aspect.name, designRegion.name, designRegion.name)
                         ).data('design-region', designRegion).appendTo(designRegions);
                     }.bind(this));
                 }.bind(this));
@@ -465,7 +468,8 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     this._objectManager.add(node, node.getAttr("control-group"));
                 }.bind(this));
 
-                ts.scrollTo(config.PLAYGROUND_MARGIN, config.PLAYGROUND_MARGIN);
+                // TODO 这里没有考虑landscape的情况
+                ts.scrollTo({left: (er.width() - ts.width()) / 2, top: config.PLAYGROUND_MARGIN});
                 dispatcher.trigger('update-hotspot', this._imageLayer);
             },
             render: function () {
@@ -848,10 +852,10 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                                             baseZ: 0
                                         });
                                     });
-                                playGround.$('.change-text-panel textarea').val(im.name());
-                                playGround.$('.change-text-panel textarea').focus();
+                                playGround.$('.change-text-panel input').val(im.name());
+                                playGround.$('.change-text-panel input').focus();
                                 playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                    var text = playGround.$('.change-text-panel textarea').val().trim();
+                                    var text = playGround.$('.change-text-panel input').val().trim();
                                     playGround.$('.change-text-panel').hide();
                                     $.ajax({
                                         type: 'POST',

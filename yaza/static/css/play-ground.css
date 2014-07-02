@@ -1,6 +1,9 @@
 @import url('object-manager.css');
 
 @media screen and (min-width: 992px) {
+    .play-ground {
+        margin: 15px 15px
+    }
     .play-ground .picker {
         margin: 10px;
     }
@@ -37,8 +40,8 @@
     }
 
     .play-ground .touch-screen {
-        border: 1px solid #ccc;
-        height: 512px;
+        border-radius: 5px;
+        height: 400px;
         background-color: #ccc;
         overflow: scroll;
     }
@@ -148,9 +151,20 @@
         color: #ccc;
     }
 
-    .play-ground div.design-region-selector {
+
+    .play-ground .col-sm-7:first-child aside {
         position: absolute !important;
         z-index: 1;
+        height: 100%;
+    }
+
+    .play-ground .design-region-selector a {
+        color: #fe9a04;
+    }
+
+
+    .play-ground .design-region-selector a.active {
+        color: white;
     }
 
     .play-ground .thumbnail {
@@ -158,14 +172,23 @@
         display: inline-block;
     }
 
+    .play-ground .aspect-selector {
+        position: absolute;
+        bottom: 20px;
+        width: 86px;
+    }
+
     .play-ground .aspect-selector .thumbnail {
-        max-height: 96px;
-        max-width: 96px;
+        max-height: 80px;
+        max-width: 80px;
+        display: block
     }
 
      .play-ground .aspect-selector img {
         margin: auto;
         display: block;
+        max-height: 68px;
+        max-width: 68px;
     }
 
     .play-ground .aspect-selector .layer {
@@ -177,5 +200,31 @@
     .play-ground .design-region-selector .list-group-item {
         padding: 6px 9px;
     }
+    
+    .play-ground .dashboard > .row:first-child button {
+        width: 100%; 
+    }
 
+    .play-ground .dashboard > .row:nth-child(2) {
+        height: 120px;
+    }
+
+    .play-ground .dashboard .text-operators {
+        margin-top: 15px;
+        border: 1px dashed gray;
+        padding: 10px;
+    }
+
+    .play-ground .dashboard .text-operators .row:last-child {
+        margin-top: 10px;
+    }
+
+
+    .play-ground .object-manager {
+        margin-top: 15px;
+    }
+
+    .play-ground .add-text-modal input {
+        width: 100%;
+    }
 }

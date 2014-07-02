@@ -2,10 +2,13 @@
 @import url('jit-preview.css');
 
 @media screen and (min-width: 992px) {
-    /*common*/
+    .container-fluid {
+        width: 1080px;
+        background-image: url('/static/assets/congruent_outline.png');
+    }
+
     body {
-        /* for nav bar */
-        padding-top: 60px !important;
+        background-color: #222;
     }
 
     .form-signin {
