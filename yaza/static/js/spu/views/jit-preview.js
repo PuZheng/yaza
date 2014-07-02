@@ -38,104 +38,106 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
                         jitPreview._currentAspect = aspect;
 
-                        // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
-                        jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
-                            dispatcher.trigger('jitPreview-unmask');
+                        $.get(aspect.picUrl, function () {
+                            jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
+                                dispatcher.trigger('jitPreview-unmask');
 
-                            // 其实可以不用使用本img标签,直接在backgroud layer中画,
-                            // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
-                            // 图片的大小
-                            $(this).show();  // 先显示为了正确获得图片的style
-                            jitPreview.$('.design-regions').css({
-                                width: $(this).width(),
-                                height: $(this).height()
-                            }).offset($(this).offset());
-                            evt.target.crossOrigin = 'Anonymous';
-                            var im = new Kinetic.Image({
-                                image: evt.target,
-                                width: $(this).width(),
-                                height: $(this).height()
-                            });
-                            jitPreview._backgroundLayer = new Kinetic.Layer({
-                                name: "background"
-                            });
-                            jitPreview._backgroundLayer.add(im).on('mouseover', function(evt){
-                                jitPreview._onMouseover(evt, jitPreview);
-                            });
-                            // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
-                            // background layer不重叠
+                                // 其实可以不用使用本img标签,直接在backgroud layer中画,
+                                // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
+                                // 图片的大小
+                                $(this).show();  // 先显示为了正确获得图片的style
+                                jitPreview.$('.design-regions').css({
+                                    width: $(this).width(),
+                                    height: $(this).height()
+                                }).offset($(this).offset());
+                                evt.target.crossOrigin = 'Anonymous';
+                                var im = new Kinetic.Image({
+                                    image: evt.target,
+                                    width: $(this).width(),
+                                    height: $(this).height()
+                                });
+                                jitPreview._backgroundLayer = new Kinetic.Layer({
+                                    name: "background"
+                                });
+                                jitPreview._backgroundLayer.add(im).on('mouseover', function(evt){
+                                    jitPreview._onMouseover(evt, jitPreview);
+                                });
+                                // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
+                                // background layer不重叠
 
-                            jitPreview._stage.getChildren(function (node) {
-                                return node.getName() == "background";
-                            }).forEach(function (node) {
-                                node.destroy();
-                            });
-                            jitPreview._stage.draw();
+                                jitPreview._stage.getChildren(function (node) {
+                                    return node.getName() == "background";
+                                }).forEach(function (node) {
+                                    node.destroy();
+                                });
+                                jitPreview._stage.draw();
 
-                            jitPreview._stage.add(jitPreview._backgroundLayer);
-                            jitPreview._backgroundLayer.moveToBottom();
-                            jitPreview._stage.width($(this).width());
-                            jitPreview._stage.height($(this).height());
-                            $(this).hide();
-                            jitPreview._stage.children.forEach(function (node) {
-                                // 只改变当前面的所有layer的大小
-                                if (node.nodeType === 'Layer' && node.visible()) {
-                                    node.size(jitPreview._stage.size());
-                                }
-                            });
-                            // 只有当纹理图片都加载完毕才能开始产生预览
-
-                            var d = function () {
-                                var ret = $.Deferred();
-                                var l = [];
-                                ret.progress(function (arg) {
-                                    l.push(arg);
-                                    if (l.length == 2) {
-                                        // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
-                                        if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                            $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                        } else {
-                                            $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                        }
+                                jitPreview._stage.add(jitPreview._backgroundLayer);
+                                jitPreview._backgroundLayer.moveToBottom();
+                                jitPreview._stage.width($(this).width());
+                                jitPreview._stage.height($(this).height());
+                                $(this).hide();
+                                jitPreview._stage.children.forEach(function (node) {
+                                    // 只改变当前面的所有layer的大小
+                                    if (node.nodeType === 'Layer' && node.visible()) {
+                                        node.size(jitPreview._stage.size());
                                     }
                                 });
-                                return ret;
-                            }();
-                            if (!aspect.blackShadowImageData) {
-                                var blackImageObj = new Image();
-                                blackImageObj.crossOrigin = "Anonymous";
-                                blackImageObj.onload = function () {
-                                    var canvas = document.createElement("canvas");
-                                    canvas.width = jitPreview._stage.width();
-                                    canvas.height = jitPreview._stage.height();
-                                    var ctx = canvas.getContext("2d");
-                                    ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
-                                    aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width,
+                                // 只有当纹理图片都加载完毕才能开始产生预览
+
+                                var d = function () {
+                                    var ret = $.Deferred();
+                                    var l = [];
+                                    ret.progress(function (arg) {
+                                        l.push(arg);
+                                        if (l.length == 2) {
+                                            // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                                            if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                                                $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
+                                            } else {
+                                                $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                            }
+                                        }
+                                    });
+                                    return ret;
+                                }();
+                                if (!aspect.blackShadowImageData) {
+                                    var blackImageObj = new Image();
+                                    blackImageObj.crossOrigin = "Anonymous";
+                                    blackImageObj.onload = function () {
+                                        var canvas = document.createElement("canvas");
+                                        canvas.width = jitPreview._stage.width();
+                                        canvas.height = jitPreview._stage.height();
+                                        var ctx = canvas.getContext("2d");
+                                        ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
+                                        aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width,
                                         canvas.height).data;
+                                        d.notify('black');
+                                    };
+                                    blackImageObj.src = aspect.blackShadowUrl;
+                                } else {
                                     d.notify('black');
-                                };
-                                blackImageObj.src = aspect.blackShadowUrl;
-                            } else {
-                                d.notify('black');
-                            }
-                            if (!aspect.whiteShadowImageData) {
-                                var whiteImageObj = new Image();
-                                whiteImageObj.crossOrigin = "Anonymous";
-                                whiteImageObj.onload = function () {
-                                    var canvas = document.createElement("canvas");
-                                    canvas.width = jitPreview._stage.width();
-                                    canvas.height = jitPreview._stage.height();
-                                    var ctx = canvas.getContext("2d");
-                                    ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
-                                    aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width,
+                                }
+                                if (!aspect.whiteShadowImageData) {
+                                    var whiteImageObj = new Image();
+                                    whiteImageObj.crossOrigin = "Anonymous";
+                                    whiteImageObj.onload = function () {
+                                        var canvas = document.createElement("canvas");
+                                        canvas.width = jitPreview._stage.width();
+                                        canvas.height = jitPreview._stage.height();
+                                        var ctx = canvas.getContext("2d");
+                                        ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
+                                        aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width,
                                         canvas.height).data;
+                                        d.notify('white');
+                                    };
+                                    whiteImageObj.src = aspect.whiteShadowUrl;
+                                } else {
                                     d.notify('white');
-                                };
-                                whiteImageObj.src = aspect.whiteShadowUrl;
-                            } else {
-                                d.notify('white');
-                            }
+                                }
+                            });
                         });
+                        // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     }.bind(this)).on("design-region-selected", function (designRegion) {
                         console.log("design region selected, " + designRegion.name);
                         if (!designRegion.previewEdges) {
