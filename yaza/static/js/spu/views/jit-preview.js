@@ -147,6 +147,9 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         if (!designRegion.bounds) {
                             designRegion.bounds = this._getBounds(designRegion.previewEdges);
                         }
+
+                        !!this._currentLayer && this._currentLayer.remove();
+
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
                             layer = new Kinetic.Layer({
@@ -159,6 +162,8 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         this._currentLayer = layer;
                         this._currentDesignRegion = designRegion;
                         this._designRegionAnimate(designRegion.previewEdges);
+                        this._stage.add(this._currentLayer);
+                        this._stage.draw();
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
@@ -541,7 +546,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                 render: function () {
                     this.$el.append(this._template({
                         spu: this._spu,
-                        orderId: this._orderId,
+                        orderId: this._orderId
                     }));
                     this._stage = new Kinetic.Stage({
                         container: this.$('.design-regions')[0]
@@ -570,20 +575,15 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
 
                 _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                    if (canvasElement === null) {
-                        return;
-                    }
                     var $image = $('img[data-aspectId=' + aspectId + ']');
                     var designRegionName = "design-region-" + designRegionId;
                     var stage =$image.data("stage");
                     if (!stage) {
-                        var div = $('<div class="layer"></div>').insertBefore($image);
+                        var div = $('<div></div>').addClass("layer").insertBefore($image).css("margin-left", $image.css("margin-left"));
                         stage = new Kinetic.Stage({
                             container: div[0],
                             width: $image.width(),
-                            height: $image.height(),
-                            x: $image.position().left,
-                            y: $image.position().top,
+                            height: $image.height()
                         });
                         $image.data("stage", stage);
                     }
@@ -592,14 +592,16 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     }).forEach(function (node) {
                         node.destroy();
                     });
-                    var layer = new Kineticjs.Layer({
-                        name: designRegionName
-                    });
-                    stage.add(layer);
-                    layer.draw();
-                    var thumbnailContext = layer.getContext();
-                    thumbnailContext.imageSmoothEnabled = false;
-                    thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
+                    if (!!canvasElement) {
+                        var layer = new Kineticjs.Layer({
+                            name: designRegionName
+                        });
+                        stage.add(layer);
+                        layer.draw();
+                        var thumbnailContext = layer.getContext();
+                        thumbnailContext.imageSmoothEnabled = false;
+                        thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
+                    }
                 },
 
                 _getPreviewEdges: function (edges, ratio) {
