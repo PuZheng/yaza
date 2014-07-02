@@ -199,9 +199,12 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     return false;
                 },
                 'click .aspect-selector .thumbnail': function (evt) {
+                    var aspect = $(evt.currentTarget).data('aspect');
+                    if (!!this._currentAspect && this._currentAspect.id == aspect.id) {
+                        return;                        
+                    }
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
-                    var aspect = $(evt.currentTarget).data('aspect');
                     console.log("aspect click:", aspect.name);
                     this._currentAspect = aspect;
                     dispatcher.trigger("aspect-selected", aspect);

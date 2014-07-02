@@ -570,37 +570,36 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
 
 
                 _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                    var aspectElement = $('[data-aspectId=' + aspectId + "]");
+                    if (canvasElement === null) {
+                        return;
+                    }
+                    var $image = $('img[data-aspectId=' + aspectId + ']');
                     var designRegionName = "design-region-" + designRegionId;
-                    var stage = aspectElement.data("stage");
+                    var stage =$image.data("stage");
                     if (!stage) {
-                        if (canvasElement === null) {
-                            return;
-                        }
-                        var div = $("<div></div>").addClass("layer");
-                        aspectElement.before(div);
+                        var div = $('<div class="layer"></div>').insertBefore($image);
                         stage = new Kinetic.Stage({
                             container: div[0],
-                            width: aspectElement.width(),
-                            height: aspectElement.height()
+                            width: $image.width(),
+                            height: $image.height(),
+                            x: $image.position().left,
+                            y: $image.position().top,
                         });
-                        aspectElement.data("stage", stage);
+                        $image.data("stage", stage);
                     }
                     stage.getChildren(function (node) {
                         return node.getName() == designRegionName;
                     }).forEach(function (node) {
                         node.destroy();
                     });
-                    if (canvasElement) {
-                        var layer = new Kineticjs.Layer({
-                            name: designRegionName
-                        });
-                        stage.add(layer);
-                        layer.draw();
-                        var thumbnailContext = layer.getContext();
-                        thumbnailContext.imageSmoothEnabled = false;
-                        thumbnailContext.drawImage(canvasElement, 0, 0, aspectElement.width(), aspectElement.height());
-                    }
+                    var layer = new Kineticjs.Layer({
+                        name: designRegionName
+                    });
+                    stage.add(layer);
+                    layer.draw();
+                    var thumbnailContext = layer.getContext();
+                    thumbnailContext.imageSmoothEnabled = false;
+                    thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
                 },
 
                 _getPreviewEdges: function (edges, ratio) {
