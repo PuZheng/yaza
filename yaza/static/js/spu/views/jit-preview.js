@@ -503,25 +503,28 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             alert('您尚未作出任何定制，请先定制!');
                             return;
                         }
-                        this._draw.clear();
-                        this._draw.size(this._stage.width(), this._stage.height());
-                        var _draw = this._draw;
-                        this._stage.toDataURL({
-                            callback: function (image) {
-                                _draw.image(image, _draw.width(), _draw.height());
-                                var data = {};
-                                var svg = _draw.exportSvg({whitespace: true});
-                                if ($("[name=order_id]").val()) {
-                                    data[$("[name=order_id]").val()] = svg
-                                } else {
-                                    data[new Date().getTime()] = svg;
-                                }
-                                var uri = 'data:application/svg+xml;base64,' + btoa(svg);
-                                $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".svg").click(function (evt) {
-                                    evt.stopPropagation();
-                                })[0].click();
+                        var canvas = document.createElement("canvas");
+                        canvas.width = this._stage.width();
+                        canvas.height = this._stage.height();
+
+                        var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
+                        var previewImageData = this._currentLayer.getContext().getImageData(0, 0, canvas.width, canvas.height);
+                        var pixel = previewImageData.data.length / 4;
+                        // merge the background and preview 
+                        while (pixel--) {
+                            if (previewImageData.data[pixel * 4 + 3] == 0) {
+                                previewImageData.data[pixel * 4] = backgroundImageData[pixel * 4];
+                                previewImageData.data[pixel * 4 + 1] = backgroundImageData[pixel * 4 + 1];
+                                previewImageData.data[pixel * 4 + 2] = backgroundImageData[pixel * 4 + 2];
+                                previewImageData.data[pixel * 4 + 3] = backgroundImageData[pixel * 4 + 3];
                             }
-                        });
+                        }
+                        var ctx = canvas.getContext("2d");
+                        ctx.putImageData(previewImageData, 0, 0);
+                        var uri = canvas.toDataURL('image/png');
+                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
+                            evt.stopPropagation();
+                        })[0].click();
                     }
                 },
 
