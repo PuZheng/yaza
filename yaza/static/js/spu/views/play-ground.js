@@ -265,7 +265,7 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 designRegions.empty();
 
                 ocspu.aspectList.forEach(function (aspect) {
-                    $(_.sprintf('<div class="thumbnail"><img src="%s" alt="%s" title="%s" data-aspectID="%s"/></div>',
+                    $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" data-aspectID="%s"/><div></div>',
                         aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
 
                     aspect.designRegionList.forEach(function (designRegion) {
@@ -377,7 +377,67 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     }).always(function () {
                         $(evt.currentTarget).removeClass('disabled');
                     });
+                }.bind(this)).on('update-hotspot-done', function (hotspotContext) {
+                    if (!hotspotContext) {
+                        this._clearThumbnail(this._currentAspect.id, 
+                            this._currentDesignRegion.id);    
+                        if (this._currentDesignRegion) {
+                            this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"] i').remove();
+                        }
+                    } else {
+                        this._updateThumbnail(this._currentAspect.id, 
+                            this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);    
+                        if (this._currentDesignRegion) {
+                            var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
+                            if (dom.find("i").size() == 0) {
+                                dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
+                            }
+                        }
+                    }
                 }.bind(this));
+            },
+
+            _clearThumbnail: function (aspectId, designRegionId) {
+                var $image = this.$('img[data-aspectId=' + aspectId + ']');
+                var designRegionName = "design-region-" + designRegionId;
+                var stage =$image.data("stage");
+                if (!stage) {
+                    // img has margin-[left|top], however this margin is not 
+                    // calculate into position().[left|top], so I must recaculate
+                    // the margin for stage container
+                    var $container = $image.prev().css({
+                        width: $image.width(),
+                        height: $image.height(),
+                        'margin-left': ($image.parent().width() - $image.width())/2,
+                        'margin-top': ($image.parent().height() - $image.height())/2,
+                    });
+                    stage = new Kinetic.Stage({
+                        container: $container[0],
+                        width: $image.width(),
+                        height: $image.height()
+                    });
+                    $image.data("stage", stage);
+                }
+                stage.getChildren(function (node) {
+                    return node.getName() == designRegionName;
+                }).forEach(function (node) {
+                    node.destroy();
+                });
+            },
+
+            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
+                this._clearThumbnail(aspectId, designRegionId); 
+                var $image = $('img[data-aspectId=' + aspectId + ']');
+                var designRegionName = "design-region-" + designRegionId;
+                var stage =$image.data("stage");
+                var layer = new Kinetic.Layer({
+                    name: designRegionName
+                });
+                stage.add(layer);
+                layer.draw();
+                var thumbnailContext = layer.getContext();
+                thumbnailContext.imageSmoothEnabled = false;
+                thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
             },
 
             _getDesignData: function () {
