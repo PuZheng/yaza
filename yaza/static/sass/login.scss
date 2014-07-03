@@ -1,0 +1,13 @@
+@import "../js/vendor/bootswatch-scss/flatly/variables";
+
+$form-signin-width: 480px !default;
+
+@media screen and (min-width: $screen-md) {
+    
+    .form-signin {
+        margin: 10px auto;
+        width: $form-signin-width;
+    }
+
+}
+

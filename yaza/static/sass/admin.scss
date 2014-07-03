@@ -1,0 +1,10 @@
+@import "../js/vendor/bootswatch-scss/flatly/variables";
+@import "admin/variables";
+
+@media screen and (min-width: $screen-md) {
+    
+    body {
+        padding-top: 60px;
+    }
+}
+

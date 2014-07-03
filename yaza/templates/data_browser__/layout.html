@@ -1,9 +1,8 @@
-
 {% extends "data_browser__/base_layout.html" %}
 {% block __data_browser__customized_head_block %}
-  <link rel="stylesheet" href="{{ url_for('static', filename="css/custom.css") }}"/>
-
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/admin.css") }}"/>
 {% endblock %}
+
 {% block __data_browser__nav_bar_block %}
   <header>
     {% import "data_browser__/navbar.html" as navbar %}
