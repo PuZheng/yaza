@@ -82,6 +82,9 @@ def setup_nav_bar():
     admin_nav_bar.register(admin, name=_(u'定制结果'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-result'))
 
+    default_url = speaklater.make_lazy_string(views.design_image_view.url_for_list)
+    admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
+                           enabler=lambda nav: request.path.startswith('/admin/design-image'))
 
 register_views()
 
