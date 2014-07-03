@@ -84,7 +84,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                                 }
                             });
                             // 只有当纹理图片都加载完毕才能开始产生预览
-
                             var d = function () {
                                 var ret = $.Deferred();
                                 var l = [];
@@ -172,20 +171,10 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var hotspotContext = this._currentLayer.getContext();
                         if (playGroundLayer.children.length == 0) {
                             hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
-                            this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, null);
-                            if (this._currentDesignRegion) {
-                                var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                                dom.find("i").remove();
-                            }
+                            dispatcher.trigger('update-hotspot-done');
                             return;
                         }
 
-                        if (this._currentDesignRegion) {
-                            var dom = $('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
-                            if (dom.find("i").size() == 0) {
-                                dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
-                            }
-                        }
                         this._currentLayer.size(this._stage.size());
                         var targetWidth = this._stage.width();
                         var targetHeight = this._stage.height();
@@ -239,7 +228,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             this._onMouseover(evt, this);
                         }.bind(this));
                         this._currentLayer.draw();
-                        this._updateThumbnail(this._currentDesignRegion.aspect.id, this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
+                        dispatcher.trigger('update-hotspot-done', hotspotContext);
                     }.bind(this));
                 },
 
@@ -569,37 +558,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                     }.bind(this));
 
                     this.$('.ocspu-selector .thumbnail:first-child').click();
-                },
-
-
-                _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                    var $image = $('img[data-aspectId=' + aspectId + ']');
-                    var designRegionName = "design-region-" + designRegionId;
-                    var stage =$image.data("stage");
-                    if (!stage) {
-                        var div = $('<div></div>').addClass("layer").insertBefore($image).css("margin-left", $image.css("margin-left"));
-                        stage = new Kinetic.Stage({
-                            container: div[0],
-                            width: $image.width(),
-                            height: $image.height()
-                        });
-                        $image.data("stage", stage);
-                    }
-                    stage.getChildren(function (node) {
-                        return node.getName() == designRegionName;
-                    }).forEach(function (node) {
-                        node.destroy();
-                    });
-                    if (!!canvasElement) {
-                        var layer = new Kineticjs.Layer({
-                            name: designRegionName
-                        });
-                        stage.add(layer);
-                        layer.draw();
-                        var thumbnailContext = layer.getContext();
-                        thumbnailContext.imageSmoothEnabled = false;
-                        thumbnailContext.drawImage(canvasElement, 0, 0, $image.width(), $image.height());
-                    }
                 },
 
                 _getPreviewEdges: function (edges, ratio) {
