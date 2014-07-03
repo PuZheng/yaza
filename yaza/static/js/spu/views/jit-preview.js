@@ -191,54 +191,38 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var targetHeight = this._stage.height();
 
                         this._currentLayer.find(".design-image").destroy();
-                        var image = new Kinetic.Image({
-                            name: "design-image",
-                            x: 0,
-                            y: 0,
-                            width: this._currentLayer.width(),
-                            height: this._currentLayer.height()
-                        });
-
-                        image.sceneFunc(function (context) {
-                            var hotspotImageData = context.createImageData(targetWidth, targetHeight);
-                            this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
-                            if (__debug__) {
-                                var layer = new Kinetic.Layer();
-                                var data = [];
-                                this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
-                                    data.push(pair[0][0]);
-                                    data.push(pair[0][1]);
-                                    var circle = new Kinetic.Circle({
-                                        x: pair[0][0],
-                                        y: pair[0][1],
-                                        stroke: '#666',
-                                        fill: '#ddd',
-                                        strokeWidth: 2,
-                                        radius: 3
-                                    });
-                                    layer.add(circle);
-                                }.bind(this));
-                                data.push(data[0]);
-                                data.push(data[1]);
-                                var line = new Kinetic.Line({
-                                    points: data,
-                                    stroke: 'white',
-                                    strokeWidth: 1
+                        var hotspotContext = this._currentLayer.getContext();
+                        var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
+                        this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
+                        if (__debug__) {
+                            var layer = new Kinetic.Layer();
+                            var data = [];
+                            this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                                data.push(pair[0][0]);
+                                data.push(pair[0][1]);
+                                var circle = new Kinetic.Circle({
+                                    x: pair[0][0],
+                                    y: pair[0][1],
+                                    stroke: '#666',
+                                    fill: '#ddd',
+                                    strokeWidth: 2,
+                                    radius: 3
                                 });
-                                layer.add(line);
-                                this._stage.add(layer);
-                                this._stage.draw();
-                            }
-                            context.imageSmoothEnabled = true;
-                            context.putImageData(hotspotImageData, 0, 0);
-                        }.bind(this));
-                        this._currentLayer.add(image);
-
-                        // 添加了Image对象后，this._backgroundLayer不能再监听到mouseover事件，所以改由 this._currentLayer监听
-                        this._currentLayer.off("mouseover").on("mouseover", function (evt) {
-                            this._onMouseover(evt, this);
-                        }.bind(this));
-                        this._currentLayer.draw();
+                                layer.add(circle);
+                            }.bind(this));
+                            data.push(data[0]);
+                            data.push(data[1]);
+                            var line = new Kinetic.Line({
+                                points: data,
+                                stroke: 'white',
+                                strokeWidth: 1
+                            });
+                            layer.add(line);
+                            this._stage.add(layer);
+                            this._stage.draw();
+                        }
+                        hotspotContext.imageSmoothEnabled = true;
+                        hotspotContext.putImageData(hotspotImageData, 0, 0);
                         dispatcher.trigger('update-hotspot-done', hotspotContext);
                     }.bind(this));
                 },
