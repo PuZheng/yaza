@@ -11,7 +11,7 @@ require.config({
         underscore: 'components/underscore/underscore',
         kineticjs: 'components/kineticjs/kinetic.min',
         backbone: 'components/backbone/backbone',
-        bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
+        bootstrap: 'components/bootstrap-sass-official/assets/javascripts/bootstrap',
         handlebars: 'components/handlebars/handlebars.amd.min',
         buckets: 'components/buckets/buckets',
         'underscore.string': 'components/underscore.string/dist/underscore.string.min',

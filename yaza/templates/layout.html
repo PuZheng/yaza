@@ -11,7 +11,6 @@
       <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
       <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
       <link rel="stylesheet" href="{{ url_for('static', filename='components/fancybox/source/jquery.fancybox.css') }}" />
-      <link rel="stylesheet" href="{{ url_for('static', filename='components/normalize-css/normalize.css') }}" />
       <link rel="stylesheet" href="{{ url_for('static', filename='components/select2/select2.css') }}" />
       <link rel="stylesheet" href="{{ url_for('static', filename='components/font-awesome/css/font-awesome.min.css') }}" />
       <!--[if lt IE 9]>
@@ -20,7 +19,6 @@
       {% if config.DEBUG %}
       <script type="text/javascript" src="{{ url_for('static', filename='components/loremjs/lorem.js') }}"></script>
       {% endif %}
-      <script type="text/javascript" src="{{ url_for('static', filename='components/modernizr/modernizr.js') }}"></script>
     {% endblock %}
     {% block customized_head_block %}
     {% endblock %}
