@@ -11,11 +11,6 @@
         background-color: #222;
     }
 
-    .form-signin {
-        margin: 10px auto;
-        width: 30em;
-    }
-
     .thumbnail.selected {
         border: 2px solid #0088CC;
     }

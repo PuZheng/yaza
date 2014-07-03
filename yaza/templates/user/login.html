@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 
+{% block customized_head_block %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+{% endblock %}
+
 {% block page_title %}
   Yaza - login
 {% endblock %}
