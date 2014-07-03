@@ -187,7 +187,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var targetHeight = this._stage.height();
 
                         this._currentLayer.find(".design-image").destroy();
-                        var hotspotContext = this._currentLayer.getContext();
                         var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
                         this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
                         if (__debug__) {
