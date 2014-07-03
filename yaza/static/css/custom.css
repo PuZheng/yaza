@@ -11,6 +11,10 @@
         background-color: #222;
     }
 
+    .primary {
+        height: 816px;
+    }
+
     .form-signin {
         margin: 10px auto;
         width: 30em;

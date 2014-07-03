@@ -44,7 +44,8 @@ module.exports = function (grunt) {
         sass: {
             dist: {
                 options: {
-                    style: 'nested'
+                    style: 'nested',
+                    'default-encoding': 'utf-8'
                 },
                 files: {}
             }
