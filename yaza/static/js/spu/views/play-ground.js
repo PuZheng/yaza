@@ -401,6 +401,20 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                 var $image = this.$('img[data-aspectId=' + aspectId + ']');
                 var designRegionName = "design-region-" + designRegionId;
                 var stage =$image.data("stage");
+                if (!!stage) {
+                    stage.getChildren(function (node) {
+                        return node.getName() == designRegionName;
+                    }).forEach(function (node) {
+                        node.destroy();
+                    });
+                }
+            },
+
+            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
+                this._clearThumbnail(aspectId, designRegionId); 
+                var $image = $('img[data-aspectId=' + aspectId + ']');
+                var designRegionName = "design-region-" + designRegionId;
+                var stage =$image.data("stage");
                 if (!stage) {
                     // img has margin-[left|top], however this margin is not 
                     // calculate into position().[left|top], so I must recaculate
@@ -418,18 +432,6 @@ define(['collections/design-images', 'colors', 'object-manager', 'control-group'
                     });
                     $image.data("stage", stage);
                 }
-                stage.getChildren(function (node) {
-                    return node.getName() == designRegionName;
-                }).forEach(function (node) {
-                    node.destroy();
-                });
-            },
-
-            _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                this._clearThumbnail(aspectId, designRegionId); 
-                var $image = $('img[data-aspectId=' + aspectId + ']');
-                var designRegionName = "design-region-" + designRegionId;
-                var stage =$image.data("stage");
                 var layer = new Kinetic.Layer({
                     name: designRegionName
                 });
