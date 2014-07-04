@@ -7,7 +7,7 @@ require.config({
         }
     },
     paths: {
-        // vendors
+        // vendors using bootcss cdn
         jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
         underscore: ['http://cdn.bootcss.com/underscore.js/1.6.0/underscore-min', 'components/underscore/underscore'],
         backbone: ['http://cdn.bootcss.com/backbone.js/1.1.2/backbone-min', 'components/backbone/backbone'],
@@ -22,8 +22,7 @@ require.config({
         'spectrum': ['http://cdn.bootcss.com/spectrum/1.3.0/js/spectrum.min', 'components/spectrum/spectrum'],
         'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
         "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
-        "jquery.scrollTo": "components/jquery.scrollTo/jquery.scrollTo.min",
-
+        // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
         buckets: 'components/buckets/buckets',
