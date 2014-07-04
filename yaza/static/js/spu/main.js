@@ -1,3 +1,4 @@
+
 require.config({
     baseUrl: '/static',
     map: {
@@ -7,26 +8,28 @@ require.config({
     },
     paths: {
         // vendors
-        jquery: 'components/jquery/dist/jquery.min',
-        underscore: 'components/underscore/underscore',
+        jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
+        underscore: ['http://cdn.bootcss.com/underscore.js/1.6.0/underscore-min', 'components/underscore/underscore'],
+        backbone: ['http://cdn.bootcss.com/backbone.js/1.1.2/backbone-min', 'components/backbone/backbone'],
+        bootstrap: ['http://cdn.bootcss.com/bootstrap/3.2.0/js/bootstrap.min', 'components/bootstrap-sass-official/assets/javascripts/bootstrap'],
+        handlebars: ['http://cdn.bootcss.com/handlebars.js/2.0.0-alpha.4/handlebars.amd', 'components/handlebars/handlebars.amd.min'],
+        'underscore.string': ['http://cdn.bootcss.com/underscore.string/2.3.3/underscore.string.min', 'components/underscore.string/dist/underscore.string.min'],
+        'jquery.ui.widget': ['http://cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min', 'components/jquery-ui/ui/jquery.ui.widget'],
+        'cookies-js': ['http://cdn.bootcss.com/Cookies.js/0.4.0/cookies', 'components/cookies-js/src/cookies.min'],
+        'select2': ['http://cdn.bootcss.com/select2/3.5.0/select2.min', 'components/select2/select2.min'],
+        'svg': ['http://cdn.bootcss.com/svg.js/1.0rc3/svg.min', 'components/svg.js/dist/svg.min'],
+        'block-ui': ['http://cdn.bootcss.com/jquery.blockUI/2.66.0-2013.10.09/jquery.blockUI', 'components/blockui/jquery.blockUI'],
+        'spectrum': ['http://cdn.bootcss.com/spectrum/1.3.0/js/spectrum.min', 'components/spectrum/spectrum'],
+        'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
+        "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
+        "jquery.scrollTo": "components/jquery.scrollTo/jquery.scrollTo.min",
+
+        'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
-        backbone: 'components/backbone/backbone',
-        bootstrap: 'components/bootstrap-sass-official/assets/javascripts/bootstrap',
-        handlebars: 'components/handlebars/handlebars.amd.min',
         buckets: 'components/buckets/buckets',
-        'underscore.string': 'components/underscore.string/dist/underscore.string.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-        'jquery.ui.widget': 'components/jquery-ui/ui/jquery.ui.widget',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
-        'cookies-js': 'components/cookies-js/src/cookies.min',
-        'select2': 'components/select2/select2.min',
-        'svg': 'components/svg.js/dist/svg.min',
-        'svg.export': 'components/svg.export.js/svg.export.min',
-        'block-ui': 'components/blockui/jquery.blockUI',
-        'spectrum': 'components/spectrum/spectrum',
-        'zClip':"components/zeroclipboard/dist/ZeroClipboard.min",
-        "jquery.scrollTo": "components/jquery.scrollTo/jquery.scrollTo.min",
         // application
         dispatcher: 'js/dispatcher',
         app: 'js/spu/app',
@@ -73,10 +76,11 @@ require.config({
             deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css']
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
         },
         'spectrum': {
-            deps: ['css!components/spectrum/spectrum.css'],
+            deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
+            //deps: ['css!components/spectrum/spectrum.css', 'jquery'],
             exports: '$.fn.spectrum',
         },
         'svg': {
@@ -86,7 +90,8 @@ require.config({
             deps: ['svg'],
         },
         'select2':{
-            deps:['jquery', 'css!components/select2/select2.css', 'css!components/select2/select2-bootstrap.css']
+            deps:['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
+            //deps:['jquery', 'css!components/select2/select2.css', 'css!components/select2/select2-bootstrap.css']
         },
         'buckets': {
             exports: 'buckets',
@@ -96,7 +101,13 @@ require.config({
         },
         'jquery.scrollTo': {
             deps: ['jquery']
-        }
+        },
+        'jquery.iframe-transport': {
+            deps: ['jquery'],
+        },
+        'jquery.ui.widget': {
+            deps: ['jquery'],
+        },
     }
 });
 
