@@ -507,11 +507,18 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var pixel = previewImageData.data.length / 4;
                         // merge the background and preview 
                         while (pixel--) {
-                            if (previewImageData.data[pixel * 4 + 3] == 0) {
-                                previewImageData.data[pixel * 4] = backgroundImageData[pixel * 4];
-                                previewImageData.data[pixel * 4 + 1] = backgroundImageData[pixel * 4 + 1];
-                                previewImageData.data[pixel * 4 + 2] = backgroundImageData[pixel * 4 + 2];
-                                previewImageData.data[pixel * 4 + 3] = backgroundImageData[pixel * 4 + 3];
+                            // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
+                            if (backgroundImageData[pixel * 4 + 3] != 0) {
+                                var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                                var dstA = backgroundImageData[pixel * 4 + 3] / 255;
+                                var outA = srcA + dstA * (1 - srcA);
+                                var outR = (previewImageData.data[pixel * 4] * srcA + backgroundImageData[pixel * 4] * dstA * (1 - srcA)) / outA;
+                                var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundImageData[pixel * 4 + 1] * dstA * (1 - srcA)) / outA;
+                                var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundImageData[pixel * 4 + 2] * dstA * (1 - srcA)) / outA;
+                                previewImageData.data[pixel * 4 + 3] = outA * 255;
+                                previewImageData.data[pixel * 4] = outR;
+                                previewImageData.data[pixel * 4 + 1] = outG;
+                                previewImageData.data[pixel * 4 + 2] = outB;
                             }
                         }
                         var ctx = canvas.getContext("2d");
