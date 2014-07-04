@@ -158,8 +158,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             designRegion.bounds = this._getBounds(designRegion.previewEdges);
                         }
 
-                        !!this._currentLayer && this._currentLayer.remove();
-
                         var layer = this._layerCache[designRegion.id];
                         if (!layer) {
                             layer = new Kinetic.Layer({
@@ -172,8 +170,6 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         this._currentLayer = layer;
                         this._currentDesignRegion = designRegion;
                         this._designRegionAnimate(designRegion.previewEdges);
-                        this._stage.add(this._currentLayer);
-                        this._stage.draw();
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
@@ -191,54 +187,37 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var targetHeight = this._stage.height();
 
                         this._currentLayer.find(".design-image").destroy();
-                        var image = new Kinetic.Image({
-                            name: "design-image",
-                            x: 0,
-                            y: 0,
-                            width: this._currentLayer.width(),
-                            height: this._currentLayer.height()
-                        });
-
-                        image.sceneFunc(function (context) {
-                            var hotspotImageData = context.createImageData(targetWidth, targetHeight);
-                            this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
-                            if (__debug__) {
-                                var layer = new Kinetic.Layer();
-                                var data = [];
-                                this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
-                                    data.push(pair[0][0]);
-                                    data.push(pair[0][1]);
-                                    var circle = new Kinetic.Circle({
-                                        x: pair[0][0],
-                                        y: pair[0][1],
-                                        stroke: '#666',
-                                        fill: '#ddd',
-                                        strokeWidth: 2,
-                                        radius: 3
-                                    });
-                                    layer.add(circle);
-                                }.bind(this));
-                                data.push(data[0]);
-                                data.push(data[1]);
-                                var line = new Kinetic.Line({
-                                    points: data,
-                                    stroke: 'white',
-                                    strokeWidth: 1
+                        var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
+                        this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
+                        if (__debug__) {
+                            var layer = new Kinetic.Layer();
+                            var data = [];
+                            this._currentDesignRegion.controlPointsMap.forEach(function (pair) {
+                                data.push(pair[0][0]);
+                                data.push(pair[0][1]);
+                                var circle = new Kinetic.Circle({
+                                    x: pair[0][0],
+                                    y: pair[0][1],
+                                    stroke: '#666',
+                                    fill: '#ddd',
+                                    strokeWidth: 2,
+                                    radius: 3
                                 });
-                                layer.add(line);
-                                this._stage.add(layer);
-                                this._stage.draw();
-                            }
-                            context.imageSmoothEnabled = true;
-                            context.putImageData(hotspotImageData, 0, 0);
-                        }.bind(this));
-                        this._currentLayer.add(image);
-
-                        // 添加了Image对象后，this._backgroundLayer不能再监听到mouseover事件，所以改由 this._currentLayer监听
-                        this._currentLayer.off("mouseover").on("mouseover", function (evt) {
-                            this._onMouseover(evt, this);
-                        }.bind(this));
-                        this._currentLayer.draw();
+                                layer.add(circle);
+                            }.bind(this));
+                            data.push(data[0]);
+                            data.push(data[1]);
+                            var line = new Kinetic.Line({
+                                points: data,
+                                stroke: 'white',
+                                strokeWidth: 1
+                            });
+                            layer.add(line);
+                            this._stage.add(layer);
+                            this._stage.draw();
+                        }
+                        hotspotContext.imageSmoothEnabled = true;
+                        hotspotContext.putImageData(hotspotImageData, 0, 0);
                         dispatcher.trigger('update-hotspot-done', hotspotContext);
                     }.bind(this));
                 },
@@ -519,25 +498,35 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                             alert('您尚未作出任何定制，请先定制!');
                             return;
                         }
-                        this._draw.clear();
-                        this._draw.size(this._stage.width(), this._stage.height());
-                        var _draw = this._draw;
-                        this._stage.toDataURL({
-                            callback: function (image) {
-                                _draw.image(image, _draw.width(), _draw.height());
-                                var data = {};
-                                var svg = _draw.exportSvg({whitespace: true});
-                                if ($("[name=order_id]").val()) {
-                                    data[$("[name=order_id]").val()] = svg
-                                } else {
-                                    data[new Date().getTime()] = svg;
-                                }
-                                var uri = 'data:application/svg+xml;base64,' + btoa(svg);
-                                $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".svg").click(function (evt) {
-                                    evt.stopPropagation();
-                                })[0].click();
+                        var canvas = document.createElement("canvas");
+                        canvas.width = this._stage.width();
+                        canvas.height = this._stage.height();
+
+                        var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
+                        var previewImageData = this._currentLayer.getContext().getImageData(0, 0, canvas.width, canvas.height);
+                        var pixel = previewImageData.data.length / 4;
+                        // merge the background and preview 
+                        while (pixel--) {
+                            // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
+                            if (backgroundImageData[pixel * 4 + 3] != 0) {
+                                var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                                var dstA = backgroundImageData[pixel * 4 + 3] / 255;
+                                var outA = srcA + dstA * (1 - srcA);
+                                var outR = (previewImageData.data[pixel * 4] * srcA + backgroundImageData[pixel * 4] * dstA * (1 - srcA)) / outA;
+                                var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundImageData[pixel * 4 + 1] * dstA * (1 - srcA)) / outA;
+                                var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundImageData[pixel * 4 + 2] * dstA * (1 - srcA)) / outA;
+                                previewImageData.data[pixel * 4 + 3] = outA * 255;
+                                previewImageData.data[pixel * 4] = outR;
+                                previewImageData.data[pixel * 4 + 1] = outG;
+                                previewImageData.data[pixel * 4 + 2] = outB;
                             }
-                        });
+                        }
+                        var ctx = canvas.getContext("2d");
+                        ctx.putImageData(previewImageData, 0, 0);
+                        var uri = canvas.toDataURL('image/png');
+                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
+                            evt.stopPropagation();
+                        })[0].click();
                     }
                 },
 
