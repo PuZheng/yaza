@@ -512,6 +512,7 @@ define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 
                         var pixel = previewImageData.data.length / 4;
                         // merge the background and preview 
                         while (pixel--) {
+                            // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
                             if (backgroundImageData[pixel * 4 + 3] != 0) {
                                 var srcA = previewImageData.data[pixel * 4 + 3] / 255;
                                 var dstA = backgroundImageData[pixel * 4 + 3] / 255;
