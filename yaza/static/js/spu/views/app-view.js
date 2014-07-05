@@ -1,4 +1,4 @@
-define(['backbone', 'views/play-ground', 'views/jit-preview', 'bootstrap', 'select2'], function (Backbone, PlayGround, JitPreview) {
+define(['backbone', 'spu/views/play-ground', 'spu/views/jit-preview', 'bootstrap', 'select2'], function (Backbone, PlayGround, JitPreview) {
     var AppView = Backbone.View.extend({
         el: '.primary',
 

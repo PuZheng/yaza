@@ -1,6 +1,10 @@
 {% extends "data_browser__/base_layout.html" %}
 {% block __data_browser__customized_head_block %}
-  <link rel="stylesheet" href="{{ url_for('static', filename="css/admin.css") }}"/>
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin.css"/>
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}"/>
+  {% endif %}
 {% endblock %}
 
 {% block __data_browser__nav_bar_block %}

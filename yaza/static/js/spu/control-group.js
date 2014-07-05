@@ -1,4 +1,4 @@
-define(["config"], function (config) {
+define(["spu/config"], function (config) {
 
     function info(group) {
         var rect = group.find('.rect')[0];

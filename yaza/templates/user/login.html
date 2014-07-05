@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 
 {% block customized_head_block %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/login.css"/>
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+  {% endif %}
 {% endblock %}
 
 {% block page_title %}

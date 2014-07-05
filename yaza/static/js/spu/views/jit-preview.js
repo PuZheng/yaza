@@ -1,4 +1,4 @@
-define(['linear-interpolation', 'cubic-interpolation', 'color-tools', 'config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
     function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);

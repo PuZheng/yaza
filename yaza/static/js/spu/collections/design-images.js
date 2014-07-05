@@ -1,4 +1,4 @@
-define(['backbone', 'models/design-image'], function(Backbone, DesignImage) {
+define(['backbone', 'spu/models/design-image'], function(Backbone, DesignImage) {
 
     var DesignImages = Backbone.Collection.extend({
 

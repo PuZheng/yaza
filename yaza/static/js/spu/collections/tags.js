@@ -1,4 +1,4 @@
-define(['backbone', 'models/tag'], function (Backbone, Tag) {
+define(['backbone', 'spu/models/tag'], function (Backbone, Tag) {
     
     var Tags = Backbone.Collection.extend({
         model: Agent,

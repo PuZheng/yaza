@@ -1,4 +1,3 @@
-
 require.config({
     baseUrl: '/static',
     map: {
@@ -23,7 +22,7 @@ require.config({
         'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
         "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
         // vendors not using cdn
-        'svg.export': 'components/svg.export.js/svg.export.min',
+        'svg.export': 'components/svg.export.js/svg.export',
         kineticjs: 'components/kineticjs/kinetic.min',
         buckets: 'components/buckets/buckets',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
@@ -31,22 +30,10 @@ require.config({
         'text': 'components/text/text',
         // application
         dispatcher: 'js/dispatcher',
-        app: 'js/spu/app',
-        'views/app-view': 'js/spu/views/app-view',
-        'views/play-ground': 'js/spu/views/play-ground',
-        'views/jit-preview': 'js/spu/views/jit-preview',
-        config: 'js/spu/config',
-        'color-tools': 'js/color-tools',
-        'control-group': 'js/spu/control-group',
-        'object-manager': 'js/spu/views/object-manager',
-        colors: 'js/spu/colors',
-        'collections/tags': 'js/spu/collections/tags',
-        'models/tag': 'js/spu/models/tag',
-        'collections/design-images': 'js/spu/collections/design-images',
-        'models/design-image': 'js/spu/models/design-image',
         'lazy-load': 'js/utils/lazy-load',
-        'cubic-interpolation': 'js/spu/core/cubic-interpolation',
-        'linear-interpolation': 'js/spu/core/linear-interpolation',
+        'color-tools': 'js/color-tools',
+        'spu': 'js/spu',
+        'js/infrastructure': ['http://yaza.qiniudn.com/infrastructure', 'js/infrastructure'],
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -110,4 +97,8 @@ require.config({
     }
 });
 
-requirejs(['app']);
+require(['svg'], function () {
+    require(['js/infrastructure'], function () {
+        require(['spu/app'], function () {});  
+    });
+});

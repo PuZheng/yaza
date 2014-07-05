@@ -1,4 +1,4 @@
-define(['views/app-view'], function (AppView, AppRouter, common) {
+define(['spu/views/app-view'], function (AppView) {
     var appView = new AppView();
     Backbone.history.start();
 });
