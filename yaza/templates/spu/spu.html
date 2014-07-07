@@ -10,9 +10,9 @@
 
 {% block customized_tail_block %}
   {% if config.QINIU_ENABLED and not config.DEBUG %}
-    <script type="text/javascript" data-main="http://yaza.qiniudn.com/spu/main.js" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="http://yaza.qiniudn.com/spu/main.js" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
   {% else %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
   {% endif %}
 {% endblock %}
 

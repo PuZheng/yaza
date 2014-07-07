@@ -8,16 +8,14 @@
       {% endblock %}
     </title>
     {% block head_block %}
-      {% if config.DEBUG %}
-        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='components/fancybox/source/jquery.fancybox.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='components/select2/select2.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='components/font-awesome/css/font-awesome.min.css') }}" />
-      {% elif config.QINIU_ENABLED %}
-        <link rel="stylesheet" href="http://yaza.qiniudn.com/static/assets/style.css" />
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      <link href="http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+      <link href="http://cdn.bootcss.com/select2/3.5.0/select2.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
+      {% if config.QINIU_ENABLED and not config.DEBUG %}
+        <link rel="stylesheet" href="http://yaza.qiniudn.com/js/vendor/bootswatch-scss/flatly/bootstrap.min.css" />
       {% else %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
       {% endif %}
       <!--[if lt IE 9]>
           <script src="{{ url_for('static', filename='components/html5shiv/dist/html5shiv.js') }}"></script>
