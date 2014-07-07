@@ -28,6 +28,7 @@ require.config({
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
+        "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
         // application
         dispatcher: 'js/dispatcher',
         'lazy-load': 'js/utils/lazy-load',
@@ -94,6 +95,9 @@ require.config({
         'jquery.ui.widget': {
             deps: ['jquery'],
         },
+        'autosize':{
+            deps: ['jquery']
+        }
     }
 });
 

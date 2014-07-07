@@ -1,4 +1,4 @@
-define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo"],
+define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize"],
     function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         _.mixin(_.str.exports());
 
@@ -80,7 +80,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     return false;
                 },
                 'click .add-text-modal .btn-ok': function (evt) {
-                    var text = this.$('.add-text-modal input').val().trim();
+                    var text = this.$('.add-text-modal textarea').val().trim();
                     if (!text) {
                         alert('文字不能为空');
                         return;
@@ -423,7 +423,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         width: $image.width(),
                         height: $image.height(),
                         'margin-left': ($image.parent().width() - $image.width())/2,
-                        'margin-top': ($image.parent().height() - $image.height())/2,
+                        'margin-top': ($image.parent().height() - $image.height())/2
                     });
                     stage = new Kinetic.Stage({
                         container: $container[0],
@@ -546,6 +546,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 });
 
                 this.$('.nav-tabs a:first').tab('show');
+                this.$("textarea").autosize();
 
                 var playGround = this;
                 this.$('.add-img-modal').on('shown.bs.modal', function (e) {
@@ -890,17 +891,19 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
 
                         controlGroup.off('dblclick').on('dblclick', function (playGround) {
                             return function (evt) {
+                                playGround._crossLayer.hide();
+                                playGround._stage.draw();
                                 // 之所以不用position, 是因为chrome下面position方法有bug
-                                var left = controlGroup.x() - im.width() / 2;
+                                var left = controlGroup.x() - (im.width() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
                                 left = Math.max(left, 0);
                                 left += playGround.$('.editable-region').offset().left;
                                 left -= playGround.$('.editable-region').parent().offset().left;
-                                var top = controlGroup.y() - im.height() / 2;
-                                top += playGround.$('.editable-region').offset().top,
+                                var top = controlGroup.y() - (im.height() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
+                                top += playGround.$('.editable-region').offset().top;
                                     top -= playGround.$('.editable-region').parent().offset().top;
                                 playGround.$('.change-text-panel').css({
-                                    left: left,
-                                    top: top,
+                                    left: left + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+                                    top: top + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
                                     position: 'absolute'
                                 }).show();
                                 ['.editable-region', '.object-manager', '.dashboard'].forEach(
@@ -914,10 +917,15 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                                             baseZ: 0
                                         });
                                     });
-                                playGround.$('.change-text-panel input').val(im.name());
-                                playGround.$('.change-text-panel input').focus();
+                                playGround.$('.change-text-panel textarea').val(im.name()).trigger('autosize.resize');
+                                playGround.$('.change-text-panel textarea').focus();
                                 playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                    var text = playGround.$('.change-text-panel input').val().trim();
+                                    var text = playGround.$('.change-text-panel textarea').val().trim();
+                                    if(!text){
+                                        alert("文字不能为空");
+                                        playGround.$('.change-text-panel textarea').val(im.name());
+                                        return false;
+                                    }
                                     playGround.$('.change-text-panel').hide();
                                     $.ajax({
                                         type: 'POST',
