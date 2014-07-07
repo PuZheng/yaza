@@ -501,9 +501,24 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         var canvas = document.createElement("canvas");
                         canvas.width = this._stage.width();
                         canvas.height = this._stage.height();
-
+                        var ctx = canvas.getContext("2d");
+                        var previewImageData = ctx.createImageData(canvas.width, 
+                            canvas.height);
+                        
+                        this._currentAspect.designRegionList.forEach(function (jitPreview) {
+                            return function (dr) {
+                                var imageData = jitPreview._layerCache[dr.id].getContext().getImageData(0, 0, canvas.width, canvas.height).data;
+                                var pixel = previewImageData.data.length / 4;
+                                while (pixel--) {
+                                    previewImageData.data[pixel * 4] |= imageData[pixel * 4];
+                                    previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
+                                    previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
+                                    previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                                }
+                            }
+                        }(this));
+                        
                         var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
-                        var previewImageData = this._currentLayer.getContext().getImageData(0, 0, canvas.width, canvas.height);
                         var pixel = previewImageData.data.length / 4;
                         // merge the background and preview 
                         while (pixel--) {
@@ -521,7 +536,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 previewImageData.data[pixel * 4 + 2] = outB;
                             }
                         }
-                        var ctx = canvas.getContext("2d");
                         ctx.putImageData(previewImageData, 0, 0);
                         var uri = canvas.toDataURL('image/png');
                         $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
