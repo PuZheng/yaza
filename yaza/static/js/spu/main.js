@@ -34,7 +34,7 @@ require.config({
         'lazy-load': 'js/utils/lazy-load',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
-        'js/infrastructure': ['http://yaza.qiniudn.com/infrastructure', 'js/infrastructure'],
+        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure'],
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -101,7 +101,7 @@ require.config({
     }
 });
 
-require(['svg'], function () {
+require(['jquery', 'svg'], function () {
     require(['js/infrastructure'], function () {
         require(['spu/app'], function () {});  
     });
