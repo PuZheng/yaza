@@ -8,7 +8,7 @@ from flask.ext.principal import Permission, RoleNeed
 
 from yaza import const
 from yaza.admin import views
-from yaza.basemain import data_browser, app
+from yaza.basemain import data_browser, app, admin_nav_bar
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
@@ -51,7 +51,6 @@ for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view,
 
 @admin.route("/")
 def index():
-    from yaza.basemain import admin_nav_bar
 
     return render_template("admin/index.html", nav_bar=admin_nav_bar)
 
@@ -72,3 +71,8 @@ def generator_ws():
 @admin.route("/design-result-download/<path:file>")
 def design_result_download(file):
     return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
+
+@admin.route('/spu-pkg-generator')
+def spu_pkg():
+    return render_template('admin/spu-pkg-generator.html',
+                           nav_bar=admin_nav_bar)

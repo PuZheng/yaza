@@ -99,6 +99,11 @@ def setup_nav_bar():
     admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-image'))
 
+    default_url = speaklater.make_lazy_string(lambda: url_for('admin.spu_pkg'))
+    admin_nav_bar.register(admin, name=u'设计包制作', default_url=default_url,
+                           enabler=lambda nav:
+                           request.path.startswith(url_for('admin.spu_pkg')))
+
 register_views()
 
 setup_nav_bar()
