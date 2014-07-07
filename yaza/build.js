@@ -27,6 +27,7 @@
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
+        "autosize": 'empty:',
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
