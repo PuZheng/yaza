@@ -56,13 +56,17 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def black_shadow_url(self):
-        return self.black_shadow_path if self.black_shadow_path.startswith("http") else \
-            url_for('image.serve', filename=self.black_shadow_path)
+        return self.black_shadow_path + '?imageView2/0/w/' + str(
+                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+                if self.black_shadow_path.startswith("http") else \
+                url_for('image.serve', filename=self.black_shadow_path)
 
     @property
     def white_shadow_url(self):
-        return self.white_shadow_path if self.white_shadow_path.startswith("http") else \
-            url_for('image.serve', filename=self.white_shadow_path)
+        return self.white_shadow_path + '?imageView2/0/w/' + str(
+                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+                if self.white_shadow_path.startswith("http") else \
+                url_for('image.serve', filename=self.white_shadow_path)
 
     @property
     def thumbnail(self):

@@ -6,28 +6,53 @@
         }
     },
     paths: {
-        // vendors
-        jquery: 'components/jquery/dist/jquery.min',
-        underscore: 'components/underscore/underscore',
+        jquery: 'empty:',
+        underscore: 'empty:',
+        backbone: 'empty:',
+        bootstrap: 'empty:',
+        handlebars: 'empty:',
+        'underscore.string': 'empty:',
+        'jquery.ui.widget': 'empty:',
+        'cookies-js': 'empty:',
+        'select2': 'empty:',
+        'svg': 'empty:',
+        'block-ui': 'empty:',
+        'spectrum': 'empty:',
+        'zClip': 'empty:',
+        "jquery.scrollTo": 'empty:',
+        // vendors not using cdn
+        'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
-        backbone: 'components/backbone/backbone',
-        bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
-        handlebars: 'components/handlebars/handlebars.amd.min',
-        'underscore.string': 'components/underscore.string/dist/underscore.string.min',
+        buckets: 'components/buckets/buckets',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-        'jquery.ui.widget': 'components/jquery-ui/ui/minified/jquery.ui.widget.min',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
-        'cookies-js': 'components/cookies-js/src/cookies.min',
-        'select2': 'components/select2/select2.min',
         // application
+        'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
-        app: 'js/spu/app',
-        'views/app-view': 'js/spu/views/app-view',
-        'views/play-ground': 'js/spu/views/play-ground',
-        'views/jit-preview': 'js/spu/views/jit-preview',
+        'lazy-load': 'js/utils/lazy-load',
+        'color-tools': 'js/color-tools',
+        'spu': 'js/spu'
     },
+    removeCombined: true,
+    preserveLicenseComments: false,
+    //optimize: "none",
+    optimizeCss: "standard",
+    dir: "static/dist",
+    findNestedDependencies: true,
+    modules: [
+        {
+            name: 'js/spu/main',
+            exclude: ['js/infrastructure'],
+        },
+        {
+            name: 'js/infrastructure',
+        }
+    ],
     shim: {
+        'block-ui': {
+            deps: ['jquery'],
+        },
         'underscore': {
             exports: '_',
         },
@@ -42,20 +67,43 @@
             deps: ['jquery'],
             exports: '$.fn.tooltip',
         },
-        'select2': {
-            deps: ['css!//cdn.staticfile.org/select2/3.4.6/select2.min.css', 'css!//cdn.staticfile.org/select2/3.4.6/select2-bootstrap.css']
+        'lazy-load': {
+            deps: ['jquery'],
+            exports: '$.fn.lazyLoad', 
+        },
+        'color-tools':{
+            deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
+        },
+        'spectrum': {
+            deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
+            exports: '$.fn.spectrum',
+        },
+        'svg': {
+            exports: 'SVG',
+        },
+        'svg.export': {
+            deps: ['svg'],
+        },
+        'select2':{
+            deps:['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
+        },
+        'buckets': {
+            exports: 'buckets',
+        },
+        'zlib': {
+            exports: 'Zlib',
+        },
+        'jquery.scrollTo': {
+            deps: ['jquery']
+        },
+        'jquery.iframe-transport': {
+            deps: ['jquery'],
+        },
+        'jquery.ui.widget': {
+            deps: ['jquery'],
         }
     },
-    removeCombined: true,
-    preserveLicenseComments: false,
-    optimizeCss: "standard",
-    dir: "static/dist",
-    modules: [
-        {
-            name: 'js/spu/main'
-        },
-    ]
 })

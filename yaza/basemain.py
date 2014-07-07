@@ -11,7 +11,20 @@ import speaklater
 from sqlalchemy.exc import SQLAlchemyError
 
 
-app = Flask(__name__, instance_relative_config=True)
+class MyFlask(Flask):
+
+    @property
+    def static_folder(self):
+        if self.config.get('DEBUG'):
+            return os.path.join(self.root_path, 'static')
+        return os.path.join(self.root_path, 'static', 'dist')
+
+    @static_folder.setter
+    def static_folder(self, value):
+        pass
+
+app = MyFlask(__name__, instance_relative_config=True,
+            static_url_path='/static')
 app.config.from_object("yaza.default_settings")
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
 

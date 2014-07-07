@@ -1,14 +1,18 @@
 {% extends "layout.html" %}
 
 {% block customized_head_block %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}"/>
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/custom.css"/>
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}"/>
+  {% endif %}
 {% endblock %}
 
 {% block customized_tail_block %}
-  {% if config.DEBUG %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <script type="text/javascript" data-main="http://yaza.qiniudn.com/spu/main.js" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
   {% else %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='dist/js/spu/main.js', bust=time) }}" src="{{ url_for('static', filename='components/requirejs/require.js') }}"></script>
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
   {% endif %}
 {% endblock %}
 
