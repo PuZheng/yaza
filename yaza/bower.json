@@ -44,7 +44,8 @@
     "bootstrap-sass-official": "~3.2.0",
     "modernizr": "~2.8.2",
     "normalize-css": "~3.0.1",
-    "zlib": "~3.24.10",
-    "autosize":"https://github.com/jackmoore/autosize.git"
+    "autosize": "https://github.com/jackmoore/autosize.git",
+    "jszip": "Stuk/jszip#~2.3.0",
+    "FileSaver": "*"
   }
 }
