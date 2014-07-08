@@ -205,7 +205,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     }
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
-                    console.log("aspect click:", aspect.name);
                     this._currentAspect = aspect;
                     dispatcher.trigger("aspect-selected", aspect);
                 },
@@ -311,7 +310,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspect.name)).parent().click();
                     }
                 }, this).on('active-object', function (controlGroup) {
-                    console.log('active object');
                     this._controlLayer.getChildren().forEach(function (group) {
                         group.hide();
                         group.find('.rect')[0].stroke(this._hoveredComplementColor);
@@ -838,7 +836,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
             },
 
             _addText: function (data, text, oldIm, oldControlGroup) {
-                console.log('add text ' + text);
                 var imageObj = new Image();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
@@ -941,7 +938,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                                             dispatcher.trigger("jitPreview-mask");
                                         }
                                     }).done(function (data) {
-                                        console.log("don");
                                         playGround._addText(data, text, im, controlGroup);
                                     }).fail(playGround._fail).always(function () {
                                         dispatcher.trigger("jitPreview-unmask");

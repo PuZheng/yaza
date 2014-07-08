@@ -28,6 +28,7 @@
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         "autosize": 'empty:',
+        'jquery-ajaxtransport-xdomainrequest': "empty:",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',

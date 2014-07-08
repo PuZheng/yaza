@@ -1,5 +1,5 @@
-define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string'],
-    function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest"],
+    function ( bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -32,16 +32,13 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     this._orderId = options.orderId;
                     dispatcher.on("aspect-selected", function (aspect) {
                         var jitPreview = this;
-                        console.log('aspect ' + aspect.name + ' ' + aspect.picUrl + ' selected');
                         // 切换图片时要mask
                         dispatcher.trigger('jitPreview-mask');
 
                         jitPreview._currentAspect = aspect;
 
-                        // 
-                        $.get(aspect.picUrl, function () {
+                        $.ajax({url: aspect.picUrl, crossDomain: true}).done(function () {
                             jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
-
                                 // 其实可以不用使用本img标签,直接在backgroud layer中画,
                                 // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
                                 // 图片的大小
@@ -62,7 +59,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 jitPreview._backgroundLayer = new Kinetic.Layer({
                                     name: "background"
                                 });
-                                jitPreview._backgroundLayer.add(im).on('mouseover', function(evt){
+                                jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
                                     jitPreview._onMouseover(evt, jitPreview);
                                 });
                                 // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
@@ -115,12 +112,13 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                         var ctx = canvas.getContext("2d");
                                         ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width,
-                                        canvas.height).data;
+                                            canvas.height).data;
                                         d.notify('black');
                                     };
-                                    $.get(aspect.blackShadowUrl, function () {
-                                        blackImageObj.src = aspect.blackShadowUrl;
-                                    });
+                                    $.ajax({url: aspect.blackShadowUrl, crossDomain: true}).done(
+                                        function () {
+                                            blackImageObj.src = aspect.blackShadowUrl;
+                                        });
                                 } else {
                                     d.notify('black');
                                 }
@@ -134,12 +132,13 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                         var ctx = canvas.getContext("2d");
                                         ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
                                         aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width,
-                                        canvas.height).data;
+                                            canvas.height).data;
                                         d.notify('white');
                                     };
-                                    $.get(aspect.whiteShadowUrl, function () {
-                                        whiteImageObj.src = aspect.whiteShadowUrl;
-                                    });
+                                    $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
+                                        function () {
+                                            whiteImageObj.src = aspect.whiteShadowUrl;
+                                        });
                                 } else {
                                     d.notify('white');
                                 }
@@ -147,7 +146,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         });
                         // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     }.bind(this)).on("design-region-selected", function (designRegion) {
-                        console.log("design region selected, " + designRegion.name);
                         if (!designRegion.previewEdges) {
                             designRegion.previewEdges = this._getPreviewEdges(designRegion.edges, {
                                 x: this._stage.width() / designRegion.aspect.size[0],
@@ -351,7 +349,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 },
 
                 _onMouseover: function (evt, jitPreview) {
-                    console.log('mouseover');
                     dispatcher.trigger('jitPreview-mask');
                     var hdImageObj = new Image();
                     var mouseOverEvent = evt;
@@ -368,7 +365,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             height: jitPreview._backgroundLayer.height()
                         });
                         zoomBackgroundLayer.on('mouseout', function () {
-                            console.log('mouseout');
                             jitPreview._stage.find('.zoom-layer').destroy();
                             zoomBackgroundLayer.destroy();
                             jitPreview._backgroundLayer.show();
@@ -502,9 +498,9 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         canvas.width = this._stage.width();
                         canvas.height = this._stage.height();
                         var ctx = canvas.getContext("2d");
-                        var previewImageData = ctx.createImageData(canvas.width, 
+                        var previewImageData = ctx.createImageData(canvas.width,
                             canvas.height);
-                        
+
                         this._currentAspect.designRegionList.forEach(function (jitPreview) {
                             return function (dr) {
                                 var imageData = jitPreview._layerCache[dr.id].getContext().getImageData(0, 0, canvas.width, canvas.height).data;
@@ -517,7 +513,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 }
                             }
                         }(this));
-                        
+
                         var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
                         var pixel = previewImageData.data.length / 4;
                         // merge the background and preview 
@@ -976,10 +972,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
             imageData.data[pos] = bilinear(pointsMatrix[0]);
             imageData.data[pos + 1] = bilinear(pointsMatrix[1]);
             imageData.data[pos + 2] = bilinear(pointsMatrix[2]);
-            console.log(imageData.data[pos] + ' ' +
-                imageData.data[pos + 1] + ' ' +
-                imageData.data[pos + 2] + ' ' +
-                imageData.data[pos + 3]);
         }
 
         return JitPreview;
