@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
-from itsdangerous import URLSafeTimedSerializer
+import time
 
+from itsdangerous import URLSafeTimedSerializer
 from flask import Blueprint, render_template, request, send_from_directory
 from flask.ext.login import current_user
 from flask.ext.babel import _
@@ -72,7 +73,8 @@ def generator_ws():
 def design_result_download(file):
     return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
 
+
 @admin.route('/spu-pkg-generator')
 def spu_pkg():
     return render_template('admin/spu-pkg-generator.html',
-                           nav_bar=admin_nav_bar)
+                           nav_bar=admin_nav_bar, time=time.time())

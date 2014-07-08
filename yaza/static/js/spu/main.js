@@ -1,10 +1,5 @@
 require.config({
     baseUrl: '/static',
-    map: {
-        '*': {
-            'css': 'components/require-css/css.min'
-        }
-    },
     paths: {
         // vendors using bootcss cdn
         jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
@@ -28,6 +23,7 @@ require.config({
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
+        'css': 'components/require-css/css.min',
         "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
         // application
         dispatcher: 'js/dispatcher',
@@ -101,6 +97,8 @@ require.config({
     }
 });
 
+// force loading jquery, svg before infrastructure, since infrastructure need
+// them after compression
 require(['jquery', 'svg'], function () {
     require(['js/infrastructure'], function () {
         require(['spu/app'], function () {});  
