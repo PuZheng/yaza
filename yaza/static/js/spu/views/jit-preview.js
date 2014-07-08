@@ -47,8 +47,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                         jitPreview._currentAspect = aspect;
 
-                        if ($.support.cors) {
-                            $.ajax({url: aspect.picUrl, crossDomain: true}).done(function(){
+                        if ($.support.cors || aspect.picUrl.indexOf("http") !== 0) {
+                            $.ajax({url: aspect.picUrl, crossDomain: true}).done(function () {
                                 jitPreview._setupImage(aspect.picUrl, aspect);
                             });
                         } else {
@@ -526,16 +526,16 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             return ret;
                         }();
                         if (!aspect.blackShadowImageData) {
-                            if ($.support.cors) {
+                            if ($.support.cors || aspect.blackShadowUrl.indexOf("http") !== 0) {
                                 var blackImageObj = new Image();
                                 blackImageObj.crossOrigin = "Anonymous";
                                 blackImageObj.onload = function () {
                                     aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
                                     d.notify('black');
                                 };
-                                $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
+                                $.ajax({url: aspect.blackShadowUrl, crossDomain: true}).done(
                                     function () {
-                                        blackImageObj.src = aspect.whiteShadowUrl;
+                                        blackImageObj.src = aspect.blackShadowUrl;
                                     });
                             } else {
                                 $.getImageData({url: aspect.blackShadowUrl,
@@ -555,7 +555,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         }
 
                         if (!aspect.whiteShadowImageData) {
-                            if ($.support.cors) {
+                            if ($.support.cors || aspect.whiteShadowUrl.indexOf("http") !== 0) {
                                 var whiteImageObj = new Image();
                                 whiteImageObj.crossOrigin = "Anonymous";
                                 whiteImageObj.onload = function () {

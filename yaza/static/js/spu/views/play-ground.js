@@ -1,4 +1,4 @@
-define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize"],
+define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
     function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
         _.mixin(_.str.exports());
 
@@ -773,15 +773,9 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 }
             },
 
-            _addImage: function (src, title, design_image_id) {
-                if (!title) { // 用户自己上传的图片没有title
-                    title = new Date().getTime();
-                }
-                // 将图片按比例缩小，并且放在正中
-                var er = this._imageLayer;
-                var imageObj = new Image();
-                imageObj.crossOrigin = 'Anonymous';
-                imageObj.onload = _.bind(function () {
+            _addKineticImage: function(imageObj, name, design_image_id){
+                    // 将图片按比例缩小，并且放在正中
+                    var er = this._imageLayer;
                     var width = er.width() - 2 * this._initMargin;
                     var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
                     if (imageObj.height * width > imageObj.width * height) {
@@ -797,7 +791,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         width: width,
                         "design-image-id": design_image_id,
                         height: height,
-                        name: title,
+                        name: name,
                         offset: {
                             x: width / 2,
                             y: height / 2
@@ -806,7 +800,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     this._imageLayer.add(image);
                     this._imageLayer.draw();
 
-                    var group = makeControlGroup(image, title, true).on('dragend',
+                    var group = makeControlGroup(image, name, true).on('dragend',
                         function (playGround) {
                             return function () {
                                 playGround._crossLayer.hide();
@@ -831,8 +825,32 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     this._controlLayer.add(group).draw();
                     this._objectManager.add(image, group);
                     dispatcher.trigger('update-hotspot', this._imageLayer);
-                }, this);
-                imageObj.src = src;
+            },
+
+            _addImage: function (src, title, design_image_id) {
+                if (!title) { // 用户自己上传的图片没有title
+                    title = new Date().getTime();
+                }
+
+                if ($.support.cors || src.indexOf("http") !== 0) {
+                    var imageObj = new Image();
+                    imageObj.crossOrigin = 'Anonymous';
+                    imageObj.onload = function () {
+                        this._addKineticImage(imageObj, title, design_image_id)
+                    }.bind(this);
+                    imageObj.src = src;
+                }else{
+                    $.getImageData({
+                        url:src,
+                        server: "http://maxnov.com/getimagedata/getImageData.php",
+                        success: function(image){
+                            this._addKineticImage(image, title, design_image_id)
+                        }.bind(this),
+                        error: function(xhr, status){
+                            alert("load image error");
+                        }
+                    })
+                }
             },
 
             _addText: function (data, text, oldIm, oldControlGroup) {
