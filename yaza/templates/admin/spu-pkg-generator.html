@@ -1,0 +1,43 @@
+{% extends "data_browser__/layout.html" %}
+
+{% block __data_browser__tail_block %}
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <script type="text/javascript" data-main="http://yaza.qiniudn.com/js/admin/spu-pkg-generator/main.js" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
+  {% else %}
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/admin/spu-pkg-generator/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="primary">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        新建SPU
+      </div>
+      <div class="panel-body">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <label for="" class="control-label col-sm-2">SPU名称</label>
+            <div class="col-sm-4">
+              <input type="text" placeholder="SPU名称" class='form-control'>
+            </div>
+            <button class="btn-new-ocspu cols-sm-3 btn btn-primary">
+              <i class="fa fa-plus"></i>
+              增加OCSPU
+            </button>
+            <button class="btn-new-ocspu cols-sm-3 btn btn-success">
+              <i class="fa fa-download"></i>
+              下载
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ocspu" style="display: none">
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+<div class="col-md-10 col-md-offset-1">
+  <div class="panel-new-aspect panel panel-default">
+    <div class="panel-heading">
+      新建面
+    </div>
+    <div class="panel-body">
+      <div class="form-horizontal">
+        <div class="form-group">
+          <label for="" class="control-label col-sm-2">面名称</label>
+          <div class="col-sm-4">
+            <input type="text" placeholder="正面或者反面等..." class='form-control'>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="" class="control-label col-sm-2">面图片</label>
+          <div class="col-sm-4">
+            <input type="file" class='form-control'/>
+          </div>
+          <div class="col-sm-4">
+            <img src="" alt="" class="aspect-preview" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <div class="row">
+        <div class="col-md-6 col-md-offset-6">
+          <button class="btn-new-design-region btn btn-primary" data-toggle='modal' data-target='.modal-new-design-region'>
+            <i class="fa fa-plus"></i>
+            增加定制区
+          </button>
+          <button class="btn btn-danger btn-cancel-aspect"><span aria-hidden="true">&times;</span>取消</button>
+          <button class="btn btn-primary">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-new-design-region modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <label for="" class="control-label col-md-3">定制区名称</label>
+            <div class="col-md-6">
+              <input type="" class="form-control" placeholder='例如前胸...'/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="" class="control-label col-md-3">尺寸<small class='text-danger'>(英寸)</small></label>
+            <div class="col-md-2">
+              <input type="number" class="form-control" placeholder='宽'/>   
+            </div>
+            <div class="col-md-1">
+              <div class='control-label'>X</div>
+            </div>
+            <div class="col-md-2">
+              <input type="number" class="form-control" placeholder='高'/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="" class="control-label col-md-3">图片</label>
+            <div class="col-md-6">
+              <input type="file" class="form-control" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
