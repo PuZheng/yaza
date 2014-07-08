@@ -6,9 +6,6 @@ define(["spu/config"], function (config) {
     }
 
     function makeControlGroup(node, title, resizable) {
-
-        console.log(node.x() + ' ' + node.y());
-
         resizable = !!resizable;
         var group = new Kinetic.Group({
             x: node.x() - node.offsetX() + node.width() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
@@ -175,7 +172,6 @@ define(["spu/config"], function (config) {
                         var distance = Math.sqrt(offsetY * offsetY + offsetX * offsetX);
                         // 计算在group坐标系下(即以group.position()为原点, 并考虑旋转)的新的Y坐标, 并沿着同一条边的y
                         var offsetY_ = (offsetY > 0 ? 1 : -1) * distance * Math.cos(group.rotation() / 180 * Math.PI + Math.atan(offsetX / offsetY));
-                        console.log(offsetX + ' ' + offsetY + ' ' + distance + ' ' + offsetY_);
                         if (offsetY_ < 0) {
                             offsetY_ = 0;
                         }

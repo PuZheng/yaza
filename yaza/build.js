@@ -28,6 +28,8 @@
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         "autosize": 'empty:',
+        'jquery-ajaxtransport-xdomainrequest': "empty:",
+        "getImageData": "components/getImageData/jquery.getimagedata.min.js",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
@@ -70,10 +72,10 @@
         },
         'lazy-load': {
             deps: ['jquery'],
-            exports: '$.fn.lazyLoad', 
+            exports: '$.fn.lazyLoad',
         },
-        'color-tools':{
-            deps:['underscore', 'jquery']
+        'color-tools': {
+            deps: ['underscore', 'jquery']
         },
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
@@ -88,8 +90,8 @@
         'svg.export': {
             deps: ['svg'],
         },
-        'select2':{
-            deps:['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
+        'select2': {
+            deps: ['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
         },
         'buckets': {
             exports: 'buckets',
