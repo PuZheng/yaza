@@ -1,5 +1,5 @@
-define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest"],
-    function ( bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData"],
+    function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -27,6 +27,16 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 _template: Handlebars.default.compile(jitPreviewTemplate),
                 _layerCache: {},
 
+                _getImageData: function (image) {
+                    var canvas = document.createElement("canvas");
+                    canvas.width = this._stage.width();
+                    canvas.height = this._stage.height();
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    return ctx.getImageData(0, 0, canvas.width,
+                        canvas.height).data;
+                },
+
                 initialize: function (options) {
                     this._spu = options.spu;
                     this._orderId = options.orderId;
@@ -37,113 +47,22 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                         jitPreview._currentAspect = aspect;
 
-                        $.ajax({url: aspect.picUrl, crossDomain: true}).done(function () {
-                            jitPreview.$('.hotspot img').attr('src', aspect.picUrl).one('load', function (evt) {
-                                // 其实可以不用使用本img标签,直接在backgroud layer中画,
-                                // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
-                                // 图片的大小
-                                $(this).show();  // 先显示为了正确获得图片的style
-                                jitPreview.$('.design-regions').css({
-                                    width: $(this).width(),
-                                    height: $(this).height()
-                                }).offset($(this).offset());
-                                evt.target.crossOrigin = 'Anonymous';
-                                var im = new Kinetic.Image({
-                                    image: evt.target,
-                                    width: $(this).width(),
-                                    height: $(this).height()
-                                });
-
-                                !!jitPreview._backgroundLayer && jitPreview._backgroundLayer.remove();
-
-                                jitPreview._backgroundLayer = new Kinetic.Layer({
-                                    name: "background"
-                                });
-                                jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                                    jitPreview._onMouseover(evt, jitPreview);
-                                });
-                                // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
-                                // background layer不重叠
-
-                                jitPreview._stage.getChildren(function (node) {
-                                    return node.getName() == "background";
-                                }).forEach(function (node) {
-                                    node.destroy();
-                                });
-                                jitPreview._stage.draw();
-
-                                jitPreview._stage.add(jitPreview._backgroundLayer);
-                                jitPreview._backgroundLayer.moveToBottom();
-                                jitPreview._stage.width($(this).width());
-                                jitPreview._stage.height($(this).height());
-                                $(this).hide();
-                                jitPreview._stage.children.forEach(function (node) {
-                                    // 只改变当前面的所有layer的大小
-                                    if (node.nodeType === 'Layer' && node.visible()) {
-                                        node.size(jitPreview._stage.size());
-                                    }
-                                });
-                                // 只有当纹理图片都加载完毕才能开始产生预览
-
-                                var d = function () {
-                                    var ret = $.Deferred();
-                                    var l = [];
-                                    ret.progress(function (arg) {
-                                        l.push(arg);
-                                        if (l.length == 2) {
-                                            dispatcher.trigger('jitPreview-unmask');
-                                            // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
-                                            if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                                $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                            } else {
-                                                $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                            }
-                                        }
-                                    });
-                                    return ret;
-                                }();
-                                if (!aspect.blackShadowImageData) {
-                                    var blackImageObj = new Image();
-                                    blackImageObj.crossOrigin = "Anonymous";
-                                    blackImageObj.onload = function () {
-                                        var canvas = document.createElement("canvas");
-                                        canvas.width = jitPreview._stage.width();
-                                        canvas.height = jitPreview._stage.height();
-                                        var ctx = canvas.getContext("2d");
-                                        ctx.drawImage(blackImageObj, 0, 0, canvas.width, canvas.height);
-                                        aspect.blackShadowImageData = ctx.getImageData(0, 0, canvas.width,
-                                            canvas.height).data;
-                                        d.notify('black');
-                                    };
-                                    $.ajax({url: aspect.blackShadowUrl, crossDomain: true}).done(
-                                        function () {
-                                            blackImageObj.src = aspect.blackShadowUrl;
-                                        });
-                                } else {
-                                    d.notify('black');
-                                }
-                                if (!aspect.whiteShadowImageData) {
-                                    var whiteImageObj = new Image();
-                                    whiteImageObj.crossOrigin = "Anonymous";
-                                    whiteImageObj.onload = function () {
-                                        var canvas = document.createElement("canvas");
-                                        canvas.width = jitPreview._stage.width();
-                                        canvas.height = jitPreview._stage.height();
-                                        var ctx = canvas.getContext("2d");
-                                        ctx.drawImage(whiteImageObj, 0, 0, canvas.width, canvas.height);
-                                        aspect.whiteShadowImageData = ctx.getImageData(0, 0, canvas.width,
-                                            canvas.height).data;
-                                        d.notify('white');
-                                    };
-                                    $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
-                                        function () {
-                                            whiteImageObj.src = aspect.whiteShadowUrl;
-                                        });
-                                } else {
-                                    d.notify('white');
+                        if ($.support.cors) {
+                            $.ajax({url: aspect.picUrl, crossDomain: true}).done(function(){
+                                jitPreview._setupImage(aspect.picUrl, aspect);
+                            });
+                        } else {
+                            $.getImageData({url: aspect.picUrl,
+                                crossDomain: true,
+                                server: 'http://maxnov.com/getimagedata/getImageData.php',
+                                success: function (image) {
+                                    jitPreview._setupImage(image.src, aspect);
+                                },
+                                error: function (xhr, status) {
+                                    alert("load image error");
                                 }
                             });
-                        });
+                        }
                         // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     }.bind(this)).on("design-region-selected", function (designRegion) {
                         if (!designRegion.previewEdges) {
@@ -538,6 +457,132 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             evt.stopPropagation();
                         })[0].click();
                     }
+                },
+
+                _setupImage: function (picUrl, aspect) {
+                    var jitPreview = this;
+                    jitPreview.$('.hotspot img').attr("src", picUrl).one('load', function (evt) {
+                        // 其实可以不用使用本img标签,直接在backgroud layer中画,
+                        // 不过这里用了一个投机取巧的办法,用浏览器帮助计算
+                        // 图片的大小
+                        $(this).show();  // 先显示为了正确获得图片的style
+                        jitPreview.$('.design-regions').css({
+                            width: $(this).width(),
+                            height: $(this).height()
+                        }).offset($(this).offset());
+                        evt.target.crossOrigin = 'Anonymous';
+                        var im = new Kinetic.Image({
+                            image: evt.target,
+                            width: $(this).width(),
+                            height: $(this).height()
+                        });
+
+                        !!jitPreview._backgroundLayer && jitPreview._backgroundLayer.remove();
+
+                        jitPreview._backgroundLayer = new Kinetic.Layer({
+                            name: "background"
+                        });
+                        jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
+                            jitPreview._onMouseover(evt, jitPreview);
+                        });
+                        // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
+                        // background layer不重叠
+
+                        jitPreview._stage.getChildren(function (node) {
+                            return node.getName() == "background";
+                        }).forEach(function (node) {
+                            node.destroy();
+                        });
+                        jitPreview._stage.draw();
+
+                        jitPreview._stage.add(jitPreview._backgroundLayer);
+                        jitPreview._backgroundLayer.moveToBottom();
+                        jitPreview._stage.width($(this).width());
+                        jitPreview._stage.height($(this).height());
+                        $(this).hide();
+                        jitPreview._stage.children.forEach(function (node) {
+                            // 只改变当前面的所有layer的大小
+                            if (node.nodeType === 'Layer' && node.visible()) {
+                                node.size(jitPreview._stage.size());
+                            }
+                        });
+                        // 只有当纹理图片都加载完毕才能开始产生预览
+
+                        var d = function () {
+                            var ret = $.Deferred();
+                            var l = [];
+                            ret.progress(function (arg) {
+                                l.push(arg);
+                                if (l.length == 2) {
+                                    dispatcher.trigger('jitPreview-unmask');
+                                    // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                                    if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                                        $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
+                                    } else {
+                                        $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
+                                    }
+                                }
+                            });
+                            return ret;
+                        }();
+                        if (!aspect.blackShadowImageData) {
+                            if ($.support.cors) {
+                                var blackImageObj = new Image();
+                                blackImageObj.crossOrigin = "Anonymous";
+                                blackImageObj.onload = function () {
+                                    aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
+                                    d.notify('black');
+                                };
+                                $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
+                                    function () {
+                                        blackImageObj.src = aspect.whiteShadowUrl;
+                                    });
+                            } else {
+                                $.getImageData({url: aspect.blackShadowUrl,
+                                    crossDomain: true,
+                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
+                                    success: function (blackImageObj) {
+                                        aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
+                                        d.notify('black');
+                                    },
+                                    error: function (xhr, status) {
+                                        alert("load image error");
+                                    }
+                                })
+                            }
+                        } else {
+                            d.notify('black');
+                        }
+
+                        if (!aspect.whiteShadowImageData) {
+                            if ($.support.cors) {
+                                var whiteImageObj = new Image();
+                                whiteImageObj.crossOrigin = "Anonymous";
+                                whiteImageObj.onload = function () {
+                                    aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
+                                    d.notify('white');
+                                };
+                                $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
+                                    function () {
+                                        whiteImageObj.src = aspect.whiteShadowUrl;
+                                    });
+                            } else {
+                                $.getImageData({url: aspect.whiteShadowUrl,
+                                    crossDomain: true,
+                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
+                                    success: function (whiteImageObj) {
+                                        aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
+                                        d.notify('white');
+                                    },
+                                    error: function (xhr, status) {
+                                        alert("load image error");
+                                    }
+                                })
+                            }
+                        } else {
+                            d.notify('white');
+                        }
+                    });
                 },
 
                 render: function () {

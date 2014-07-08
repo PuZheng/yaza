@@ -31,6 +31,7 @@ require.config({
         "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
         'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
+        "getImageData": "components/getImageData/jquery.getimagedata.min",
         // application
         dispatcher: 'js/dispatcher',
         'lazy-load': 'js/utils/lazy-load',
@@ -98,6 +99,9 @@ require.config({
             deps: ['jquery'],
         },
         'autosize':{
+            deps: ['jquery']
+        },
+        'getImageData' :{
             deps: ['jquery']
         }
     }
