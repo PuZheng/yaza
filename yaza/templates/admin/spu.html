@@ -1,0 +1,61 @@
+{% extends "data_browser__/layout.html" %}
+{% block __data_browser__customized_head_block %}
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin.css"/>
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin/spu.css"/>
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/spu.css') }}"/>
+  {% endif %}
+{% endblock %}
+
+{% block __data_browser__tail_block %}
+  {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <script type="text/javascript" data-main="http://yaza.qiniudn.com/js/admin/spu/main.js" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
+  {% else %}
+    <script type="text/javascript" data-main="{{ url_for('static', filename='js/admin/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="primary">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <span class="text-muted">
+          新建SPU 
+        </span>
+        <em class='spu-name'></em>
+      </div>
+      <div class="panel-body">
+        <div class="form-horizontal spu-form">
+          <div class="form-group">
+            <label for="" class="control-label col-sm-2">SPU名称</label>
+            <div class="col-sm-4">
+              <input type="text" placeholder="SPU名称" class='form-control'>
+            </div>
+            <button class="btn-new-ocspu btn btn-primary" style="display: none">
+              <i class="fa fa-plus"></i>
+              增加OCSPU
+            </button>
+            <label class="control-label text-danger" style='display: none'>* SPU名称不能为空</label>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <div class="row">
+          <a class="cols-sm-3 btn btn-default pull-right" href="{{ model_view.url_for_list() }}">
+            <i class="fa fa-back"></i>
+            返回
+          </a>
+          <button class="btn-new-spu cols-sm-3 btn btn-primary pull-right">
+            <i class="fa fa-plus"></i>
+            创建
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="ocspu" style="display: none"></div>
+  </div>
+</div>
+{% endblock %}

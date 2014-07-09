@@ -9,11 +9,16 @@ require.config({
         handlebars: ['http://cdn.bootcss.com/handlebars.js/2.0.0-alpha.4/handlebars.amd', 'components/handlebars/handlebars.amd.min'],
         'underscore.string': ['http://cdn.bootcss.com/underscore.string/2.3.3/underscore.string.min', 'components/underscore.string/dist/underscore.string.min'],
         'spectrum': ['http://cdn.bootcss.com/spectrum/1.3.0/js/spectrum.min', 'components/spectrum/spectrum'],
+        'fancybox': 'http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min',
+        'jquery.ui.widget': ['http://cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min', 'components/jquery-ui/ui/jquery.ui.widget'],
         // vendors not using cdn
+        'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
+        'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'css': 'components/require-css/css.min',
         // application
-        'spg': 'js/admin/spu-pkg-generator'
+        dispatcher: 'js/dispatcher',
+        'spu': 'js/admin/spu'
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -36,10 +41,22 @@ require.config({
             //deps: ['css!components/spectrum/spectrum.css', 'jquery'],
             exports: '$.fn.spectrum',
         },
+        'fancybox': {
+            deps: ['css!http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css', 'jquery'],
+            exports: '$.fn.fancybox',
+        },
+        'jquery-file-upload': {
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
+                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css', 
+            'jquery.ui.widget']
+        },
+        'jquery.ui.widget': {
+            deps: ['jquery'],
+        },
     },
 });
 
 
-require(['spg/infrastructure'], function () {
-    require(['spg/app'], function () {})
+require(['spu/infrastructure'], function () {
+    require(['spu/app'], function () {})
 });

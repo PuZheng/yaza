@@ -59,7 +59,9 @@ require.config({
             deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
+                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css', 
+            'jquery.ui.widget']
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],

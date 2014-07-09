@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import time
 
-from flask import render_template, json, request
+from flask import render_template, json, request, jsonify
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.sa import SAModell
 from flask.ext.babel import lazy_gettext
@@ -9,10 +9,12 @@ from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied, Permission, RoleNeed
 
 from yaza import models, const
-from yaza.basemain import app
 from yaza.apis import wraps
 from yaza.database import db
 from yaza.admin import serializer
+from yaza.models import SPU, OCSPU
+from yaza.utils import do_commit, get_or_404
+from yaza.portal.spu import spu_ws
 
 
 class SPUModelView(ModelView):
@@ -41,3 +43,29 @@ class SPUModelView(ModelView):
 
 
 spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU, label=lazy_gettext(u"spu")))
+
+
+@spu_ws.route('/spu.json', methods=['POST', 'PUT'])
+def spu_api():
+    name = json.loads(request.data)['name']
+    if request.method == 'POST':
+        spu = wraps(do_commit(SPU(name=name)))
+    else:
+        id_ = json.loads(request.data)['id']
+        spu = get_or_404(SPU, id_)
+        spu.name = name
+        db.session.commit()
+    return jsonify(spu.as_dict())
+
+
+@spu_ws.route('/ocspu.json', methods=['POST', 'PUT'])
+def ocspu_api():
+
+    import pudb; pudb.set_trace()
+
+    d = json.loads(request.data)
+    color = d.get('color')
+    spu_id = d.get('spu_id')
+    rgb = d.get('rgb')
+    ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb)))
+    return jsonify(ocspu.as_dict())

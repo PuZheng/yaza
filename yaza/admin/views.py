@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import shutil
+import time
 from flask import render_template
 
 from flask.ext.databrowser import ModelView, sa, col_spec, filters
@@ -11,7 +12,7 @@ from flask.ext.principal import Permission, RoleNeed, PermissionDenied
 from yaza import ext_validators, const
 from yaza.apis import wraps
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignImageWrapper
-from yaza.basemain import app
+from yaza.basemain import app, admin_nav_bar
 from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
@@ -75,6 +76,11 @@ class SPUAdminModelView(ModelView):
         spu = self._get_one(id_)
         self.try_edit(spu)
         return render_template(self.edit_template, spu=spu)
+
+
+    def create_view(self):
+        return render_template('admin/spu.html',
+                               nav_bar=admin_nav_bar, time=time.time(), model_view=self)
 
 
 class OCSPUAdminModelView(ModelView):

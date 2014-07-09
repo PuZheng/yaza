@@ -83,6 +83,7 @@ def register_views():
 def setup_nav_bar():
     from yaza.admin import views, admin
 
+
     default_url = speaklater.make_lazy_string(views.spu_model_view.url_for_list)
     admin_nav_bar.register(admin, name=_('SPU'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/spu'))
@@ -99,10 +100,6 @@ def setup_nav_bar():
     admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-image'))
 
-    default_url = speaklater.make_lazy_string(lambda: url_for('admin.spu_pkg'))
-    admin_nav_bar.register(admin, name=u'设计包制作', default_url=default_url,
-                           enabler=lambda nav:
-                           request.path.startswith(url_for('admin.spu_pkg')))
 
 register_views()
 
@@ -187,7 +184,7 @@ from yaza.utils import assert_dir
 
 assert_dir(app.config['UPLOAD_FOLDER'])
 
-if app.debug:
+if app.debug and app.config['ENABLE_DEBUG_TOOLBAR']:
     from flask.ext.debugtoolbar import DebugToolbarExtension
     DebugToolbarExtension(app)
 

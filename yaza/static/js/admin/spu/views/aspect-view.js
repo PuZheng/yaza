@@ -1,4 +1,4 @@
-define(['backbone', 'handlebars', 'text!templates/admin/spu-pkg-generator/aspect.hbs', 
+define(['backbone', 'handlebars', 'text!templates/admin/spu/aspect.hbs', 
 'bootstrap'], function (Backbone, handlebars, aspectTemplate) {
     var AspectView = Backbone.View.extend({
 
