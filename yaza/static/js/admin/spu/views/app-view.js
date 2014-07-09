@@ -1,4 +1,4 @@
-define(['backbone', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'underscore.string'], function (Backbone, OcspuView, SPU, dispatcher, _) {
+define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'underscore.string'], function (Backbone, context, OcspuView, SPU, dispatcher, _) {
     _.mixin(_.str.exports());
 
     var AppView = Backbone.View.extend({
@@ -22,6 +22,7 @@ define(['backbone', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'und
                         appView.$('.btn-new-spu').hide();
                         appView.$('.spu-name').text(model.get('name'));
                         appView.$('.btn-new-ocspu').show();
+                        context.currentSPU = appView._spu.toJSON();
                     }, {}, this),
                     error: function () {
                         dispatcher.trigger('flash', {

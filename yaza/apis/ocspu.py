@@ -26,7 +26,7 @@ class OCSPUWrapper(ModelWrapper):
     def hovered_complement_color(self):
         return darker_color(self.complementary_color)
 
-    def as_dict(self, camel_case):
+    def as_dict(self, camel_case=False):
         return {
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list': [aspect.as_dict(camel_case) for aspect in self.aspect_list],

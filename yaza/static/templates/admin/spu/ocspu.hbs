@@ -24,10 +24,14 @@
 
         <div class="form-group">
           <label for="" class="control-label col-sm-2">材质图</label>
-          <div class="col-sm-4">
-            <input type="file" class='form-control'>
+          <div class="col-sm-2">
+            <span class="btn btn-success fileinput-button">
+                <i class="fa fa-plus"></i>
+                <span>选择文件</span>
+                <input type="file" name="files[]">
+            </span>
           </div>
-          <label class="control-label text-danger" style='display: none'>* 文件不能为空</label>
+          <label class="control-label text-danger" style='display: none'>* 材质图不能为空</label>
           <a class="fancybox" rel="group">
             <div class="col-md-2">
               <div class="thumbnail">

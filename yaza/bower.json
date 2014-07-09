@@ -46,7 +46,6 @@
     "normalize-css": "~3.0.1",
     "autosize": "https://github.com/jackmoore/autosize.git",
     "jszip": "Stuk/jszip#~2.3.0",
-    "FileSaver": "*",
-    "messenger": "~1.4.1"
+    "FileSaver": "*"
   }
 }

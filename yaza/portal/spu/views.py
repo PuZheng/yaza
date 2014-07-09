@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import time
+import os.path
 
 from flask import render_template, json, request, jsonify
 from flask.ext.databrowser import ModelView
@@ -9,12 +10,14 @@ from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied, Permission, RoleNeed
 
 from yaza import models, const
+from yaza.basemain import app
 from yaza.apis import wraps
 from yaza.database import db
 from yaza.admin import serializer
 from yaza.models import SPU, OCSPU
-from yaza.utils import do_commit, get_or_404
+from yaza.utils import do_commit, get_or_404, random_str
 from yaza.portal.spu import spu_ws
+from yaza.qiniu_handler import upload_image
 
 
 class SPUModelView(ModelView):
@@ -42,7 +45,9 @@ class SPUModelView(ModelView):
         return render_template(self.edit_template, **params)
 
 
-spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU, label=lazy_gettext(u"spu")))
+
+spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU,
+                                              label=lazy_gettext(u"spu")))
 
 
 @spu_ws.route('/spu.json', methods=['POST', 'PUT'])
@@ -63,9 +68,22 @@ def ocspu_api():
 
     import pudb; pudb.set_trace()
 
-    d = json.loads(request.data)
-    color = d.get('color')
-    spu_id = d.get('spu_id')
-    rgb = d.get('rgb')
-    ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb)))
-    return jsonify(ocspu.as_dict())
+    color = request.form['color']
+    spu_id = request.form['spu-id']
+    rgb = request.form['rgb']
+
+    fs = request.files['files[]']
+    filename = random_str(32) + '.' + fs.filename.split('.')[-1]
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    fs.save(file_path)
+    cover_path = filename
+    if app.config.get("QINIU_ENABLED"):
+        cover_path = upload_image(file_path,
+                                  app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+
+    ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
+                                  cover_path=cover_path)))
+    return jsonify({
+        'ocspu': ocspu.as_dict(),
+        'status': 'success',
+    })
