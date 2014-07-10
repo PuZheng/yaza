@@ -80,7 +80,8 @@ class SPUAdminModelView(ModelView):
 
     def create_view(self):
         return render_template('admin/spu.html',
-                               nav_bar=admin_nav_bar, time=time.time(), model_view=self)
+                               nav_bar=admin_nav_bar, time=time.time(),
+                               model_view=self)
 
 
 class OCSPUAdminModelView(ModelView):

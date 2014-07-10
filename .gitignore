@@ -42,9 +42,13 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-.swp
+*.swp
 .ropeproject/*
 node_modules/*
 /yaza/static/components/*
 /yaza/*.db
-log.txt
+log.*
+/yaza/.sass-cache/*
+/yaza/static/css/*
+/yaza/static/uploads/*
+/yaza/static/sass/.sass-cache/*

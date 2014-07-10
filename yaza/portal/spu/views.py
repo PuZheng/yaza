@@ -52,6 +52,7 @@ spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU,
 
 @spu_ws.route('/spu.json', methods=['POST', 'PUT'])
 def spu_api():
+
     name = json.loads(request.data)['name']
     if request.method == 'POST':
         spu = wraps(do_commit(SPU(name=name)))
@@ -65,25 +66,24 @@ def spu_api():
 
 @spu_ws.route('/ocspu.json', methods=['POST', 'PUT'])
 def ocspu_api():
+    d = json.loads(request.data)
+    color = d.get('color')
+    spu_id = d.get('spu-id')
+    rgb = d.get('rgb')
+    cover_path = d.get('cover-path')
 
-    import pudb; pudb.set_trace()
+    if request.method == 'POST':
+        ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
+                                      cover_path=cover_path)))
+    else:
+        ocspu_id = d.get('id')
+        ocspu = get_or_404(OCSPU, ocspu_id)
+        if color:
+            ocspu.color = color
+        if rgb:
+            ocspu.rgb = rgb
+        if cover_path:
+            ocspu.cover_path = cover_path
+        (color or rgb or cover_path) and db.session.commit()
 
-    color = request.form['color']
-    spu_id = request.form['spu-id']
-    rgb = request.form['rgb']
-
-    fs = request.files['files[]']
-    filename = random_str(32) + '.' + fs.filename.split('.')[-1]
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    fs.save(file_path)
-    cover_path = filename
-    if app.config.get("QINIU_ENABLED"):
-        cover_path = upload_image(file_path,
-                                  app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
-
-    ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
-                                  cover_path=cover_path)))
-    return jsonify({
-        'ocspu': ocspu.as_dict(),
-        'status': 'success',
-    })
+    return jsonify(ocspu.as_dict())

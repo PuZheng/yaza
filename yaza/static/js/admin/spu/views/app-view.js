@@ -1,11 +1,24 @@
-define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'underscore.string'], function (Backbone, context, OcspuView, SPU, dispatcher, _) {
+define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'toastr', 'underscore.string'], function (Backbone, context, OcspuView, SPU, dispatcher, _, toastr) {
     _.mixin(_.str.exports());
-
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "positionClass": "toast-bottom-left",
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "2000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
     var AppView = Backbone.View.extend({
         el: '.primary',
 
         events: {
-            'click .btn-new-spu': function () {
+            'click .btn-new-spu': function (event) {
                 var name = this.$('.spu-form input').val().trim();
                 if (!name) {
                     this.$('.spu-form input').focus();
@@ -23,14 +36,19 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
                         appView.$('.spu-name').text(model.get('name'));
                         appView.$('.btn-new-ocspu').show();
                         context.currentSPU = appView._spu.toJSON();
+                        appView.$('.btn-new-spu').removeClass('disabled');
                     }, {}, this),
-                    error: function () {
-                        dispatcher.trigger('flash', {
-                            type: 'danger',
-                            msg: '创建SPU失败!', 
-                        });             
-                    },
+                    error: (function (appView) {
+                        return function () {
+                            dispatcher.trigger('flash', {
+                                type: 'error',
+                                msg: '创建SPU失败!', 
+                            });             
+                            appView.$('.btn-new-spu').removeClass('disabled');
+                        }
+                    })(this),
                 });
+                $(event.target).addClass('disabled');
             },
 
             'keydown .spu-form input': function () {
@@ -43,19 +61,19 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
                  } 
                  event.preventDefault();
                  if (!!this._spu) {
-                     $(event.target).blur()
+                     $(event.target).blur();
+                     this._spu.set('name', $(event.target).val());
                      this._spu.save(['name'], {
                          success: _.bind(function (appView, model, response, options) {
                              dispatcher.trigger('flash', {
                                  type: 'success',
                                  msg: '成功修改SPU名称 - ' + model.get('name') + '!', 
                              });             
-                             appView.$('.btn-new-spu').hide();
                              appView.$('.spu-name').text(model.get('name'));
                          }, {}, this),
                          error: function () {
                              dispatcher.trigger('flash', {
-                                 type: 'danger',
+                                 type: 'error',
                                  msg: '修改SPU名称失败!', 
                              });             
                          },
@@ -73,12 +91,9 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
         initialize: function () {
             this._ocspuView = new OcspuView({el: this.$('.ocspu')}).render(); 
             this.$('.btn-new-ocspu').hide();
-            dispatcher.on('flash', _.bind(function (appView, arg) {
-                var $alert = $(_.sprintf('<div class="alert alert-%s">%s<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button></div>', arg.type, arg.msg)).prependTo(appView.$el);
-                setTimeout(function () {
-                    $alert.fadeOut();
-                }, 2000);
-            }, {}, this)); 
+            dispatcher.on('flash', function (arg) {
+                toastr[arg.type](arg.msg)
+            });
         }
     });
     return AppView;

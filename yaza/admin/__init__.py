@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 from itsdangerous import URLSafeTimedSerializer
-from flask import Blueprint, render_template, request, send_from_directory
+from flask import Blueprint, render_template, request, send_from_directory, jsonify
 from flask.ext.login import current_user
 from flask.ext.babel import _
 from flask.ext.principal import Permission, RoleNeed
@@ -8,6 +8,7 @@ from flask.ext.principal import Permission, RoleNeed
 from yaza import const
 from yaza.admin import views
 from yaza.basemain import data_browser, app, admin_nav_bar
+from yaza.qiniu_handler import upload_token
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
@@ -70,3 +71,15 @@ def generator_ws():
 @admin.route("/design-result-download/<path:file>")
 def design_result_download(file):
     return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
+
+
+@admin.route('/qiniu-upload-token')
+def qiniu_upload_token():
+    '''
+    之所以将upload-token作为ajax的形式存在， 是因为必须在上传图片到qiniu前， 重新
+    获取upload-token, 若在网页加载的时候获取upload-token, 若网页打开很长时间，
+    upload-token，就会失效
+    '''
+    return jsonify({
+        'token': upload_token()
+    })
