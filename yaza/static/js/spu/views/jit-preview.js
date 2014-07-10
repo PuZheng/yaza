@@ -422,13 +422,16 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                         this._currentAspect.designRegionList.forEach(function (jitPreview) {
                             return function (dr) {
-                                var imageData = jitPreview._layerCache[dr.id].getContext().getImageData(0, 0, canvas.width, canvas.height).data;
-                                var pixel = previewImageData.data.length / 4;
-                                while (pixel--) {
-                                    previewImageData.data[pixel * 4] |= imageData[pixel * 4];
-                                    previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
-                                    previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
-                                    previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                                var cache = jitPreview._layerCache[dr.id];
+                                if (cache) {
+                                    var imageData = cache.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
+                                    var pixel = previewImageData.data.length / 4;
+                                    while (pixel--) {
+                                        previewImageData.data[pixel * 4] |= imageData[pixel * 4];
+                                        previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
+                                        previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
+                                        previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                                    }
                                 }
                             }
                         }(this));
@@ -453,9 +456,28 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         }
                         ctx.putImageData(previewImageData, 0, 0);
                         var uri = canvas.toDataURL('image/png');
-                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
+                        var a = $(evt.currentTarget).find('a');
+                        if(!a[0]) {
+                            a = $("<a></a>");
+                            $(evt.currentTarget).append(a);
+                        }
+                        if(typeof Blob == "undefined"){
+                            var $form = $("#download-form");
+                            if(!$form[0]){
+                                $form = $("<form></form>");
+                            }else{
+                                $form.empty();
+                            }
+                            var $input = $("<input></input>").attr({"name": "data", "type":"hidden"}).val(uri);
+                            $form.append($input);
+                            $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/image"});
+                            $form.appendTo($("body")).submit();
+                        }else{
+                            a.attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
                             evt.stopPropagation();
                         })[0].click();
+                        }
+
                     }
                 },
 

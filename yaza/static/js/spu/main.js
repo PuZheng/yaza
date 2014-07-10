@@ -32,6 +32,9 @@ require.config({
         'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
         "getImageData": "components/getImageData/jquery.getimagedata.min",
+        "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
+        "filesaver":"components/FileSaver/FileSaver",
+        "downloadify":"components/Downloadify/js/downloadify.min",
         // application
         dispatcher: 'js/dispatcher',
         'lazy-load': 'js/utils/lazy-load',
@@ -103,7 +106,7 @@ require.config({
         },
         'getImageData' :{
             deps: ['jquery']
-        }
+        },
     }
 });
 

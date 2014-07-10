@@ -30,6 +30,8 @@
         "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
         "getImageData": "components/getImageData/jquery.getimagedata.min.js",
+        "jszip": "empty:",
+        "filesaver":"components/FileSaver/FileSaver.js",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
