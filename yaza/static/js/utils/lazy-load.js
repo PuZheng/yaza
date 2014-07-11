@@ -17,6 +17,7 @@ require(['jquery'], function (jQuery) {
                     var $mask = $('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></i></div>').css({
                         width: $obj.parent().width(),
                     }).appendTo($obj.parent());
+                    $obj.hide();
                     var img = new Image();
                     img.src = $obj.attr('src');
                     $obj.src = ""; 

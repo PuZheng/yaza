@@ -82,14 +82,19 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
             },
 
             'click .btn-new-ocspu': function () {
-                var $ocspuViewEl = $('<div></div>').insertAfter(this.$('.spu-form'));
-                this._ocspuView = new OcspuView({el: $ocspuViewEl}).render(); 
+                if (this._ocspuView == undefined) {
+                    var $ocspuEl = $('<div class="ocspu"></div>').insertAfter(this.$('.spu-form'));
+                    this._ocspuView = new OcspuView({el: $ocspuEl}).render(); 
+                } else if (this._ocspuView.getOCSPU()) {  // 已经生成了OCSPU
+                    this._ocspuView.collapse(); 
+                    var $ocspuEl = $('<div class=".ocspu"></div>').insertAfter(this.$('.spu-form'));
+                    this._ocspuView = new OcspuView({el: $ocspuEl}).render(); 
+                }
             },
 
         },
 
         initialize: function () {
-            this._ocspuView = new OcspuView({el: this.$('.ocspu')}).render(); 
             this.$('.btn-new-ocspu').hide();
             dispatcher.on('flash', function (arg) {
                 toastr[arg.type](arg.msg)

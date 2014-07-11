@@ -39,14 +39,22 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                 $(event.target).addClass('disabled');
                 var jqXHR = data.submit();
             },
+
             'click .btn-new-aspect': function () {
-                this._aspectView.$el.fadeIn();
-            }
+                if (this._aspectView == undefined) {
+                    var $aspectEl = $('<div class="aspect"></div>').insertAfter(this.$('.ocspu-form'));
+                    this._aspectView = new AspectView({el: $aspectEl}).render();
+                } else if (!!this._aspectView.getAspect()) { 
+                    this._aspectView.collapse();
+                    var $aspectEl = $('<div class="aspect"></div>').insertAfter(this.$('.ocspu-form'));
+                    this._aspectView = new AspectView({el: $aspectEl}).render();
+                
+                }
+            },
         },
 
-        initialize: function () {
+        render: function () {
             this.$el.html(this._template());
-            this._aspectView = new AspectView({el: this.$('.aspect')}).render();
             this.$colorNameInput = this.$('.ocspu-form .form-group:first-child input');
             this.$colorNameInput.data('error-label', this.$('.ocspu-form .form-group:first-child .text-danger'));
             this.$rgbInput = this.$('.ocspu-form .form-group:nth-child(2) input');
@@ -71,7 +79,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                                     type: 'success',
                                     msg: '成功修改OCSPU颜色名称 - ' + model.get('color') + '!', 
                                 });             
-                                ocspuView.$('.panel-new-ocspu .panel-heading em').text(model.get('color'));
+                                ocspuView.$('.panel-new-ocspu > .panel-heading em').text(model.get('color'));
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -114,15 +122,16 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
             });
             this.$('.aspect').hide();
             this.$('.fancybox').fancybox();
-            //
             // 因为上传文件的原因， 只能手动写ajax
             this.$('.ocspu-form').fileupload({
                 dataType: 'json',
                 url: 'http://up.qiniu.com',
                 add: (function (ocspuView) {
                     return function (e, data) {
-                        // 首先清除错误， 并且设置预览图
-                        ocspuView.$materialImageInput.data('error-label').hide();
+
+                        // 这里不用$materialImageInput.data('error-label')是由于fileupload这个插件会替换掉ocspuView.$materialImageInput
+                        var $errorLabelEl = ocspuView.$('.ocspu-form .form-group:nth-child(3) .text-danger');
+                        $errorLabelEl.hide();
                         var fileReader = new FileReader();
                         fileReader.onload = (function (a) {
                             return function (e) {
@@ -135,10 +144,9 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                         // 只有修改ocspu的材质图的时候， 才直接提交数据
                         if (!!ocspuView._ocspu) {
                             $(this).find('.uploading-progress').show();
-                            var reader = new FileReader();
-                            // Automatically upload the file once it is added to the queue
                             data.ocspu = {};
                             var jqXHR = data.submit();
+                            ocspuView.$('.ocspu-form input').attr('disabled', '');
                             $(this).find('.uploading-progress .upload-cancel-btn').click(
                                 function () {
                                     jqXHR.abort();
@@ -156,14 +164,13 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                             var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                             postfix = (postfix && postfix[0]) || '';
                             data.formData = {
-                                'key': new Date().getTime() + '.' + postfix,
+                                'key': 'material+' + new Date().getTime() + '.' + postfix,
                                 'token': token.token,
                             };
                             data.ocspu['cover-path'] = 'http://yaza-spus.qiniu.com/' + data.formData.key;
                             console.log('upload image to qiniu');
                             $(that).find('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
                             ocspuView.$('.ocspu-form .uploading-progress').show();
-                            var reader = new FileReader();
                             $(that).find('.uploading-progress .upload-cancel-btn').click(
                                 function () {
                                     data.abort();
@@ -179,6 +186,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                             });
                             data.abort();
                         });
+                        // 之前已经send了， 就不要再submit
                         return false;
                     }
                 })(this),
@@ -200,7 +208,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                                 'spu-id': context.currentSPU.id,
                             });
 
-                            ocspuView._ocspu.save(['color', 'cover-path', 'rgb'], {
+                            ocspuView._ocspu.save(['color', 'cover-path', 'rgb', 'spu-id'], {
                                 success: function (model, response, options) {
                                     ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
                                     dispatcher.trigger('flash', {
@@ -210,9 +218,10 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                                     ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').hide();
                                     ocspuView.$('.panel-new-ocspu > .panel-footer .btn-cancel').hide();
                                     ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                    ocspuView.$('.panel-new-ocspu .panel-heading em').text(data.ocspu.color);
+                                    ocspuView.$('.panel-new-ocspu > .panel-heading em').text(data.ocspu.color);
                                     ocspuView.$('.panel-new-ocspu .btn-collapse').show();
                                     ocspuView.$('.panel-new-ocspu .btn-new-aspect').show();
+                                    context.currentOCSPU = ocspuView._ocspu;
                                 },
                                 error: function () {
                                     ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
@@ -234,12 +243,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                                         type: 'success',
                                         msg: '成功修改OCSPU材质图' + data.ocspu['cover-path'],
                                     });
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').hide();
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-cancel').hide();
                                     ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                    ocspuView.$('.panel-new-ocspu .panel-heading em').text(data.ocspu.color);
-                                    ocspuView.$('.panel-new-ocspu .btn-collapse').show();
-                                    ocspuView.$('.panel-new-ocspu .btn-new-aspect').show();
                                 },
                                 error: function () {
                                     ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
@@ -247,7 +251,6 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                                         type: 'error',
                                         msg: '修改OCSPU材质图失败!', 
                                     });             
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').removeClass('disabled');
                                     ocspuView.$('.ocspu-form input').removeAttr('disabled');
                                 }
                             });
@@ -268,12 +271,16 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                     }
                 })(this),
             });
-        },
-
-        render: function () {
             return this;
         },
 
+        getOCSPU: function () {
+            return this._ocspu;
+        },
+        
+        collapse: function () {
+        
+        },
     });
     return OcspuView;
 });

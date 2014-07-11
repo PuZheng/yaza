@@ -14,7 +14,7 @@ from yaza.basemain import app
 from yaza.apis import wraps
 from yaza.database import db
 from yaza.admin import serializer
-from yaza.models import SPU, OCSPU
+from yaza.models import SPU, OCSPU, Aspect
 from yaza.utils import do_commit, get_or_404, random_str
 from yaza.portal.spu import spu_ws
 from yaza.qiniu_handler import upload_image
@@ -86,4 +86,34 @@ def ocspu_api():
             ocspu.cover_path = cover_path
         (color or rgb or cover_path) and db.session.commit()
 
-    return jsonify(ocspu.as_dict())
+    return jsonify({
+        'color': ocspu.color,
+        'spu-id': ocspu.spu_id,
+        'rgb': ocspu.rgb,
+        'cover-path': ocspu.cover_path,
+    })
+
+
+@spu_ws.route('/aspect.json', methods=['POST'])
+def aspect_api():
+    d = json.loads(request.data)
+    name = d.get('name')
+    pic_path = d.get('pic-path')
+    ocspu_id = d.get('ocspu-id')
+
+    if request.method == 'POST':
+        aspect = wraps(do_commit(Aspect(name=name, ocspu_id=ocspu_id,
+                                        pic_path=pic_path)))
+    else:
+        aspect_id = d.get('id')
+        aspect = get_or_404(Aspect, aspect_id)
+        if name:
+            aspect.name = name
+        if pic_path:
+            aspect.pic_path = pic_path
+        (name or pic_path) and db.session.commit()
+    return jsonify({
+        'name': aspect.name,
+        'pic-path': aspect.pic_path,
+        'ocspu-id': aspect.ocspu_id,
+    })

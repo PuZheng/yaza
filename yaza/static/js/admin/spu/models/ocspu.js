@@ -1,5 +1,5 @@
 define(['backbone'], function (Backbone) {
-    var SPU = Backbone.Model.extend({
+    var OCSPU = Backbone.Model.extend({
         url: '/spu-ws/ocspu.json',
         defaults: {
             color: '',
@@ -9,5 +9,5 @@ define(['backbone'], function (Backbone) {
         },
 
     });
-    return SPU;
+    return OCSPU;
 });
