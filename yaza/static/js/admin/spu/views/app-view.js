@@ -82,8 +82,8 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
             },
 
             'click .btn-new-ocspu': function () {
-                this._ocspuView.$el.insertAfter(this.$('.spu-form'));
-                this._ocspuView.$el.fadeIn();
+                var $ocspuViewEl = $('<div></div>').insertAfter(this.$('.spu-form'));
+                this._ocspuView = new OcspuView({el: $ocspuViewEl}).render(); 
             },
 
         },

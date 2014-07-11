@@ -5,8 +5,13 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
         _template: handlebars.default.compile(ocspuTemplate),
 
         events: {
-            'click .btn-cancel-ocspu': function() {
-                this.$el.fadeOut();
+            'click .panel-new-ocspu .btn-cancel': function() {
+
+                this.$el.fadeOut({
+                    always: function () {
+                        $(this).remove();
+                    }
+                });
             }, 
 
             'click .panel-new-ocspu > .panel-footer .btn-ok': function () {
@@ -15,15 +20,15 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                 var materialImage = !!files.length && files[0];
                 var rgb = this.$rgbInput.val();
                 if (!colorName) {
-                    this.$colorNameInput.focus().parent().next('.text-danger').show();
+                    this.$colorNameInput.focus().data('error-label').show();
                     return false;
                 }
                 if (!rgb) {
-                    this.$('.ocspu-form > .form-group:nth-child(2) label.text-danger').show();
+                    this.$rgbInput.focus().data('error-label').show();
                     return false;
                 }
                 if (!materialImage) {
-                    this.$('.ocspu-form > .form-group:nth-child(3) label.text-danger').show();
+                    this.$materialImageInput.focus().data('error-label').show();
                     return false;
                 }
                 var data = this.$materialImageInput.data('data');
@@ -43,11 +48,14 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
             this.$el.html(this._template());
             this._aspectView = new AspectView({el: this.$('.aspect')}).render();
             this.$colorNameInput = this.$('.ocspu-form .form-group:first-child input');
+            this.$colorNameInput.data('error-label', this.$('.ocspu-form .form-group:first-child .text-danger'));
             this.$rgbInput = this.$('.ocspu-form .form-group:nth-child(2) input');
+            this.$rgbInput.data('error-label', this.$('.ocspu-form .form-group:nth-child(2) .text-danger'));
             this.$materialImageInput = this.$('.ocspu-form :file'); 
+            this.$materialImageInput.data('error-label', this.$('.ocspu-form .form-group:nth-child(3) .text-danger'));
 
             this.$colorNameInput.keydown(function (event) {
-                $(this).parent().next('.text-danger').hide();
+                $(this).data('error-label').hide();
             }).keypress(function (ocspuView) {
                 return function (event) {
                     if (event.which != 13) {
@@ -83,7 +91,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                 allowEmpty: true,
                 change: function (ocspuView) {
                     return function (event) {
-                        ocspuView.$('.ocspu-form .form-group:nth-child(2) .text-danger').hide();
+                        $(this).data('error-label').hide();
                         if (!!ocspuView._ocspu) {
                             ocspuView._ocspu.set('rgb', $(this).val());
                             ocspuView._ocspu.save(['rgb'], {
@@ -114,7 +122,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'spu/views/aspect-view', 'spu/m
                 add: (function (ocspuView) {
                     return function (e, data) {
                         // 首先清除错误， 并且设置预览图
-                        $(this).find('.form-group:nth-child(3) .text-danger').hide();
+                        ocspuView.$materialImageInput.data('error-label').hide();
                         var fileReader = new FileReader();
                         fileReader.onload = (function (a) {
                             return function (e) {
