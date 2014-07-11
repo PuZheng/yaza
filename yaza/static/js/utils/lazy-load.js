@@ -15,21 +15,18 @@ require(['jquery'], function (jQuery) {
                         return;
                     }
                     var $mask = $('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></i></div>').css({
-                        width: $obj.parent().width(),
+                        width: $obj.parent().width()
                     }).appendTo($obj.parent());
-                    var img = new Image();
-                    img.src = $obj.attr('src');
-                    $obj.src = ""; 
-                    img.onload = function () {
+                    var src = $obj.attr('src');
+                    $obj.hide();
+                    $obj.one("load", function () {
                         $mask.remove();
-                        $obj.src = img.src;
                         $obj.show();
-                    };
-                    img.onerror = function () {
+                    }).error(function() {
                         $mask.remove();
-                        $obj.src = img.src;
                         $obj.show();
-                    }
+                    });
+                    $obj.src = src;
                 });
             }
         });

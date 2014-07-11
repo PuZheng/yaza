@@ -485,7 +485,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 this._currentDesignRegion = designRegion;
 
                 this._objectManager.empty();
-                var mix_size = 360;
 
                 var ts = this.$(".touch-screen");
                 var er = this.$('.touch-screen .editable-region');
