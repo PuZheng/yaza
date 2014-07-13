@@ -14,7 +14,7 @@ from yaza.basemain import app
 from yaza.apis import wraps
 from yaza.database import db
 from yaza.admin import serializer
-from yaza.models import SPU, OCSPU, Aspect
+from yaza.models import SPU, OCSPU, Aspect, DesignRegion
 from yaza.utils import do_commit, get_or_404, random_str
 from yaza.portal.spu import spu_ws
 from yaza.qiniu_handler import upload_image
@@ -87,6 +87,7 @@ def ocspu_api():
         (color or rgb or cover_path) and db.session.commit()
 
     return jsonify({
+        'id': ocspu.id,
         'color': ocspu.color,
         'spu-id': ocspu.spu_id,
         'rgb': ocspu.rgb,
@@ -94,7 +95,7 @@ def ocspu_api():
     })
 
 
-@spu_ws.route('/aspect.json', methods=['POST'])
+@spu_ws.route('/aspect.json', methods=['POST', 'PUT'])
 def aspect_api():
     d = json.loads(request.data)
     name = d.get('name')
@@ -113,7 +114,44 @@ def aspect_api():
             aspect.pic_path = pic_path
         (name or pic_path) and db.session.commit()
     return jsonify({
+        'id': aspect.id,
         'name': aspect.name,
         'pic-path': aspect.pic_path,
         'ocspu-id': aspect.ocspu_id,
+    })
+
+
+@spu_ws.route('/design-region.json', methods=['POST', 'PUT'])
+def design_region_api():
+    d = json.loads(request.data)
+    name = d.get('name')
+    pic_path = d.get('pic-path')
+    aspect_id = d.get('aspect-id')
+    width = d.get('width')
+    height = d.get('height')
+    if request.method == 'POST':
+        design_region = wraps(do_commit(DesignRegion(name=name, width=width,
+                                                     height=height,
+                                                     pic_path=pic_path,
+                                                     aspect_id=aspect_id)))
+    else:
+        design_region_id = d.get('id')
+        design_region = get_or_404(DesignRegion, design_region_id)
+        if name:
+            design_region.name = name
+        if width:
+            design_region.width = width
+        if height:
+            design_region.height = height
+        if pic_path:
+            design_region.pic_path = pic_path
+        (name or width or height or pic_path) and db.session.commit()
+
+    return jsonify({
+        'name': design_region.name,
+        'width': design_region.width,
+        'height': design_region.height,
+        'aspect-id': design_region.aspect.id,
+        'pic-path': design_region.pic_path,
+        'id': design_region.id
     })

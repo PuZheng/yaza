@@ -1,5 +1,5 @@
-define(['dispatcher', 'spu/context', 'backbone', 'handlebars', 'spu/models/aspect', 'text!templates/admin/spu/aspect.hbs', 
-'bootstrap'], function (dispatcher, context, Backbone, handlebars, Aspect, aspectTemplate) {
+define(['dispatcher', 'spu/context', 'backbone', 'handlebars', 'spu/models/aspect', 'text!templates/admin/spu/aspect.hbs', 'spu/views/design-region-view',
+'bootstrap'], function (dispatcher, context, Backbone, handlebars, Aspect, aspectTemplate, DesignRegionView) {
     var AspectView = Backbone.View.extend({
 
         _template: handlebars.default.compile(aspectTemplate),
@@ -12,7 +12,7 @@ define(['dispatcher', 'spu/context', 'backbone', 'handlebars', 'spu/models/aspec
                     } 
                 });
             },
-            'click .panel-aspect .btn-ok': function () {
+            'click .panel-aspect > .panel-footer .btn-ok': function () {
                 var aspectName = this.$aspectNameInput.val();
                 if (!aspectName) {
                     this.$aspectNameInput.data('error-label').show();
@@ -31,7 +31,16 @@ define(['dispatcher', 'spu/context', 'backbone', 'handlebars', 'spu/models/aspec
                 $(event.target).addClass('disabled');
                 data.submit();
             },
-
+            'click .panel-aspect > .panel-footer .btn-new-design-region': function () {
+                if (!this._designRegionView) {
+                    var $designRegionEl = $('<div class="design-region"></div>').insertAfter('.aspect-form');
+                    this._designRegionView = new DesignRegionView({el: $designRegionEl, aspect: this._aspect}).render();
+                } else if (this._designRegionView.getDesignRegion()) {
+                    this._designRegionView.collapse();
+                    var $designRegionEl = $('<div class="design-region"></div>').insertAfter('.aspect-form');
+                    this._designRegionView = new DesignRegionView({el: $designRegionEl}).render();
+                }
+            }
         },
 
         render: function () {
@@ -104,7 +113,6 @@ define(['dispatcher', 'spu/context', 'backbone', 'handlebars', 'spu/models/aspec
                 submit: function (aspectView) {
                     return function (e, data) {
                         $.getJSON('/admin/qiniu-upload-token', function (token) {
-                            debugger;
                             var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                             postfix = (postfix && postfix[0]) || '';
                             data.formData = {
