@@ -12,6 +12,7 @@ require.config({
         'fancybox': 'http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min',
         'jquery.ui.widget': ['http://cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min', 'components/jquery-ui/ui/jquery.ui.widget'],
         'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
+        'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
         // vendors not using cdn
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
@@ -56,7 +57,11 @@ require.config({
         },
         'toastr': {
             deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
-        }
+        },
+        'js-url': {
+            deps: ['jquery'],
+            exports: '$.fn.url',
+        },
     },
 });
 

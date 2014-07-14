@@ -1,4 +1,4 @@
-define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'toastr', 'underscore.string'], function (Backbone, context, OcspuView, SPU, dispatcher, _, toastr) {
+define(['backbone', 'spu/context', 'spu/views/spu-view', 'spu/views/ocspu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'toastr', 'underscore.string'], function (Backbone, context, SPUView, OcspuView, SPU, dispatcher, _, toastr) {
     _.mixin(_.str.exports());
     toastr.options = {
         "closeButton": false,
@@ -83,19 +83,22 @@ define(['backbone', 'spu/context', 'spu/views/ocspu-view', 'spu/models/spu', 'di
 
             'click .btn-new-ocspu': function () {
                 if (this._ocspuView == undefined) {
-                    var $ocspuEl = $('<div class="ocspu"></div>').insertAfter(this.$('.spu-form'));
+                    var $ocspuEl = $('<div class="ocspu"></div>').prependTo(this.$('.panel-spu .list-group'));
                     this._ocspuView = new OcspuView({el: $ocspuEl}).render(); 
                 } else if (this._ocspuView.getOCSPU()) {  // 已经生成了OCSPU
                     this._ocspuView.collapse(); 
-                    var $ocspuEl = $('<div class=".ocspu"></div>').insertAfter(this.$('.spu-form'));
+                    var $ocspuEl = $('<li class="ocspu list-group-item list-group-item-info"></li>').prependTo(this.$('.panel-spu .list-group'));
                     this._ocspuView = new OcspuView({el: $ocspuEl}).render(); 
                 }
             },
 
         },
 
-        initialize: function () {
-            this.$('.btn-new-ocspu').hide();
+        initialize: function (option) {
+            this.$el.html(new SPUView({
+                el: $('.spu'), 
+                model: this.model || new SPU(),
+            }).render());
             dispatcher.on('flash', function (arg) {
                 toastr[arg.type](arg.msg)
             });

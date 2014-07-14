@@ -1,0 +1,38 @@
+<div class="panel panel-default panel-{{timestamp}}">
+  <div class="panel-heading">
+    <a class="btn-collapse btn btn-xs pull-right" style="display: none">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+    <span class="text-muted">
+      {{#if title}}
+      修改
+      {{else}}
+      新建
+      {{/if}}
+      {{label}}
+    </span>
+    <em>{{title}}</em>
+  </div>
+  <div class="panel-body">
+    <form class="form-horizontal">
+      {{#each fields}}
+        <div class="form-group">
+          <label for="" class="control-label col-sm-2">{{this.label}}</label>
+          <div class="col-sm-4">
+            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}">
+          </div>
+          <label class="control-label text-danger" style='display: none' data-field='{{this.name}}'>* {{this.error}}</label>
+        </div>
+      {{/each}}
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <div class="row">
+      <div class="pull-right">
+        <button class="btn btn-danger btn-cancel"><span aria-hidden="true">&times;</span>取消</button>
+        <button class="btn btn-primary btn-ok">确认</button>
+      </div>
+    </div>
+  </div>
+</div>

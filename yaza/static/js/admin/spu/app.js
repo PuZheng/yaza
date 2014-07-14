@@ -1,4 +1,16 @@
-define(['spu/views/app-view'], function (AppView) {
-    var appView = new AppView();
+define(['spu/views/app-view', 'spu/models/spu', 'jquery', 'js-url'], function (AppView, SPU, $) {
+    var spuId = $.url('filename');
+    if (spuId === 'spu') {
+        var appView = new AppView();
+    } else {
+        var spu = new SPU({
+            id: spuId,
+        });
+        spu.fetch({
+            success: function () {
+                var appView = new AppView({model: spu});
+            }
+        });
+    }
     Backbone.history.start();
 });

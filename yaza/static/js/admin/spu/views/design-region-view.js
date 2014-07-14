@@ -1,4 +1,6 @@
-define(['dispatcher', 'backbone', 'handlebars', 'text!templates/admin/spu/design-region.hbs', 'spu/models/design-region', 'jquery-file-upload', 'fancybox'], function (dispatcher, Backbone, handlebars, designRegionTemplate, DesignRegion) {
+define(['dispatcher', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/design-region.hbs', 'spu/models/design-region', 'jquery-file-upload', 'fancybox', 'underscore.string'], function (dispatcher, _, Backbone, handlebars, designRegionTemplate, DesignRegion) {
+
+    _.mixin(_.str.exports());
 
     var DesignRegionView = Backbone.View.extend({
 
@@ -160,6 +162,16 @@ define(['dispatcher', 'backbone', 'handlebars', 'text!templates/admin/spu/design
                         })($(this).find('a.fancybox')[0]);
                         fr.readAsDataURL(data.files[0]); 
                         designRegionView.$imageInput.data('data', data);
+                        if (!!designRegionView._designRegion) {
+                            $(this).find('.uploading-progress').show();
+                            var jqXHR = data.submit();
+                            designRegionView.$('.desigin-region-form input').attr('disabled', '');
+                            $(this).find('.uploading-progress .upload-cancel-btn').click(
+                                function () {
+                                    jqXHR.abort();
+                                    $(this).find('.uploading-progress').fadeOut(1000);
+                                });
+                        }
                     } 
                 }(this), 
                 submit: function (designRegionView) {
@@ -231,6 +243,26 @@ define(['dispatcher', 'backbone', 'handlebars', 'text!templates/admin/spu/design
                                     designRegionView._designRegion = null;
                                 },
                             });
+                        } else {  // 修改图片
+                            designRegionView._aspect.set('pic-path', 'http://yaza-spus.qiniu.com' + data.formData.key);
+                            designRegionView._aspect.save(['pic-path'], {
+                                success: function (model, response, options) {
+                                    designRegionView.$('.design-region-form .uploading-progress').fadeOut(1000);
+                                    dispatcher.trigger('flash', {
+                                        type: 'success',
+                                        msg: '成功修改设计区图片为' + model.get('pic-path'),
+                                    });
+                                    designRegionView.$('.design-region-form input').removeAttr('disabled');
+                                },
+                                error: function () {
+                                    designRegionView.$('.design-region-form .uploading-progress').fadeOut(1000);
+                                    dispatcher.trigger('flash', {
+                                        type: 'error',
+                                        msg: '修改设计区图片失败!', 
+                                    });             
+                                    designRegionView.$('.design-region-form input').removeAttr('disabled');
+                                }
+                            });
                         }
                     }
                 }(this),
@@ -250,7 +282,6 @@ define(['dispatcher', 'backbone', 'handlebars', 'text!templates/admin/spu/design
         },
 
         collapse: function () {
-        
         },
 
         getDesignRegion: function () {

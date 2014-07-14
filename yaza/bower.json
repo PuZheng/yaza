@@ -47,6 +47,7 @@
     "autosize": "https://github.com/jackmoore/autosize.git",
     "jszip": "Stuk/jszip#~2.3.0",
     "FileSaver": "*",
-    "toastr": "~2.0.3"
+    "toastr": "~2.0.3",
+    "js-url": "~1.8.6"
   }
 }

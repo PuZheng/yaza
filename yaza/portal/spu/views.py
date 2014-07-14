@@ -50,13 +50,16 @@ spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU,
                                               label=lazy_gettext(u"spu")))
 
 
-@spu_ws.route('/spu.json', methods=['POST', 'PUT'])
-def spu_api():
-
-    name = json.loads(request.data)['name']
-    if request.method == 'POST':
+@spu_ws.route('/spu.json/<int:id_>', methods=['GET', 'PUT'])
+@spu_ws.route('/spu.json', methods=['POST'])
+def spu_api(id_=None):
+    if request.method == 'GET':
+        spu = get_or_404(SPU, id_)
+    elif request.method == 'POST':
+        name = json.loads(request.data)['name']
         spu = wraps(do_commit(SPU(name=name)))
     else:
+        name = json.loads(request.data)['name']
         id_ = json.loads(request.data)['id']
         spu = get_or_404(SPU, id_)
         spu.name = name

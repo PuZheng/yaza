@@ -1,9 +1,14 @@
 {% extends "data_browser__/layout.html" %}
-{% block __data_browser__customized_head_block %}
+{% block __data_browser__head_block %}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
   {% if config.QINIU_ENABLED and not config.DEBUG %}
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/js/vendor/bootswatch-scss/flatly/bootstrap.min.css" />
     <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin.css"/>
     <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin/spu.css"/>
   {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/spu.css') }}"/>
   {% endif %}
@@ -20,41 +25,7 @@
 {% block body %}
 <div class="container">
   <div class="primary">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <span class="text-muted">
-          新建SPU 
-        </span>
-        <em class='spu-name'></em>
-      </div>
-      <div class="panel-body">
-        <div class="form-horizontal spu-form">
-          <div class="form-group">
-            <label for="" class="control-label col-sm-2">SPU名称</label>
-            <div class="col-sm-4">
-              <input type="text" placeholder="SPU名称" class='form-control'>
-            </div>
-            <label class="control-label text-danger" style='display: none'>* SPU名称不能为空</label>
-          </div>
-        </div>
-      </div>
-      <div class="panel-footer">
-        <div class="row">
-          <a class="cols-sm-3 btn btn-default pull-right" href="{{ model_view.url_for_list() }}">
-            <i class="fa fa-back"></i>
-            返回
-          </a>
-          <button class="btn-new-spu cols-sm-3 btn btn-primary pull-right">
-            <i class="fa fa-plus"></i>
-            创建
-          </button>
-          <button class="btn-new-ocspu btn btn-primary pull-right" style="display: none">
-            <i class="fa fa-plus"></i>
-            增加OCSPU
-          </button>
-        </div>
-      </div>
-    </div>
+    <div class="spu"></div>
   </div>
 </div>
 {% endblock %}

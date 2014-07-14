@@ -75,7 +75,10 @@ class SPUAdminModelView(ModelView):
     def edit_view(self, id_):
         spu = self._get_one(id_)
         self.try_edit(spu)
-        return render_template(self.edit_template, spu=spu)
+        return render_template('admin/spu.html',
+                               nav_bar=admin_nav_bar, time=time.time(),
+                               model_view=self)
+        #return render_template(self.edit_template, spu=spu)
 
 
     def create_view(self):
