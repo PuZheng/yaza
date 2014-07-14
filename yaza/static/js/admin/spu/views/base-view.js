@@ -1,9 +1,10 @@
-define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect-view', 'spu/models/ocspu', 'handlebars', 'text!templates/admin/spu/view.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url'], function (dispatcher, context, _, Backbone, AspectView, OCSPU, handlebars, template) {
+define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect-view', 'spu/models/ocspu', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url'], function (dispatcher, context, _, Backbone, AspectView, OCSPU, handlebars, template, entryTemplate) {
     _.mixin(_.str.exports());
     var BaseView = Backbone.View.extend({
         el: 'div',
 
         _template: handlebars.default.compile(template),
+        _entryTemplate: handlebars.default.compile(entryTemplate),
 
         events: {
             'click .panel-new-ocspu .btn-cancel': function() {
@@ -53,100 +54,123 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect
                 }
             },
 
-            'click .panel-new-ocspu .btn-collapse': function () {
-                this.collapse();  
-            },
         },
 
-        render: function () {
-            this.fields.forEach(function (field) {
-                field.value = this.model.id == undefined? '': this.model.get(field.name);
-            }.bind(this));
-            var timestamp = new Date().getTime();
-            this.$el.html(this._template({fields: this.fields, label: this.label, 
-               title: this.model.id == undefined? '': this.model.get(this.title),
-               timestamp: timestamp,
-            }));
-            this.$panel = this.$('.panel-' + timestamp);
-            this.$form = this.$('.panel-' + timestamp + ' > .panel-body form');
-            this.$title = this.$('.panel-' + timestamp + ' > .panel-heading em');
-            this.$createBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-ok');
-            this.$cancelBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-cancel');
-            this.$inputs = this.fields.map(function (field) {
-                var selector = '[data-field="' + field.name + '"]';
-                return this.$form.find('input' + selector).data('error-label', 
-                    this.$form.find('label' + selector)).keydown(function (event) {
-                        $(this).data('error-label').hide();
-                    }).keypress(function (view) {
-                        return function (event) {
-                            if (event.which != 13) {
-                                return true;
-                            } 
-                            event.preventDefault();
-                            if (view.model.id != undefined) {
-                                $(event.target).blur()
-                                view.model.set(field.name, $(this).val());
-                                view.model.save([field.name], {
-                                    success: function (model, response, options) {
-                                        dispatcher.trigger('flash', {
-                                            type: 'success',
-                                            msg: '成功修改' + field.name + '为' + model.get(field.name) + '!', 
-                                        });             
-                                        if (view.title == field.name) {
-                                            view.$title.text(model.get(field.name));
-                                        }
-                                    },
-                                    error: function () {
-                                        dispatcher.trigger('flash', {
-                                            type: 'error',
-                                            msg: '修改' + field.name + '失败!', 
-                                        });             
-                                    },
-                                });
+        render: function (collapsed) {
+            if (!collapsed) {
+                this.fields.forEach(function (field) {
+                    field.value = this.model.id == undefined? '': this.model.get(field.name);
+                }.bind(this));
+                var timestamp = new Date().getTime();
+                this.$el.html(this._template({fields: this.fields, label: this.label, 
+                    title: this.model.id == undefined? '': this.model.get(this.title),
+                    timestamp: timestamp,
+                }));
+                this.$panel = this.$('.panel-' + timestamp);
+                this.$form = this.$('.panel-' + timestamp + ' > .panel-body form');
+                this.$title = this.$('.panel-' + timestamp + ' > .panel-heading em');
+                this.$createBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-ok');
+                this.$cancelBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-cancel');
+                this.$collapseBtn = this.$('.panel-' + timestamp + ' > .panel-heading a.btn-collapse');
+                this.$inputs = this.fields.map(function (field) {
+                    var selector = '[data-field="' + field.name + '"]';
+                    return this.$form.find('input' + selector).data('error-label', 
+                        this.$form.find('label' + selector)).keydown(function (event) {
+                            $(this).data('error-label').hide();
+                        }).keypress(function (view) {
+                            return function (event) {
+                                if (event.which != 13) {
+                                    return true;
+                                } 
+                                event.preventDefault();
+                                if (view.model.id != undefined) {
+                                    $(event.target).blur()
+                            view.model.set(field.name, $(this).val());
+                        view.model.save([field.name], {
+                            success: function (model, response, options) {
+                                dispatcher.trigger('flash', {
+                                    type: 'success',
+                                    msg: '成功修改' + field.name + '为' + model.get(field.name) + '!', 
+                                });             
+                                if (view.title == field.name) {
+                                    view.$title.text(model.get(field.name));
+                                }
+                            },
+                            error: function () {
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
+                                msg: '修改' + field.name + '失败!', 
+                                });             
+                            },
+                        });
+                                }
+                            };
+                        }(this));
+                }.bind(this));
+                this.$createBtn.click(function (view) {
+                    return function (event) {
+                        event.preventDefault();
+                        var fieldNames = [];
+                        for (var i=0; i < view.$inputs.length; ++i) {
+                            var $input = view.$inputs[i];
+                            var val = $input.val().trim();
+                            var fieldName = $input.data('field');
+                            fieldNames.push(fieldName);
+                            if (!val) {
+                                $input.focus().data('error-label').show(); 
+                                return false;
                             }
-                        };
-                    }(this));
-            }.bind(this));
-            this.$createBtn.click(function (view) {
-                return function (event) {
-                    event.preventDefault();
-                    var fieldNames = [];
-                    for (var i=0; i < view.$inputs.length; ++i) {
-                        var $input = view.$inputs[i];
-                        var val = $input.val().trim();
-                        var fieldName = $input.data('field');
-                        fieldNames.push(fieldName);
-                        if (!val) {
-                            $input.focus().data('error-label').show(); 
-                            return false;
+                            view.model.set(fieldName, val);
                         }
-                        view.model.set(fieldName, val);
-                    }
-                    view.model.save(fieldNames, {
-                        success: function (model, response, options) {
-                            dispatcher.trigger('flash', {
-                                type: 'success',
-                                msg: '成功创建' + view.label + model.get(view.title) + '!', 
-                            });
-                            view.$createBtn.hide();
-                            view.$title.text(model.get(view.title));
-                        },
-                        error: function () {
-                            dispatcher.trigger('flash', {
-                                type: 'error',
+                        view.model.save(fieldNames, {
+                            success: function (model, response, options) {
+                                dispatcher.trigger('flash', {
+                                    type: 'success',
+                                    msg: '成功创建' + view.label + model.get(view.title) + '!', 
+                                });
+                                view.$createBtn.hide();
+                                view.$title.text(model.get(view.title));
+                                view.$collapseBtn.show();
+                            },
+                            error: function () {
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
                                 msg: '创建' + view.label + '失败!', 
-                            });             
-                            view.$createBtn.removeClass('disabled');
-                        }
-                    });
-                    $(event.target).addClass('disabled');
+                                });             
+                                view.$createBtn.removeClass('disabled');
+                            }
+                        });
+                        $(event.target).addClass('disabled');
+                        return false;
+                    }
+                }(this));
+                this.$cancelBtn.click(function (event) {
+                    location.href = decodeURIComponent($.url('?__back_url__'));   
                     return false;
-                }
-            }(this));
-            this.$cancelBtn.click(function (event) {
-                location.href = decodeURIComponent($.url('?__back_url__'));   
-                return false;
-            });
+                });
+                this.$collapseBtn.one('click', function (view) {
+                    return function (event) {
+                        debugger;
+                        view.render(true); 
+                    }
+                }(this));
+            } else {
+                var obj = {
+                    label: this.label,
+                    title: this.model.get(this.title),
+                    fields: {},
+                }; 
+                this.fields.forEach(function (field) {
+                    obj.fields[field.name] = this.model.get(field.name);
+                }.bind(this));
+                this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>'); 
+                this.$expandBtn = this.$('.btn');
+                this.$expandBtn.one('click', function (view) {
+                    return function (event) {
+                        view.render();
+                    }
+                }(this));
+            }
             return;
             this.$colorNameInput = this.$('.ocspu-form .form-group:first-child input');
             this.$colorNameInput.data('error-label', this.$('.ocspu-form .form-group:first-child .text-danger'));
@@ -367,13 +391,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect
             return this;
         },
 
-        getObj: function () {
-            return this._obj;
-        },
-        
-        collapse: function () {
-            return this.$el.html(_.sprintf('<li class="list-group-item list-group-item-info"><div><span>%s<span></div></li>', this._obj.name()));
-        },
     });
     return BaseView;
 });
