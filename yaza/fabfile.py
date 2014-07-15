@@ -50,6 +50,7 @@ def upload_file(file_):
 
 def deploy():
     prepare_deploy()
+    upload()
     with cd("/srv/www/yaza-env"):
         with prefix('source env/bin/activate'):
             run('python -c "import sys; print sys.path"')
