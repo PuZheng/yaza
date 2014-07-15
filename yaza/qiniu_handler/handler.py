@@ -39,6 +39,29 @@ def upload_image_str(key, data, bucket):
     return "http://" + bucket + '.qiniudn.com/' + key
 
 
+def upload_text(key, data, bucket):
+    qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
+    qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
+    ret, err = qiniu.rs.Client().stat(bucket, key)
+    if err is not None:
+        policy = qiniu.rs.PutPolicy(bucket)
+        uptoken = policy.token()
+        extra = qiniu.io.PutExtra()
+        extra.mime_type = "text/plain"
+
+        data = StringIO(data)
+        ret, err = qiniu.io.put(uptoken, key, data, extra)
+        if err is not None:
+            app.logger.error('error: %s ' % err)
+            raise UploadException(err, key)
+    else:
+        print ret
+
+    if os.path.altsep in key:
+        key = key.replace("\\", "%5C")
+    return "http://" + bucket + '.qiniudn.com/' + key
+
+
 class UploadException(Exception):
     def __init__(self, err, filename):
         self.msg = "error: %s, when uploading %s" % (err, filename)

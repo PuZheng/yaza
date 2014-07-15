@@ -1,0 +1,10 @@
+{
+    "include": {
+        "file": ["build.txt"],
+        "dir": ["js"]
+    },
+    "exclude": {
+        "file": ["js/demo.js"],
+        "dir": ["js/spu"]
+    }
+}
