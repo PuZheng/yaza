@@ -49,6 +49,7 @@ QINIU_CONF = {
     "SPU_IMAGE_BUCKET": "yaza-spu-images",
     "ASPECT_MD_SIZE": 400,
     "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
+    "EXPIRY_TIME": 2592000  # 30天
 }
 
 DESIGN_IMAGE_LIST_API = "http://diancai.snsunion.cn/cloth/index.php/Uility/designimages"
