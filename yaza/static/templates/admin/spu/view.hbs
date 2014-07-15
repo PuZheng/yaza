@@ -1,39 +1,82 @@
-<div class="panel panel-default panel-{{timestamp}}">
+<div class="panel panel-default panel-{{label}}">
   <div class="panel-heading">
-    <a class="btn-collapse btn btn-xs pull-right" {{#unless title}}style="display: none"{{/unless}}>
+    <a class="btn-collapse btn btn-xs pull-right" {{#unless model}}style="display: none"{{/unless}}>
       <i class="fa fa-chevron-up"></i>
     </a>
     <span class="text-muted">
-      {{#if title}}
+      {{#if model}}
       修改
       {{else}}
       新建
       {{/if}}
       {{label}}
     </span>
-    <em>{{title}}</em>
+    <em>{{model}}</em>
   </div>
   <div class="panel-body">
-    <form class="form-horizontal">
+    <form class="form-horizontal form-{{label}}">
       {{#each fields}}
         <div class="form-group">
           <label for="" class="control-label col-sm-2">{{this.label}}</label>
-          <div class="col-sm-4">
-            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}">
+          <div class="col-sm-2">
+            {{#eq this.type 'file'}}
+              <span class="btn btn-success fileinput-button">
+                <i class="fa fa-plus"></i>
+                <span>选择文件</span>
+                <input type="file" name="file" data-field="{{this.name}}">
+              </span>
+            {{else}}
+              <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}">
+            {{/eq}}
           </div>
           <label class="control-label text-danger" style='display: none' data-field='{{this.name}}'>* {{this.error}}</label>
+          {{#eq this.type 'file'}}
+            <a class="fancybox" rel="group" data-field="{{this.name}}">
+              <div class="col-md-2">
+                <div class="thumbnail">
+                  <img alt="" src="{{this.value}}"/>
+                </div>
+              </div>
+            </a>
+          {{/eq}}
         </div>
       {{/each}}
+      <div class="uploading-progress row" style='display: none'>
+        <div class="col-md-11">
+          <div class="progress progress-striped active">
+            <div class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+              0%
+            </div>
+          </div>
+        </div>
+        <div class="col-md-1">
+          <button class="upload-cancel-btn btn btn-danger btn-xs">取消</button>
+        </div>
+      </div>
     </form>
+    <ul class="list-group"></ul>
   </div>
 
   <div class="panel-footer">
     <div class="row">
       <div class="pull-right">
+        {{#if nextLevel}}
+        <button class="btn btn-success btn-next-level" {{#unless model}}style='display:none'{{/unless}}>
+          <i class="fa fa-plus"></i>
+          新建{{nextLevel.view.prototype.label}}
+        </button>
+        {{/if}}
+        {{#unless model}}
         <button class="btn btn-danger btn-cancel"><span aria-hidden="true">&times;</span>取消</button>
+        {{else}}
+          {{#unless parentView}}
+          <button class="btn btn-danger btn-cancel"><span aria-hidden="true">&times;</span>取消</button>
+          {{/unless}}
+        {{/unless}}
+        {{#unless model}}
         <button class="btn btn-primary btn-ok">确认</button>
+        {{/unless}}
       </div>
     </div>
   </div>
 </div>
-<li class="list-group-item"></li>

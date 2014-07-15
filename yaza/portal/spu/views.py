@@ -64,30 +64,43 @@ def spu_api(id_=None):
         spu = get_or_404(SPU, id_)
         spu.name = name
         db.session.commit()
-    return jsonify(spu.as_dict())
+    return jsonify({
+        'name': spu.name,
+        'ocspu-id-list': [ocspu.id for ocspu in spu.ocspu_list],
+    })
 
 
-@spu_ws.route('/ocspu.json', methods=['POST', 'PUT'])
-def ocspu_api():
-    d = json.loads(request.data)
-    color = d.get('color')
-    spu_id = d.get('spu-id')
-    rgb = d.get('rgb')
-    cover_path = d.get('cover-path')
+@spu_ws.route('/ocspu.json/<int:id_>', methods=['GET', 'PUT', 'DELETE'])
+@spu_ws.route('/ocspu.json', methods=['POST'])
+def ocspu_api(id_=None):
+    if request.method == 'DELETE':
+        ocspu = get_or_404(OCSPU, id_)
+        do_commit(ocspu, 'delete')
+        # TODO should delete all the children and image on qiniu
+        return jsonify({})
 
-    if request.method == 'POST':
-        ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
-                                      cover_path=cover_path)))
+    if request.method == 'GET':
+        ocspu = get_or_404(OCSPU, id_)
     else:
-        ocspu_id = d.get('id')
-        ocspu = get_or_404(OCSPU, ocspu_id)
-        if color:
-            ocspu.color = color
-        if rgb:
-            ocspu.rgb = rgb
-        if cover_path:
-            ocspu.cover_path = cover_path
-        (color or rgb or cover_path) and db.session.commit()
+        d = json.loads(request.data)
+        color = d.get('color')
+        spu_id = d.get('spu-id')
+        rgb = d.get('rgb')
+        cover_path = d.get('cover-path')
+
+        if request.method == 'POST':
+            ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
+                                        cover_path=cover_path)))
+        else:
+            ocspu_id = d.get('id')
+            ocspu = get_or_404(OCSPU, ocspu_id)
+            if color:
+                ocspu.color = color
+            if rgb:
+                ocspu.rgb = rgb
+            if cover_path:
+                ocspu.cover_path = cover_path
+            (color or rgb or cover_path) and db.session.commit()
 
     return jsonify({
         'id': ocspu.id,
@@ -95,6 +108,7 @@ def ocspu_api():
         'spu-id': ocspu.spu_id,
         'rgb': ocspu.rgb,
         'cover-path': ocspu.cover_path,
+        'aspect-id-list': [aspect.id for aspect in ocspu.aspect_list]
     })
 
 

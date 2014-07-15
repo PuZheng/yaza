@@ -1,115 +1,132 @@
-define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect-view', 'spu/models/ocspu', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url'], function (dispatcher, context, _, Backbone, AspectView, OCSPU, handlebars, template, entryTemplate) {
+define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url'], function (dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
     _.mixin(_.str.exports());
+    handlebars.default.registerHelper('eq', function(a, b, opts) {
+        if(a == b) // Or === depending on your needs
+            return opts.fn(this);
+        else
+            return opts.inverse(this);
+    });
     var BaseView = Backbone.View.extend({
         el: 'div',
 
         _template: handlebars.default.compile(template),
         _entryTemplate: handlebars.default.compile(entryTemplate),
 
-        events: {
-            'click .panel-new-ocspu .btn-cancel': function() {
-
-                this.$el.fadeOut({
-                    always: function () {
-                        $(this).remove();
-                    }
-                });
-            }, 
-
-            'click .panel-new-ocspu > .panel-footer .btn-ok': function () {
-                var colorName = this.$colorNameInput.val();
-                var files = this.$materialImageInput[0].files;
-                var materialImage = !!files.length && files[0];
-                var rgb = this.$rgbInput.val();
-                if (!colorName) {
-                    this.$colorNameInput.focus().data('error-label').show();
-                    return false;
-                }
-                if (!rgb) {
-                    this.$rgbInput.focus().data('error-label').show();
-                    return false;
-                }
-                if (!materialImage) {
-                    this.$materialImageInput.focus().data('error-label').show();
-                    return false;
-                }
-                var data = this.$materialImageInput.data('data');
-                data.ocspu = {
-                    color: colorName,
-                    rgb: rgb,
-                };
-                $(event.target).addClass('disabled');
-                var jqXHR = data.submit();
-            },
-
-            'click .btn-new-aspect': function () {
-                if (this._aspectView == undefined) {
-                    var $aspectEl = $('<div class="aspect"></div>').insertAfter(this.$('.ocspu-form'));
-                    this._aspectView = new AspectView({el: $aspectEl}).render();
-                } else if (!!this._aspectView.getAspect()) { 
-                    this._aspectView.collapse();
-                    var $aspectEl = $('<div class="aspect"></div>').insertAfter(this.$('.ocspu-form'));
-                    this._aspectView = new AspectView({el: $aspectEl}).render();
-                
-                }
-            },
-
+        initialize: function (option) {
+            this._parentView = option.parentView;
         },
 
         render: function (collapsed) {
+            //collapsed? this._collapse(): this._expand();
             if (!collapsed) {
-                this.fields.forEach(function (field) {
-                    field.value = this.model.id == undefined? '': this.model.get(field.name);
-                }.bind(this));
-                var timestamp = new Date().getTime();
-                this.$el.html(this._template({fields: this.fields, label: this.label, 
-                    title: this.model.id == undefined? '': this.model.get(this.title),
-                    timestamp: timestamp,
-                }));
-                this.$panel = this.$('.panel-' + timestamp);
-                this.$form = this.$('.panel-' + timestamp + ' > .panel-body form');
-                this.$title = this.$('.panel-' + timestamp + ' > .panel-heading em');
-                this.$createBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-ok');
-                this.$cancelBtn = this.$('.panel-' + timestamp + ' > .panel-footer .btn-cancel');
-                this.$collapseBtn = this.$('.panel-' + timestamp + ' > .panel-heading a.btn-collapse');
-                this.$inputs = this.fields.map(function (field) {
-                    var selector = '[data-field="' + field.name + '"]';
-                    return this.$form.find('input' + selector).data('error-label', 
-                        this.$form.find('label' + selector)).keydown(function (event) {
-                            $(this).data('error-label').hide();
-                        }).keypress(function (view) {
-                            return function (event) {
-                                if (event.which != 13) {
-                                    return true;
-                                } 
-                                event.preventDefault();
-                                if (view.model.id != undefined) {
-                                    $(event.target).blur()
-                            view.model.set(field.name, $(this).val());
+                this._expand();
+            } else {
+                this._collapse();
+            }
+            return this;
+        },
+
+        _initColorInput: function ($input, field, view) {
+            $input.attr('type', 'text'); // 否则allowEmpty不会生效
+            $input.spectrum({
+                preferredFormat: "hex",
+                chooseText: "确定",
+                cancelText: "取消",
+                showInput: true,
+                allowEmpty: true,
+                change: function (event) {
+                    $(this).data('error-label').hide();
+                    if (view.model.id != undefined) {
+                        view.model.set(field.name, $(this).val());
                         view.model.save([field.name], {
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功修改' + field.name + '为' + model.get(field.name) + '!', 
+                                    msg: '成功修改' + field.label + '为' + model.get(field.name) + '!', 
                                 });             
-                                if (view.title == field.name) {
-                                    view.$title.text(model.get(field.name));
-                                }
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                msg: '修改' + field.name + '失败!', 
+                                    msg: '修改' + field.label + '失败!', 
                                 });             
                             },
                         });
-                                }
-                            };
-                        }(this));
-                }.bind(this));
-                this.$createBtn.click(function (view) {
-                    return function (event) {
-                        event.preventDefault();
+                    }
+                }
+            });
+        },
+
+        _initFileInput: function ($input, field, view) {
+            view.$form.fileupload({
+                dataType: 'json',
+                url: 'http://up.qiniu.com',
+                add: function (e, data) {
+                    // 这里不用$input.data('error-label')是由于fileupload这个插件会替换掉$input(变成一个隐藏元素)
+                    var $errorLabelEl = $(this).find('label.text-danger[data-field="' + field.name + '"]');
+                    $errorLabelEl.hide();
+                    var fileReader = new FileReader();
+                    fileReader.onload = (function (a) {
+                        return function (e) {
+                            a.href = e.target.result;
+                            $(a).find('img')[0].src = e.target.result;
+                        };
+                    })($(this).find('a.fancybox[data-field="' + field.name + '"]')[0]);
+                    fileReader.readAsDataURL(data.files[0]);
+                    $(this).data('data', data);
+                    // 只有修改ocspu的材质图的时候， 才直接提交数据
+                    if (view.model.id != undefined) {
+                        $(this).find('.uploading-progress').show();
+                        data.ocspu = {};
+                        var jqXHR = data.submit();
+                        view.$inputs.forEach(function ($input) {
+                            $input.attr('disabled', '');
+                        });
+                        $(this).find('.uploading-progress .upload-cancel-btn').click(
+                            function () {
+                                jqXHR.abort();
+                                $(this).find('.uploading-progress').fadeOut(1000);
+                            });
+                    }
+                },
+                submit: function (e, data) {
+                    $.getJSON('/admin/qiniu-upload-token', function (token) {
+                        var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                        postfix = (postfix && postfix[0]) || '';
+                        data.formData = {
+                            'key': view.label + '+' + new Date().getTime() + '.' + postfix,
+                            'token': token.token,
+                        };
+                        view.$form.find('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
+                        view.$form.find('.uploading-progress').show();
+                        view.$form.find('.uploading-progress .upload-cancel-btn').click(
+                            function () {
+                                data.abort();
+                                view.$form.find('.uploading-progress').fadeOut(1000);
+                            });
+                            data.jqXHR = view.$form.fileupload('send', data);
+                            // 上传期间不能对input进行修改
+                            view.$form.find('input').attr('disabled', '');
+                    }).fail(function () {
+                        dispatcher.trigger('flash', {
+                            type: 'error',
+                            msg: '不能获取七牛的上传token', 
+                        });
+                        data.abort();
+                    });
+                    // 之前已经send了， 就不要再submit
+                    return false;
+                }, 
+                progress: function (e, data) {
+                    // Calculate the completion percentage of the upload
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+                    // Update the hidden input field and trigger a change
+                    // so that the jQuery knob plugin knows to update the dial
+                    $(this).find('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%').attr('aria-valuenow', progress);
+                },
+                done: function (e, data) {
+                    // 若是之前没有创建过OCSPU, 就创建， 否则仅仅修改材质图
+                    if (view.model.id == undefined) {
                         var fieldNames = [];
                         for (var i=0; i < view.$inputs.length; ++i) {
                             var $input = view.$inputs[i];
@@ -122,275 +139,273 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'spu/views/aspect
                             }
                             view.model.set(fieldName, val);
                         }
+                        // override file field
+                        view.model.set(field.name, 'http://yaza-spus.qiniudn.com/' + data.formData.key);
+
+                        if (!!view._parentView) {
+                            fieldNames.push(view._parentView.nextLevel.parentRefBack);
+                            view.model.set(view._parentView.nextLevel.parentRefBack, view._parentView.model.id);
+                        }
                         view.model.save(fieldNames, {
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功创建' + view.label + model.get(view.title) + '!', 
+                                    msg: '成功创建' + view.label + ' - ' +  model.get(view.title) + '!', 
                                 });
+                                view.$form.find('.uploading-progress').fadeOut(1000);
                                 view.$createBtn.hide();
                                 view.$title.text(model.get(view.title));
                                 view.$collapseBtn.show();
+                                view.$nextLevelBtn.show();
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                msg: '创建' + view.label + '失败!', 
+                                    msg: '创建' + view.label + '失败!', 
                                 });             
                                 view.$createBtn.removeClass('disabled');
                             }
                         });
-                        $(event.target).addClass('disabled');
-                        return false;
-                    }
-                }(this));
-                this.$cancelBtn.click(function (event) {
-                    location.href = decodeURIComponent($.url('?__back_url__'));   
-                    return false;
-                });
-                this.$collapseBtn.one('click', function (view) {
-                    return function (event) {
-                        debugger;
-                        view.render(true); 
-                    }
-                }(this));
-            } else {
-                var obj = {
-                    label: this.label,
-                    title: this.model.get(this.title),
-                    fields: {},
-                }; 
-                this.fields.forEach(function (field) {
-                    obj.fields[field.name] = this.model.get(field.name);
-                }.bind(this));
-                this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>'); 
-                this.$expandBtn = this.$('.btn');
-                this.$expandBtn.one('click', function (view) {
-                    return function (event) {
-                        view.render();
-                    }
-                }(this));
-            }
-            return;
-            this.$colorNameInput = this.$('.ocspu-form .form-group:first-child input');
-            this.$colorNameInput.data('error-label', this.$('.ocspu-form .form-group:first-child .text-danger'));
-            this.$rgbInput = this.$('.ocspu-form .form-group:nth-child(2) input');
-            this.$rgbInput.data('error-label', this.$('.ocspu-form .form-group:nth-child(2) .text-danger'));
-            this.$materialImageInput = this.$('.ocspu-form :file'); 
-            this.$materialImageInput.data('error-label', this.$('.ocspu-form .form-group:nth-child(3) .text-danger'));
-
-            this.$colorNameInput.keydown(function (event) {
-                $(this).data('error-label').hide();
-            }).keypress(function (ocspuView) {
-                return function (event) {
-                    if (event.which != 13) {
-                        return true;
-                    } 
-                    event.preventDefault();
-                    if (!!ocspuView._ocspu) {
-                        $(event.target).blur()
-                        ocspuView._ocspu.set('color', $(this).val());
-                        ocspuView._ocspu.save(['color'], {
+                    } else {
+                        var path = 'http://yaza-spus.qiniudn.com/' + data.formData.key;
+                        view.model.set(field.name, path);
+                        var $form = $(this);
+                        view.model.save([field.name], {
                             success: function (model, response, options) {
+                                $form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功修改OCSPU颜色名称 - ' + model.get('color') + '!', 
-                                });             
-                                ocspuView.$('.panel-new-ocspu > .panel-heading em').text(model.get('color'));
+                                    msg: '成功修改' + field.label + '为' + 'http://yaza-spus.qiniudn.com/' + data.formData.key,
+                                });
+                                $form.find('input').removeAttr('disabled');
                             },
                             error: function () {
+                                $form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                    msg: '修改OCSPU颜色名称失败!', 
+                                    msg: '修改' + field.name + '失败!', 
                                 });             
-                            },
+                                $form.find('input').removeAttr('disabled');
+                            }
                         });
-                    }
-                }
-            }(this));
-            this.$rgbInput.spectrum({
-                preferredFormat: "hex",
-                chooseText: "确定",
-                cancelText: "取消",
-                showInput: true,
-                allowEmpty: true,
-                change: function (ocspuView) {
-                    return function (event) {
-                        $(this).data('error-label').hide();
-                        if (!!ocspuView._ocspu) {
-                            ocspuView._ocspu.set('rgb', $(this).val());
-                            ocspuView._ocspu.save(['rgb'], {
-                                success: function (model, response, options) {
-                                    dispatcher.trigger('flash', {
-                                        type: 'success',
-                                        msg: '成功修改OCSPU色彩 - ' + model.get('rgb') + '!', 
-                                    });             
-                                },
-                                error: function () {
-                                    dispatcher.trigger('flash', {
-                                        type: 'error',
-                                        msg: '修改OCSPU色彩失败!', 
-                                    });             
-                                },
-                            });
-                        }
-                    }
-                }(this),
-            });
-            this.$('.aspect').hide();
-            this.$('.fancybox').fancybox();
-            // 因为上传文件的原因， 只能手动写ajax
-            this.$('.ocspu-form').fileupload({
-                dataType: 'json',
-                url: 'http://up.qiniu.com',
-                add: (function (ocspuView) {
-                    return function (e, data) {
 
-                        // 这里不用$materialImageInput.data('error-label')是由于fileupload这个插件会替换掉ocspuView.$materialImageInput
-                        var $errorLabelEl = ocspuView.$('.ocspu-form .form-group:nth-child(3) .text-danger');
-                        $errorLabelEl.hide();
-                        var fileReader = new FileReader();
-                        fileReader.onload = (function (a) {
-                            return function (e) {
-                                a.href = e.target.result;
-                                $(a).find('img')[0].src = e.target.result;
-                            };
-                        })($(this).find('a.fancybox')[0]);
-                        fileReader.readAsDataURL(data.files[0]);
-                        ocspuView.$materialImageInput.data('data', data);
-                        // 只有修改ocspu的材质图的时候， 才直接提交数据
-                        if (!!ocspuView._ocspu) {
-                            $(this).find('.uploading-progress').show();
-                            data.ocspu = {};
-                            var jqXHR = data.submit();
-                            ocspuView.$('.ocspu-form input').attr('disabled', '');
-                            $(this).find('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                    jqXHR.abort();
-                                    $(this).find('.uploading-progress').fadeOut(1000);
-                                });
-                        }
                     }
-                })(this),
-                submit: (function (ocspuView) {
-                    return function (e, data) {
-                        // get qiniu upload token
-                        var that = this;
-                        $.getJSON('/admin/qiniu-upload-token', function (token) {
-                            // 先上传到qiniu
-                            var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
-                            postfix = (postfix && postfix[0]) || '';
-                            data.formData = {
-                                'key': 'material+' + new Date().getTime() + '.' + postfix,
-                                'token': token.token,
-                            };
-                            data.ocspu['cover-path'] = 'http://yaza-spus.qiniu.com/' + data.formData.key;
-                            console.log('upload image to qiniu');
-                            $(that).find('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
-                            ocspuView.$('.ocspu-form .uploading-progress').show();
-                            $(that).find('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                    data.abort();
-                                    ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
-                                });
-                            data.jqXHR = $(that).fileupload('send', data);
-                            // 上传期间不能对input进行修改
-                            $(that).find('input').attr('disabled', '');
-                        }).fail(function () {
-                            dispatcher.trigger('flash', {
-                                type: 'error',
-                                msg: '不能获取七牛的上传token', 
-                            });
-                            data.abort();
-                        });
-                        // 之前已经send了， 就不要再submit
-                        return false;
-                    }
-                })(this),
-                progress: function (e, data) {
-                    // Calculate the completion percentage of the upload
-                    var progress = parseInt(data.loaded / data.total * 100, 10);
-                    // Update the hidden input field and trigger a change
-                    // so that the jQuery knob plugin knows to update the dial
-                    $(this).find('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%').attr('aria-valuenow', progress);
                 },
-                done: (function (ocspuView) { 
-                    return function (e, data) {
-                        // 若是之前没有创建过OCSPU, 就创建， 否则仅仅修改材质图
-                        if (!ocspuView._ocspu) {
-                            ocspuView._ocspu = new OCSPU({
-                                color: data.ocspu.color,
-                                'cover-path': data.ocspu['cover-path'],
-                                rgb: data.ocspu.rgb,
-                                'spu-id': context.currentSPU.id,
-                            });
-
-                            ocspuView._ocspu.save(['color', 'cover-path', 'rgb', 'spu-id'], {
-                                success: function (model, response, options) {
-                                    ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
-                                    dispatcher.trigger('flash', {
-                                        type: 'success',
-                                        msg: '成功创建OCSPU - ' + data.ocspu.color,
-                                    });
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').hide();
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-cancel').hide();
-                                    ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                    ocspuView.$('.panel-new-ocspu > .panel-heading em').text(data.ocspu.color);
-                                    ocspuView.$('.panel-new-ocspu .btn-collapse').show();
-                                    ocspuView.$('.panel-new-ocspu .btn-new-aspect').show();
-                                    context.currentOCSPU = ocspuView._ocspu;
-                                },
-                                error: function () {
-                                    ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
-                                    dispatcher.trigger('flash', {
-                                        type: 'error',
-                                        msg: '创建OCSPU失败!', 
-                                    });             
-                                    ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').removeClass('disabled');
-                                    ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                    ocspuView._ocspu = null;
-                                }
-                            });
-                        } else {
-                            ocspuView._ocspu.set('cover-path', data.ocspu['cover-path']);
-                            ocspuView._ocspu.save(['cover-path'], {
-                                success: function (model, response, options) {
-                                    ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
-                                    dispatcher.trigger('flash', {
-                                        type: 'success',
-                                        msg: '成功修改OCSPU材质图' + data.ocspu['cover-path'],
-                                    });
-                                    ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                },
-                                error: function () {
-                                    ocspuView.$('.ocspu-form .uploading-progress').fadeOut(1000);
-                                    dispatcher.trigger('flash', {
-                                        type: 'error',
-                                        msg: '修改OCSPU材质图失败!', 
-                                    });             
-                                    ocspuView.$('.ocspu-form input').removeAttr('disabled');
-                                }
-                            });
-                            
-                        }
-
-                    }
-                })(this),
-                fail: (function (ocspuView) {
+                fail: (function (view) {
                     return function (e, data) {
                         $(this).find('.uploading-progress').fadeOut(1000);
                         dispatcher.trigger('flash', {
                             type: 'error',
-                            msg: '创建OCSPU失败',
+                            msg: '创建' + view.label + '失败',
                         });
-                        ocspuView.$('.panel-new-ocspu > .panel-footer .btn-ok').removeClass('disabled');
-                        ocspuView.$('.ocspu-form input').removeAttr('disabled');
+                        view.$createBtn.removeClass('disabled');
+                        $(this).find('input').removeAttr('disabled');
                     }
                 })(this),
             });
-            return this;
         },
 
+        _initInput: function ($input, field, view) {
+            $input.keydown(function (event) {
+                $(this).data('error-label').hide();
+            }).keypress(function (event) {
+                if (event.which != 13) {
+                    return true;
+                } 
+                event.preventDefault();
+                if (view.model.id != undefined) {
+                    $(event.target).blur()
+                    view.model.set(field.name, $(this).val());
+                    view.model.save([field.name], {
+                        success: function (model, response, options) {
+                            dispatcher.trigger('flash', {
+                                type: 'success',
+                                msg: '成功修改' + field.label + '为' + model.get(field.name) + '!', 
+                            });             
+                            if (view.title == field.name) {
+                                view.$title.text(model.get(field.name));
+                            }
+                        },
+                        error: function () {
+                            dispatcher.trigger('flash', {
+                                type: 'error',
+                                msg: '修改' + field.name + '失败!', 
+                            });             
+                        },
+                    });
+                }
+            });
+        },
+
+        _expand: function () {
+            this.fields.forEach(function (field) {
+                field.value = this.model.id == undefined? '': this.model.get(field.name);
+            }.bind(this));
+
+            this.$el.html(this._template({fields: this.fields, label: this.label, 
+                model: this.model.id == undefined? '': this.model.get(this.title),
+                nextLevel: this.nextLevel,
+                parentView: this._parentView,
+            }));
+            this.$panel = this.$('.panel-' + this.label);
+            this.$form = this.$('.form-' + this.label);
+            this.$title = this.$('.panel-' + this.label + ' > .panel-heading em');
+            this.$createBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-ok');
+            this.$cancelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-cancel');
+            this.$collapseBtn = this.$('.panel-' + this.label + ' > .panel-heading a.btn-collapse');
+            this.$nextLevelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-next-level');
+            if (!!this.nextLevel && this.model.id != undefined) {
+                var nextLevel = this.nextLevel;
+                var $listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
+                this.nextLevel.objects(this.model).forEach(function (view) {
+                    return function (model) {
+                        model.fetch({
+                            success: function () {
+                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo($listGroup);
+                                new nextLevel.view({
+                                    el: $nextLevelEl, 
+                                    model: model,
+                                    parentView: view,
+                                }).render(true);
+                            }
+                        });
+                    }
+                }(this)); 
+            }
+            this.$inputs = this.fields.map(function (field) {
+                var selector = '[data-field="' + field.name + '"]';
+                var $input = this.$form.find('input' + selector).data('error-label', this.$form.find('label.text-danger' + selector));
+                switch (field.type) {
+                    case 'color':
+                        this._initColorInput($input, field, this);
+                        break;
+                    case 'file':
+                        this._initFileInput($input, field, this);
+                        break; 
+                    default:
+                        this._initInput($input, field, this);
+                }
+                return $input;
+            }.bind(this));
+            this.$createBtn.click(function (view) {
+                return function (event) {
+                    event.preventDefault();
+                    var fieldNames = [];
+                    if (view.$inputs.every(function ($input) {
+                        return $input.attr('type') != 'file';
+                    })) {
+                        for (var i=0; i < view.$inputs.length; ++i) {
+                            var $input = view.$inputs[i];
+                            var val = $input.val().trim();
+                            var fieldName = $input.data('field');
+                            fieldNames.push(fieldName);
+                            if (!val) {
+                                $input.focus().data('error-label').show(); 
+                                return false;
+                            }
+                            view.model.set(fieldName, val);
+                        }
+                        if (!!view._parentView) {
+                            fieldName.push(view._parentView.nextLevel.parentRefBack);
+                            view.model.set(view._parentView.nextLevel.parentRefBack, view._parentView.model.id);
+                        }
+                        view.model.save(fieldNames, {
+                            success: function (model, response, options) {
+                                dispatcher.trigger('flash', {
+                                    type: 'success',
+                                    msg: '成功创建' + view.label + ' - ' + model.get(view.title) + '!', 
+                                });
+                                view.$createBtn.hide();
+                                view.$title.text(model.get(view.title));
+                                view.$collapseBtn.show();
+                                view.$nextLevelBtn.show();
+                            },
+                            error: function () {
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
+                                    msg: '创建' + view.label + '失败!', 
+                                });             
+                                view.$createBtn.removeClass('disabled');
+                            }
+                        });
+                    } else {
+                        $(event.target).addClass('disabled');
+                        var data = view.$form.data('data');
+                        var jqXHR = data.submit();
+                    }
+                    return false;
+                }
+            }(this));
+            this.$cancelBtn.click(function (event) {
+                if (!this._parentView) {
+                    location.href = decodeURIComponent($.url('?__back_url__'));   
+                } else {
+                    this.$el.fadeOut({
+                        always: function () {
+                            $(this).remove();
+                        }
+                    });
+                }
+                return false;
+            }.bind(this));
+            this.$collapseBtn.one('click', function (view) {
+                return function (event) {
+                    view.render(true); 
+                }
+            }(this));
+            this.$nextLevelBtn.click(function (event) {
+                var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$('.panel-' + this.label + ' > .panel-body .list-group'));
+                new this.nextLevel.view({
+                    el: $nextLevelEl, 
+                    model: this.nextLevel.newObject(),
+                    parentView: this,
+                }).render();
+            }.bind(this));
+        },
+
+        _collapse: function () {
+            var obj = {
+                label: this.label,
+                title: this.model.get(this.title),
+                fields: {},
+            }; 
+            this.fields.forEach(function (field) {
+                obj.fields[field.name] = this.model.get(field.name);
+            }.bind(this));
+            this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>'); 
+            this.$expandBtn = this.$('.btn-expand');
+            this.$expandBtn.one('click', function (view) {
+                return function (event) {
+                    view.render();
+                }
+            }(this));
+            this.$removeBtn = this.$('.btn-remove');
+            this.$removeBtn.click(function (view) {
+                return function (event) {
+                    if (confirm('您是否要删除' + view.label + '(' + view.model.get(view.title) + ')?')) {
+                        view.model.destroy({
+                            success: function (model, response) {
+                                dispatcher.trigger('flash', {
+                                    type: 'success',
+                                    msg: '成功删除' + view.label + '(' + view.model.get(view.title) + ')!', 
+                                });
+                                view.$el.fadeOut({
+                                    always: function () {
+                                        $(this).remove();
+                                    }
+                                });
+                            },
+                            error: function (model, response) {
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
+                                    msg: '删除' + view.label + '(' + view.model.get(view.title) + ')出现错误!</br>' + _(response.responseText).escapeHTML(), 
+                                });
+                            }
+                        });    
+                    }
+                }
+            }(this));
+        },
     });
     return BaseView;
 });
