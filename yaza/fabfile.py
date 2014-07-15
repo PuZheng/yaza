@@ -6,9 +6,11 @@ from flask import json
 
 import yaza
 
-env.hosts = ["localhost"]
-env.passwords = {"localhost": "13321244"}
-env.user = "xiechao"
+config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
+
+env.hosts = config["hosts"]
+env.passwords = config["passwords"]
+env.user = config["user"]
 
 
 def prepare_deploy():
@@ -21,7 +23,6 @@ def prepare_deploy():
 
 def upload():
     base_dir = os.path.join(os.path.split(yaza.__file__)[0], "static\dist")
-    config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
     included_dirs = [os.path.normpath(os.path.join(base_dir, d)) for d in config["include"].get("dir", [])]
     included_files = [os.path.normpath(os.path.join(base_dir, f)) for f in config["include"].get("file", [])]
 

@@ -6,5 +6,10 @@
     "exclude": {
         "file": ["js/demo.js"],
         "dir": ["js/spu"]
-    }
+    },
+    "hosts": ["localhost"],
+    "passwords": {
+        "localhost": "13321244"
+    },
+    "user": "xiechao"
 }
