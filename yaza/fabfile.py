@@ -19,6 +19,7 @@ def prepare_deploy():
         branch = env.branch
     with cd("/srv/www/yaza-env"):
         sudo('cd yaza && git pull origin %s' % branch, user="www-data")
+        sudo("r.js -o build.js", user="www-data")
 
 
 def upload():
