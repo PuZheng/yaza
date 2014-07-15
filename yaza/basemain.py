@@ -45,6 +45,8 @@ from flask.ext.nav_bar import FlaskNavBar
 
 admin_nav_bar = FlaskNavBar(app)
 
+from werkzeug.contrib.cache import SimpleCache
+app.cache = SimpleCache()
 
 def init_login():
     from . import models
@@ -69,7 +71,7 @@ def register_views():
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
-    installed_apps = ['user', "image", "spu"]
+    installed_apps = ['user', "image", "spu", "qiniu"]
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])

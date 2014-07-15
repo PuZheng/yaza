@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
-from datetime import datetime
+import time
 import sys
-from flask import request, json
+from flask import request, json, jsonify
 import base64
 import hmac
 from hashlib import sha1
@@ -10,19 +10,20 @@ from yaza.basemain import app
 from yaza.portal.qiniu import qiniu
 
 
-@qiniu.route("/token/")
+@qiniu.route("/token")
 def token():
-    time_ = request.args["time"]
-    if request.args.get("filename"):
-        scope = ":".join([request.args["bucket"], request.args["filename"]])
+    time_ = app.cache.get("time") or int(time.time())
+    if request.args.get("key"):
+        scope = ":".join([request.args["bucket"], request.args["key"]])
     else:
         scope = request.args["bucket"]
 
     expiry_time = app.config["QINIU_CONF"].get("EXPIRY_TIME", sys.maxint)
-    now = datetime.now()
-    if time_ - now < expiry_time:
-        time_ = now + expiry_time
-    return make_token(scope, time_), time_
+    now = int(time.time())
+    if now - time_ > expiry_time:
+        time_ = now
+    app.cache.set("time", time_, expiry_time)
+    return jsonify(token=make_token(scope, time_ + expiry_time), time=time_)
 
 
 def make_token(scope, deadline):
