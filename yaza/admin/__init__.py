@@ -8,7 +8,6 @@ from flask.ext.principal import Permission, RoleNeed
 from yaza import const
 from yaza.admin import views
 from yaza.basemain import data_browser, app, admin_nav_bar
-from yaza.qiniu_handler import upload_token
 from yaza.models import SPU
 from yaza.utils import get_or_404
 
