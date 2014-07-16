@@ -112,57 +112,78 @@ def ocspu_api(id_=None):
     })
 
 
-@spu_ws.route('/aspect.json', methods=['POST', 'PUT'])
-def aspect_api():
-    d = json.loads(request.data)
-    name = d.get('name')
-    pic_path = d.get('pic-path')
-    ocspu_id = d.get('ocspu-id')
+@spu_ws.route('/aspect.json/<int:id_>', methods=['GET', 'PUT', 'DELETE'])
+@spu_ws.route('/aspect.json', methods=['POST'])
+def aspect_api(id_=None):
+    if request.method == 'DELETE':
+        aspect = get_or_404(Aspect, id_)
+        do_commit(aspect, 'delete')
+        # TODO should delete all the children and image on qiniu
+        return jsonify({})
 
-    if request.method == 'POST':
-        aspect = wraps(do_commit(Aspect(name=name, ocspu_id=ocspu_id,
-                                        pic_path=pic_path)))
+    if request.method == 'GET':
+        aspect = get_or_404(Aspect, id_)
     else:
-        aspect_id = d.get('id')
-        aspect = get_or_404(Aspect, aspect_id)
-        if name:
-            aspect.name = name
-        if pic_path:
-            aspect.pic_path = pic_path
-        (name or pic_path) and db.session.commit()
+        d = json.loads(request.data)
+        name = d.get('name')
+        pic_path = d.get('pic-path')
+        ocspu_id = d.get('ocspu-id')
+
+        if request.method == 'POST':
+            aspect = wraps(do_commit(Aspect(name=name, ocspu_id=ocspu_id,
+                                            pic_path=pic_path)))
+        else:
+            aspect_id = d.get('id')
+            aspect = get_or_404(Aspect, aspect_id)
+            if name:
+                aspect.name = name
+            if pic_path:
+                aspect.pic_path = pic_path
+            (name or pic_path) and db.session.commit()
     return jsonify({
         'id': aspect.id,
         'name': aspect.name,
         'pic-path': aspect.pic_path,
         'ocspu-id': aspect.ocspu_id,
+        'design-region-id-list': [dr.id for dr in aspect.design_region_list]
     })
 
 
-@spu_ws.route('/design-region.json', methods=['POST', 'PUT'])
-def design_region_api():
-    d = json.loads(request.data)
-    name = d.get('name')
-    pic_path = d.get('pic-path')
-    aspect_id = d.get('aspect-id')
-    width = d.get('width')
-    height = d.get('height')
-    if request.method == 'POST':
-        design_region = wraps(do_commit(DesignRegion(name=name, width=width,
-                                                     height=height,
-                                                     pic_path=pic_path,
-                                                     aspect_id=aspect_id)))
+@spu_ws.route('/design-region.json/<int:id_>', methods=['GET', 'PUT', 'DELETE'])
+@spu_ws.route('/design-region.json', methods=['POST'])
+def design_region_api(id_):
+    if request.method == 'DELETE':
+        design_region = get_or_404(DesignRegion, id_)
+        do_commit(design_region, 'delete')
+        # TODO should delete all the children and image on qiniu
+        return jsonify({})
+
+    if request.method == 'GET':
+        design_region = get_or_404(DesignRegion, id_)
     else:
-        design_region_id = d.get('id')
-        design_region = get_or_404(DesignRegion, design_region_id)
-        if name:
-            design_region.name = name
-        if width:
-            design_region.width = width
-        if height:
-            design_region.height = height
-        if pic_path:
-            design_region.pic_path = pic_path
-        (name or width or height or pic_path) and db.session.commit()
+        d = json.loads(request.data)
+        name = d.get('name')
+        pic_path = d.get('pic-path')
+        aspect_id = d.get('aspect-id')
+        width = d.get('width')
+        height = d.get('height')
+        if request.method == 'POST':
+            design_region = wraps(do_commit(DesignRegion(name=name, width=width,
+                                                         height=height,
+                                                         pic_path=pic_path,
+                                                         aspect_id=aspect_id)))
+        else:
+            design_region_id = d.get('id')
+            design_region = get_or_404(DesignRegion, design_region_id)
+            if name:
+                design_region.name = name
+            if width:
+                design_region.width = width
+            if height:
+                design_region.height = height
+            if pic_path:
+                design_region.pic_path = pic_path
+            (name or width or height or pic_path) and db.session.commit()
 
     return jsonify({
         'name': design_region.name,

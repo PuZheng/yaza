@@ -1,6 +1,6 @@
 define(['backbone'], function (Backbone) {
     var DesignRegion = Backbone.Model.extend({
-        url: '/spu-ws/design-region.json',
+        urlRoot: '/spu-ws/design-region.json',
         defaults: {
             name: '',
             width: '',

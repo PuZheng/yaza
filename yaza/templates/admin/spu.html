@@ -23,9 +23,116 @@
 {% endblock %}
 
 {% block body %}
+<button class="btn btn-info pull-left float-helper" data-toggle='modal' data-target=".help-modal">
+  <i class="fa fa-question-circle fa-2x"></i>
+</button>
 <div class="container">
   <div class="primary">
     <div class="spu"></div>
   </div>
 </div>
+
+<div class="help-modal modal fade" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h3 class="modal-title">SPU创建器说明</h3>
+      </div>
+      <div class="modal-body">
+        <div class="panel-group" id="accordion">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                  <h4>概述</h4>
+                </a>
+              </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <p>SPU包含的对象级别是:</p>
+                <blockquote>
+                  <p>
+                  SPU -&gt; OCSPU -&gt; 面 -&gt; 设计区
+                  </p>
+                </blockquote>
+                <dl class="dl-horizontal">
+                  <dt>SPU</dt>
+                  <dd>款式，例如“韩版潮男士V领短袖T恤修身立领时尚T恤T059”</dd>
+                  <dt>OCSPU</dt>
+                  <dd>某色彩/材质</dd>
+                  <dt>面</dt>
+                  <dd>正面/反面</dd>
+                  <dt>设计区</dt>
+                  <dd>某个面上面的设计区</dd>
+                </dl>
+                <p>本工具逐层帮助创建/修改各个级别的对象。</p>
+                <p>每一级对象都有两种呈现形式: 展开/收缩状态</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                  <h4>创建对象</h4>
+                </a>
+              </h4>
+            </div>
+            <div id="collapseTwo" class="panel-collapse collapse">
+              <div class="panel-body">
+                略
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                  <h4>删除对象</h4>
+                </a>
+              </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse">
+              <div class="panel-body">
+                <p>
+                在收缩状态下， 点击图标
+                "<i class="fa fa-trash-o"></i>", 确认后删除对象
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+                  <h4>修改对象</h4>
+                </a>
+              </h4>
+            </div>
+            <div id="collapseFour" class="panel-collapse collapse">
+              <div class="panel-body">
+                <ul>
+                  <li>
+                  对于输入框， 修改后， 直接敲击回车就可以修改此字段。
+                  </li>
+                  <li>
+                  对于色彩， 选择一个新的颜色， 就可以修改此字段。
+                  </li>
+                  <li>
+                  对于文件， 选择一个新的文件， 就可以修改此字段。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 {% endblock %}

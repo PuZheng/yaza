@@ -1,5 +1,5 @@
-define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize"],
-    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies) {
+define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
+    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -201,11 +201,10 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 'click .aspect-selector .thumbnail': function (evt) {
                     var aspect = $(evt.currentTarget).data('aspect');
                     if (!!this._currentAspect && this._currentAspect.id == aspect.id) {
-                        return;                        
+                        return;
                     }
                     this.$(".aspect-selector .thumbnail").removeClass("selected");
                     $(evt.currentTarget).addClass("selected");
-                    console.log("aspect click:", aspect.name);
                     this._currentAspect = aspect;
                     dispatcher.trigger("aspect-selected", aspect);
                 },
@@ -275,11 +274,11 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         ).data('design-region', designRegion).appendTo(designRegions);
                     }.bind(this));
                 }.bind(this));
-                if(_.all(ocspu.aspectList, function (aspect) {
+                if (_.all(ocspu.aspectList, function (aspect) {
                     return aspect.designRegionList.length == 1;
-                })){
+                })) {
                     designRegions.hide();
-                }else{
+                } else {
                     designRegions.show();
                 }
             },
@@ -311,7 +310,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', this._currentAspect.name)).parent().click();
                     }
                 }, this).on('active-object', function (controlGroup) {
-                    console.log('active object');
                     this._controlLayer.getChildren().forEach(function (group) {
                         group.hide();
                         group.find('.rect')[0].stroke(this._hoveredComplementColor);
@@ -362,31 +360,42 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     $(evt.currentTarget).addClass('disabled');
 
                     var data = this._getDesignData();
-                    $.ajax({
-                        type: 'POST',
-                        url: '/image/design-pkg',
-                        data: data
-                    }).done(function (data) {
-                        var uri = "data:application/svg+xml;base64," + data;
-                        // 注意, $.click仅仅是调用handler，并不是真正触发事件，
-                        // 必须直接在html element上调用click, 而且注意要
-                        // 避免click扩散到父级元素
-                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".zip").click(function (evt) {
-                            evt.stopPropagation();
-                        })[0].click();
-                    }).always(function () {
-                        $(evt.currentTarget).removeClass('disabled');
+
+                    var zip = new JSZip();
+                    _.each(data, function (val, key) {
+                        zip.file(key + ".svg", val);
                     });
+                    // 对于IE<10的浏览器，没有Blob对象，所以jszip不能正常的generate blob，并且，generate成base64后
+                    // "data:application/zip;base64," + zip.generate({type:"base64"})
+                    // ，其生成的链接太长，导致ie出现“传递给系统调用的数据区域太小”异常， 所以，依旧传递到后台拼装
+                    if (typeof Blob == "undefined") {
+                        var $form = $("#download-form");
+                        if (!$form[0]) {
+                            $form = $("<form></form>");
+                        } else {
+                            $form.empty();
+                        }
+                        var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
+                        $form.append($input);
+                        $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/design-pkg"});
+                        $form.appendTo($("body")).submit();
+                        $(evt.currentTarget).removeClass('disabled');
+                    } else {
+                        var content = zip.generate({type: "blob"});
+                        saveAs(content, new Date().getTime() + ".zip");
+
+                        $(evt.currentTarget).removeClass('disabled');
+                    }
                 }.bind(this)).on('update-hotspot-done', function (hotspotContext) {
                     if (!hotspotContext) {
-                        this._clearThumbnail(this._currentAspect.id, 
-                            this._currentDesignRegion.id);    
+                        this._clearThumbnail(this._currentAspect.id,
+                            this._currentDesignRegion.id);
                         if (this._currentDesignRegion) {
                             this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"] i').remove();
                         }
                     } else {
-                        this._updateThumbnail(this._currentAspect.id, 
-                            this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);    
+                        this._updateThumbnail(this._currentAspect.id,
+                            this._currentDesignRegion.id, hotspotContext.getCanvas()._canvas);
                         if (this._currentDesignRegion) {
                             var dom = this.$('[name="current-design-region"] a[design-region="' + this._currentDesignRegion.name + '"]');
                             if (dom.find("i").size() == 0) {
@@ -400,7 +409,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
             _clearThumbnail: function (aspectId, designRegionId) {
                 var $image = this.$('img[data-aspectId=' + aspectId + ']');
                 var designRegionName = "design-region-" + designRegionId;
-                var stage =$image.data("stage");
+                var stage = $image.data("stage");
                 if (!!stage) {
                     stage.getChildren(function (node) {
                         return node.getName() == designRegionName;
@@ -411,10 +420,10 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
             },
 
             _updateThumbnail: function (aspectId, designRegionId, canvasElement) {
-                this._clearThumbnail(aspectId, designRegionId); 
+                this._clearThumbnail(aspectId, designRegionId);
                 var $image = $('img[data-aspectId=' + aspectId + ']');
                 var designRegionName = "design-region-" + designRegionId;
-                var stage =$image.data("stage");
+                var stage = $image.data("stage");
                 if (!stage) {
                     // img has margin-[left|top], however this margin is not 
                     // calculate into position().[left|top], so I must recaculate
@@ -422,8 +431,8 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     var $container = $image.prev().css({
                         width: $image.width(),
                         height: $image.height(),
-                        'margin-left': ($image.parent().width() - $image.width())/2,
-                        'margin-top': ($image.parent().height() - $image.height())/2
+                        'margin-left': ($image.parent().width() - $image.width()) / 2,
+                        'margin-top': ($image.parent().height() - $image.height()) / 2
                     });
                     stage = new Kinetic.Stage({
                         container: $container[0],
@@ -476,7 +485,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 this._currentDesignRegion = designRegion;
 
                 this._objectManager.empty();
-                var mix_size = 360;
 
                 var ts = this.$(".touch-screen");
                 var er = this.$('.touch-screen .editable-region');
@@ -723,8 +731,8 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 this._stage.add(boardLayer);
 
                 //if (this._imageLayer.x() === 0) {
-                    //// 说明该 _imageLayer还没有移动过
-                    //this._imageLayer.move({x: config.PLAYGROUND_MARGIN, y: config.PLAYGROUND_MARGIN});
+                //// 说明该 _imageLayer还没有移动过
+                //this._imageLayer.move({x: config.PLAYGROUND_MARGIN, y: config.PLAYGROUND_MARGIN});
                 //}
 
                 boardLayer.moveToBottom();
@@ -775,70 +783,87 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                 }
             },
 
+            _addKineticImage: function (imageObj, name, design_image_id) {
+                // 将图片按比例缩小，并且放在正中
+                var er = this._imageLayer;
+                var width = er.width() - 2 * this._initMargin;
+                var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
+                if (imageObj.height * width > imageObj.width * height) {
+                    // portrait
+                    width = imageObj.width * height / imageObj.height;
+                } else {
+                    height = imageObj.height * width / imageObj.width;
+                }
+                var image = new Kinetic.Image({
+                    x: er.width() / 2,
+                    y: er.height() / 2,
+                    image: imageObj,
+                    width: width,
+                    "design-image-id": design_image_id,
+                    height: height,
+                    name: name,
+                    offset: {
+                        x: width / 2,
+                        y: height / 2
+                    }
+                });
+                this._imageLayer.add(image);
+                this._imageLayer.draw();
+
+                var group = makeControlGroup(image, name, true).on('dragend',
+                    function (playGround) {
+                        return function () {
+                            playGround._crossLayer.hide();
+                            playGround._crossLayer.moveToBottom();
+                            playGround._stage.draw();
+                            dispatcher.trigger('update-hotspot', playGround._imageLayer);
+                        };
+                    }(this)).on('mousedown', function () {
+                        if (this.getAttr('trasient')) {
+                            dispatcher.trigger('active-object', this);
+                        }
+                    }).on("dragmove", function (playGround) {
+                        return function () {
+                            playGround._crossLayer.show();
+                            playGround._crossLayer.moveToTop();
+                            playGround._stage.draw();
+
+                            this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, config.MAGNET_TOLERANCE);
+                        }
+                    }(this));
+                image.setAttr("control-group", group);
+                this._controlLayer.add(group).draw();
+                this._objectManager.add(image, group);
+                dispatcher.trigger('update-hotspot', this._imageLayer);
+            },
+
             _addImage: function (src, title, design_image_id) {
                 if (!title) { // 用户自己上传的图片没有title
                     title = new Date().getTime();
                 }
-                // 将图片按比例缩小，并且放在正中
-                var er = this._imageLayer;
-                var imageObj = new Image();
-                imageObj.crossOrigin = 'Anonymous';
-                imageObj.onload = _.bind(function () {
-                    var width = er.width() - 2 * this._initMargin;
-                    var height = er.height() - 2 * (this._initMargin * er.width() / er.height());
-                    if (imageObj.height * width > imageObj.width * height) {
-                        // portrait
-                        width = imageObj.width * height / imageObj.height;
-                    } else {
-                        height = imageObj.height * width / imageObj.width;
-                    }
-                    var image = new Kinetic.Image({
-                        x: er.width() / 2,
-                        y: er.height() / 2,
-                        image: imageObj,
-                        width: width,
-                        "design-image-id": design_image_id,
-                        height: height,
-                        name: title,
-                        offset: {
-                            x: width / 2,
-                            y: height / 2
+
+                if ($.support.cors || src.indexOf("http") !== 0) {
+                    var imageObj = new Image();
+                    imageObj.crossOrigin = 'Anonymous';
+                    imageObj.onload = function () {
+                        this._addKineticImage(imageObj, title, design_image_id)
+                    }.bind(this);
+                    imageObj.src = src;
+                } else {
+                    $.getImageData({
+                        url: src,
+                        server: "http://maxnov.com/getimagedata/getImageData.php",
+                        success: function (image) {
+                            this._addKineticImage(image, title, design_image_id)
+                        }.bind(this),
+                        error: function (xhr, status) {
+                            alert("load image error");
                         }
-                    });
-                    this._imageLayer.add(image);
-                    this._imageLayer.draw();
-
-                    var group = makeControlGroup(image, title, true).on('dragend',
-                        function (playGround) {
-                            return function () {
-                                playGround._crossLayer.hide();
-                                playGround._crossLayer.moveToBottom();
-                                playGround._stage.draw();
-                                dispatcher.trigger('update-hotspot', playGround._imageLayer);
-                            };
-                        }(this)).on('mousedown', function () {
-                            if (this.getAttr('trasient')) {
-                                dispatcher.trigger('active-object', this);
-                            }
-                        }).on("dragmove", function (playGround) {
-                            return function () {
-                                playGround._crossLayer.show();
-                                playGround._crossLayer.moveToTop();
-                                playGround._stage.draw();
-
-                                this.snap(playGround._stage.width() / 2, playGround._stage.height() / 2, config.MAGNET_TOLERANCE);
-                            }
-                        }(this));
-                    image.setAttr("control-group", group);
-                    this._controlLayer.add(group).draw();
-                    this._objectManager.add(image, group);
-                    dispatcher.trigger('update-hotspot', this._imageLayer);
-                }, this);
-                imageObj.src = src;
+                    })
+                }
             },
 
             _addText: function (data, text, oldIm, oldControlGroup) {
-                console.log('add text ' + text);
                 var imageObj = new Image();
                 $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', function (playGround) {
                     return function () {
@@ -900,7 +925,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                                 left -= playGround.$('.editable-region').parent().offset().left;
                                 var top = controlGroup.y() - (im.height() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
                                 top += playGround.$('.editable-region').offset().top;
-                                    top -= playGround.$('.editable-region').parent().offset().top;
+                                top -= playGround.$('.editable-region').parent().offset().top;
                                 playGround.$('.change-text-panel').css({
                                     left: left + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
                                     top: top + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
@@ -921,7 +946,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                                 playGround.$('.change-text-panel textarea').focus();
                                 playGround.$('.change-text-panel .btn-primary').off('click').click(function () {
                                     var text = playGround.$('.change-text-panel textarea').val().trim();
-                                    if(!text){
+                                    if (!text) {
                                         alert("文字不能为空");
                                         playGround.$('.change-text-panel textarea').val(im.name());
                                         return false;
@@ -941,7 +966,6 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                                             dispatcher.trigger("jitPreview-mask");
                                         }
                                     }).done(function (data) {
-                                        console.log("don");
                                         playGround._addText(data, text, im, controlGroup);
                                     }).fail(playGround._fail).always(function () {
                                         dispatcher.trigger("jitPreview-unmask");

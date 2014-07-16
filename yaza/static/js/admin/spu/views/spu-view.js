@@ -10,6 +10,7 @@ define(['spu/views/base-view',
                 label: '名称',
                 error: '名称不能为空',
                 placeholder: 'SPU名称',
+                class: 'col-md-4',
             }],
             title: 'name',
             nextLevel: {

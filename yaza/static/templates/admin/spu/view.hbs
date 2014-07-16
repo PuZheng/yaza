@@ -3,13 +3,13 @@
     <a class="btn-collapse btn btn-xs pull-right" {{#unless model}}style="display: none"{{/unless}}>
       <i class="fa fa-chevron-up"></i>
     </a>
-    <span class="text-muted">
+    <span class="text-warning">
       {{#if model}}
       修改
       {{else}}
       新建
       {{/if}}
-      {{label}}
+      <b>{{label}}</b>
     </span>
     <em>{{model}}</em>
   </div>
@@ -18,7 +18,7 @@
       {{#each fields}}
         <div class="form-group">
           <label for="" class="control-label col-sm-2">{{this.label}}</label>
-          <div class="col-sm-2">
+          <div class="{{this.class}}">
             {{#eq this.type 'file'}}
               <span class="btn btn-success fileinput-button">
                 <i class="fa fa-plus"></i>

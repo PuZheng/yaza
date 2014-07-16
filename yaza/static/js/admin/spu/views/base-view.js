@@ -90,7 +90,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                     }
                 },
                 submit: function (e, data) {
-                    $.getJSON('/admin/qiniu-upload-token', function (token) {
+                    $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
                         var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                         postfix = (postfix && postfix[0]) || '';
                         data.formData = {
@@ -133,10 +133,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             var val = $input.val().trim();
                             var fieldName = $input.data('field');
                             fieldNames.push(fieldName);
-                            if (!val) {
-                                $input.focus().data('error-label').show(); 
-                                return false;
-                            }
                             view.model.set(fieldName, val);
                         }
                         // override file field
@@ -154,6 +150,9 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 });
                                 view.$form.find('.uploading-progress').fadeOut(1000);
                                 view.$createBtn.hide();
+                                if (!!view._parentView) {
+                                    view.$cancelBtn.hide();
+                                }
                                 view.$title.text(model.get(view.title));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
@@ -240,6 +239,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
         _expand: function () {
             this.fields.forEach(function (field) {
                 field.value = this.model.id == undefined? '': this.model.get(field.name);
+                field.class = field.class || 'col-md-2'
             }.bind(this));
 
             this.$el.html(this._template({fields: this.fields, label: this.label, 
@@ -291,20 +291,20 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 return function (event) {
                     event.preventDefault();
                     var fieldNames = [];
+                    for (var i=0; i < view.$inputs.length; ++i) {
+                        var $input = view.$inputs[i];
+                        var val = $input.val().trim();
+                        var fieldName = $input.data('field');
+                        fieldNames.push(fieldName);
+                        if (!val) {
+                            $input.focus().data('error-label').show(); 
+                            return false;
+                        }
+                        view.model.set(fieldName, val);
+                    }
                     if (view.$inputs.every(function ($input) {
                         return $input.attr('type') != 'file';
                     })) {
-                        for (var i=0; i < view.$inputs.length; ++i) {
-                            var $input = view.$inputs[i];
-                            var val = $input.val().trim();
-                            var fieldName = $input.data('field');
-                            fieldNames.push(fieldName);
-                            if (!val) {
-                                $input.focus().data('error-label').show(); 
-                                return false;
-                            }
-                            view.model.set(fieldName, val);
-                        }
                         if (!!view._parentView) {
                             fieldName.push(view._parentView.nextLevel.parentRefBack);
                             view.model.set(view._parentView.nextLevel.parentRefBack, view._parentView.model.id);

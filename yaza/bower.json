@@ -48,6 +48,9 @@
     "jszip": "Stuk/jszip#~2.3.0",
     "FileSaver": "*",
     "toastr": "~2.0.3",
-    "js-url": "~1.8.6"
+    "js-url": "~1.8.6",
+    "jquery-ajaxtransport-xdomainrequest":"https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
+    "getImageData": "https://github.com/betamax/getImageData.git",
+    "FileSaver": "latest"
   }
 }

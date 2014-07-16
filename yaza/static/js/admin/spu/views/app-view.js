@@ -1,4 +1,4 @@
-define(['backbone', 'spu/context', 'spu/views/spu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'toastr', 'underscore.string'], function (Backbone, context, SPUView, SPU, dispatcher, _, toastr) {
+define(['backbone', 'spu/context', 'spu/views/spu-view', 'spu/models/spu', 'dispatcher', 'underscore', 'toastr', 'underscore.string', 'bootstrap'], function (Backbone, context, SPUView, SPU, dispatcher, _, toastr) {
     _.mixin(_.str.exports());
     toastr.options = {
         "closeButton": false,
