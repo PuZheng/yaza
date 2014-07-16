@@ -153,9 +153,11 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 if (!!view._parentView) {
                                     view.$cancelBtn.hide();
                                 }
-                                view.$title.text(model.get(view.title));
+                                view.$title.find('.hint').text('修改');
+                                view.$title.find('em').text(model.get(view.title));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
+                                view.$form.find('input').removeAttr('disabled');
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -163,6 +165,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                     msg: '创建' + view.label + '失败!', 
                                 });             
                                 view.$createBtn.removeClass('disabled');
+                                view.$form.find('input').removeAttr('disabled');
                             }
                         });
                     } else {
@@ -222,7 +225,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 msg: '成功修改' + field.label + '为' + model.get(field.name) + '!', 
                             });             
                             if (view.title == field.name) {
-                                view.$title.text(model.get(field.name));
+                                view.$title.find('em').text(model.get(field.name));
                             }
                         },
                         error: function () {
@@ -249,7 +252,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             }));
             this.$panel = this.$('.panel-' + this.label);
             this.$form = this.$('.form-' + this.label);
-            this.$title = this.$('.panel-' + this.label + ' > .panel-heading em');
+            this.$title = this.$('.panel-' + this.label + ' > .panel-heading .title');
             this.$createBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-ok');
             this.$cancelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-cancel');
             this.$collapseBtn = this.$('.panel-' + this.label + ' > .panel-heading a.btn-collapse');
@@ -317,7 +320,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                     msg: '成功创建' + view.label + ' - ' + model.get(view.title) + '!', 
                                 });
                                 view.$createBtn.hide();
-                                view.$title.text(model.get(view.title));
+                                view.$title.find('.hint').text('修改');
+                                view.$title.find('em').text(model.get(view.title));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                             },
