@@ -14,3 +14,4 @@ upyun
 requests
 qiniu
 pillow
+WTForms==1.0.5
