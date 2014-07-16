@@ -7,7 +7,7 @@ from fabric.api import *
 config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
 
 env.hosts = config["hosts"]
-env.passwords = config["passwords"]
+env.password = config["password"]
 env.user = config["user"]
 branch = config.get("branch", "master")
 
