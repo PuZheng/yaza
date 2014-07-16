@@ -19,6 +19,7 @@ def prepare_deploy():
     with cd(yaza_env):
         sudo('cd yaza && git pull origin %s && git checkout %s' % (branch, branch), user="www-data")
         sudo('cd yaza && bower install', user="www-data")
+        sudo('cd yaza/yaza/static/js/vendor/bootswatch-scss && grunt build:flatly', user="www-data")
         sudo("cd yaza/yaza && r.js -o build.js", user="www-data")
 
 
