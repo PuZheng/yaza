@@ -46,12 +46,10 @@
     "normalize-css": "~3.0.1",
     "autosize": "https://github.com/jackmoore/autosize.git",
     "jszip": "Stuk/jszip#~2.3.0",
-    "FileSaver": "*",
     "toastr": "~2.0.3",
     "js-url": "~1.8.6",
     "jquery-ajaxtransport-xdomainrequest":"https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
     "getImageData": "https://github.com/betamax/getImageData.git",
-    "jszip":"https://github.com/Stuk/jszip.git",
     "FileSaver": "latest"
   }
 }
