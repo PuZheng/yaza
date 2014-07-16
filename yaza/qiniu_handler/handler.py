@@ -45,6 +45,3 @@ class UploadException(Exception):
 
     def __str__(self):
         return repr(self.msg)
-
-def upload_token():
-    return 'kQdEWJ6924zBbQYSMuCw71rc-aBNBousngwAtjIE:7BDbQQ9XlKjIL9I1QV3rkYMEB58=:eyJzY29wZSI6InlhemEtc3B1cyIsImRlYWRsaW5lIjoxNDA1NDU5OTI5fQ=='

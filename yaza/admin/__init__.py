@@ -75,17 +75,6 @@ def design_result_download(file):
     return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
 
 
-@admin.route('/qiniu-upload-token')
-def qiniu_upload_token():
-    '''
-    之所以将upload-token作为ajax的形式存在， 是因为必须在上传图片到qiniu前， 重新
-    获取upload-token, 若在网页加载的时候获取upload-token, 若网页打开很长时间，
-    upload-token，就会失效
-    '''
-    return jsonify({
-        'token': upload_token()
-    })
-
 
 @admin.route('/spu-url-generator/<int:id_>')
 def spu_url_generator(id_):
