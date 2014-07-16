@@ -14,3 +14,5 @@ upyun
 requests
 qiniu
 pillow
+SQLAlchemy-Utils==0.20.0
+WTForms-Components==0.8.2
