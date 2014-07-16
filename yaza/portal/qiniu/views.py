@@ -9,10 +9,12 @@ from hashlib import sha1
 from yaza.basemain import app
 from yaza.portal.qiniu import qiniu
 
+time_ = int(time.time())
+
 
 @qiniu.route("/token")
 def token():
-    time_ = app.cache.get("time") or int(time.time())
+    global time_
     if request.args.get("key"):
         scope = ":".join([request.args["bucket"], request.args["key"]])
     else:
@@ -22,7 +24,6 @@ def token():
     now = int(time.time())
     if now - time_ > expiry_time:
         time_ = now
-    app.cache.set("time", time_, expiry_time)
     return jsonify(token=make_token(scope, time_ + expiry_time), time=time_)
 
 

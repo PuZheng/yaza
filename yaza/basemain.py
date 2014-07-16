@@ -45,8 +45,6 @@ from flask.ext.nav_bar import FlaskNavBar
 
 admin_nav_bar = FlaskNavBar(app)
 
-from werkzeug.contrib.cache import SimpleCache
-app.cache = SimpleCache()
 
 def init_login():
     from . import models
