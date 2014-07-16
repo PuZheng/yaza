@@ -254,19 +254,20 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.$cancelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-cancel');
             this.$collapseBtn = this.$('.panel-' + this.label + ' > .panel-heading a.btn-collapse');
             this.$nextLevelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-next-level');
+            this.$listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
             if (!!this.nextLevel && this.model.id != undefined) {
                 var nextLevel = this.nextLevel;
-                var $listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
                 this.nextLevel.objects(this.model).forEach(function (view) {
                     return function (model) {
                         model.fetch({
                             success: function () {
-                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo($listGroup);
-                                new nextLevel.view({
+                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo(this.$listGroup);
+                                var nextLevelView = new nextLevel.view({
                                     el: $nextLevelEl, 
                                     model: model,
                                     parentView: view,
                                 }).render(true);
+                                $nextLevelEl.data('view', nextLevelView);
                             }
                         });
                     }
@@ -354,12 +355,22 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 }
             }(this));
             this.$nextLevelBtn.click(function (event) {
+                // 若已经有一个下一级对象正在创建
+                if (_(this.$listGroup.children()).any(function (el) {
+                    return $(el).data('view').isNew();
+                })) {
+                    return;
+                }
+                this.$listGroup.children().each(function (i, el) {
+                    $(el).data('view').render(true);
+                }); 
                 var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$('.panel-' + this.label + ' > .panel-body .list-group'));
-                new this.nextLevel.view({
+                var nextLevelView = new this.nextLevel.view({
                     el: $nextLevelEl, 
                     model: this.nextLevel.newObject(),
                     parentView: this,
                 }).render();
+                $nextLevelEl.data('view', nextLevelView);
             }.bind(this));
         },
 
@@ -406,6 +417,10 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 }
             }(this));
         },
+
+        isNew: function () {
+            return this.model.id == undefined;
+        }
     });
     return BaseView;
 });

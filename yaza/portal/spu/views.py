@@ -152,7 +152,7 @@ def aspect_api(id_=None):
 
 @spu_ws.route('/design-region.json/<int:id_>', methods=['GET', 'PUT', 'DELETE'])
 @spu_ws.route('/design-region.json', methods=['POST'])
-def design_region_api(id_):
+def design_region_api(id_=None):
     if request.method == 'DELETE':
         design_region = get_or_404(DesignRegion, id_)
         do_commit(design_region, 'delete')
