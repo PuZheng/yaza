@@ -2,9 +2,9 @@
 import os
 import shutil
 import time
-from flask import render_template
+from flask import render_template, redirect, url_for
 
-from flask.ext.databrowser import ModelView, sa, col_spec, filters
+from flask.ext.databrowser import ModelView, sa, col_spec, filters, action
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
 from flask.ext.principal import Permission, RoleNeed, PermissionDenied
@@ -31,8 +31,16 @@ def allowed_file(filename, types=IMAGES):
 
 img_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Picture"), nullable=False)
 
+
+class _RedirectAction(action.RedirectAction):
+
+    def op_upon_list(self, objs, model_view):
+        return redirect(url_for('admin.spu_url_generator', id_=objs[0].id))
+
 class SPUAdminModelView(ModelView):
-    edit_template = "admin/spu/spu.html"
+
+    def get_actions(self, processed_objs=None):
+        return [_RedirectAction(u'生成用户链接')]
 
     def try_edit(self, processed_objs=None):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
@@ -78,7 +86,6 @@ class SPUAdminModelView(ModelView):
         return render_template('admin/spu.html',
                                nav_bar=admin_nav_bar, time=time.time(),
                                model_view=self)
-        #return render_template(self.edit_template, spu=spu)
 
 
     def create_view(self):

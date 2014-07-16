@@ -9,6 +9,8 @@ from yaza import const
 from yaza.admin import views
 from yaza.basemain import data_browser, app, admin_nav_bar
 from yaza.qiniu_handler import upload_token
+from yaza.models import SPU
+from yaza.utils import get_or_404
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
@@ -83,3 +85,8 @@ def qiniu_upload_token():
     return jsonify({
         'token': upload_token()
     })
+
+
+@admin.route('/spu-url-generator/<int:id_>')
+def spu_url_generator(id_):
+    return render_template('admin/spu/spu.html', spu=get_or_404(SPU, id_))
