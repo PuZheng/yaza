@@ -9,7 +9,7 @@
     },
     "hosts": ["localhost"],
     "passwords": {
-        "localhost": "13321244"
+        "xiechao": "13321244"
     },
     "user": "xiechao"
 }
