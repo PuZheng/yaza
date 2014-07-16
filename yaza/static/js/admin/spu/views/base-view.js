@@ -261,7 +261,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                     return function (model) {
                         model.fetch({
                             success: function () {
-                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo(this.$listGroup);
+                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo(view.$listGroup);
                                 var nextLevelView = new nextLevel.view({
                                     el: $nextLevelEl, 
                                     model: model,
