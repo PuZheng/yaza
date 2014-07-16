@@ -8,8 +8,6 @@
         "dir": ["js/spu"]
     },
     "hosts": ["localhost"],
-    "passwords": {
-        "xiechao": "13321244"
-    },
+    "password": "13321244",
     "user": "xiechao"
 }
