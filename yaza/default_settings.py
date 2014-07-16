@@ -55,3 +55,5 @@ QINIU_CONF = {
 DESIGN_IMAGE_LIST_API = "http://diancai.snsunion.cn/cloth/index.php/Uility/designimages"
 
 DESIGNED_FILE_FOLDER = 'static/custom'
+
+DEBUG_TB_INTERCEPT_REDIRECTS = False
