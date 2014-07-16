@@ -34,7 +34,6 @@ require.config({
         "getImageData": "components/getImageData/jquery.getimagedata.min",
         "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
         "filesaver":"components/FileSaver/FileSaver",
-        "downloadify":"components/Downloadify/js/downloadify.min",
         // application
         dispatcher: 'js/dispatcher',
         'lazy-load': 'js/utils/lazy-load',
