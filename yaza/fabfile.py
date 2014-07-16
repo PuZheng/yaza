@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
+import json
 
 from fabric.api import *
-from flask import json
 
 config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
 
