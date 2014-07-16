@@ -65,6 +65,7 @@ def spu_api(id_=None):
         spu.name = name
         db.session.commit()
     return jsonify({
+        'id': spu.id,
         'name': spu.name,
         'ocspu-id-list': [ocspu.id for ocspu in spu.ocspu_list],
     })
