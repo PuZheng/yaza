@@ -18,7 +18,7 @@ dist_dir = "yaza/yaza/static/dist"
 def prepare_deploy():
     with cd(yaza_env):
         sudo('cd yaza && git pull origin %s' % branch, user="www-data")
-        sudo("r.js -o build.js", user="www-data")
+        sudo("cd yaza/yaza && r.js -o build.js", user="www-data")
 
 
 def upload():
