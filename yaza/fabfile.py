@@ -16,13 +16,13 @@ dist_dir = "yaza/yaza/static/dist"
 
 
 def prepare_deploy():
-    with lcd(yaza_env):
+    with cd(yaza_env):
         sudo('cd yaza && git pull origin %s' % branch, user="www-data")
         sudo("r.js -o build.js", user="www-data")
 
 
 def upload():
-    with lcd(yaza_env):
+    with cd(yaza_env):
         included_dirs = [os.path.normpath(os.path.join(dist_dir, d)) for d in config["include"].get("dir", [])]
         included_files = [os.path.normpath(os.path.join(dist_dir, f)) for f in config["include"].get("file", [])]
 
@@ -52,7 +52,7 @@ def upload_file(file_):
 def deploy():
     prepare_deploy()
     upload()
-    with lcd(yaza_env):
+    with cd(yaza_env):
         with prefix('source env/bin/activate'):
             run('python -c "import sys; print sys.path"')
             sudo("cd yaza && pip install -r requirements.txt && python setup.py install", user="www-data")
