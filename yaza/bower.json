@@ -51,6 +51,7 @@
     "js-url": "~1.8.6",
     "jquery-ajaxtransport-xdomainrequest":"https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
     "getImageData": "https://github.com/betamax/getImageData.git",
+    "jszip":"https://github.com/Stuk/jszip.git",
     "FileSaver": "latest"
   }
 }
