@@ -2,8 +2,8 @@
 
 .float-helper {
     @include opacity(0.6);
-    margin: 100px 0px 0px 100px;
     position: fixed;
+    z-index: 999;
 }
 
 .fancybox img {
