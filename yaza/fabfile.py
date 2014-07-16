@@ -53,11 +53,12 @@ def upload_file(file_):
 
 def deploy():
     prepare_deploy()
-    upload()
     with cd(yaza_env):
         with prefix('source env/bin/activate'):
             run('python -c "import sys; print sys.path"')
             sudo("cd yaza && pip install -r requirements.txt && python setup.py install", user="www-data")
+
+            upload()
 
     sudo("service nginx restart")
     sudo("service uwsgi restart yaza")
