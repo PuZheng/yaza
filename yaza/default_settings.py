@@ -57,3 +57,5 @@ DESIGN_IMAGE_LIST_API = "http://diancai.snsunion.cn/cloth/index.php/Uility/desig
 DESIGNED_FILE_FOLDER = 'static/custom'
 
 ENABLE_DEBUG_TOOLBAR = True
+
+DEBUG_TB_INTERCEPT_REDIRECTS = False
