@@ -318,7 +318,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                     0, 0, layer.width(), layer.height());
                             });
                         });
-                        console.log('zoom');
                         jitPreview._stage.add(zoomBackgroundLayer);
                         zoomBackgroundLayer.add(im);
                         // 必须触发mousemove操作, 因为在firefox中, mouseover不会和mousemove同时发生
@@ -488,7 +487,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 },
 
                 _setupImage: function (picUrl, aspect) {
-                    console.log('setup image');
                     var jitPreview = this;
                     jitPreview.$('.hotspot img').attr("src", picUrl).one('load', function (evt) {
                         // 其实可以不用使用本img标签,直接在backgroud layer中画,
@@ -512,7 +510,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             name: "background"
                         });
                         jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                            console.log('mouseover');
                             jitPreview._onMouseover(evt);
                         });
                         //jitPreview._backgroundLayer.off('mouseover');
