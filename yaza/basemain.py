@@ -129,21 +129,21 @@ file_handler.setFormatter(
 file_handler.suffix = "%Y%m%d.log"
 app.logger.addHandler(file_handler)
 
+@app.errorhandler(PermissionDenied)
+@app.errorhandler(401)
+def permission_denied(error):
+    if not current_user.is_anonymous():
+        return render_template("error.html",
+                                error=_('You are not permitted to visit '
+                                        'this page or perform this action, '
+                                        'please contact Administrator to '
+                                        'grant you required permission'),
+                                back_url=request.args.get('__back_url__'))
+    return redirect(url_for("user.login", error=_("please login"),
+                            next=request.url))
+
 if not app.debug:
     mail = Mail(app)
-
-    @app.errorhandler(PermissionDenied)
-    @app.errorhandler(401)
-    def permission_denied(error):
-        if not current_user.is_anonymous():
-            return render_template("error.html",
-                                   error=_('You are not permitted to visit '
-                                           'this page or perform this action, '
-                                           'please contact Administrator to '
-                                           'grant you required permission'),
-                                   back_url=request.args.get('__back_url__'))
-        return redirect(url_for("user.login", error=_("please login"),
-                                next=request.url))
 
     def sender_email(traceback):
         recipients = app.config.get("ERROR_LOG_RECIPIENTS", [])

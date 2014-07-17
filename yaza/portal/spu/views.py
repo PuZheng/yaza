@@ -45,7 +45,6 @@ class SPUModelView(ModelView):
         return render_template(self.edit_template, **params)
 
 
-
 spu_model_view = SPUModelView(modell=SAModell(db=db, model=models.SPU,
                                               label=lazy_gettext(u"spu")))
 
@@ -91,7 +90,7 @@ def ocspu_api(id_=None):
 
         if request.method == 'POST':
             ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
-                                        cover_path=cover_path)))
+                                          cover_path=cover_path)))
         else:
             ocspu_id = d.get('id')
             ocspu = get_or_404(OCSPU, ocspu_id)
