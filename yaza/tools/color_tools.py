@@ -17,6 +17,7 @@ rtoh = lambda rgb: ('#%s' % ''.join(('%02x' % p for p in rgb))).upper()
 
 
 def contrast_color(base_color):
+
     base_color = _parse2color(base_color)
     # 从web safe colors 里面选
     iterator = safe_colors.itervalues() if base_color.red > 128 else reversed(safe_colors.values())

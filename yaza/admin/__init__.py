@@ -1,14 +1,15 @@
 # -*- coding:utf-8 -*-
 from itsdangerous import URLSafeTimedSerializer
-
-from flask import Blueprint, render_template, request, send_from_directory
+from flask import Blueprint, render_template, request, send_from_directory, jsonify
 from flask.ext.login import current_user
 from flask.ext.babel import _
 from flask.ext.principal import Permission, RoleNeed
 
 from yaza import const
 from yaza.admin import views
-from yaza.basemain import data_browser, app
+from yaza.basemain import data_browser, app, admin_nav_bar
+from yaza.models import SPU
+from yaza.utils import get_or_404
 
 
 admin = Blueprint("admin", __name__, static_folder="static", template_folder="templates")
@@ -51,7 +52,6 @@ for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view,
 
 @admin.route("/")
 def index():
-    from yaza.basemain import admin_nav_bar
 
     return render_template("admin/index.html", nav_bar=admin_nav_bar)
 
@@ -72,3 +72,9 @@ def generator_ws():
 @admin.route("/design-result-download/<path:file>")
 def design_result_download(file):
     return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
+
+
+
+@admin.route('/spu-url-generator/<int:id_>')
+def spu_url_generator(id_):
+    return render_template('admin/spu/spu.html', spu=get_or_404(SPU, id_))

@@ -5,5 +5,6 @@ define(['jquery'], function () {
         'buckets',
         'jquery-file-upload',
         'jquery.iframe-transport',
-        'text'], function () {});
+        'text',
+        'css'], function () {});
 });

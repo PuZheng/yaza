@@ -1,0 +1,15 @@
+@import "../../components/bootstrap-sass-official/assets/stylesheets/bootstrap/mixins";
+
+.float-helper {
+    @include opacity(0.6);
+    margin-left: -60px;
+    position: fixed;
+    z-index: 999;
+}
+
+.fancybox img {
+    height: 64px;
+    width: 64px;
+    max-width: 64px;
+    max-height: 64px;
+}

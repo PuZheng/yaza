@@ -5,9 +5,9 @@ from flask.ext.babel import _
 
 from yaza.basemain import data_browser
 
-from .views import spu_model_view
 
 spu = Blueprint("spu", __name__, template_folder="templates", static_folder="static")
+spu_ws = Blueprint("spu-ws", __name__, template_folder="templates", static_folder="static")
 
 
 def register_model_view(model_view, bp, **kwargs):
@@ -29,4 +29,5 @@ def register_model_view(model_view, bp, **kwargs):
     data_browser.register_model_view(model_view, bp, extra_params)
 
 
+from yaza.portal.spu.views import spu_model_view
 register_model_view(spu_model_view, spu)

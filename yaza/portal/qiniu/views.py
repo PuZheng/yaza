@@ -28,11 +28,10 @@ def token():
 
 
 def make_token(scope, deadline):
-    policy = {scope: scope, deadline: deadline}
+    policy = {'scope': scope, 'deadline': deadline}
     put_policy = json.dumps(policy)
     encoded_put_policy = base64.urlsafe_b64encode(put_policy)
     sign = hmac.new(app.config["QINIU_CONF"]["SECRET_KEY"], encoded_put_policy, sha1).digest()
     encoded_sign = base64.urlsafe_b64encode(sign)
-    return ":".join([app.config["QINIU_CONF"]["ACCESS_KEY"], encoded_sign, encoded_put_policy])
-
-
+    return ":".join([app.config["QINIU_CONF"]["ACCESS_KEY"], encoded_sign,
+                     encoded_put_policy])

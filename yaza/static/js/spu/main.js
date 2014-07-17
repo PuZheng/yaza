@@ -1,10 +1,5 @@
 require.config({
     baseUrl: '/static',
-    map: {
-        '*': {
-            'css': 'components/require-css/css.min'
-        }
-    },
     paths: {
         // vendors using bootcss cdn
         jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
@@ -28,6 +23,7 @@ require.config({
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
+        'css': 'components/require-css/css.min',
         "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
         'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
@@ -68,7 +64,9 @@ require.config({
             deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
+                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css', 
+            'jquery.ui.widget']
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
@@ -109,6 +107,8 @@ require.config({
     }
 });
 
+// force loading jquery, svg before infrastructure, since infrastructure need
+// them after compression
 require(['jquery', 'svg'], function () {
     require(['js/infrastructure'], function () {
         require(['spu/app'], function () {});  
