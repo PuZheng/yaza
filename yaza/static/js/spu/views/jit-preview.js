@@ -267,10 +267,11 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     });
                 },
 
-                _onMouseover: function (evt, jitPreview) {
+                _onMouseover: function (evt) {
                     dispatcher.trigger('jitPreview-mask');
                     var hdImageObj = new Image();
                     var mouseOverEvent = evt;
+                    var jitPreview = this;
                     $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
                         dispatcher.trigger('jitPreview-unmask');
                         jitPreview._backgroundLayer.hide();
@@ -290,6 +291,10 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             _(jitPreview._layerCache).values().forEach(function (layer) {
                                 layer.show();
                             });
+                            jitPreview._backgroundLayer.on('mouseover', function (evt) {
+                                jitPreview._onMouseover(evt);
+                                this.off('mouseover');
+                            })
                         }).on('mousemove', function (evt) {
                             // firefox has no offset[XY], chrome has both offset[XY] and layer[XY], but
                             // layer[XY] is incorrect in chrome
@@ -505,7 +510,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             name: "background"
                         });
                         jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                            jitPreview._onMouseover(evt, jitPreview);
+                            jitPreview._onMouseover(evt);
                         });
                         // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                         // background layer不重叠
