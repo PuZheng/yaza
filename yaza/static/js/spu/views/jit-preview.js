@@ -512,7 +512,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
                             jitPreview._onMouseover(evt);
                         });
-                        //jitPreview._backgroundLayer.off('mouseover');
                         // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                         // background layer不重叠
 
