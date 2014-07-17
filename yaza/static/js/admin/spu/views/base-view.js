@@ -82,11 +82,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         view.$inputs.forEach(function ($input) {
                             $input.attr('disabled', '');
                         });
-                        $(this).find('.uploading-progress .upload-cancel-btn').click(
-                            function () {
-                                jqXHR.abort();
-                                $(this).find('.uploading-progress').fadeOut(1000);
-                            });
                     }
                 },
                 submit: function (e, data) {
@@ -103,6 +98,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             function () {
                                 data.abort();
                                 view.$form.find('.uploading-progress').fadeOut(1000);
+                                return false;
                             });
                             data.jqXHR = view.$form.fileupload('send', data);
                             // 上传期间不能对input进行修改
@@ -127,21 +123,10 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 done: function (e, data) {
                     // 若是之前没有创建过OCSPU, 就创建， 否则仅仅修改材质图
                     if (view.model.id == undefined) {
-                        var fieldNames = [];
-                        for (var i=0; i < view.$inputs.length; ++i) {
-                            var $input = view.$inputs[i];
-                            var val = $input.val().trim();
-                            var fieldName = $input.data('field');
-                            fieldNames.push(fieldName);
-                            view.model.set(fieldName, val);
-                        }
+                        var fieldNames = view.populateModel();
                         // override file field
                         view.model.set(field.name, 'http://yaza-spus.qiniudn.com/' + data.formData.key);
 
-                        if (!!view._parentView) {
-                            fieldNames.push(view._parentView.nextLevel.parentRefBack);
-                            view.model.set(view._parentView.nextLevel.parentRefBack, view._parentView.model.id);
-                        }
                         view.model.save(fieldNames, {
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
@@ -196,12 +181,15 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 fail: (function (view) {
                     return function (e, data) {
                         $(this).find('.uploading-progress').fadeOut(1000);
-                        dispatcher.trigger('flash', {
-                            type: 'error',
-                            msg: '创建' + view.label + '失败',
-                        });
-                        view.$createBtn.removeClass('disabled');
+                        if (view.model.id == undefined) {
+                            dispatcher.trigger('flash', {
+                                type: 'error',
+                                msg: '创建' + view.label + '失败',
+                            });
+                            view.$createBtn.removeClass('disabled');
+                        }
                         $(this).find('input').removeAttr('disabled');
+                        return false;
                     }
                 })(this),
             });
@@ -294,26 +282,20 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.$createBtn.click(function (view) {
                 return function (event) {
                     event.preventDefault();
-                    var fieldNames = [];
+                    // check
                     for (var i=0; i < view.$inputs.length; ++i) {
                         var $input = view.$inputs[i];
                         var val = $input.val().trim();
-                        var fieldName = $input.data('field');
-                        fieldNames.push(fieldName);
                         if (!val) {
                             $input.focus().data('error-label').show(); 
                             return false;
                         }
-                        view.model.set(fieldName, val);
                     }
+
                     if (view.$inputs.every(function ($input) {
                         return $input.attr('type') != 'file';
                     })) {
-                        if (!!view._parentView) {
-                            fieldName.push(view._parentView.nextLevel.parentRefBack);
-                            view.model.set(view._parentView.nextLevel.parentRefBack, view._parentView.model.id);
-                        }
-                        view.model.save(fieldNames, {
+                        view.model.save(view.populateModel(), {
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
@@ -424,7 +406,23 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
 
         isNew: function () {
             return this.model.id == undefined;
-        }
+        },
+
+        populateModel: function () {
+            var fieldNames = [];
+            for (var i=0; i < this.$inputs.length; ++i) {
+                var $input = this.$inputs[i];
+                var val = $input.val().trim();
+                var fieldName = $input.data('field');
+                fieldNames.push(fieldName);
+                this.model.set(fieldName, val);
+            }
+            if (!!this._parentView) {
+                fieldNames.push(this._parentView.nextLevel.parentRefBack);
+                this.model.set(this._parentView.nextLevel.parentRefBack, this._parentView.model.id);
+            }
+            return fieldNames;
+        },
     });
     return BaseView;
 });

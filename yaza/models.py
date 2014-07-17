@@ -94,6 +94,10 @@ class DesignRegion(db.Model):
     pic_path = db.Column(db.String(64))
     width = db.Column(db.Float, doc=u'以英寸为单位')
     height = db.Column(db.Float, doc=u'以英寸为单位')
+    left_top = db.Column(db.String(16))
+    right_top = db.Column(db.String(16))
+    rght_bottom = db.Column(db.String(16))
+    left_bottom = db.Column(db.String(16))
     edge_file = db.Column(db.String(64))
     control_point_file = db.Column(db.String(64))
 

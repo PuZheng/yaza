@@ -14,6 +14,7 @@ require.config({
         'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
         'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
         // vendors not using cdn
+        kineticjs: 'components/kineticjs/kinetic.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
