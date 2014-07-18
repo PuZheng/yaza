@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 from yaza.apis import ModelWrapper
+from yaza.utils import do_commit
 
 
 class SPUWrapper(ModelWrapper):
@@ -12,6 +13,7 @@ class SPUWrapper(ModelWrapper):
             [ocspu.as_dict(camel_case) for ocspu in self.ocspu_list],
         }
 
-    def retrieve(self):
+    def delete(self):
         for ocspu in self.ocspu_list:
-            ocspu.retrieve()
+            ocspu.delete()
+        do_commit(self, "delete")

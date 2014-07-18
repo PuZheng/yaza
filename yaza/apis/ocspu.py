@@ -9,6 +9,7 @@ from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
 from yaza.tools.color_tools import contrast_color, darker_color
 from yaza.qiniu_handler import delete_file
+from yaza.utils import do_commit
 
 
 def split_pic_url(pic_url):
@@ -54,12 +55,14 @@ class OCSPUWrapper(ModelWrapper):
             'rgb': self.rgb,
         }
 
-    def retrieve(self):
+    def delete(self):
         for aspect in self.aspect_list:
-            aspect.retrieve()
+            aspect.delete()
 
         if self.cover_path:
             delete_file_from_path(self.cover_path)
+
+        do_commit(self, "delete")
 
 
 class AspectWrapper(ModelWrapper):
@@ -121,9 +124,9 @@ class AspectWrapper(ModelWrapper):
     def spu(self):
         return self.ocspu.spu
 
-    def retrieve(self):
+    def delete(self):
         for design_region in self.design_region_list:
-            design_region.retrieve()
+            design_region.delete()
 
         if self.pic_path:
             delete_file_from_path(self.pic_path)
@@ -136,6 +139,8 @@ class AspectWrapper(ModelWrapper):
 
         if self.thumbnail_path:
             delete_file_from_path(self.thumbnail_path)
+
+        do_commit(self, "delete")
 
 
 class DesignRegionWrapper(ModelWrapper):
@@ -176,13 +181,15 @@ class DesignRegionWrapper(ModelWrapper):
             'name': self.name,
         }
 
-    def retrieve(self):
+    def delete(self):
         if self.pic_path:
             delete_file_from_path(self.pic_path)
         if os.path.exists(self.edge_file):
             os.unlink(self.edge_file)
         if os.path.exists(self.control_point_file):
             os.unlink(self.control_point_file)
+
+        do_commit(self, "delete")
 
 
 class DesignImageWrapper(ModelWrapper):

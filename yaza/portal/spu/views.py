@@ -72,8 +72,7 @@ def spu_api(id_=None):
 def ocspu_api(id_=None):
     if request.method == 'DELETE':
         ocspu = get_or_404(OCSPU, id_)
-        ocspu.retrieve()
-        do_commit(ocspu, 'delete')
+        ocspu.delete()
         return jsonify({})
 
     if request.method == 'GET':
@@ -114,8 +113,7 @@ def ocspu_api(id_=None):
 def aspect_api(id_=None):
     if request.method == 'DELETE':
         aspect = get_or_404(Aspect, id_)
-        do_commit(aspect, 'delete')
-        aspect.retrieve()
+        aspect.delete()
         return jsonify({})
 
     if request.method == 'GET':
@@ -151,8 +149,7 @@ def aspect_api(id_=None):
 def design_region_api(id_=None):
     if request.method == 'DELETE':
         design_region = get_or_404(DesignRegion, id_)
-        do_commit(design_region, 'delete')
-        design_region.retrieve()
+        design_region.delete()
         return jsonify({})
 
     if request.method == 'GET':
