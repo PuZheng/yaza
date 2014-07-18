@@ -1,7 +1,7 @@
-define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url'], function (dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
+define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url', "ekko-lightbox"], function (dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
     _.mixin(_.str.exports());
-    handlebars.default.registerHelper('eq', function(a, b, opts) {
-        if(a == b) // Or === depending on your needs
+    handlebars.default.registerHelper('eq', function (a, b, opts) {
+        if (a == b) // Or === depending on your needs
             return opts.fn(this);
         else
             return opts.inverse(this);
@@ -42,14 +42,14 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功修改' + field.label + '为' + model.get(field.name) + '!', 
-                                });             
+                                    msg: '成功修改' + field.label + '为' + model.get(field.name) + '!',
+                                });
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                    msg: '修改' + field.label + '失败!', 
-                                });             
+                                    msg: '修改' + field.label + '失败!',
+                                });
                             },
                         });
                     }
@@ -100,19 +100,19 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 view.$form.find('.uploading-progress').fadeOut(1000);
                                 return false;
                             });
-                            data.jqXHR = view.$form.fileupload('send', data);
-                            // 上传期间不能对input进行修改
-                            view.$form.find('input').attr('disabled', '');
+                        data.jqXHR = view.$form.fileupload('send', data);
+                        // 上传期间不能对input进行修改
+                        view.$form.find('input').attr('disabled', '');
                     }).fail(function () {
                         dispatcher.trigger('flash', {
                             type: 'error',
-                            msg: '不能获取七牛的上传token', 
+                            msg: '不能获取七牛的上传token',
                         });
                         data.abort();
                     });
                     // 之前已经send了， 就不要再submit
                     return false;
-                }, 
+                },
                 progress: function (e, data) {
                     // Calculate the completion percentage of the upload
                     var progress = parseInt(data.loaded / data.total * 100, 10);
@@ -124,12 +124,11 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                     // 若是之前没有创建过OCSPU, 就创建， 否则仅仅修改材质图
                     if (view.model.id == undefined) {
                         var fieldNames = view.populateModel(data);
-
                         view.model.save(fieldNames, {
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功创建' + view.label + ' - ' +  model.get(view.title) + '!', 
+                                    msg: '成功创建' + view.label + ' - ' + model.get(view.title) + '!',
                                 });
                                 view.$form.find('.uploading-progress').fadeOut(1000);
                                 view.$createBtn.hide();
@@ -166,7 +165,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 view.$form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                    msg: '修改' + field.name + '失败!', 
+                                    msg: '修改' + field.name + '失败!',
                                 });             
                                 view.$form.find('input').removeAttr('disabled');
                             }
@@ -198,7 +197,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             }).keypress(function (event) {
                 if (event.which != 13) {
                     return true;
-                } 
+                }
                 event.preventDefault();
                 if (view.model.id != undefined) {
                     $(event.target).blur()
@@ -207,8 +206,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         success: function (model, response, options) {
                             dispatcher.trigger('flash', {
                                 type: 'success',
-                                msg: '成功修改' + field.label + '为' + model.get(field.name) + '!', 
-                            });             
+                                msg: '成功修改' + field.label + '为' + model.get(field.name) + '!',
+                            });
                             if (view.title == field.name) {
                                 view.$title.find('em').text(model.get(field.name));
                             }
@@ -216,8 +215,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         error: function () {
                             dispatcher.trigger('flash', {
                                 type: 'error',
-                                msg: '修改' + field.name + '失败!', 
-                            });             
+                                msg: '修改' + field.name + '失败!',
+                            });
                         },
                     });
                 }
@@ -226,7 +225,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
 
         _expand: function () {
             this.fields.forEach(function (field) {
-                field.value = this.model.id == undefined? '': this.model.get(field.name);
+                field.value = this.model.id == undefined ? '' : this.model.get(field.name);
                 field.class = field.class || 'col-md-2'
             }.bind(this));
 
@@ -251,7 +250,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             success: function () {
                                 var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').appendTo(view.$listGroup);
                                 var nextLevelView = new nextLevel.view({
-                                    el: $nextLevelEl, 
+                                    el: $nextLevelEl,
                                     model: model,
                                     parentView: view,
                                 }).render(true);
@@ -259,7 +258,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             }
                         });
                     }
-                }(this)); 
+                }(this));
             }
             this.$inputs = this.fields.map(function (field) {
                 var selector = '[data-field="' + field.name + '"]';
@@ -270,7 +269,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         break;
                     case 'file':
                         this._initFileInput($input, field, this);
-                        break; 
+                        break;
                     default:
                         this._initInput($input, field, this);
                 }
@@ -284,7 +283,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         var $input = view.$inputs[i];
                         var val = $input.val().trim();
                         if (!val) {
-                            $input.focus().data('error-label').show(); 
+                            $input.focus().data('error-label').show();
                             return false;
                         }
                     }
@@ -296,7 +295,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             success: function (model, response, options) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功创建' + view.label + ' - ' + model.get(view.title) + '!', 
+                                    msg: '成功创建' + view.label + ' - ' + model.get(view.title) + '!',
                                 });
                                 view.$createBtn.hide();
                                 view.$title.find('.hint').text('修改');
@@ -307,8 +306,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             error: function () {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                    msg: '创建' + view.label + '失败!', 
-                                });             
+                                    msg: '创建' + view.label + '失败!',
+                                });
                                 view.$createBtn.removeClass('disabled');
                             }
                         });
@@ -322,7 +321,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             }(this));
             this.$cancelBtn.click(function (event) {
                 if (!this._parentView) {
-                    location.href = decodeURIComponent($.url('?__back_url__'));   
+                    location.href = decodeURIComponent($.url('?__back_url__'));
                 } else {
                     this.$el.fadeOut({
                         always: function () {
@@ -334,7 +333,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             }.bind(this));
             this.$collapseBtn.one('click', function (view) {
                 return function (event) {
-                    view.render(true); 
+                    view.render(true);
                 }
             }(this));
             this.$nextLevelBtn.click(function (event) {
@@ -349,7 +348,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 }); 
                 var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$listGroup);
                 var nextLevelView = new this.nextLevel.view({
-                    el: $nextLevelEl, 
+                    el: $nextLevelEl,
                     model: this.nextLevel.newObject(),
                     parentView: this,
                 }).render();
@@ -367,7 +366,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.fields.forEach(function (field) {
                 obj.fields[field.name] = this.model.get(field.name);
             }.bind(this));
-            this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>'); 
+            this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>');
             this.$expandBtn = this.$('.btn-expand');
             this.$expandBtn.one('click', function (view) {
                 return function (event) {
@@ -382,7 +381,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             success: function (model, response) {
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功删除' + view.label + '(' + view.model.get(view.title) + ')!', 
+                                    msg: '成功删除' + view.label + '(' + view.model.get(view.title) + ')!',
                                 });
                                 view.$el.fadeOut({
                                     always: function () {
@@ -393,10 +392,10 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                             error: function (model, response) {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
-                                    msg: '删除' + view.label + '(' + view.model.get(view.title) + ')出现错误!</br>' + _(response.responseText).escapeHTML(), 
+                                    msg: '删除' + view.label + '(' + view.model.get(view.title) + ')出现错误!</br>' + _(response.responseText).escapeHTML(),
                                 });
                             }
-                        });    
+                        });
                     }
                 }
             }(this));

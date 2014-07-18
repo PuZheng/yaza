@@ -10,6 +10,23 @@ from yaza.basemain import app
 from yaza.models import OCSPU, Aspect, DesignRegion
 from yaza.tools.color_tools import contrast_color, darker_color
 from yaza.utils import do_commit
+from yaza.qiniu_handler import delete_file
+
+
+def split_pic_url(pic_url):
+    http_, key = pic_url.split(".qiniudn.com/")
+    bucket = http_.split("//")[-1]
+    return bucket, key
+
+
+def delete_file_from_path(path):
+    if path.startswith("http"):  # 说明是存在qiniu的
+        delete_file(*split_pic_url(path))
+    else:
+        # 删除本地文件
+        local_file = os.path.join(app.config['UPLOAD_FOLDER'], path)
+        if os.path.exists(local_file):
+            os.unlink(local_file)
 
 
 class OCSPUWrapper(ModelWrapper):
@@ -52,6 +69,15 @@ class OCSPUWrapper(ModelWrapper):
                                        height=dr.height))
         return ret
 
+    def delete(self):
+        for aspect in self.aspect_list:
+            aspect.delete()
+
+        if self.cover_path:
+            delete_file_from_path(self.cover_path)
+
+        do_commit(self, "delete")
+
 
 class AspectWrapper(ModelWrapper):
     @property
@@ -72,16 +98,16 @@ class AspectWrapper(ModelWrapper):
     @property
     def black_shadow_url(self):
         return self.black_shadow_path + '?imageView2/0/w/' + str(
-                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-                if self.black_shadow_path.startswith("http") else \
-                url_for('image.serve', filename=self.black_shadow_path)
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+            if self.black_shadow_path.startswith("http") else \
+            url_for('image.serve', filename=self.black_shadow_path)
 
     @property
     def white_shadow_url(self):
         return self.white_shadow_path + '?imageView2/0/w/' + str(
-                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-                if self.white_shadow_path.startswith("http") else \
-                url_for('image.serve', filename=self.white_shadow_path)
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
+            if self.white_shadow_path.startswith("http") else \
+            url_for('image.serve', filename=self.white_shadow_path)
 
     @property
     def thumbnail(self):
@@ -111,6 +137,24 @@ class AspectWrapper(ModelWrapper):
     @property
     def spu(self):
         return self.ocspu.spu
+
+    def delete(self):
+        for design_region in self.design_region_list:
+            design_region.delete()
+
+        if self.pic_path:
+            delete_file_from_path(self.pic_path)
+
+        if self.black_shadow_path:
+            delete_file_from_path(self.black_shadow_path)
+
+        if self.white_shadow_path:
+            delete_file_from_path(self.white_shadow_path)
+
+        if self.thumbnail_path:
+            delete_file_from_path(self.thumbnail_path)
+
+        do_commit(self, "delete")
 
 
 class DesignRegionWrapper(ModelWrapper):
@@ -150,6 +194,16 @@ class DesignRegionWrapper(ModelWrapper):
             'size': [self.width, self.height],
             'name': self.name,
         }
+
+    def delete(self):
+        if self.pic_path:
+            delete_file_from_path(self.pic_path)
+        if os.path.exists(self.edge_file):
+            os.unlink(self.edge_file)
+        if os.path.exists(self.control_point_file):
+            os.unlink(self.control_point_file)
+
+        do_commit(self, "delete")
 
 
 class DesignImageWrapper(ModelWrapper):

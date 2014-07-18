@@ -37,13 +37,11 @@
           </div>
           <label class="control-label text-danger" style='display: none' data-field='{{this.name}}'>* {{this.error}}</label>
           {{#eq this.type 'file'}}
-            <a class="fancybox" rel="group" data-field="{{this.name}}">
-              <div class="col-md-2">
-                <div class="thumbnail">
-                  <img alt="" src="{{this.value}}"/>
-                </div>
-              </div>
-            </a>
+            <div class="col-sm-2">
+              <a class="fancybox thumbnail" rel="group" data-field="{{this.name}}" href="{{this.value}}" data-title="{{label}}">
+                <img alt="{{this.name}}" src="{{this.value}}"/>
+              </a>
+            </div>
           {{/eq}}
         </div>
       {{/each}}
