@@ -11,3 +11,7 @@ class SPUWrapper(ModelWrapper):
             'ocspuList' if camel_case else 'ocspu_list':
             [ocspu.as_dict(camel_case) for ocspu in self.ocspu_list],
         }
+
+    def retrieve(self):
+        for ocspu in self.ocspu_list:
+            ocspu.retrieve()

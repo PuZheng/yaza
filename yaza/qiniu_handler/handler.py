@@ -7,6 +7,9 @@ import qiniu.rs
 import qiniu.io
 from yaza.basemain import app
 
+qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
+qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
+
 
 def _md5sum(file, blocksize=65536):
     hash = hashlib.md5()
@@ -22,21 +25,27 @@ def upload_image(file_path, bucket):
 
 
 def upload_image_str(key, data, bucket):
-    qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
-    qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
+    if not is_exists(bucket, key):
+        policy = qiniu.rs.PutPolicy(bucket)
+        uptoken = policy.token()
+        extra = qiniu.io.PutExtra()
+        extra.mime_type = "image/png"
+
+        data = StringIO(data)
+        ret, err = qiniu.io.put(uptoken, key, data, extra)
+        if err is not None:
+            app.logger.error('error: %s ' % err)
+            raise UploadException(err, key)
+    return "http://" + bucket + '.qiniudn.com/' + key
+
+
+def delete_file(bucket, key):
     qiniu.rs.Client().delete(bucket, key)
 
-    policy = qiniu.rs.PutPolicy(bucket)
-    uptoken = policy.token()
-    extra = qiniu.io.PutExtra()
-    extra.mime_type = "image/png"
 
-    data = StringIO(data)
-    ret, err = qiniu.io.put(uptoken, key, data, extra)
-    if err is not None:
-        app.logger.error('error: %s ' % err)
-        raise UploadException(err, key)
-    return "http://" + bucket + '.qiniudn.com/' + key
+def is_exists(bucket, key):
+    ret, err = qiniu.rs.Client().stat(bucket, key)
+    return ret is not None
 
 
 class UploadException(Exception):
