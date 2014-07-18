@@ -18,7 +18,7 @@ require.config({
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'css': 'components/require-css/css.min',
-        "ekko-lightbox": "components/lightbox/dist/ekko-lightbox",
+        "ekko-lightbox": "components/ekko-lightbox/dist/ekko-lightbox.min",
         // application
         dispatcher: 'js/dispatcher',
         'spu': 'js/admin/spu'
@@ -64,7 +64,7 @@ require.config({
             exports: '$.fn.url'
         },
         'ekko-lightbox': {
-            deps: ['bootstrap', "css!components/lightbox/dist/ekko-lightbox.min.css"]
+            deps: ['bootstrap', "css!components/ekko-lightbox/dist/ekko-lightbox.min.css"]
         }
     }
 });
