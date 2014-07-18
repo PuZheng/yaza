@@ -167,11 +167,21 @@ def design_region_api(id_=None):
         aspect_id = d.get('aspect-id')
         width = d.get('width')
         height = d.get('height')
+        left_top = d.get('left-top')
+        right_top = d.get('right-top')
+        right_bottom = d.get('right-bottom')
+        left_bottom = d.get('left-bottom')
+
         if request.method == 'POST':
             design_region = wraps(do_commit(DesignRegion(name=name, width=width,
                                                          height=height,
                                                          pic_path=pic_path,
-                                                         aspect_id=aspect_id)))
+                                                         aspect_id=aspect_id,
+                                                         left_top=",".join(map(str, left_top)),
+                                                         right_top=",".join(map(str, right_top)),
+                                                         right_bottom=",".join(map(str, right_bottom)),
+                                                         left_bottom=",".join(map(str, left_bottom))
+                                                         )))
         else:
             design_region_id = d.get('id')
             design_region = get_or_404(DesignRegion, design_region_id)
@@ -183,6 +193,12 @@ def design_region_api(id_=None):
                 design_region.height = height
             if pic_path:
                 design_region.pic_path = pic_path
+            if left_top and right_top and right_bottom and left_bottom:
+                design_region.left_top = ",".join(map(str, left_top))
+                design_region.right_top = ",".join(map(str, right_top))
+                design_region.right_bottom = ",".join(map(str, right_bottom))
+                design_region.left_bottom = ",".join(map(str, left_bottom))
+
             (name or width or height or pic_path) and db.session.commit()
 
     return jsonify({

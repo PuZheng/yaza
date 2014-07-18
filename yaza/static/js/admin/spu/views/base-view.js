@@ -123,9 +123,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 done: function (e, data) {
                     // 若是之前没有创建过OCSPU, 就创建， 否则仅仅修改材质图
                     if (view.model.id == undefined) {
-                        var fieldNames = view.populateModel();
-                        // override file field
-                        view.model.set(field.name, 'http://yaza-spus.qiniudn.com/' + data.formData.key);
+                        var fieldNames = view.populateModel(data);
 
                         view.model.save(fieldNames, {
                             success: function (model, response, options) {
@@ -149,30 +147,28 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                     type: 'error',
                                     msg: '创建' + view.label + '失败!', 
                                 });             
+                                view.$form.find('.uploading-progress').fadeOut(1000);
                                 view.$createBtn.removeClass('disabled');
                                 view.$form.find('input').removeAttr('disabled');
                             }
                         });
                     } else {
-                        var path = 'http://yaza-spus.qiniudn.com/' + data.formData.key;
-                        view.model.set(field.name, path);
-                        var $form = $(this);
-                        view.model.save([field.name], {
+                        view.model.save(view.populateModel(data, [field.name]), {
                             success: function (model, response, options) {
-                                $form.find('.uploading-progress').fadeOut(1000);
+                                view.$form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'success',
                                     msg: '成功修改' + field.label + '为' + 'http://yaza-spus.qiniudn.com/' + data.formData.key,
                                 });
-                                $form.find('input').removeAttr('disabled');
+                                view.$form.find('input').removeAttr('disabled');
                             },
                             error: function () {
-                                $form.find('.uploading-progress').fadeOut(1000);
+                                view.$form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'error',
                                     msg: '修改' + field.name + '失败!', 
                                 });             
-                                $form.find('input').removeAttr('disabled');
+                                view.$form.find('input').removeAttr('disabled');
                             }
                         });
 
@@ -180,6 +176,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 },
                 fail: (function (view) {
                     return function (e, data) {
+                        debugger;
                         $(this).find('.uploading-progress').fadeOut(1000);
                         if (view.model.id == undefined) {
                             dispatcher.trigger('flash', {
@@ -234,7 +231,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             }.bind(this));
 
             this.$el.html(this._template({fields: this.fields, label: this.label, 
-                model: this.model.id == undefined? '': this.model.get(this.title),
+                model: this.model.id == undefined?  '': {title: this.model.get(this.title), id: this.model.id },
                 nextLevel: this.nextLevel,
                 parentView: this._parentView,
             }));
@@ -365,6 +362,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 label: this.label,
                 title: this.model.get(this.title),
                 fields: {},
+                id: this.model.id,
             }; 
             this.fields.forEach(function (field) {
                 obj.fields[field.name] = this.model.get(field.name);
@@ -408,20 +406,28 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             return this.model.id == undefined;
         },
 
-        populateModel: function () {
-            var fieldNames = [];
+        populateModel: function (data, fieldNames) {
+            fieldNames = !!fieldNames;
+            var ret = [];
             for (var i=0; i < this.$inputs.length; ++i) {
                 var $input = this.$inputs[i];
                 var val = $input.val().trim();
                 var fieldName = $input.data('field');
-                fieldNames.push(fieldName);
-                this.model.set(fieldName, val);
+                if (!fieldNames || _(fieldNames).contains(fieldName)) {
+                    ret.push(fieldName);
+                    if ($input.attr('type') != 'file') {
+                        this.model.set(fieldName, val);
+                    } else {
+                        var path = 'http://yaza-spus.qiniudn.com/' + data.formData.key;
+                        this.model.set(fieldName, path);
+                    }
+                }
             }
             if (!!this._parentView) {
-                fieldNames.push(this._parentView.nextLevel.parentRefBack);
+                ret.push(this._parentView.nextLevel.parentRefBack);
                 this.model.set(this._parentView.nextLevel.parentRefBack, this._parentView.model.id);
             }
-            return fieldNames;
+            return ret;
         },
     });
     return BaseView;

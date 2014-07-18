@@ -14,7 +14,9 @@
         </span>
         <b>{{label}}</b>
       </span>
-      <em>{{model}}</em>
+      {{# if model}}
+      <em>{{model.id}} - {{model.title}}</em>
+      {{/if}}
     </span>
   </div>
   <div class="panel-body">

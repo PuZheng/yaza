@@ -47,9 +47,9 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
                                     $img.attr('src', e.target.result).load(function (e) {
                                         var $zone = $(this).parent();
                                         if ($(this).height() / $(this).width() > $zone.height() / $zone.width()) {
-                                            $(this).addClass('portrait');
+                                            $(this).addClass('portrait').removeClass('landscape');
                                         } else {
-                                            $(this).addClass('landscape');
+                                            $(this).addClass('landscape').removeClass('portrait');
                                         }
 
 
@@ -62,29 +62,46 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
                                         });
 
                                         view._layer = new Kinetic.Layer({
-                                            width: $(this).width(),
-                                            height: $(this).height(),
-                                            x: $(this).offset().left - $(this).parent().offset().left,
-                                            y: $(this).offset().top - $(this).parent().offset().top,
+                                            width: $container.width(),
+                                            height: $container.height(),
                                         });
                                         view._stage.add(view._layer);
+                                        var offset = {
+                                            x: $(this).parent().offset().left - $(this).offset().left,
+                                            y: $(this).parent().offset().top - $(this).offset().top,
+                                        };
                                         var rect = new Kinetic.Rect({
                                             stroke: '#999',
                                             strokeWidth: 1,
                                             width: $(this).width(),
                                             height: $(this).height(),
+                                            offset: offset,
                                         });
                                         view._layer.add(rect);
-                                        var tack = new Kinetic.Text({
-                                            x: 50, 
-                                            y: 50,
-                                            //text: String.fromCharCode("\f08d"),
-                                            text: "\uF08D",
+                                        var hint = new Kinetic.Text({
                                             fontSize: 15,
-                                            fontFamily: 'FontAwesome',
-                                            fill: 'red',
-                                        });
-                                        view._layer.add(tack);
+                                            name: 'hint',
+                                            fill: 'gray',
+                                            x: 200,
+                                            y: $(this).height() + 5,
+                                            offset: offset,
+                                        });    
+                                        hint.hide();
+                                        view._layer.add(hint);
+
+                                        view._layer.add(view._makeTack('左上角', hint, offset, $(this)));
+                                        view._layer.add(view._makeTack('右上角', hint, offset, $(this)).position({
+                                            x: $(this).width(),
+                                            y: 0,
+                                        }));
+                                        view._layer.add(view._makeTack('右下角', hint, offset, $(this)).position({
+                                            x: $(this).width(),
+                                            y: $(this).height(),
+                                        }));
+                                        view._layer.add(view._makeTack('左下角', hint, offset, $(this)).position({
+                                            x: 0, 
+                                            y: $(this).height(),
+                                        }));
                                         view._stage.draw();
                                     });
                                 }
@@ -94,11 +111,25 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
                         }
                     }(this));
                     var origAdd = this.$form.fileupload('option', 'add'); 
-                    this.$vertexSelector.find('.btn').click(function ($selector) {
+                    this.$vertexSelector.find('.btn').click(function (view) {
                         return function (e) {
-                            origAdd.call(this, e, $selector.data('data'));
+                            origAdd.call(view.$form, e, view.$vertexSelector.data('data'));
+                            var $img = view.$('img.design-region-image');
+                            var proportion = {
+                                x: $img[0].naturalWidth / $img.width(),
+                                y: $img[0].naturalHeight / $img.height(),
+                            };
+                            var tack = view._layer.find('.左上角')[0];
+                            view.$vertexSelector.data('left-top', [Math.round(tack.x() * proportion.x) || 0, Math.round(tack.y() * proportion.y) || 0]);
+                            var tack = view._layer.find('.右上角')[0];
+                            view.$vertexSelector.data('right-top', [Math.round(tack.x() * proportion.x) || 0, Math.round(tack.y() * proportion.y) || 0]);
+                            var tack = view._layer.find('.右下角')[0];
+                            view.$vertexSelector.data('right-bottom', [Math.round(tack.x() * proportion.x) || 0, Math.round(tack.y() * proportion.y) || 0]);
+                            var tack = view._layer.find('.左下角')[0];
+                            view.$vertexSelector.data('left-bottom', [Math.round(tack.x() * proportion.x) || 0, Math.round(tack.y() * proportion.y) || 0]);
+                            view.$vertexSelector.modal('hide');
                         };
-                    }(this.$vertexSelector));
+                    }(this));
                     this.$form.fileupload('option', 'add', function (view) {
                         return function (e, data) {
                             view.$vertexSelector.data('data', data).modal('show');
@@ -107,9 +138,45 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
                 }
                 return ret;
             },
-            populateModel: function () {
-                return BaseView.prototype.populateModel.call(this);
-            } 
+
+            populateModel: function (data, fieldNames) {
+                var ret = BaseView.prototype.populateModel.call(this, data, fieldNames);
+                this.model.set('left-top', this.$vertexSelector.data('left-top'));
+                this.model.set('right-top', this.$vertexSelector.data('right-top'));
+                this.model.set('right-bottom', this.$vertexSelector.data('right-bottom'));
+                this.model.set('left-bottom', this.$vertexSelector.data('left-bottom'));
+                return ret;
+            },
+
+            _makeTack: function (name, hint, offset, $img) {
+                view = this;
+                var tack = new Kinetic.Text({
+                    text: "\uF08D",
+                    fontSize: 18,
+                    fontFamily: 'FontAwesome',
+                    fill: '#ff6e6e',
+                    name: name,
+                    draggable: true,
+                });
+                tack.offset({
+                    x: offset.x + tack.width() / 2,
+                    y: offset.y + tack.height(),
+                }).on('mouseover', function (e) {
+                    this.fill('red');
+                    view._stage.draw();
+                }).on('mouseout', function (e) {
+                    this.fill('#ff6e6e');
+                    hint.hide();
+                    view._stage.draw();
+                }).on('dragstart', function (e) {
+                    hint.show();
+                }).on('dragmove', function (e) {
+                    var hint = view._layer.find('.hint')[0];
+                    hint.text(name + ' - x: ' + Math.round(this.x() * $img[0].naturalWidth / $img.width()) + ', y: ' + Math.round(this.y() * $img[0].naturalHeight / $img.height()));
+                    view._stage.draw();
+                });
+                return tack;
+            },
         });
         return DesignRegionView;
     });
