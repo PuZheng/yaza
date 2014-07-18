@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 import time
-import os.path
 
 from flask import render_template, json, request, jsonify
 from flask.ext.databrowser import ModelView
@@ -82,15 +81,20 @@ def ocspu_api(id_=None):
     if request.method == 'GET':
         ocspu = get_or_404(OCSPU, id_)
     else:
-        d = json.loads(request.data)
-        color = d.get('color')
-        spu_id = d.get('spu-id')
-        rgb = d.get('rgb')
-        cover_path = d.get('cover-path')
+        if request.data:
+            d = json.loads(request.data)
+            color = d.get('color')
+            spu_id = d.get('spu-id')
+            rgb = d.get('rgb')
+            cover_path = d.get('cover-path')
 
         if request.method == 'POST':
-            ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
-                                          cover_path=cover_path)))
+            clone_id = request.args.get('clone-to')
+            if clone_id:
+                ocspu = get_or_404(OCSPU, clone_id).clone()
+            else:
+                ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
+                                            cover_path=cover_path)))
         else:
             ocspu_id = d.get('id')
             ocspu = get_or_404(OCSPU, ocspu_id)
@@ -207,5 +211,9 @@ def design_region_api(id_=None):
         'height': design_region.height,
         'aspect-id': design_region.aspect.id,
         'pic-path': design_region.pic_path,
-        'id': design_region.id
+        'id': design_region.id,
+        'left-top': left_top,
+        'right-top': right_top,
+        'right-bottom': right_bottom,
+        'left-bottom': left_bottom,
     })

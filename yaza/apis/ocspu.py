@@ -7,7 +7,9 @@ from werkzeug.utils import cached_property
 
 from yaza.apis import ModelWrapper, wraps
 from yaza.basemain import app
+from yaza.models import OCSPU, Aspect, DesignRegion
 from yaza.tools.color_tools import contrast_color, darker_color
+from yaza.utils import do_commit
 
 
 class OCSPUWrapper(ModelWrapper):
@@ -36,6 +38,19 @@ class OCSPUWrapper(ModelWrapper):
             "hoveredComplementColor" if camel_case else "hovered_complement_color": self.hovered_complement_color,
             'rgb': self.rgb,
         }
+
+    def clone(self):
+        # 不clone文件
+        ret = do_commit(OCSPU(color=self.color, spu_id=self.spu_id, rgb=self.id))
+        for aspect in self.aspect_list:
+            new_aspect = do_commit(Aspect(name=aspect.name, ocspu_id=ret.id,
+                                          width=aspect.width,
+                                          height=aspect.height))
+            for dr in aspect.design_region_list:
+                do_commit(DesignRegion(aspect_id=new_aspect.id, name=dr.name,
+                                       width=dr.width,
+                                       height=dr.height))
+        return ret
 
 
 class AspectWrapper(ModelWrapper):

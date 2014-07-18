@@ -249,7 +249,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                     return function (model) {
                         model.fetch({
                             success: function () {
-                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').prependTo(view.$listGroup);
+                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').appendTo(view.$listGroup);
                                 var nextLevelView = new nextLevel.view({
                                     el: $nextLevelEl, 
                                     model: model,
@@ -347,7 +347,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 this.$listGroup.children().each(function (i, el) {
                     $(el).data('view').render(true);
                 }); 
-                var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$('.panel-' + this.label + ' > .panel-body .list-group'));
+                var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$listGroup);
                 var nextLevelView = new this.nextLevel.view({
                     el: $nextLevelEl, 
                     model: this.nextLevel.newObject(),
