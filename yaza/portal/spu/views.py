@@ -207,8 +207,8 @@ def design_region_api(id_=None):
         'aspect-id': design_region.aspect.id,
         'pic-path': design_region.pic_path,
         'id': design_region.id,
-        'left-top': left_top,
-        'right-top': right_top,
-        'right-bottom': right_bottom,
-        'left-bottom': left_bottom,
+        'left-top': design_region.left_top,
+        'right-top': design_region.right_top,
+        'right-bottom': design_region.right_bottom,
+        'left-bottom': design_region.left_bottom,
     })
