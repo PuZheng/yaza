@@ -33,7 +33,15 @@ define(['spu/views/base-view',
                     return new DesignRegion();
                 },
                 parentRefBack: 'aspect-id',
-            }
+            }, 
+
+            populateModel: function (data, fieldNames) {
+                var ret = BaseView.prototype.populateModel.call(this, data, fieldNames);
+                var img = this.$form.find('a[data-field="pic-path"] img')[0];
+                this.model.set('width', img.naturalWidth);
+                this.model.set('height', img.naturalHeight);
+                return ret; 
+            },
         });
         return AspectView;
     });

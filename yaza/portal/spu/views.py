@@ -125,13 +125,18 @@ def aspect_api(id_=None):
         aspect = get_or_404(Aspect, id_)
     else:
         d = json.loads(request.data)
+        print d
         name = d.get('name')
         pic_path = d.get('pic-path')
         ocspu_id = d.get('ocspu-id')
+        width = d.get('width')
+        height = d.get('height')
 
         if request.method == 'POST':
             aspect = wraps(do_commit(Aspect(name=name, ocspu_id=ocspu_id,
-                                            pic_path=pic_path)))
+                                            pic_path=pic_path,
+                                            width=width,
+                                            height=height)))
         else:
             aspect_id = d.get('id')
             aspect = get_or_404(Aspect, aspect_id)
@@ -139,6 +144,10 @@ def aspect_api(id_=None):
                 aspect.name = name
             if pic_path:
                 aspect.pic_path = pic_path
+            if width:
+                aspect.width = width
+            if height:
+                aspect.height = height
             (name or pic_path) and db.session.commit()
     return jsonify({
         'id': aspect.id,
