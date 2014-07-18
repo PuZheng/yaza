@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 import time
-import os.path
 
 from flask import render_template, json, request, jsonify
 from flask.ext.databrowser import ModelView
@@ -10,14 +9,12 @@ from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied, Permission, RoleNeed
 
 from yaza import models, const
-from yaza.basemain import app
 from yaza.apis import wraps
 from yaza.database import db
 from yaza.admin import serializer
 from yaza.models import SPU, OCSPU, Aspect, DesignRegion
-from yaza.utils import do_commit, get_or_404, random_str
+from yaza.utils import do_commit, get_or_404
 from yaza.portal.spu import spu_ws
-from yaza.qiniu_handler import upload_image
 
 
 class SPUModelView(ModelView):
@@ -75,8 +72,7 @@ def spu_api(id_=None):
 def ocspu_api(id_=None):
     if request.method == 'DELETE':
         ocspu = get_or_404(OCSPU, id_)
-        do_commit(ocspu, 'delete')
-        # TODO should delete all the children and image on qiniu
+        ocspu.delete()
         return jsonify({})
 
     if request.method == 'GET':
@@ -117,8 +113,7 @@ def ocspu_api(id_=None):
 def aspect_api(id_=None):
     if request.method == 'DELETE':
         aspect = get_or_404(Aspect, id_)
-        do_commit(aspect, 'delete')
-        # TODO should delete all the children and image on qiniu
+        aspect.delete()
         return jsonify({})
 
     if request.method == 'GET':
@@ -154,8 +149,7 @@ def aspect_api(id_=None):
 def design_region_api(id_=None):
     if request.method == 'DELETE':
         design_region = get_or_404(DesignRegion, id_)
-        do_commit(design_region, 'delete')
-        # TODO should delete all the children and image on qiniu
+        design_region.delete()
         return jsonify({})
 
     if request.method == 'GET':

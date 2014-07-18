@@ -7,6 +7,7 @@ from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
 from flask.ext.babel import gettext as _
 from flask.ext.mail import Mail, Message
+from plumbum import CommandNotFound
 import speaklater
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -190,7 +191,10 @@ if app.debug and app.config['ENABLE_DEBUG_TOOLBAR']:
 
 
 def locate_all_fonts():
-    from plumbum.cmd import fc_list
+    try:
+        from plumbum.cmd import fc_list
+    except CommandNotFound:
+        return
 
     # TODO 这里并没有处理style
     for l in fc_list[': ', 'file', 'family']().split('\n'):

@@ -195,7 +195,7 @@ def extract_images(dir_, relpath_start="", front_aspect_name="aa.png"):
 
             elif os.path.isdir(abs_path):
 
-                #design_region_list
+                # design_region_list
                 for root, walk_dirs, files in os.walk(abs_path):
                     for design_file in files:
                         if allowed_file(design_file, IMAGES):
@@ -266,9 +266,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     pic_path = os.path.relpath(full_path, start_dir)
                     black_shadow_im, white_shadow_im = create_shadow_im(Image.open(full_path), ocspu.rgb)
                     black_shadow_full_path = os.path.join(aspect_dir,
-                                                    fname + '.black_shadow.png')
+                                                          fname + '.black_shadow.png')
                     white_shadow_full_path = os.path.join(aspect_dir,
-                                                    fname + '.white_shadow.png')
+                                                          fname + '.white_shadow.png')
                     black_shadow_im.save(black_shadow_full_path)
                     white_shadow_im.save(white_shadow_full_path)
                     black_shadow_path = os.path.relpath(black_shadow_full_path, start_dir)
@@ -278,11 +278,11 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                         thumbnail_path = pic_path + '?imageView2/0/w/' + str(
                             app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                         black_shadow_path = upload_image(black_shadow_full_path,
-                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                         white_shadow_path = upload_image(white_shadow_full_path,
-                                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
                     else:
-                        thumbnail_path = _make_thumbnail(pic_path, start_dir)
+                        thumbnail_path = _make_thumbnail(full_path, start_dir)
 
                     im = Image.open(full_path)
                     width, height = im.size
@@ -346,7 +346,6 @@ def marked_as_corner(pixel):
 
 
 def create_shadow_im(im, color):
-
     im = im.convert('LA')
     pa = im.load()
     v = max(ImageColor.getrgb(color))
@@ -356,7 +355,7 @@ def create_shadow_im(im, color):
     white_dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
     white_dest_pa = white_dest_im.load()
     color_list = list(pixel[0] for pixel in (pa[p] for p in itertools.product(xrange(im.size[0]),
-                                                                             xrange(im.size[1]))) if pixel[1])
+                                                                              xrange(im.size[1]))) if pixel[1])
     avg_color = sum(color_list) / len(color_list)
 
     enhance = 20  # 让反差更明显一些
