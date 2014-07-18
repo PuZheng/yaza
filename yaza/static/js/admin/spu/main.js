@@ -18,6 +18,7 @@ require.config({
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'css': 'components/require-css/css.min',
+        "ekko-lightbox": "components/ekko-lightbox/dist/ekko-lightbox.min",
         // application
         dispatcher: 'js/dispatcher',
         'spu': 'js/admin/spu'
@@ -25,27 +26,27 @@ require.config({
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
         'underscore': {
-            exports: '_',
+            exports: '_'
         },
         'underscore.string': {
-            deps: ['underscore'],
+            deps: ['underscore']
         },
         'backbone': {
             deps: ['jquery', 'underscore'],
-            exports: 'Backbone',
+            exports: 'Backbone'
         },
         'bootstrap': {
             deps: ['jquery'],
-            exports: '$.fn.tooltip',
+            exports: '$.fn.tooltip'
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
             //deps: ['css!components/spectrum/spectrum.css', 'jquery'],
-            exports: '$.fn.spectrum',
+            exports: '$.fn.spectrum'
         },
         'fancybox': {
             deps: ['css!http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css', 'jquery'],
-            exports: '$.fn.fancybox',
+            exports: '$.fn.fancybox'
         },
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
@@ -53,16 +54,19 @@ require.config({
             'jquery.ui.widget']
         },
         'jquery.ui.widget': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'toastr': {
             deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
         },
         'js-url': {
             deps: ['jquery'],
-            exports: '$.fn.url',
+            exports: '$.fn.url'
         },
-    },
+        'ekko-lightbox': {
+            deps: ['bootstrap', "css!components/ekko-lightbox/dist/ekko-lightbox.min.css"]
+        }
+    }
 });
 
 
