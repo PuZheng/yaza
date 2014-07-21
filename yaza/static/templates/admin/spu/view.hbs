@@ -14,7 +14,7 @@
         </span>
         <b>{{label}}</b>
       </span>
-      <em>{{model}}</em>
+      <em>{{# if model}}{{model.id}} - {{model.title}}{{/if}}</em>
     </span>
   </div>
   <div class="panel-body">
@@ -30,17 +30,21 @@
                 <input type="file" name="file" data-field="{{this.name}}">
               </span>
             {{else}}
-              <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}">
+            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}"
+              {{#each this.attributes}}
+              {{this.name}}="{{this.val}}"
+              {{/each}}
+            >
             {{/eq}}
           </div>
-          <label class="control-label text-danger" style='display: none' data-field='{{this.name}}'>* {{this.error}}</label>
           {{#eq this.type 'file'}}
             <div class="col-sm-2">
               <a class="fancybox thumbnail" rel="group" data-field="{{this.name}}" href="{{this.value}}" data-title="{{label}}">
-                <img alt="{{this.name}}" src="{{this.value}}"/>
+                <img src="{{this.value}}"/>
               </a>
             </div>
           {{/eq}}
+          <label class="control-label text-danger" style='display: none' data-field='{{this.name}}'>* {{this.error}}</label>
         </div>
       {{/each}}
       <div class="uploading-progress row" style='display: none'>

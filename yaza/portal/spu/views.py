@@ -78,15 +78,20 @@ def ocspu_api(id_=None):
     if request.method == 'GET':
         ocspu = get_or_404(OCSPU, id_)
     else:
-        d = json.loads(request.data)
-        color = d.get('color')
-        spu_id = d.get('spu-id')
-        rgb = d.get('rgb')
-        cover_path = d.get('cover-path')
+        if request.data:
+            d = json.loads(request.data)
+            color = d.get('color')
+            spu_id = d.get('spu-id')
+            rgb = d.get('rgb')
+            cover_path = d.get('cover-path')
 
         if request.method == 'POST':
-            ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
-                                          cover_path=cover_path)))
+            clone_id = request.args.get('clone-to')
+            if clone_id:
+                ocspu = get_or_404(OCSPU, clone_id).clone()
+            else:
+                ocspu = wraps(do_commit(OCSPU(color=color, spu_id=spu_id, rgb=rgb,
+                                            cover_path=cover_path)))
         else:
             ocspu_id = d.get('id')
             ocspu = get_or_404(OCSPU, ocspu_id)
@@ -161,11 +166,21 @@ def design_region_api(id_=None):
         aspect_id = d.get('aspect-id')
         width = d.get('width')
         height = d.get('height')
+        left_top = d.get('left-top')
+        right_top = d.get('right-top')
+        right_bottom = d.get('right-bottom')
+        left_bottom = d.get('left-bottom')
+
         if request.method == 'POST':
             design_region = wraps(do_commit(DesignRegion(name=name, width=width,
                                                          height=height,
                                                          pic_path=pic_path,
-                                                         aspect_id=aspect_id)))
+                                                         aspect_id=aspect_id,
+                                                         left_top=",".join(map(str, left_top)),
+                                                         right_top=",".join(map(str, right_top)),
+                                                         right_bottom=",".join(map(str, right_bottom)),
+                                                         left_bottom=",".join(map(str, left_bottom))
+                                                         )))
         else:
             design_region_id = d.get('id')
             design_region = get_or_404(DesignRegion, design_region_id)
@@ -177,6 +192,12 @@ def design_region_api(id_=None):
                 design_region.height = height
             if pic_path:
                 design_region.pic_path = pic_path
+            if left_top and right_top and right_bottom and left_bottom:
+                design_region.left_top = ",".join(map(str, left_top))
+                design_region.right_top = ",".join(map(str, right_top))
+                design_region.right_bottom = ",".join(map(str, right_bottom))
+                design_region.left_bottom = ",".join(map(str, left_bottom))
+
             (name or width or height or pic_path) and db.session.commit()
 
     return jsonify({
@@ -185,5 +206,9 @@ def design_region_api(id_=None):
         'height': design_region.height,
         'aspect-id': design_region.aspect.id,
         'pic-path': design_region.pic_path,
-        'id': design_region.id
+        'id': design_region.id,
+        'left-top': design_region.left_top,
+        'right-top': design_region.right_top,
+        'right-bottom': design_region.right_bottom,
+        'left-bottom': design_region.left_bottom,
     })
