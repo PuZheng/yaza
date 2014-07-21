@@ -1,4 +1,4 @@
-define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url', "ekko-lightbox"], function (dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
+define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url', "ekko-lightbox"], function ($, dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
     _.mixin(_.str.exports());
     handlebars.default.registerHelper('eq', function (a, b, opts) {
         if (a == b) // Or === depending on your needs
@@ -17,13 +17,26 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
         },
 
         render: function (collapsed) {
-            //collapsed? this._collapse(): this._expand();
+            this._makeEntry();
+            this._makePanel();
             if (!collapsed) {
-                this._expand();
+                this.expand();
             } else {
-                this._collapse();
+                this.collapse();
             }
             return this;
+        },
+
+        expand: function () {
+            this._expanded = true;
+            this.$panel.show();
+            this.$entry.hide();
+        },
+
+        collapse: function () {
+            this._expanded = false;
+            this.$entry.show();
+            this.$panel.hide();
         },
 
         _initColorInput: function ($input, field, view) {
@@ -35,7 +48,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 showInput: true,
                 allowEmpty: true,
                 change: function (event) {
-                    $(this).data('error-label').hide();
+                    dispatcher.trigger('validate');
                     if (view.model.id != undefined) {
                         view.model.set(field.name, $(this).val());
                         view.model.save([field.name], {
@@ -45,7 +58,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                     msg: '成功修改' + field.label + '为' + model.get(field.name) + '!',
                                 });
                             },
-                            error: function () {
+                            error: function (model, response) {
                                 dispatcher.trigger('flash', {
                                     type: 'error',
                                     msg: '修改' + field.label + '失败!',
@@ -62,9 +75,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 dataType: 'json',
                 url: 'http://up.qiniu.com',
                 add: function (e, data) {
-                    // 这里不用$input.data('error-label')是由于fileupload这个插件会替换掉$input(变成一个隐藏元素)
-                    var $errorLabelEl = $(this).find('label.text-danger[data-field="' + field.name + '"]');
-                    $errorLabelEl.hide();
+                    dispatcher.trigger('validate');
                     var fileReader = new FileReader();
                     fileReader.onload = (function (a) {
                         return function (e) {
@@ -82,7 +93,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                         view.$inputs.forEach(function ($input) {
                             $input.attr('disabled', '');
                         });
-                    }
+                    } 
                 },
                 submit: function (e, data) {
                     $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
@@ -175,7 +186,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 },
                 fail: (function (view) {
                     return function (e, data) {
-                        debugger;
                         $(this).find('.uploading-progress').fadeOut(1000);
                         if (view.model.id == undefined) {
                             dispatcher.trigger('flash', {
@@ -192,8 +202,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
         },
 
         _initInput: function ($input, field, view) {
-            $input.keydown(function (event) {
-                $(this).data('error-label').hide();
+            $input.keyup(function (event) {
+                dispatcher.trigger('validate');
             }).keypress(function (event) {
                 if (event.which != 13) {
                     return true;
@@ -223,13 +233,68 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             });
         },
 
-        _expand: function () {
+        validate: function () {
+            var ok = true;
+            for (var i=0; i < this.$inputs.length; ++i) {
+                var $input = this.$inputs[i];
+                var val = $input.val().trim();
+                var inputTest = true;
+                if ($input.attr('type') != 'file') {
+                    if (!val) {
+                        inputTest = false;
+                    }
+                } else {
+                    if (this.model.id == undefined) {
+                        if (!val) {
+                            inputTest = false;
+                        }
+                    } else {
+                        var href = this.$form.find('a.fancybox[data-field="' + $input.data('field') + '"]').attr('href');
+                        if (!href) {
+                            inputTest = false;
+                        }
+                    }
+                }
+                if (!inputTest) {
+                    $input.focus();
+                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').show();
+                    ok = false;
+                } else {
+                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').hide();
+                }
+            }
+            for (var i=0; i < this.$listGroup.children().length; ++i) {
+                if (!$(this.$listGroup.children()[i]).data('view').validate()) {
+                    ok = false; 
+                }
+            }
+            if (!ok) {
+                if (!this._hasError) {
+                    var $bugEl = $('<i class="fa fa-bug"></i>');
+                    this.$entry.prepend($bugEl).addClass('list-group-item-warning'); 
+                    this.$('.panel-' + this.label + ' > .panel-heading').prepend($bugEl.clone());
+                    this.$panel.addClass('panel-danger').removeClass('panel-default');
+                    this._hasError = true;
+                }
+            } else {
+                this.$entry.removeClass('list-group-item-warning').find('.fa-bug').remove();
+                this.$('.panel-' + this.label + ' > .panel-heading').find('.fa-bug').remove();
+                this.$panel.addClass('panel-default').removeClass('panel-danger');
+                this._hasError = false;
+            }
+
+
+            return ok;
+        },
+
+
+        _makePanel: function () {
             this.fields.forEach(function (field) {
                 field.value = this.model.id == undefined ? '' : this.model.get(field.name);
                 field.class = field.class || 'col-md-2'
             }.bind(this));
 
-            this.$el.html(this._template({fields: this.fields, label: this.label, 
+            this.$el.append(this._template({fields: this.fields, label: this.label, 
                 model: this.model.id == undefined?  '': {title: this.model.get(this.title), id: this.model.id },
                 nextLevel: this.nextLevel,
                 parentView: this._parentView,
@@ -242,24 +307,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.$collapseBtn = this.$('.panel-' + this.label + ' > .panel-heading a.btn-collapse');
             this.$nextLevelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-next-level');
             this.$listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
-            if (!!this.nextLevel && this.model.id != undefined) {
-                var nextLevel = this.nextLevel;
-                this.nextLevel.objects(this.model).forEach(function (view) {
-                    return function (model) {
-                        model.fetch({
-                            success: function () {
-                                var $nextLevelEl = $('<div class="' + nextLevel.label + '"></div>').appendTo(view.$listGroup);
-                                var nextLevelView = new nextLevel.view({
-                                    el: $nextLevelEl,
-                                    model: model,
-                                    parentView: view,
-                                }).render(true);
-                                $nextLevelEl.data('view', nextLevelView);
-                            }
-                        });
-                    }
-                }(this));
-            }
             this.$inputs = this.fields.map(function (field) {
                 var selector = '[data-field="' + field.name + '"]';
                 var $input = this.$form.find('input' + selector).data('error-label', this.$form.find('label.text-danger' + selector));
@@ -278,14 +325,8 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.$createBtn.click(function (view) {
                 return function (event) {
                     event.preventDefault();
-                    // check
-                    for (var i=0; i < view.$inputs.length; ++i) {
-                        var $input = view.$inputs[i];
-                        var val = $input.val().trim();
-                        if (!val) {
-                            $input.focus().data('error-label').show();
-                            return false;
-                        }
+                    if (!view.validate()) {
+                        return false;
                     }
 
                     if (view.$inputs.every(function ($input) {
@@ -331,9 +372,9 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                 }
                 return false;
             }.bind(this));
-            this.$collapseBtn.one('click', function (view) {
+            this.$collapseBtn.on('click', function (view) {
                 return function (event) {
-                    view.render(true);
+                    view.collapse();
                 }
             }(this));
             this.$nextLevelBtn.click(function (event) {
@@ -344,19 +385,67 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                     return;
                 }
                 this.$listGroup.children().each(function (i, el) {
-                    $(el).data('view').render(true);
+                    $(el).data('view').collapse();
                 }); 
                 var $nextLevelEl = $('<div class="' + this.label + '"></div>').prependTo(this.$listGroup);
                 var nextLevelView = new this.nextLevel.view({
                     el: $nextLevelEl,
                     model: this.nextLevel.newObject(),
                     parentView: this,
-                }).render();
+                });
+                nextLevelView.on('loaded', function () {
+                    dispatcher.trigger('validate'); 
+                });
                 $nextLevelEl.data('view', nextLevelView);
+                nextLevelView.render();
             }.bind(this));
+            if (!!this.nextLevel && this.model.id != undefined && this.nextLevel.objects(this.model).length > 0) {
+                nextLevelModels = this.nextLevel.objects(this.model);
+                var d = function (view, nextLevelViewsLength) {
+                    var ret = $.Deferred(); 
+                    var l = [];
+                    ret.progress(function (arg) {
+                        l.push(arg);
+                        if (l.length == nextLevelViewsLength) {
+                            view.trigger('loaded');
+                        }
+                    });
+                    return ret;
+                }(this, nextLevelModels.length);
+                var nextLevel = this.nextLevel;
+                nextLevelModels.forEach(function (view) {
+                    return function (model) {
+                        model.fetch({
+                            success: function () {
+                                var $nextLevelEl = $('<div class="' + nextLevel.view.prototype.label + '"></div>').appendTo(view.$listGroup);
+                                var nextLevelView = new nextLevel.view({
+                                    el: $nextLevelEl,
+                                    model: model,
+                                    parentView: view,
+                                });
+                                nextLevelView.on('loaded', function () {
+                                    d.notify(1);
+                                });
+                                $nextLevelEl.data('view', nextLevelView);
+                                nextLevelView.render(!view._childrenExpaned);
+                            },
+                            error: function (model, response) {
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
+                                    msg: '不能加载' + nextLevel.label + '(' +  model.id + ')!</br>' + _(response.responseText).escapeHTML(),
+                                });
+                            }
+                        });
+                    }
+                }(this));
+            } else {
+                console.log(this.label + '-' + this.model.id +  ' loaded');
+                this.trigger('loaded');
+            }
         },
 
-        _collapse: function () {
+        _makeEntry: function () {
+            this._expanded = false;
             var obj = {
                 label: this.label,
                 title: this.model.get(this.title),
@@ -366,11 +455,12 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
             this.fields.forEach(function (field) {
                 obj.fields[field.name] = this.model.get(field.name);
             }.bind(this));
-            this.$el.html('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>');
+            this.$el.append('<li class="list-group-item">' + this._entryTemplate(obj) + '</li>');
+            this.$entry = this.$('.list-group-item');
             this.$expandBtn = this.$('.btn-expand');
-            this.$expandBtn.one('click', function (view) {
+            this.$expandBtn.on('click', function (view) {
                 return function (event) {
-                    view.render();
+                    view.expand();
                 }
             }(this));
             this.$removeBtn = this.$('.btn-remove');
@@ -386,6 +476,7 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
                                 view.$el.fadeOut({
                                     always: function () {
                                         $(this).remove();
+                                        dispatcher.trigger('validate');
                                     }
                                 });
                             },
@@ -406,7 +497,6 @@ define(['dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'te
         },
 
         populateModel: function (data, fieldNames) {
-            fieldNames = !!fieldNames;
             var ret = [];
             for (var i=0; i < this.$inputs.length; ++i) {
                 var $input = this.$inputs[i];

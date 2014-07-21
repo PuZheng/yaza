@@ -34,7 +34,7 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
             title: 'name',
             render: function (collasped) {
                 var ret = BaseView.prototype.render.call(this, collasped);
-                if (!collasped) {
+                if (true) {
                     // 一定不能写成this.$vertexSelector = $(vertexSelectorTemplate).appendTo(this.$el)， 因为$已经会将其初始化为modal， 而appendTo又将其container变化了，这样就会导致backdrop不能消失， 见http://stackoverflow.com/questions/11519660/twitter-bootstrap-modal-backdrop-doesnt-disappear
                     this.$el.append(vertexSelectorTemplate);
                     this.$vertexSelector = this.$('.desigin-region-vertex-selector');

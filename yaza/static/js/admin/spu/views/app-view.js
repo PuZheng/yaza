@@ -19,17 +19,23 @@ define(['backbone', 'spu/context', 'spu/views/spu-view', 'spu/models/spu', 'disp
 
         initialize: function (option) {
             this.$mask = $('.mask');
-            new SPUView({
+            var spuView = new SPUView({
                 el: $('.spu'), 
                 model: this.model || new SPU(),
-            }).render();
+            });
+            spuView.on('loaded', function () {
+                this.validate();
+            });
+            spuView.render();
             dispatcher.on('flash', function (arg) {
                 toastr[arg.type](arg.msg)
             }).on('mask', function (appView) {
                 return function (toggle) {
                     toggle? appView.$mask.show(): appView.$mask.hide();
                 }
-            }(this));
+            }(this)).on('validate', function () {
+                spuView.validate();
+            });
         }
     });
     return AppView;

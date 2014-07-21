@@ -16,7 +16,7 @@ from yaza.qiniu_handler import delete_file
 def split_pic_url(pic_url):
     http_, key = pic_url.split(".qiniudn.com/")
     bucket = http_.split("//")[-1]
-    return bucket, key
+    return bucket.encode('utf-8'), key.encode('utf-8')
 
 
 def delete_file_from_path(path):
@@ -198,9 +198,9 @@ class DesignRegionWrapper(ModelWrapper):
     def delete(self):
         if self.pic_path:
             delete_file_from_path(self.pic_path)
-        if os.path.exists(self.edge_file):
+        if self.edge_file and os.path.exists(self.edge_file):
             os.unlink(self.edge_file)
-        if os.path.exists(self.control_point_file):
+        if self.control_point_file and os.path.exists(self.control_point_file):
             os.unlink(self.control_point_file)
 
         do_commit(self, "delete")
