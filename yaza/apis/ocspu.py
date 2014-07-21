@@ -58,7 +58,7 @@ class OCSPUWrapper(ModelWrapper):
 
     def clone(self):
         # 不clone文件
-        ret = do_commit(OCSPU(color=self.color, spu_id=self.spu_id, rgb=self.id))
+        ret = do_commit(OCSPU(color=self.color, spu_id=self.spu_id, rgb=self.rgb))
         for aspect in self.aspect_list:
             new_aspect = do_commit(Aspect(name=aspect.name, ocspu_id=ret.id,
                                           width=aspect.width,
