@@ -204,6 +204,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
         _initInput: function ($input, field, view) {
             $input.keyup(function (event) {
                 dispatcher.trigger('validate');
+                $(this).focus();
+                return true;
             }).keypress(function (event) {
                 if (event.which != 13) {
                     return true;
