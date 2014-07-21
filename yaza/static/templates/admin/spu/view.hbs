@@ -30,7 +30,11 @@
                 <input type="file" name="file" data-field="{{this.name}}">
               </span>
             {{else}}
-              <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}">
+            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}"
+              {{#each this.attributes}}
+              {{this.name}}="{{this.val}}"
+              {{/each}}
+            >
             {{/eq}}
           </div>
           {{#eq this.type 'file'}}

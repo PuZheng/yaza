@@ -17,12 +17,24 @@ define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-se
                     type: 'number',
                     label: '宽度(英寸)',
                     error: '宽度不能为空',
+                    attributes: [
+                        {
+                            name: 'step',
+                            val: 0.01,
+                        }
+                    ]
                 },
                 {
                     name: 'height',
                     type: 'number',
                     label: '高度(英寸)',
                     error: '高度不能为空',
+                    attributes: [
+                        {
+                            name: 'step',
+                            val: 0.01,
+                        }
+                    ]
                 },
                 {
                     name: 'pic-path',
