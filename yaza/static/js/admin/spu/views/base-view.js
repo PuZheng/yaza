@@ -367,6 +367,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     this.$el.fadeOut({
                         always: function () {
                             $(this).remove();
+                            dispatcher.trigger('validate');
                         }
                     });
                 }
