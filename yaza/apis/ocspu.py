@@ -48,19 +48,19 @@ class OCSPUWrapper(ModelWrapper):
         return darker_color(self.complementary_color)
 
     @property
-    def brightness(self):
+    def lightness(self):
         red = int(self.rgb[1:3], 16)
         green = int(self.rgb[3:5], 16)
         blue = int(self.rgb[5:7], 16)
-        return colorsys.rgb_to_hls(red / 255, green / 255, blue / 255)[1]
+        return colorsys.rgb_to_hls(red / 255.0, green / 255.0, blue / 255.0)[1]
 
     @property
     def padding_color(self):
-        return self.padding_colorz[self.brightness < 0.5]
+        return self.padding_colorz[self.lightness < 0.5]
 
     @property
     def margin_color(self):
-        return self.margin_colorz[self.brightness < 0.5]
+        return self.margin_colorz[self.lightness < 0.5]
 
     def as_dict(self, camel_case=False):
         return {
