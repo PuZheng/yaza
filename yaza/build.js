@@ -29,9 +29,9 @@
         'text': 'components/text/text',
         "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
-        "getImageData": "components/getImageData/jquery.getimagedata.min.js",
+        "getImageData": "components/getImageData/jquery.getimagedata.min",
         "jszip": "empty:",
-        "filesaver":"components/FileSaver/FileSaver.js",
+        "filesaver":"components/FileSaver/FileSaver",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',

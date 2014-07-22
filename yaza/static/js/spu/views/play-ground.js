@@ -288,7 +288,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
 
                 dispatcher.on('ocspu-selected', function (ocspu) {
                     this.$('.touch-screen .editable-region').css('background-color',
-                        ocspu.rgb).data("margin-color", ocspu.hoveredComplementColor).data('padding-color', ocspu.complementaryColor);
+                        ocspu.rgb).data("margin-color", ocspu.marginColor).data('padding-color', ocspu.paddingColor);
                     this._complementaryColor = ocspu.complementaryColor;
                     this._hoveredComplementColor = ocspu.hoveredComplementColor;
                     if (!!this._controlLayer) {
