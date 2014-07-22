@@ -30,8 +30,12 @@ define(['backbone', 'spu/context', 'spu/views/spu-view', 'spu/models/spu', 'disp
             dispatcher.on('flash', function (arg) {
                 toastr[arg.type](arg.msg)
             }).on('mask', function (appView) {
-                return function (toggle) {
-                    toggle? appView.$mask.show(): appView.$mask.hide();
+                return function (msg) {
+                    appView.$mask.show().find('.text-info').text(msg);
+                }
+            }(this)).on('unmask', function (appView) {
+                return function () {
+                    appView.$mask.hide();
                 }
             }(this)).on('validate', function () {
                 spuView.validate();

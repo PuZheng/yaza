@@ -147,7 +147,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                     view.$cancelBtn.hide();
                                 }
                                 view.$title.find('.hint').text('修改');
-                                view.$title.find('em').text(model.get(view.title));
+                                view.$title.find('em').text(model.id + ' - ' + model.get(view.title));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get(view.title))
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                                 view.$form.find('input').removeAttr('disabled');
@@ -222,7 +223,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 msg: '成功修改' + field.label + '为' + model.get(field.name) + '!',
                             });
                             if (view.title == field.name) {
-                                view.$title.find('em').text(model.get(field.name));
+                                view.$title.find('em').text(model.id + ' - ' + model.get(field.name));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get('view.title'));
                             }
                         },
                         error: function () {
@@ -234,6 +236,10 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     });
                 }
             });
+        },
+
+        hasError: function () {
+            return this.$entry.find('.fa-bug').length > 0;
         },
 
         validate: function () {
@@ -259,7 +265,6 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     }
                 }
                 if (!inputTest) {
-                    $input.focus();
                     this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').show();
                     ok = false;
                 } else {
@@ -272,18 +277,16 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                 }
             }
             if (!ok) {
-                if (!this._hasError) {
+                if (!this.hasError()) {
                     var $bugEl = $('<i class="fa fa-bug"></i>');
                     this.$entry.prepend($bugEl).addClass('list-group-item-warning'); 
                     this.$('.panel-' + this.label + ' > .panel-heading').prepend($bugEl.clone());
                     this.$panel.addClass('panel-danger').removeClass('panel-default');
-                    this._hasError = true;
                 }
             } else {
                 this.$entry.removeClass('list-group-item-warning').find('.fa-bug').remove();
                 this.$('.panel-' + this.label + ' > .panel-heading').find('.fa-bug').remove();
                 this.$panel.addClass('panel-default').removeClass('panel-danger');
-                this._hasError = false;
             }
 
 
@@ -343,7 +346,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 });
                                 view.$createBtn.hide();
                                 view.$title.find('.hint').text('修改');
-                                view.$title.find('em').text(model.get(view.title));
+                                view.$title.find('em').text(model.get(model.id + ' - ' + view.title));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get('view.title'));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                                 view.trigger('object-created');
@@ -526,6 +530,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
 
         enable: function () {
             this.$form.find('input').removeAttr('disabled');
+            this.$nextLevelBtn.removeClass('disabled');
+            this.$removeBtn.removeClass('disabled');
             this.$listGroup.children().each(function (idx, el) {
                 $(el).data('view').enable();
             })
@@ -533,6 +539,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
 
         disable: function () {
             this.$form.find('input').attr('disabled', '');
+            this.$nextLevelBtn.addClass('disabled');
+            this.$removeBtn.addClass('disabled');
             this.$listGroup.children().each(function (idx, el) {
                 $(el).data('view').disable();
             })

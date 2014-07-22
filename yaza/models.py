@@ -99,7 +99,7 @@ class DesignRegion(db.Model):
     right_top = db.Column(db.String(16))
     right_bottom = db.Column(db.String(16))
     left_bottom = db.Column(db.String(16))
-    edge_file = db.Column(db.String(64))
+    edge_path = db.Column(db.String(64))
     control_point_file = db.Column(db.String(64))
 
 

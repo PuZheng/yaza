@@ -3,6 +3,7 @@ define(['backbone'], function (Backbone) {
         urlRoot: '/spu-ws/spu.json',
         defaults: {
             name: '',
+            published: false,
         },
 
     });
