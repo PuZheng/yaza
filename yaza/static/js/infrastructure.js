@@ -6,5 +6,7 @@ define(['jquery'], function () {
         'jquery-file-upload',
         'jquery.iframe-transport',
         'text',
-        'css'], function () {});
+        'css',
+        'getImageData', 
+        'filesaver'], function () {});
 });
