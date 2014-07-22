@@ -151,6 +151,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                                 view.$form.find('input').removeAttr('disabled');
+                                view.trigger('object-created');
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -345,6 +346,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 view.$title.find('em').text(model.get(view.title));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
+                                view.trigger('object-created');
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -521,6 +523,20 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             }
             return ret;
         },
+
+        enable: function () {
+            this.$form.find('input').removeAttr('disabled');
+            this.$listGroup.children().each(function (idx, el) {
+                $(el).data('view').enable();
+            })
+        },
+
+        disable: function () {
+            this.$form.find('input').attr('disabled', '');
+            this.$listGroup.children().each(function (idx, el) {
+                $(el).data('view').disable();
+            })
+        }
     });
     return BaseView;
 });
