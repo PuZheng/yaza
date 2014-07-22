@@ -29,6 +29,9 @@ def delete_file_from_path(path):
 
 
 class OCSPUWrapper(ModelWrapper):
+    padding_colorz = ["#C0C0C0", "#E5E4E2"]
+    margin_colorz = ["#808080", "#C0C0C0"]
+
     @property
     def cover(self):
         if self.cover_path:
@@ -44,12 +47,29 @@ class OCSPUWrapper(ModelWrapper):
     def hovered_complement_color(self):
         return darker_color(self.complementary_color)
 
+    @property
+    def brightness(self):
+        red = int(self.rgb[1:3], 16)
+        green = int(self.rgb[3:5], 16)
+        blue = int(self.rgb[5:7], 16)
+        return colorsys.rgb_to_hls(red / 255, green / 255, blue / 255)[1]
+
+    @property
+    def padding_color(self):
+        return self.padding_colorz[self.brightness < 0.5]
+
+    @property
+    def margin_color(self):
+        return self.margin_colorz[self.brightness < 0.5]
+
     def as_dict(self, camel_case=False):
         return {
             'id': self.id,
             'aspectList' if camel_case else 'aspect_list': [aspect.as_dict(camel_case) for aspect in self.aspect_list],
             'cover': self.cover,
             'color': self.color,
+            "paddingColor" if camel_case else "padding_color": self.padding_color,
+            "marginColor" if camel_case else "margin_color": self.margin_color,
             "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
             "hoveredComplementColor" if camel_case else "hovered_complement_color": self.hovered_complement_color,
             'rgb': self.rgb,
