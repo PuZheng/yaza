@@ -13,13 +13,13 @@ require.config({
         'jquery.ui.widget': ['http://cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min', 'components/jquery-ui/ui/jquery.ui.widget'],
         'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
         'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
+        "ekko-lightbox": 'http://cdn.bootcss.com/ekko-lightbox/3.0.3a/ekko-lightbox.min',
         // vendors not using cdn
         kineticjs: 'components/kineticjs/kinetic.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
         'css': 'components/require-css/css.min',
-        "ekko-lightbox": "components/ekko-lightbox/dist/ekko-lightbox.min",
         // application
         dispatcher: 'js/dispatcher',
         'spu': 'js/admin/spu'
@@ -65,12 +65,14 @@ require.config({
             exports: '$.fn.url'
         },
         'ekko-lightbox': {
-            deps: ['bootstrap', "css!components/ekko-lightbox/dist/ekko-lightbox.min.css"]
+            deps: ['bootstrap', "css!http://cdn.bootcss.com/ekko-lightbox/3.0.3a/ekko-lightbox.min.css"]
         }
     }
 });
 
 
-require(['spu/infrastructure'], function () {
-    require(['spu/app'], function () {})
+require(['jquery'], function () {
+    require(['js/admin/spu/infrastructure'], function () {
+        require(['js/admin/spu/app'], function () {})
+    });
 });
