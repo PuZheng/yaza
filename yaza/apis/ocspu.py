@@ -43,7 +43,7 @@ class OCSPUWrapper(ModelWrapper):
 
     @property
     def hovered_complement_color(self):
-        return darker_color(self.complementary_color)
+        return darker_color(self.complementary_color, 50)
 
     def as_dict(self, camel_case=False):
         return {

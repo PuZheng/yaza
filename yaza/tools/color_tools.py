@@ -17,23 +17,10 @@ rtoh = lambda rgb: ('#%s' % ''.join(('%02x' % p for p in rgb))).upper()
 
 
 def contrast_color(base_color):
-
     base_color = _parse2color(base_color)
-    # 从web safe colors 里面选
-    iterator = safe_colors.itervalues() if base_color.red > 128 else reversed(safe_colors.values())
-    for color in iterator:
-        color = _parse2color(color)
-        if _is_readability(base_color, color):
-            return rtoh([color.red, color.green, color.blue])
-    else:
-        for red in xrange(0, 256):
-            for green in xrange(0, 256):
-                for blue in xrange(0, 256):
-                    color = Color(red=red, green=green, blue=blue)
-                    if _is_readability(base_color, color):
-                        return rtoh([color.red, color.green, color.blue])
-
-    return rtoh([255 - base_color.red, 255 - base_color.green, 255 - base_color.blue])
+    hsv = colorsys.rgb_to_hsv(base_color.red / 255.0, base_color.green / 255.0, base_color.blue / 255.0)
+    _contrast_color = colorsys.hsv_to_rgb(hsv[0] + 0.5, 1, 1)
+    return rtoh(map(lambda x: x * 255, _contrast_color))
 
 
 def darker_color(base_color, darker_percent=25):
@@ -51,35 +38,6 @@ def dominant_colorz(filename, n=3):
     clusters = _kmeans(points, n, 1)
     rgbs = [map(int, c.center.coords) for c in clusters]
     return map(rtoh, rgbs)
-
-
-def _is_readability(color1, color2):
-    return color_diff(color1, color2) > 500 and \
-           brightness_diff(color1, color2) > 125 and \
-           luminosity_diff(color1, color2) > 5
-
-
-def color_diff(color1, color2):
-    # value higher than 500 is recommended for good readability
-    return abs(color1.red - color2.red) + abs(color1.green - color2.green) + abs(color1.blue - color2.blue)
-
-
-def brightness_diff(color1, color2):
-    # return value of more than 125 is recommended
-    def brightness(color):
-        return (299 * color.red + 587 * color.green + 114 * color.blue) / 1000
-
-    return abs(brightness(color1) - brightness(color2))
-
-
-def luminosity_diff(color1, color2):
-    # returned value should be bigger than 5 for best readability
-    def luminosity(color):
-        return 0.2126 * pow(color.red / 255, 2.2) + 0.7152 * pow(color.green, 2.2) + 0.0722 * pow(color.blue, 2.2)
-
-    l1 = luminosity(color1)
-    l2 = luminosity(color2)
-    return (l1 + 0.05) / (l2 + 0.05) if l1 > l2 else (l2 + 0.05) / (l1 + 0.05)
 
 
 def _parse2color(color_str):
@@ -286,7 +244,7 @@ _safe_colors_dict = {"Black": "#000000",
 safe_colors = OrderedDict(sorted(_safe_colors_dict.items(), key=lambda t: t[1]))
 
 if __name__ == "__main__":
-    # print contrast_color("#757575")
-    # print darker_color("#FFDAB9")
-    print dominant_colorz(r"C:\Work\Project\yaza\yaza\static\assets\design-images-hd\Anonymous_Einstein.png", 1)
+    print contrast_color("#FFDAB9")
+    print darker_color("#00FFFF", 50)
+    # print dominant_colorz(r"C:\Work\Project\yaza\yaza\static\assets\design-images-hd\Anonymous_Einstein.png", 1)
     # print dominant_colorz(r"C:\Work\Project\yaza\yaza\static\assets\design-images-hd\bob_marley.png", 1)
