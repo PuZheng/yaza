@@ -189,6 +189,10 @@ class DesignRegionWrapper(ModelWrapper):
                                                                                   filename=self.pic_path)
         return ""
 
+    @property
+    def edge_url(self):
+        return self.edge_path if self.pic_path.startswith("http") else url_for("image.serve",
+                                                                                  filename=self.edge_path)
 
     @property
     def spu(self):
@@ -199,10 +203,6 @@ class DesignRegionWrapper(ModelWrapper):
         return self.aspect.ocspu
 
     @cached_property
-    def edges(self):
-        return json.load(file(self.edge_file))
-
-    @cached_property
     def control_points(self):
         return json.load(file(self.control_point_file))
 
@@ -210,7 +210,7 @@ class DesignRegionWrapper(ModelWrapper):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
-            'edges': self.edges,
+            'edgeUrl' if camel_case else 'edge_url': self.edge_url,
             'size': [self.width, self.height],
             'name': self.name,
         }
@@ -218,8 +218,8 @@ class DesignRegionWrapper(ModelWrapper):
     def delete(self):
         if self.pic_path:
             delete_file_from_path(self.pic_path)
-        if self.edge_file and os.path.exists(self.edge_file):
-            os.unlink(self.edge_file)
+        if self.edge_path and os.path.exists(self.edge_path):
+            os.unlink(self.edge_path)
         if self.control_point_file and os.path.exists(self.control_point_file):
             os.unlink(self.control_point_file)
 

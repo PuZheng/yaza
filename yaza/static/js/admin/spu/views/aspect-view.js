@@ -37,7 +37,7 @@ define(['spu/views/base-view',
 
             populateModel: function (data, fieldNames) {
                 var ret = BaseView.prototype.populateModel.call(this, data, fieldNames);
-                var img = this.$form.find('a[data-field="pic-path"] img')[0];
+                var img = this.$form.find('a[data-field-name="pic-path"] img')[0];
                 this.model.set('width', img.naturalWidth);
                 this.model.set('height', img.naturalHeight);
                 return ret; 

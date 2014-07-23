@@ -89,10 +89,6 @@ def setup_nav_bar():
     admin_nav_bar.register(admin, name=_('SPU'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/spu'))
 
-    default_url = speaklater.make_lazy_string(views.ocspu_model_view.url_for_list)
-    admin_nav_bar.register(admin, name=_('OCSPU'), default_url=default_url,
-                           enabler=lambda nav: request.path.startswith('/admin/ocspu'))
-
     default_url = speaklater.make_lazy_string(views.design_result_view.url_for_list)
     admin_nav_bar.register(admin, name=_(u'定制结果'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-result'))

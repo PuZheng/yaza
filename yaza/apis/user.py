@@ -76,7 +76,7 @@ LoginManager.token_loader`_
     def default_url(self):
         from yaza.admin import views
         if self.group_id == const.VENDOR_GROUP:
-            return views.ocspu_model_view.url_for_list()
+            return views.spu_model_view.url_for_list()
         return self.group.default_url
 
 

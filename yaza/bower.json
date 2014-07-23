@@ -48,9 +48,9 @@
     "jszip": "Stuk/jszip#~2.3.0",
     "toastr": "~2.0.3",
     "js-url": "~1.8.6",
-    "jquery-ajaxtransport-xdomainrequest":"https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
+    "jquery-ajaxtransport-xdomainrequest": "https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
     "getImageData": "https://github.com/betamax/getImageData.git",
     "FileSaver": "latest",
-    "ekko-lightbox":"https://github.com/ashleydw/lightbox.git"
+    "ekko-lightbox": "~3.1.4"
   }
 }

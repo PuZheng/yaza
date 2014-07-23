@@ -55,15 +55,25 @@ def spu_api(id_=None):
         name = json.loads(request.data)['name']
         spu = wraps(do_commit(SPU(name=name)))
     else:
-        name = json.loads(request.data)['name']
-        id_ = json.loads(request.data)['id']
+        d = json.loads(request.data)
+        name = d.get('name')
+        id_ = d['id']
+        published = d.get('published')
         spu = get_or_404(SPU, id_)
-        spu.name = name
+        if name:
+            spu.name = name
+        if published is not None:
+            if published:
+                spu.publish()
+            else:
+                spu.unpublish()
+
         db.session.commit()
     return jsonify({
         'id': spu.id,
         'name': spu.name,
         'ocspu-id-list': [ocspu.id for ocspu in spu.ocspu_list],
+        'published': spu.published,
     })
 
 

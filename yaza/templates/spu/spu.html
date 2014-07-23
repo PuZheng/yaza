@@ -19,19 +19,24 @@
 {% block main %}
 <div class="container-fluid">
   <div class="primary">
-
-    <div class="jit-preview">
-      <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}> </div>
-    </div>
-
-    <div class="play-ground">
-      <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+    {% if spu.published %}
+      <div class="jit-preview">
+        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}> </div>
       </div>
-    </div>
 
-    <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
-    <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
-    <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
+      <div class="play-ground">
+        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+        </div>
+      </div>
+
+      <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
+      <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
+      <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
+    {% else %}
+    <div class="alert alert-danger">
+      <h3>对不起， 该产品已经下架!</h3>
+    </div>
+    {% endif %}
   </div>
   <!--/span-->
 </div>
@@ -39,7 +44,7 @@
 <footer class="footer visible-md visible-lg">
 <div class="container">
   <div class="text-muted">
-    copyright@Yaza
+    copyright@374路
   </div>
 </div>
 </footer>

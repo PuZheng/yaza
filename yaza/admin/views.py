@@ -34,8 +34,17 @@ img_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Plea
 
 class _RedirectAction(action.RedirectAction):
 
+    def test(self, *records):
+        return 0 if records[0].published else -1
+
     def op_upon_list(self, objs, model_view):
         return redirect(url_for('admin.spu_url_generator', id_=objs[0].id))
+
+    @property
+    def forbidden_msg_formats(self):
+        return {
+            -1: u'请先发布该SPU！'
+        }
 
 class SPUAdminModelView(ModelView):
 
@@ -93,6 +102,11 @@ class SPUAdminModelView(ModelView):
                                nav_bar=admin_nav_bar, time=time.time(),
                                model_view=self)
 
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return ["id", col_spec.ColSpec("name", label=u'名称'), 
+        col_spec.ColSpec("published", label=u'发布', formatter=lambda v, obj: u'是' if v else u'否')]
 
 class OCSPUAdminModelView(ModelView):
     list_template = "admin/ocspu/ocspu-list.html"

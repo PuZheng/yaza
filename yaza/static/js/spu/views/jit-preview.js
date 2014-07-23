@@ -66,38 +66,55 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
                     }.bind(this)).on("design-region-selected", function (designRegion) {
                         if (!designRegion.previewEdges) {
-                            designRegion.previewEdges = this._getPreviewEdges(designRegion.edges, {
-                                x: this._stage.width() / designRegion.aspect.size[0],
-                                y: this._stage.height() / designRegion.aspect.size[1]
-                            });
-                        }
-                        if (!designRegion.bounds) {
-                            designRegion.bounds = this._getBounds(designRegion.previewEdges);
-                        }
+                            $.getJSON(designRegion.edgeUrl, function (edges) {
+                                designRegion.previewEdges = this._getPreviewEdges(edges, {
+                                    x: this._stage.width() / designRegion.aspect.size[0],
+                                    y: this._stage.height() / designRegion.aspect.size[1]
+                                });
+                                if (!designRegion.bounds) {
+                                    designRegion.bounds = this._getBounds(designRegion.previewEdges);
+                                }
 
-                        var layer = this._layerCache[designRegion.id];
-                        if (!layer) {
-                            layer = new Kinetic.Layer({
-                                name: designRegion.name
-                            });
-                            this._layerCache[designRegion.id] = layer;
-                            this._stage.add(layer);
-                            // 没有缓存， 产生预览
+                                var layer = this._layerCache[designRegion.id];
+                                if (!layer) {
+                                    layer = new Kinetic.Layer({
+                                        name: designRegion.name
+                                    });
+                                    this._layerCache[designRegion.id] = layer;
+                                    this._stage.add(layer);
+                                    // 没有缓存， 产生预览
+                                }
+                                this._currentLayer = layer;
+                                this._currentDesignRegion = designRegion;
+                                this._designRegionAnimate(designRegion.previewEdges);
+                            }.bind(this));
+                        } else {
+                            var layer = this._layerCache[designRegion.id];
+                            if (!layer) {
+                                layer = new Kinetic.Layer({
+                                    name: designRegion.name
+                                });
+                                this._layerCache[designRegion.id] = layer;
+                                this._stage.add(layer);
+                                // 没有缓存， 产生预览
+                            }
+                            this._currentLayer = layer;
+                            this._currentDesignRegion = designRegion;
+                            this._designRegionAnimate(designRegion.previewEdges);
                         }
-                        this._currentLayer = layer;
-                        this._currentDesignRegion = designRegion;
-                        this._designRegionAnimate(designRegion.previewEdges);
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
                         this._mask.hide();
                     }.bind(this)).on('update-hotspot', function (playGroundLayer) {
-                        var hotspotContext = this._currentLayer.getContext();
                         if (playGroundLayer.children.length == 0) {
-                            hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                            if (!!this._currentLayer) {
+                                this._currentLayer.getContext().clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                            }
                             dispatcher.trigger('update-hotspot-done');
                             return;
                         }
+                        var hotspotContext = this._currentLayer.getContext();
 
                         this._currentLayer.size(this._stage.size());
                         var targetWidth = this._stage.width();
@@ -291,10 +308,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             _(jitPreview._layerCache).values().forEach(function (layer) {
                                 layer.show();
                             });
-                            jitPreview._backgroundLayer.on('mouseover', function (evt) {
-                                jitPreview._onMouseover(evt);
-                                this.off('mouseover');
-                            })
                         }).on('mousemove', function (evt) {
                             // firefox has no offset[XY], chrome has both offset[XY] and layer[XY], but
                             // layer[XY] is incorrect in chrome
@@ -509,7 +522,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         jitPreview._backgroundLayer = new Kinetic.Layer({
                             name: "background"
                         });
-                        jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
+                        jitPreview._backgroundLayer.add(im);
+                        jitPreview._backgroundLayer.on('mouseover', function (evt) {
                             jitPreview._onMouseover(evt);
                         });
                         // 若不隐藏,放大缩小浏览器的比例时,会造成本img和

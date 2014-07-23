@@ -82,7 +82,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                             a.href = e.target.result;
                             $(a).find('img')[0].src = e.target.result;
                         };
-                    })($(this).find('a.fancybox[data-field="' + field.name + '"]')[0]);
+                    })($(this).find('a.fancybox[data-field-name="' + field.name + '"]')[0]);
                     fileReader.readAsDataURL(data.files[0]);
                     $(this).data('data', data);
                     // 只有修改ocspu的材质图的时候， 才直接提交数据
@@ -147,10 +147,12 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                     view.$cancelBtn.hide();
                                 }
                                 view.$title.find('.hint').text('修改');
-                                view.$title.find('em').text(model.get(view.title));
+                                view.$title.find('em').text(model.id + ' - ' + model.get(view.title));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get(view.title))
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                                 view.$form.find('input').removeAttr('disabled');
+                                view.trigger('object-created');
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -221,7 +223,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 msg: '成功修改' + field.label + '为' + model.get(field.name) + '!',
                             });
                             if (view.title == field.name) {
-                                view.$title.find('em').text(model.get(field.name));
+                                view.$title.find('em').text(model.id + ' - ' + model.get(field.name));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get('view.title'));
                             }
                         },
                         error: function () {
@@ -233,6 +236,10 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     });
                 }
             });
+        },
+
+        hasError: function () {
+            return this.$entry.find('.fa-bug').length > 0;
         },
 
         validate: function () {
@@ -251,18 +258,17 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                             inputTest = false;
                         }
                     } else {
-                        var href = this.$form.find('a.fancybox[data-field="' + $input.data('field') + '"]').attr('href');
+                        var href = this.$form.find('a.fancybox[data-field-name="' + $input.data('field-name') + '"]').attr('href');
                         if (!href) {
                             inputTest = false;
                         }
                     }
                 }
                 if (!inputTest) {
-                    $input.focus();
-                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').show();
+                    this.$form.find('.text-danger[data-field-name=' + $input.data('field-name') + ']').show();
                     ok = false;
                 } else {
-                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').hide();
+                    this.$form.find('.text-danger[data-field-name=' + $input.data('field-name') + ']').hide();
                 }
             }
             for (var i=0; i < this.$listGroup.children().length; ++i) {
@@ -271,18 +277,16 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                 }
             }
             if (!ok) {
-                if (!this._hasError) {
+                if (!this.hasError()) {
                     var $bugEl = $('<i class="fa fa-bug"></i>');
                     this.$entry.prepend($bugEl).addClass('list-group-item-warning'); 
                     this.$('.panel-' + this.label + ' > .panel-heading').prepend($bugEl.clone());
                     this.$panel.addClass('panel-danger').removeClass('panel-default');
-                    this._hasError = true;
                 }
             } else {
                 this.$entry.removeClass('list-group-item-warning').find('.fa-bug').remove();
                 this.$('.panel-' + this.label + ' > .panel-heading').find('.fa-bug').remove();
                 this.$panel.addClass('panel-default').removeClass('panel-danger');
-                this._hasError = false;
             }
 
 
@@ -310,7 +314,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             this.$nextLevelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-next-level');
             this.$listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
             this.$inputs = this.fields.map(function (field) {
-                var selector = '[data-field="' + field.name + '"]';
+                var selector = '[data-field-name="' + field.name + '"]';
                 var $input = this.$form.find('input' + selector).data('error-label', this.$form.find('label.text-danger' + selector));
                 switch (field.type) {
                     case 'color':
@@ -322,6 +326,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     default:
                         this._initInput($input, field, this);
                 }
+                $input.data('field', field);
                 return $input;
             }.bind(this));
             this.$createBtn.click(function (view) {
@@ -342,9 +347,11 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                                 });
                                 view.$createBtn.hide();
                                 view.$title.find('.hint').text('修改');
-                                view.$title.find('em').text(model.get(view.title));
+                                view.$title.find('em').text(model.get(model.id + ' - ' + view.title));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get('view.title'));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
+                                view.trigger('object-created');
                             },
                             error: function () {
                                 dispatcher.trigger('flash', {
@@ -504,7 +511,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             for (var i=0; i < this.$inputs.length; ++i) {
                 var $input = this.$inputs[i];
                 var val = $input.val().trim();
-                var fieldName = $input.data('field');
+                var fieldName = $input.data('field-name');
                 if (!fieldNames || _(fieldNames).contains(fieldName)) {
                     ret.push(fieldName);
                     if ($input.attr('type') != 'file') {
@@ -521,6 +528,48 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             }
             return ret;
         },
+
+        enable: function () {
+            this.$inputs.forEach(function ($input) {
+                switch ($input.data('field').type) {
+                    case 'file':
+                        $input.parent().removeAttr('disabled');
+                        break;
+                    case 'rgb':
+                        $input.spectrum();
+                        break;
+                    default:
+                        $input.removeAttr('disabled');
+                } 
+            });
+            this.$nextLevelBtn.removeClass('disabled');
+            this.$removeBtn.removeClass('disabled');
+            this.$listGroup.children().each(function (idx, el) {
+                $(el).data('view').enable();
+            })
+        },
+
+        disable: function () {
+            this.$inputs.forEach(function ($input) {
+                switch ($input.data('field').type) {
+                    case 'file':
+                        $input.parent().attr('disabled', '');
+                        break;
+                    case 'color':
+                        $input.spectrum({
+                            disabled: true,
+                        });
+                        break;
+                    default:
+                        $input.attr('disabled', '');
+                } 
+            });
+            this.$nextLevelBtn.addClass('disabled');
+            this.$removeBtn.addClass('disabled');
+            this.$listGroup.children().each(function (idx, el) {
+                $(el).data('view').disable();
+            })
+        }
     });
     return BaseView;
 });

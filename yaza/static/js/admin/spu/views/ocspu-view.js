@@ -46,9 +46,9 @@ define(['jquery', 'dispatcher', 'spu/views/base-view',
                 var ret = BaseView.prototype.render.call(this, collapsed);
                 var s = '<button class="btn btn-xs btn-primary btn-clone" title="克隆OCSPU">' + 
                     '<i class="fa fa-copy"></i>' + '</button>';
-                $(s).appendTo(this.$entry.find('.pull-right')).click(function (view) {
+                this.$cloneBtn = $(s).appendTo(this.$entry.find('.pull-right')).click(function (view) {
                     return function (e) {
-                        dispatcher.trigger('mask', true);
+                        dispatcher.trigger('mask', '正在克隆...');
                         $.post('/spu-ws/ocspu.json?clone-to=' + view.model.id).done(function (data) {
                             var ocspu = new OCSPU({id: data.id}); 
                             ocspu.fetch({
@@ -68,7 +68,7 @@ define(['jquery', 'dispatcher', 'spu/views/base-view',
                                             type: 'success',
                                             msg: '成功克隆OCSPU!',
                                         });
-                                        dispatcher.trigger('mask', false);
+                                        dispatcher.trigger('unmask');
                                         dispatcher.trigger('validate');
                                     });
                                     newOCSPUView.render();
@@ -78,7 +78,7 @@ define(['jquery', 'dispatcher', 'spu/views/base-view',
                                         type: 'error',
                                         msg: '获取OCSPU失败!',
                                     });
-                                    dispatcher.trigger('mask', false);
+                                    dispatcher.trigger('unmask');
                                 },
                             });
                         }).fail(function () {
@@ -86,11 +86,21 @@ define(['jquery', 'dispatcher', 'spu/views/base-view',
                                 type: 'error',
                                 msg: '克隆OCSPU失败!',
                             });
-                            dispatcher.trigger('mask', false);
+                            dispatcher.trigger('unmask');
                         });
                     }
                 }(this));
                 return ret;
+            },
+
+            enable: function () {
+                BaseView.prototype.enable.call(this);
+                this.$cloneBtn.removeClass('disabled');
+            },
+
+            disable: function () {
+                BaseView.prototype.disable.call(this);
+                this.$cloneBtn.addClass('disabled');
             }
         });
         return OCSPUView;
