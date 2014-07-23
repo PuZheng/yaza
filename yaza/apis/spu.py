@@ -56,6 +56,10 @@ class SPUWrapper(ModelWrapper):
                         black_shadow_full_path, si.getvalue(), bucket)
                 except AlreadyExists, e:
                     print e
+                    if not aspect.black_shadow_path:
+                        # 出现这种情况， 只能说明以前留存了垃圾数据
+                        aspect.black_shadow_path = upload_image_str(
+                            black_shadow_full_path, si.getvalue(), bucket, True)
                 si.seek(0)
                 white_shadow_im.save(si, 'PNG')
                 try:
@@ -63,6 +67,10 @@ class SPUWrapper(ModelWrapper):
                         white_shadow_full_path, si.getvalue(), bucket)
                 except AlreadyExists, e:
                     print e
+                    if not aspect.white_shadow_path:
+                        # 出现这种情况， 只能说明以前留存了垃圾数据
+                        aspect.white_shadow_path = upload_image_str(
+                            white_shadow_full_path, si.getvalue(), bucket, True)
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
                     im = Image.open(StringIO(r.content))
@@ -82,6 +90,10 @@ class SPUWrapper(ModelWrapper):
                                                         bucket)
                     except AlreadyExists, e:
                         print e
+                        if not dr.edge_path:
+                            # 出现这种情况， 只能说明以前留存了垃圾数据
+                            dr.edge_path = upload_image_str(key, json.dumps(edges),
+                                                            bucket, True)
                     do_commit(dr)
 
                 do_commit(aspect)
