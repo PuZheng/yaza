@@ -255,7 +255,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         cover_path = os.path.relpath(cover_file, start_dir)
         if app.config.get("QINIU_ENABLED"):
             cover_path = upload_image(cover_file,
-                                      app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                                      app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                      True)
 
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
@@ -281,13 +282,17 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     black_shadow_path = os.path.relpath(black_shadow_full_path, start_dir)
                     white_shadow_path = os.path.relpath(white_shadow_full_path, start_dir)
                     if app.config.get("QINIU_ENABLED"):
-                        pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                        pic_path = upload_image(full_path,
+                                                app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                                True)
                         thumbnail_path = pic_path + '?imageView2/0/w/' + str(
                             app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                         black_shadow_path = upload_image(black_shadow_full_path,
-                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                                         True)
                         white_shadow_path = upload_image(white_shadow_full_path,
-                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                                                         app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                                         True)
                     else:
                         thumbnail_path = _make_thumbnail(full_path, start_dir)
 
@@ -315,14 +320,14 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 design_region_name = _get_value_from_list(design_region_configs, "name", {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
                 if app.config.get("QINIU_ENABLED"):
-                    pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                    pic_path = upload_image(full_path, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True)
                 edge_file, control_point_file = calc_design_region_image(full_path)
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        height=height,
-                                       edge_path=upload_image(edge_file, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]),
+                                       edge_path=upload_image(edge_file, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True),
                                        control_point_file=control_point_file))
 
     def _update(spu, **kwargs):

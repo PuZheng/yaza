@@ -34,9 +34,9 @@ def _md5sum(file, blocksize=65536):
     return hash.hexdigest()
 
 
-def upload_image(file_path, bucket):
+def upload_image(file_path, bucket, force=False):
     key = _md5sum(file_path) + os.path.splitext(file_path)[-1]
-    return upload_image_str(key, open(file_path, "rb").read(), bucket)
+    return upload_image_str(key, open(file_path, "rb").read(), bucket, force)
 
 
 def upload_image_str(key, data, bucket, force=False):
