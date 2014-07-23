@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 import json
+from hashlib import md5
 
 import requests
 from PIL import Image
@@ -9,7 +10,7 @@ from yaza.basemain import app
 from yaza.apis import ModelWrapper
 from yaza.utils import do_commit
 from yaza.tools.utils import create_shadow_im, detect_edges
-from yaza.qiniu_handler import upload_image_str
+from yaza.qiniu_handler import upload_image_str, AlreadyExists
 
 
 class SPUWrapper(ModelWrapper):
@@ -35,22 +36,33 @@ class SPUWrapper(ModelWrapper):
                 r = requests.get(aspect.pic_path)
                 black_shadow_im, white_shadow_im = create_shadow_im(
                     Image.open(StringIO(r.content)), ocspu.rgb)
-                black_shadow_full_path = 'aspect+' + str(aspect.id) + \
-                    '.black_shadow.png'
-                white_shadow_full_path = 'aspect+' + str(aspect.id) + \
-                    '.white_shadow.png'
+                digest = md5(r.content).hexdigest()
+                black_shadow_full_path = '.'.join(['black-shadow',
+                                                   str(aspect.id),
+                                                   digest,
+                                                   'png'])
+                white_shadow_full_path = '.'.join(['white-shadow',
+                                                   str(aspect.id),
+                                                   digest,
+                                                   'png'])
                 aspect.thumbnail_path = aspect.pic_path + \
                     '?imageView2/0/w/' + \
                     str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                 si = StringIO()
                 black_shadow_im.save(si, 'PNG')
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                aspect.black_shadow_path = upload_image_str(
-                    black_shadow_full_path, si.getvalue(), bucket, True)
+                try:
+                    aspect.black_shadow_path = upload_image_str(
+                        black_shadow_full_path, si.getvalue(), bucket)
+                except AlreadyExists, e:
+                    print e
                 si.seek(0)
                 white_shadow_im.save(si, 'PNG')
-                aspect.white_shadow_path = upload_image_str(
-                    white_shadow_full_path, si.getvalue(), bucket, True)
+                try:
+                    aspect.white_shadow_path = upload_image_str(
+                        white_shadow_full_path, si.getvalue(), bucket)
+                except AlreadyExists, e:
+                    print e
                 for dr in aspect.design_region_list:
                     print "progressing image: " + dr.pic_path
                     r = requests.get(dr.pic_path)
@@ -63,10 +75,14 @@ class SPUWrapper(ModelWrapper):
                         'rb': map(int, dr.right_top.split(',')),
                         'lb': map(int, dr.left_top.split(',')),
                     })
-                    key = 'design-region+' + str(dr.id) + '.edges'
+                    key = '.'.join(['design-region', str(dr.id),
+                                    md5(r.content).hexdigest(), 'edges'])
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    dr.edge_path = upload_image_str(key, json.dumps(edges),
-                                                    bucket, True)
+                    try:
+                        dr.edge_path = upload_image_str(key, json.dumps(edges),
+                                                        bucket)
+                    except AlreadyExists, e:
+                        print e
                     do_commit(dr)
 
                 do_commit(aspect)

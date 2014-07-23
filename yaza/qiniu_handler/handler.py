@@ -21,6 +21,9 @@ class AlreadyExists(Exception):
     def message(self):
         return '%s exists in %s' % (self.key, self.bucket)
 
+    def __str__(self):
+        return self.message
+
 
 
 def _md5sum(file, blocksize=65536):
