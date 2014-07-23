@@ -64,7 +64,6 @@ class SPUWrapper(ModelWrapper):
                 except AlreadyExists, e:
                     print e
                 for dr in aspect.design_region_list:
-                    print "progressing image: " + dr.pic_path
                     r = requests.get(dr.pic_path)
                     im = Image.open(StringIO(r.content))
                     # 注意， 标注的点， bottom的y大于top的y， 这是由于浏览器
