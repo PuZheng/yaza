@@ -82,7 +82,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                             a.href = e.target.result;
                             $(a).find('img')[0].src = e.target.result;
                         };
-                    })($(this).find('a.fancybox[data-field="' + field.name + '"]')[0]);
+                    })($(this).find('a.fancybox[data-field-name="' + field.name + '"]')[0]);
                     fileReader.readAsDataURL(data.files[0]);
                     $(this).data('data', data);
                     // 只有修改ocspu的材质图的时候， 才直接提交数据
@@ -258,17 +258,17 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                             inputTest = false;
                         }
                     } else {
-                        var href = this.$form.find('a.fancybox[data-field="' + $input.data('field') + '"]').attr('href');
+                        var href = this.$form.find('a.fancybox[data-field-name="' + $input.data('field-name') + '"]').attr('href');
                         if (!href) {
                             inputTest = false;
                         }
                     }
                 }
                 if (!inputTest) {
-                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').show();
+                    this.$form.find('.text-danger[data-field-name=' + $input.data('field-name') + ']').show();
                     ok = false;
                 } else {
-                    this.$form.find('.text-danger[data-field=' + $input.data('field') + ']').hide();
+                    this.$form.find('.text-danger[data-field-name=' + $input.data('field-name') + ']').hide();
                 }
             }
             for (var i=0; i < this.$listGroup.children().length; ++i) {
@@ -314,7 +314,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             this.$nextLevelBtn = this.$('.panel-' + this.label + ' > .panel-footer .btn-next-level');
             this.$listGroup = this.$('.panel-' + this.label + ' > .panel-body .list-group');
             this.$inputs = this.fields.map(function (field) {
-                var selector = '[data-field="' + field.name + '"]';
+                var selector = '[data-field-name="' + field.name + '"]';
                 var $input = this.$form.find('input' + selector).data('error-label', this.$form.find('label.text-danger' + selector));
                 switch (field.type) {
                     case 'color':
@@ -326,6 +326,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     default:
                         this._initInput($input, field, this);
                 }
+                $input.data('field', field);
                 return $input;
             }.bind(this));
             this.$createBtn.click(function (view) {
@@ -510,7 +511,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             for (var i=0; i < this.$inputs.length; ++i) {
                 var $input = this.$inputs[i];
                 var val = $input.val().trim();
-                var fieldName = $input.data('field');
+                var fieldName = $input.data('field-name');
                 if (!fieldNames || _(fieldNames).contains(fieldName)) {
                     ret.push(fieldName);
                     if ($input.attr('type') != 'file') {
@@ -529,7 +530,18 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
         },
 
         enable: function () {
-            this.$form.find('input').removeAttr('disabled');
+            this.$inputs.forEach(function ($input) {
+                switch ($input.data('field').type) {
+                    case 'file':
+                        $input.parent().removeAttr('disabled');
+                        break;
+                    case 'rgb':
+                        $input.spectrum();
+                        break;
+                    default:
+                        $input.removeAttr('disabled');
+                } 
+            });
             this.$nextLevelBtn.removeClass('disabled');
             this.$removeBtn.removeClass('disabled');
             this.$listGroup.children().each(function (idx, el) {
@@ -538,7 +550,20 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
         },
 
         disable: function () {
-            this.$form.find('input').attr('disabled', '');
+            this.$inputs.forEach(function ($input) {
+                switch ($input.data('field').type) {
+                    case 'file':
+                        $input.parent().attr('disabled', '');
+                        break;
+                    case 'color':
+                        $input.spectrum({
+                            disabled: true,
+                        });
+                        break;
+                    default:
+                        $input.attr('disabled', '');
+                } 
+            });
             this.$nextLevelBtn.addClass('disabled');
             this.$removeBtn.addClass('disabled');
             this.$listGroup.children().each(function (idx, el) {

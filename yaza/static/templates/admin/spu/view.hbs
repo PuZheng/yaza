@@ -27,10 +27,10 @@
               <span class="btn btn-success fileinput-button">
                 <i class="fa fa-plus"></i>
                 <span>选择文件</span>
-                <input type="file" name="file" data-field="{{this.name}}">
+                <input type="file" name="file" data-field-name="{{this.name}}">
               </span>
             {{else}}
-            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field="{{this.name}}"
+            <input type="{{this.type}}" placeholder="{{this.label}}" class='form-control' value="{{this.value}}" data-field-name="{{this.name}}"
               {{#each this.attributes}}
               {{this.name}}="{{this.val}}"
               {{/each}}
@@ -39,7 +39,7 @@
           </div>
           {{#eq this.type 'file'}}
             <div class="col-sm-2">
-              <a class="fancybox thumbnail" rel="group" data-field="{{this.name}}" href="{{this.value}}" data-title="{{label}}">
+              <a class="fancybox thumbnail" rel="group" data-field-name="{{this.name}}" href="{{this.value}}" data-title="{{label}}">
                 <img src="{{this.value}}"/>
               </a>
             </div>

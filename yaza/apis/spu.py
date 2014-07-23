@@ -46,11 +46,11 @@ class SPUWrapper(ModelWrapper):
                 black_shadow_im.save(si, 'PNG')
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                 aspect.black_shadow_path = upload_image_str(
-                    black_shadow_full_path, si.getvalue(), bucket)
+                    black_shadow_full_path, si.getvalue(), bucket, True)
                 si.seek(0)
                 white_shadow_im.save(si, 'PNG')
                 aspect.white_shadow_path = upload_image_str(
-                    white_shadow_full_path, si.getvalue(), bucket)
+                    white_shadow_full_path, si.getvalue(), bucket, True)
                 for dr in aspect.design_region_list:
                     print "progressing image: " + dr.pic_path
                     r = requests.get(dr.pic_path)
@@ -66,7 +66,7 @@ class SPUWrapper(ModelWrapper):
                     key = 'design-region+' + str(dr.id) + '.edges'
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     dr.edge_path = upload_image_str(key, json.dumps(edges),
-                                                    bucket)
+                                                    bucket, True)
                     do_commit(dr)
 
                 do_commit(aspect)
