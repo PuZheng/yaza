@@ -1,4 +1,4 @@
-define(['spu/models/config'], function (config) {
+define(['spu/models/config', 'underscore'], function (config, _) {
 
     function Config() {
         return this;  
