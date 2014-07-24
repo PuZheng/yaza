@@ -1,11 +1,11 @@
 /**
  * Created by Young on 2014/7/24.
  */
-define(['backbone', 'spu/models/font'], function (Backbone, Font) {
+define(['backbone', 'spu/models/config'], function (Backbone, Config) {
 
     var Fonts = Backbone.Collection.extend({
-        model: Font,
-        url: '/fonts',
+        model: Config,
+        url: '/configs'
     });
 
     return new Fonts();

@@ -1,5 +1,5 @@
-define(['spu/collections/design-images', 'spu/collections/fonts', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
-    function (DesignImages, fonts, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
+define(['spu/collections/design-images', 'spu/collections/configs', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
+    function (DesignImages, configs, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -663,13 +663,17 @@ define(['spu/collections/design-images', 'spu/collections/fonts', 'spu/colors', 
                             return _.sprintf('<option value="%s">%s pt</option>', fontSize, fontSize);
                         }).join(''));
 
-                fonts.fetch({reset: true});
-                fonts.on('reset', function () {
-                    config.DEFAULT_FONT_FAMILY = fonts.models[0].get("font");
-
+                configs.fetch({reset: true});
+                configs.on('reset', function () {
                     this.$('select.font-family').html(
-                        fonts.map(function (fontFamily) {
-                            return _.sprintf('<option value="%s">%s</option>', fontFamily.get("font"), fontFamily.get("font"));
+                        configs.map(function (c) {
+                            try {
+                                config.DEFAULT_FONT_FAMILY = c.get("fonts")[0];
+                            } catch (e) {
+                            }
+                            return c.get("fonts").map(function (font) {
+                                return _.sprintf('<option value="%s">%s</option>', font, font);
+                            }).join("");
                         }).join(''));
                 }.bind(this));
 

@@ -14,6 +14,7 @@ def index():
         return redirect(url_for("user.login"))
 
 
-@app.route("/fonts")
+@app.route("/configs")
 def fonts():
-    return json.dumps([{"font":key} for key in app.config["FONTS_MAP"]])
+    configs = {"fonts": app.config["FONTS_MAP"].keys()}
+    return json.dumps(configs)
