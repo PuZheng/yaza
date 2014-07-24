@@ -22,7 +22,8 @@ require.config({
         'css': 'components/require-css/css.min',
         // application
         dispatcher: 'js/dispatcher',
-        'spu': 'js/admin/spu'
+        'spu': 'js/admin/spu',
+        'js/admin/spu/infrastructure': 'http://yaza.qiniudn.com/js/admin/spu/infrastructure',
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
