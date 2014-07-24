@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
-import json
-from flask import redirect, url_for
+from flask import redirect, url_for, jsonify
 from flask.ext.login import current_user
 
 from yaza.basemain import app
@@ -17,4 +16,4 @@ def index():
 @app.route("/configs")
 def fonts():
     configs = {"fonts": app.config["FONTS_MAP"].keys()}
-    return json.dumps(configs)
+    return jsonify(configs)
