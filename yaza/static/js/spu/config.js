@@ -14,12 +14,6 @@ define(function () {
             64,
             32,
         ],
-        FONT_FAMILY_LIST: [
-            '文泉驿微米黑',
-            'AR PL UMing CN',
-            'AR PL UKai CN',
-            '腾祥铁山硬隶繁',
-        ],
         MAGNIFY: 1.5,  // 预览放大的倍数
         CONTROL_POINT_NUM: [4, 4],
         DISPROPORTIONATE: true,

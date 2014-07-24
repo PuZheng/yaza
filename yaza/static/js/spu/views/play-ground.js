@@ -664,7 +664,9 @@ define(['spu/collections/design-images', 'spu/collections/fonts', 'spu/colors', 
                         }).join(''));
 
                 fonts.fetch({reset: true});
-                fonts.on('reset', function (playGround) {
+                fonts.on('reset', function () {
+                    config.DEFAULT_FONT_FAMILY = fonts.models[0].get("font");
+
                     this.$('select.font-family').html(
                         fonts.map(function (fontFamily) {
                             return _.sprintf('<option value="%s">%s</option>', fontFamily.get("font"), fontFamily.get("font"));
