@@ -14,3 +14,4 @@ yet another zazzle
 6. `$ sudo npm install grunt`
 7. `$ sudo npm install`
 8. `$ grunt build:flatly`
+9. install fonts
