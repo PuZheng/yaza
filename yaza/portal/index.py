@@ -14,6 +14,6 @@ def index():
 
 
 @app.route("/configs")
-def fonts():
-    configs = {"fonts": app.config["FONTS_MAP"].keys()}
-    return jsonify(configs)
+def configs():
+    configs_ = {"fonts": app.config["FONTS_MAP"].keys()}
+    return jsonify(configs_)
