@@ -1,5 +1,5 @@
-define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
-    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
+define(['spu/collections/design-images', 'spu/collections/fonts', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
+    function (DesignImages, fonts, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -662,11 +662,14 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         function (fontSize) {
                             return _.sprintf('<option value="%s">%s pt</option>', fontSize, fontSize);
                         }).join(''));
-                this.$('select.font-family').html(
-                    config.FONT_FAMILY_LIST.map(
-                        function (fontFamily) {
-                            return _.sprintf('<option value="%s">%s</option>', fontFamily, fontFamily);
+
+                fonts.fetch({reset: true});
+                fonts.on('reset', function (playGround) {
+                    this.$('select.font-family').html(
+                        fonts.map(function (fontFamily) {
+                            return _.sprintf('<option value="%s">%s</option>', fontFamily.get("font"), fontFamily.get("font"));
                         }).join(''));
+                }.bind(this));
 
                 this.$('.thumbnails').scroll(function (playGround) {
                     var lastScroll = 0;
