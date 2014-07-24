@@ -13,7 +13,7 @@ def index():
         return redirect(url_for("user.login"))
 
 
-@app.route("/configs")
-def configs():
-    configs_ = {"fonts": app.config["FONTS_MAP"].keys()}
-    return jsonify(configs_)
+@app.route("/config")
+def config():
+    config_ = {"FONT_FAMILY_LIST": app.config["FONTS_MAP"].keys()}
+    return jsonify(config_)
