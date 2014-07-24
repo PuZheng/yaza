@@ -41,7 +41,6 @@ setup(
     zip_safe=False,
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
-    install_requires=open("requirements.txt").readlines(),
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
