@@ -33,7 +33,6 @@ img_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Plea
 
 
 class _RedirectAction(action.RedirectAction):
-
     def test(self, *records):
         return 0 if records[0].published else -1
 
@@ -46,8 +45,8 @@ class _RedirectAction(action.RedirectAction):
             -1: u'请先发布该SPU！'
         }
 
-class SPUAdminModelView(ModelView):
 
+class SPUAdminModelView(ModelView):
     def get_actions(self, processed_objs=None):
         return [_RedirectAction(u'生成用户链接')]
 
@@ -105,8 +104,9 @@ class SPUAdminModelView(ModelView):
     @ModelView.cached
     @property
     def list_columns(self):
-        return ["id", col_spec.ColSpec("name", label=u'名称'), 
-        col_spec.ColSpec("published", label=u'发布', formatter=lambda v, obj: u'是' if v else u'否')]
+        return ["id", col_spec.ColSpec("name", label=u'名称'),
+                col_spec.ColSpec("published", label=u'发布', formatter=lambda v, obj: u'是' if v else u'否')]
+
 
 class OCSPUAdminModelView(ModelView):
     list_template = "admin/ocspu/ocspu-list.html"
@@ -159,6 +159,10 @@ class AspectAdminModelView(ModelView):
 
 
 class DesignResultModelView(ModelView):
+
+    list_template = "admin/design-result/list.html"
+
+
     @ModelView.cached
     @property
     def list_columns(self):
@@ -166,7 +170,8 @@ class DesignResultModelView(ModelView):
                 col_spec.ColSpec("order_id", label=u"订单号"),
                 col_spec.ColSpec('create_time', u"创建时间",
                                  formatter=lambda v, obj:
-                                 v.strftime('%Y-%m-%d %H:%M'))]
+                                 v.strftime('%Y-%m-%d %H:%M')),
+                col_spec.HtmlSnippetColSpec("files", template="admin/spu/design-result-file-list.html")]
 
     def try_view(self, processed_objs=None):
         pass
@@ -182,7 +187,7 @@ class DesignResultModelView(ModelView):
     def edit_columns(self):
         return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"), col_spec.ColSpec(
             'create_time', u"创建时间", formatter=lambda v, obj: v.strftime('%Y-%m-%d %H:%M')),
-                col_spec.HtmlSnippetColSpec("file_path",
+                col_spec.HtmlSnippetColSpec("files",
                                             template="admin/spu/resign-result-download-snippet.html")]
 
     def expand_model(self, obj):
@@ -238,7 +243,8 @@ class DesignImageModelView(ModelView):
     @ModelView.cached
     @property
     def edit_columns(self):
-        return [col_spec.InputColSpec("title", label=u"标题"), col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
+        return [col_spec.InputColSpec("title", label=u"标题"),
+                col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
                 col_spec.FileColSpec("pic_path", label=u"上传设计图")]
 
 

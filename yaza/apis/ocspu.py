@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import colorsys
+from zipfile import ZipFile
 
 from flask import url_for, json
 from werkzeug.utils import cached_property

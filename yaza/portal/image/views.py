@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import codecs
 import os
 import sys
 import base64
@@ -10,11 +11,11 @@ from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
-from flask import request, jsonify, url_for, send_from_directory
+from flask import request, jsonify, url_for, send_from_directory, json
 from flask.ext.login import current_user
 
 from yaza.basemain import app
-from yaza.models import Tag, DesignImage, DesignResult
+from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
 from yaza.utils import random_str, do_commit, assert_dir
 from yaza.apis import wraps
@@ -117,23 +118,29 @@ def design_images_view(tag_id=None):
 @image.route('/design-save', methods=['POST'])
 def design_save():
     order_id = request.form.get("order_id")
+    spu_id = request.form.get("spu_id")
+
     if order_id:
-        filename = str(order_id) + ".zip"
+        dir_name = str(order_id)
     else:
-        filename = str(int(time.time())) + ".zip"
-    file_path = os.path.join(app.config["DESIGNED_FILE_FOLDER"], filename)
-    assert_dir(os.path.dirname(file_path))
-    with zipfile.ZipFile(file_path, mode='w') as zip_pkg:
-        for k, v in request.form.items():
-            if k != "order_id":
-                zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
+        dir_name = str(int(time.time()))
+
+    base_dir = os.path.join(app.config["DESIGNED_FILE_FOLDER"], dir_name)
+    assert_dir(base_dir)
     if current_user.is_authenticated():
         user = current_user
     else:
         user = None
 
-    result = DesignResult(user=user, file_path=filename, create_time=datetime.datetime.now())
+    result = DesignResult(user=user, create_time=datetime.datetime.now(), spu_id=spu_id)
     if order_id:
         result.order_id = order_id
     do_commit(result)
-    return filename
+    for k, v in json.loads(request.form["data"]).iteritems():
+        file_name = os.path.join(base_dir, k + ".svg")
+        with codecs.open(file_name, "w", "utf-8") as f:
+            f.write(v)
+        do_commit(DesignResultFile(design_result=result, name=k,
+                                   file_path=os.path.relpath(file_name, app.config["DESIGNED_FILE_FOLDER"])))
+
+    return dir_name

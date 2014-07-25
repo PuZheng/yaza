@@ -215,6 +215,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
 
                     if (this._currentAspect != designRegion.aspect) {
                         this.$(_.sprintf('.aspect-selector .thumbnail img[title="%s"]', designRegion.aspect.name)).parent().click();
+                        dispatcher.trigger("design-region-selected", designRegion, true);
                         return;
                     }
                     dispatcher.trigger("design-region-selected", designRegion);
@@ -334,10 +335,11 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                     }
                     $(evt.currentTarget).addClass('disabled');
 
-                    var data = this._getDesignData();
-                    if ($("[name=order_id]").val()) {
-                        data["order_id"] = $("[name=order_id]").val();
+                    var data = {"data": JSON.stringify(this._getDesignData())};
+                    if ($("[name=order_id]").text()) {
+                        data["order_id"] = $("[name=order_id]").text();
                     }
+                    data["spu_id"] = $("[name=spu]").data("val")["id"];
 
                     $.ajax({
                         type: 'POST',
