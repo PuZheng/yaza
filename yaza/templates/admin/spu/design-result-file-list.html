@@ -1,19 +1,5 @@
-<div class="row">
-  {% for obj in obj.files %}
-    <div class="col-sm-1">
-      <a href="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" class="thumbnail" name="design-result-file" data-title="{{ obj.name }}">
-        <img src="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" alt="{{ obj.name }}"/>
-      </a>
-    </div>
-  {% endfor %}
-</div>
-
-<script src="http://cdn.bootcss.com/ekko-lightbox/3.0.3a/ekko-lightbox.js"></script>
-<script>
-  $(function () {
-    $("a[name='design-result-file']").click(function (evt) {
-      evt.preventDefault();
-      $(this).ekkoLightbox();
-    });
-  })
-</script>
+{% for obj in obj.files %}
+    <a href="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" class="thumbnail" name="design-result-file" data-title="{{ obj.name }}">
+      <img src="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" alt="{{ obj.name }}" />
+    </a>
+{% endfor %}

@@ -159,6 +159,10 @@ class AspectAdminModelView(ModelView):
 
 
 class DesignResultModelView(ModelView):
+
+    list_template = "admin/design-result/list.html"
+
+
     @ModelView.cached
     @property
     def list_columns(self):
