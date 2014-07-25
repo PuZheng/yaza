@@ -1,9 +1,11 @@
 # -*- coding:utf-8 -*-
+import os
 from itsdangerous import URLSafeTimedSerializer
-from flask import Blueprint, render_template, request, send_from_directory, jsonify
+from flask import Blueprint, render_template, request, send_from_directory
 from flask.ext.login import current_user
 from flask.ext.babel import _
 from flask.ext.principal import Permission, RoleNeed
+import sys
 
 from yaza import const
 from yaza.admin import views
@@ -52,7 +54,6 @@ for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view,
 
 @admin.route("/")
 def index():
-
     return render_template("admin/index.html", nav_bar=admin_nav_bar)
 
 
@@ -69,12 +70,16 @@ def generator_ws():
     return "%sspu/spu/%d?captcha=%s" % (request.host_url, spu.id, security_str)
 
 
-@admin.route("/design-result-download/<path:file>")
-def design_result_download(file):
-    return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file)
-
+@admin.route("/design-result-file/<path:file_>")
+def design_result_file(file_):
+    as_attachment = "download" in request.args
+    if sys.platform.startswith("win32"):
+        file_ = file_.replace(os.path.sep, os.path.altsep)
+    return send_from_directory(app.config["DESIGNED_FILE_FOLDER"], file_, mimetype="image/svg+xml",
+                               as_attachment=as_attachment, attachment_filename=os.path.split(file_)[-1].encode("utf-8"))
 
 
 @admin.route('/spu-url-generator/<int:id_>')
 def spu_url_generator(id_):
     return render_template('admin/spu/spu.html', spu=get_or_404(SPU, id_))
+

@@ -63,8 +63,9 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 }
                             });
                         }
-                        // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
-                    }.bind(this)).on("design-region-selected", function (designRegion) {
+                    }.bind(this)).on("design-region-selected", function (designRegion, tempSelected) {
+                        //tempSelected为了解决选择不同aspect的不是第一个designRegion时 会跳转至第一个designRegion的bug
+                        this._currentDesignRegion = designRegion;
                         if (!designRegion.previewEdges) {
                             $.getJSON(designRegion.edgeUrl, function (edges) {
                                 designRegion.previewEdges = this._getPreviewEdges(edges, {
@@ -75,32 +76,34 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                     designRegion.bounds = this._getBounds(designRegion.previewEdges);
                                 }
 
+                                if (!tempSelected) {
+                                    var layer = this._layerCache[designRegion.id];
+                                    if (!layer) {
+                                        layer = new Kinetic.Layer({
+                                            name: designRegion.name
+                                        });
+                                        this._layerCache[designRegion.id] = layer;
+                                    }
+                                    //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
+                                    this._stage.add(layer);
+                                    this._currentLayer = layer;
+                                    this._designRegionAnimate(designRegion.previewEdges);
+                                }
+                            }.bind(this));
+                        } else {
+                            if (!tempSelected) {
                                 var layer = this._layerCache[designRegion.id];
                                 if (!layer) {
                                     layer = new Kinetic.Layer({
                                         name: designRegion.name
                                     });
                                     this._layerCache[designRegion.id] = layer;
+                                    // 没有缓存， 产生预览
                                 }
-                                //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
                                 this._stage.add(layer);
                                 this._currentLayer = layer;
-                                this._currentDesignRegion = designRegion;
                                 this._designRegionAnimate(designRegion.previewEdges);
-                            }.bind(this));
-                        } else {
-                            var layer = this._layerCache[designRegion.id];
-                            if (!layer) {
-                                layer = new Kinetic.Layer({
-                                    name: designRegion.name
-                                });
-                                this._layerCache[designRegion.id] = layer;
-                                // 没有缓存， 产生预览
                             }
-                            this._stage.add(layer);
-                            this._currentLayer = layer;
-                            this._currentDesignRegion = designRegion;
-                            this._designRegionAnimate(designRegion.previewEdges);
                         }
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();

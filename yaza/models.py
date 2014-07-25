@@ -66,7 +66,7 @@ class OCSPU(db.Model):
     cover_path = db.Column(db.String(64))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
     spu = db.relationship("SPU", backref='ocspu_list')
-    rgb = db.Column(db.String(7)) # #rrggbb
+    rgb = db.Column(db.String(7))  # #rrggbb
 
 
 class Aspect(db.Model):
@@ -127,6 +127,7 @@ class DesignImage(db.Model):
                            backref="design_image_list")
     dominant_color = db.Column(db.String(7))  # "#rrggbb"
 
+
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
     name = db.Column(db.String(64), primary_key=True)
@@ -136,6 +137,7 @@ class Permission(db.Model):
 
     def __repr__(self):
         return "<Permission: %s>" % self.name.encode("utf-8")
+
 
 permission_and_group_table = db.Table("TB_PERMISSION_AND_GROUP",
                                       db.Column("permission_name",
@@ -154,11 +156,21 @@ class Tag(db.Model):
 
 
 class DesignResult(db.Model):
-
     __tablename__ = "TB_DESIGN_RESULT"
     id = db.Column(db.Integer, primary_key=True)
     create_time = db.Column(db.DateTime, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     user = db.relationship("User")
     order_id = db.Column(db.String(16))
+    spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
+    spu = db.relationship("SPU", backref=db.backref("design_result_list", cascade="all, delete-orphan"))
+
+
+class DesignResultFile(db.Model):
+    __tablename__ = "TB_DESIGN_RESULT_FILE"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(16))
+    design_result_id = db.Column(db.Integer, db.ForeignKey("TB_DESIGN_RESULT.id"))
+    design_result = db.relationship("DesignResult", backref=db.backref("files", cascade="all, delete-orphan"))
     file_path = db.Column(db.String(64))

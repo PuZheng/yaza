@@ -1,2 +1,9 @@
-<a href="{{ url_for("admin.design_result_download", file=obj.file_path) }}" class="form-control-static btn btn-primary"><i class="fa fa-download fa-fw"></i>{{ obj.file_path }}
-</a>
+<div class="list-group">
+  {% for obj in obj.files %}
+    <div class="col-sm-12">
+      <a href="{{ url_for("admin.design_result_file", file_=obj.file_path, download=1) }}" class="thumbnail list-group-item">
+        <img src="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" alt="{{ obj.name }}"/>
+      </a>
+    </div>
+  {% endfor %}
+</div>
