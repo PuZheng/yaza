@@ -27,7 +27,8 @@ define(['backbone'], function (Backbone) {
             MAGNET_TOLERANCE: 5,  // 磁力吸附生效距离
             DOWNLOADABLE : true, // 是否可以下载定制结果,
             PLAYGROUND_MARGIN: 180, // 留空部分大小
-            PLAYGROUND_PADDING: 50 // 留空部分大小
+            PLAYGROUND_PADDING: 50, // 留空部分大小
+            DEFAULT_PREVIEW_BACKGROUND_COLOR: '',
         }
     });
 

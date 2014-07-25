@@ -1,0 +1,30 @@
+@import 'play-ground';
+@import 'jit-preview';
+@import 'utils';
+@import "../js/vendor/bootswatch-scss/flatly/variables";
+
+.container-fluid {
+    @include respond-to(wide-screens) {
+        width: 1080px;
+    }
+    background-image: url('/static/assets/congruent_outline.png');
+}
+
+body {
+    background-color: #222;
+}
+
+.primary {
+    @include respond-to(wide-screens) {
+        height: 816px;
+    }
+}
+
+.thumbnail.selected {
+    border: 2px solid #0088CC;
+}
+
+.mask {
+    width: 100%;
+    height: 100%;
+}
