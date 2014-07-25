@@ -1,4 +1,4 @@
-define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData"],
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData", 'spectrum'],
     function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
@@ -400,6 +400,11 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 },
 
                 events: {
+                    'click .btn-preview-background': function (e) {
+                        debugger;
+                        e.preventDefault();
+                        return false;  
+                    },
                     'click .ocspu-selector .thumbnail': function (evt) {
                         this.$(".ocspu-selector .thumbnail").removeClass("selected");
                         $(evt.currentTarget).addClass("selected");
@@ -431,6 +436,10 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             alert('您尚未作出任何定制，请先定制!');
                             return;
                         }
+                        var backgroundColor = this.$('input.preview-background-color').spectrum('get');
+                        backgroundColor = backgroundColor? backgroundColor.toRgb(): {
+                            r: 0, g: 0, b: 0, a: 0
+                        }
                         var canvas = document.createElement("canvas");
                         canvas.width = this._stage.width();
                         canvas.height = this._stage.height();
@@ -459,7 +468,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         // merge the background and preview 
                         while (pixel--) {
                             // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
-                            if (backgroundImageData[pixel * 4 + 3] != 0) {
+                            if (backgroundImageData[pixel * 4 + 3] > 0) {
                                 var srcA = previewImageData.data[pixel * 4 + 3] / 255;
                                 var dstA = backgroundImageData[pixel * 4 + 3] / 255;
                                 var outA = srcA + dstA * (1 - srcA);
@@ -470,8 +479,22 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 previewImageData.data[pixel * 4] = outR;
                                 previewImageData.data[pixel * 4 + 1] = outG;
                                 previewImageData.data[pixel * 4 + 2] = outB;
+                            } 
+                        }
+                        if (backgroundColor.a > 0) {
+                            pixel = previewImageData.data.length / 4;
+                            while (pixel--) {
+                                var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                                var outR = (previewImageData.data[pixel * 4] * srcA + backgroundColor.r * (1 - srcA));
+                                var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundColor.g * (1 - srcA));
+                                var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundColor.b * (1 - srcA));
+                                previewImageData.data[pixel * 4 + 3] = 255;
+                                previewImageData.data[pixel * 4] = outR;
+                                previewImageData.data[pixel * 4 + 1] = outG;
+                                previewImageData.data[pixel * 4 + 2] = outB;
                             }
                         }
+
                         ctx.putImageData(previewImageData, 0, 0);
                         var uri = canvas.toDataURL('image/png');
                         var a = $(evt.currentTarget).find('a');
@@ -654,6 +677,12 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     }.bind(this));
 
                     this.$('.ocspu-selector .thumbnail:first-child').click();
+                    this.$('.preview-background-color').spectrum({
+                        allowEmpty: true,
+                        color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
+                        showInput: true,
+                        showAlpha: true,
+                    });
                 },
 
                 _getPreviewEdges: function (edges, ratio) {
