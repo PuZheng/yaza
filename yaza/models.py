@@ -47,7 +47,7 @@ class SPU(db.Model):
     __tablename__ = 'TB_SPU'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(16))
+    name = db.Column(db.String(64))
     shape = db.Column(db.String(16))
     brief = db.Column(db.String(64))
     published = db.Column(db.Boolean, default=False)
@@ -63,7 +63,7 @@ class OCSPU(db.Model):
     __tablename__ = "TB_OCSPU"
     id = db.Column(db.Integer, primary_key=True)
     color = db.Column(db.String(16))
-    cover_path = db.Column(db.String(64))
+    cover_path = db.Column(db.String(256))
     spu_id = db.Column(db.Integer, db.ForeignKey("TB_SPU.id"), nullable=False)
     spu = db.relationship("SPU", backref='ocspu_list')
     rgb = db.Column(db.String(7))  # #rrggbb
@@ -78,12 +78,12 @@ class Aspect(db.Model):
     ocspu = db.relationship("OCSPU",
                             backref=db.backref("aspect_list",
                                                cascade="all, delete-orphan"))
-    pic_path = db.Column(db.String(64))
+    pic_path = db.Column(db.String(256))
     width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
     height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
-    thumbnail_path = db.Column(db.String(64))
-    black_shadow_path = db.Column(db.String(64))
-    white_shadow_path = db.Column(db.String(64))
+    thumbnail_path = db.Column(db.String(256))
+    black_shadow_path = db.Column(db.String(256))
+    white_shadow_path = db.Column(db.String(256))
 
 
 class DesignRegion(db.Model):
@@ -92,14 +92,14 @@ class DesignRegion(db.Model):
     aspect_id = db.Column(db.Integer, db.ForeignKey("TB_ASPECT.id"), nullable=False)
     aspect = db.relationship("Aspect", backref=db.backref("design_region_list", cascade="all, delete-orphan"))
     name = db.Column(db.String(16))
-    pic_path = db.Column(db.String(64))
+    pic_path = db.Column(db.String(256))
     width = db.Column(db.Float, doc=u'以英寸为单位')
     height = db.Column(db.Float, doc=u'以英寸为单位')
     left_top = db.Column(db.String(16))
     right_top = db.Column(db.String(16))
     right_bottom = db.Column(db.String(16))
     left_bottom = db.Column(db.String(16))
-    edge_path = db.Column(db.String(64))
+    edge_path = db.Column(db.String(256))
     control_point_file = db.Column(db.String(64))
 
 
@@ -121,7 +121,7 @@ class DesignImage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(32), nullable=False)
-    pic_url = db.Column(db.String(64))
+    pic_url = db.Column(db.String(256))
     tags = db.relationship("Tag",
                            secondary=tag_and_design_image,
                            backref="design_image_list")
@@ -173,4 +173,4 @@ class DesignResultFile(db.Model):
     name = db.Column(db.String(16))
     design_result_id = db.Column(db.Integer, db.ForeignKey("TB_DESIGN_RESULT.id"))
     design_result = db.relationship("DesignResult", backref=db.backref("files", cascade="all, delete-orphan"))
-    file_path = db.Column(db.String(64))
+    file_path = db.Column(db.String(256))
