@@ -81,9 +81,9 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                         name: designRegion.name
                                     });
                                     this._layerCache[designRegion.id] = layer;
-                                    this._stage.add(layer);
-                                    // 没有缓存， 产生预览
                                 }
+                                //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
+                                this._stage.add(layer);
                                 this._currentLayer = layer;
                                 this._currentDesignRegion = designRegion;
                                 this._designRegionAnimate(designRegion.previewEdges);
@@ -95,9 +95,9 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                     name: designRegion.name
                                 });
                                 this._layerCache[designRegion.id] = layer;
-                                this._stage.add(layer);
                                 // 没有缓存， 产生预览
                             }
+                            this._stage.add(layer);
                             this._currentLayer = layer;
                             this._currentDesignRegion = designRegion;
                             this._designRegionAnimate(designRegion.previewEdges);
@@ -120,7 +120,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         var targetWidth = this._stage.width();
                         var targetHeight = this._stage.height();
 
-                        this._currentLayer.find(".design-image").destroy();
                         var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
                         this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
                         if (__debug__) {
