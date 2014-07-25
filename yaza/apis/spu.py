@@ -83,7 +83,7 @@ class SPUWrapper(ModelWrapper):
                         'lb': map(int, dr.left_top.split(',')),
                     })
                     key = '.'.join(['design-region', str(dr.id),
-                                    md5(r.content).hexdigest(), 'edges'])
+                                    md5(json.dumps(edges)).hexdigest(), 'edges'])
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
                         dr.edge_path = upload_image_str(key, json.dumps(edges),
