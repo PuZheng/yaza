@@ -15,5 +15,8 @@ def index():
 
 @app.route("/config")
 def config():
-    config_ = {"FONT_FAMILY_LIST": app.config["FONTS_MAP"].keys()}
+    config_ = {
+        "FONT_FAMILY_LIST": app.config["FONTS_MAP"].keys(),
+        "DEFAULT_PREVIEW_BACKGROUND_COLOR": '#1b5a71',
+    }
     return jsonify(config_)

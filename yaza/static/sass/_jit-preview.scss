@@ -1,0 +1,106 @@
+@import 'utils';
+@import "../js/vendor/bootswatch-scss/flatly/variables";
+
+.jit-preview {
+    margin: 15px 15px 15px 15px;
+
+    & .aspect-selector {
+        border: 1px dashed #ccc;
+    }
+
+    & .hotspot {
+        height: 400px;
+        background-color: #eee;
+        border-radius: 5px;
+
+        & > .row:first-child {
+            position: absolute;
+            z-index: 999;
+
+            & button {
+                display: block;
+            }
+        }
+
+        & img {
+            max-height: 100%;
+            max-width: 100%;
+            background-color: #fff;
+            margin: auto;
+            display: block;
+        }
+
+        .design-region-selector {
+            position: absolute !important;
+        }
+
+        .design-regions {
+            position: absolute !important;
+            max-height: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+    }
+
+    & aside {
+        padding-top: 15px; 
+        padding-right: 20px;
+
+        & .logo img {
+            max-width: 100%;
+        }
+
+        & .order {
+            padding: 5px;
+            border-radius: 5px;
+
+            & p {
+                text-align: center;
+                color: white;
+                font-size: 1.5em;
+            }
+        }
+    }
+
+    & .ocspu-selector {
+        border: 1px dashed gray;
+        margin-top: 10px;
+        height: 200px;
+        border-radius: 3px;
+
+        & .thumbnail {
+            height: 64px;
+            width: 64px;
+            img {
+                min-width: 100%;
+                min-height: 100%;
+            }
+        }
+    }
+
+    & .thumbnail {
+        margin: 3px 3px 3px 0;
+        display: inline-block;
+        img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    }
+
+
+    & .thumbnail:first-child {
+        margin-left: 3px;
+    }
+
+    & .buttons {
+        width: 70%;
+        margin: 10px auto auto;
+
+        & button {
+            width: 100%;
+        }
+    }
+}
