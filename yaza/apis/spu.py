@@ -67,8 +67,7 @@ class SPUWrapper(ModelWrapper):
                             dr.black_shadow_path = upload_image_str(
                                 black_shadow_full_path, si.getvalue(),
                                 bucket, True)
-                    si.seek(0)
-                    si.truncate(0)
+                    si = StringIO()
                     white_shadow_im.save(si, 'PNG')
                     try:
                         dr.white_shadow_path = upload_image_str(
