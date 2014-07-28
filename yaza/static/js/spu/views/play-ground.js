@@ -1,5 +1,5 @@
-define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
-    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip) {
+define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager', 'spu/control-group', 'spu/config', 'buckets', 'svg', 'kineticjs', 'dispatcher', 'backbone', 'underscore', 'handlebars', 'text!templates/uploading-progress.hbs', 'text!templates/uploading-success.hbs', 'text!templates/uploading-fail.hbs', 'text!templates/gallery.hbs', 'text!templates/play-ground.hbs', 'cookies-js', "jszip", "spu/datastructures/design-region", "filesaver", 'jquery', 'jquery.iframe-transport', 'jquery-file-upload', 'bootstrap', 'svg.export', 'block-ui', 'spectrum', 'underscore.string', 'utils/lazy-load', "jquery.scrollTo", "autosize", "getImageData"],
+    function (DesignImages, make2DColorArray, ObjectManager, makeControlGroup, config, buckets, SVG, Kinetic, dispatcher, Backbone, _, handlebars, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, galleryTemplate, playGroundTemplate, Cookies, JSZip, DesignRegion) {
         _.mixin(_.str.exports());
 
         handlebars.default.registerHelper("eq", function (target, source, options) {
@@ -272,7 +272,7 @@ define(['spu/collections/design-images', 'spu/colors', 'spu/views/object-manager
                         designRegion.aspect = aspect;
 
                         $(_.sprintf("<a href='#' class='list-group-item btn btn-warning' aspect='%s' design-region='%s'>%s</a>", aspect.name, designRegion.name, designRegion.name)
-                        ).data('design-region', designRegion).appendTo(designRegions);
+                        ).data('design-region', new DesignRegion(designRegion)).appendTo(designRegions);
                     }.bind(this));
                 }.bind(this));
                 if (_.all(ocspu.aspectList, function (aspect) {

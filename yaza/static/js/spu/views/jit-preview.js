@@ -1,5 +1,5 @@
-define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData", 'spectrum'],
-    function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools','utils/read-image-data',  'spu/config', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData", 'spectrum'],
+    function (bilinear, bicubic, colorTools, readImageData, config, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -26,16 +26,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
         var JitPreview = Backbone.View.extend({
                 _template: Handlebars.default.compile(jitPreviewTemplate),
                 _layerCache: {},
-
-                _getImageData: function (image) {
-                    var canvas = document.createElement("canvas");
-                    canvas.width = this._stage.width();
-                    canvas.height = this._stage.height();
-                    var ctx = canvas.getContext("2d");
-                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-                    return ctx.getImageData(0, 0, canvas.width,
-                        canvas.height).data;
-                },
 
                 initialize: function (options) {
                     this._spu = options.spu;
@@ -66,45 +56,32 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     }.bind(this)).on("design-region-selected", function (designRegion, tempSelected) {
                         //tempSelected为了解决选择不同aspect的不是第一个designRegion时 会跳转至第一个designRegion的bug
                         this._currentDesignRegion = designRegion;
-                        if (!designRegion.previewEdges) {
-                            $.getJSON(designRegion.edgeUrl, function (edges) {
-                                designRegion.previewEdges = this._getPreviewEdges(edges, {
-                                    x: this._stage.width() / designRegion.aspect.size[0],
-                                    y: this._stage.height() / designRegion.aspect.size[1]
-                                });
-                                if (!designRegion.bounds) {
-                                    designRegion.bounds = this._getBounds(designRegion.previewEdges);
-                                }
-
-                                if (!tempSelected) {
-                                    var layer = this._layerCache[designRegion.id];
-                                    if (!layer) {
-                                        layer = new Kinetic.Layer({
-                                            name: designRegion.name
-                                        });
-                                        this._layerCache[designRegion.id] = layer;
+                        this.trigger('jitPreview-mask');
+                        var jitPreview = this;
+                        designRegion.getPreviewEdges({
+                            x: jitPreview._stage.width() / designRegion.aspect.size[0],
+                            y: jitPreview._stage.height() / designRegion.aspect.size[1]
+                        }).done(function () {
+                            designRegion.getBlackShadow(jitPreview._stage.width(), 
+                                jitPreview._stage.height()).done(function () {
+                                designRegion.getWhiteShadow(jitPreview._stage.width(), jitPreview._stage.height()).done(function () {
+                                    jitPreview.trigger('jitPreview-unmask');
+                                    if (!tempSelected) {
+                                        var layer = jitPreview._layerCache[designRegion.id];
+                                        if (!layer) {
+                                            layer = new Kinetic.Layer({
+                                                name: designRegion.name
+                                            });
+                                            jitPreview._layerCache[designRegion.id] = layer;
+                                        }
+                                        //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
+                                        jitPreview._stage.add(layer);
+                                        jitPreview._currentLayer = layer;
+                                        jitPreview._designRegionAnimate(designRegion.previewEdges);
                                     }
-                                    //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
-                                    this._stage.add(layer);
-                                    this._currentLayer = layer;
-                                    this._designRegionAnimate(designRegion.previewEdges);
-                                }
-                            }.bind(this));
-                        } else {
-                            if (!tempSelected) {
-                                var layer = this._layerCache[designRegion.id];
-                                if (!layer) {
-                                    layer = new Kinetic.Layer({
-                                        name: designRegion.name
-                                    });
-                                    this._layerCache[designRegion.id] = layer;
-                                    // 没有缓存， 产生预览
-                                }
-                                this._stage.add(layer);
-                                this._currentLayer = layer;
-                                this._designRegionAnimate(designRegion.previewEdges);
-                            }
-                        }
+                                });
+                            });
+                        });
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
@@ -170,8 +147,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                     var srcWidth = playGroundLayer.width();
                     var srcHeight = playGroundLayer.height();
-                    var blackShadowImageData = this._currentAspect.blackShadowImageData;
-                    var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
+                    var blackShadowImageData = this._currentDesignRegion.blackShadowImageData;
+                    var whiteShadowImageData = this._currentDesignRegion.whiteShadowImageData;
                     var controlPointsMap = this._currentDesignRegion.controlPointsMap;
                     var pointsMatrix = [
                         [
@@ -572,81 +549,12 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 node.size(jitPreview._stage.size());
                             }
                         });
-                        // 只有当纹理图片都加载完毕才能开始产生预览
-
-                        var d = function () {
-                            var ret = $.Deferred();
-                            var l = [];
-                            ret.progress(function (arg) {
-                                l.push(arg);
-                                if (l.length == 2) {
-                                    dispatcher.trigger('jitPreview-unmask');
-                                    // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
-                                    if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                        $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                    } else {
-                                        $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                    }
-                                }
-                            });
-                            return ret;
-                        }();
-                        if (!aspect.blackShadowImageData) {
-                            if ($.support.cors || aspect.blackShadowUrl.indexOf("http") !== 0) {
-                                var blackImageObj = new Image();
-                                blackImageObj.crossOrigin = "Anonymous";
-                                blackImageObj.onload = function () {
-                                    aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
-                                    d.notify('black');
-                                };
-                                $.ajax({url: aspect.blackShadowUrl, crossDomain: true}).done(
-                                    function () {
-                                        blackImageObj.src = aspect.blackShadowUrl;
-                                    });
-                            } else {
-                                $.getImageData({url: aspect.blackShadowUrl,
-                                    crossDomain: true,
-                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
-                                    success: function (blackImageObj) {
-                                        aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
-                                        d.notify('black');
-                                    },
-                                    error: function (xhr, status) {
-                                        alert("load image error");
-                                    }
-                                })
-                            }
+                        dispatcher.trigger('jitPreview-unmask');
+                        // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                        if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                            $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                         } else {
-                            d.notify('black');
-                        }
-
-                        if (!aspect.whiteShadowImageData) {
-                            if ($.support.cors || aspect.whiteShadowUrl.indexOf("http") !== 0) {
-                                var whiteImageObj = new Image();
-                                whiteImageObj.crossOrigin = "Anonymous";
-                                whiteImageObj.onload = function () {
-                                    aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
-                                    d.notify('white');
-                                };
-                                $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
-                                    function () {
-                                        whiteImageObj.src = aspect.whiteShadowUrl;
-                                    });
-                            } else {
-                                $.getImageData({url: aspect.whiteShadowUrl,
-                                    crossDomain: true,
-                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
-                                    success: function (whiteImageObj) {
-                                        aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
-                                        d.notify('white');
-                                    },
-                                    error: function (xhr, status) {
-                                        alert("load image error");
-                                    }
-                                })
-                            }
-                        } else {
-                            d.notify('white');
+                            $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
                         }
                     });
                 },
@@ -685,43 +593,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         showInput: true,
                         showAlpha: true,
                     });
-                },
-
-                _getPreviewEdges: function (edges, ratio) {
-                    var ret = {};
-                    // 这里必须要去重，否则边界计算错误
-                    // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
-                    // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
-                    // 这样会给判断点是否在边界上带来麻烦
-                    var set = new buckets.Set();
-                    ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                        ret[position] = [];
-                        edges[position].forEach(function (point) {
-                            var p = [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
-                            if (!set.contains(p)) {
-                                set.add(p);
-                                ret[position].push(p);
-                            }
-                        });
-                    });
-                    return ret;
-                },
-
-                _getEdgeSet: function (edges) {
-                    var edgeSet = new buckets.Set();
-                    edges['left'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['right'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['top'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['bottom'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    return edgeSet;
                 },
 
                 _getCurrentRgb: function () {
@@ -772,8 +643,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 // 测试一个点是否在边界内
                 _within: function (x, y) {
                     var test = 0;
-                    var leftRight = this._currentDesignRegion.bounds.leftRight[y];
-                    var topBottom = this._currentDesignRegion.bounds.topBottom[x];
+                    var leftRight = this._currentDesignRegion.bounds().leftRight[y];
+                    var topBottom = this._currentDesignRegion.bounds().topBottom[x];
                     if (!(leftRight && topBottom)) {
                         return false;
                     }
