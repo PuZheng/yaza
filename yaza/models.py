@@ -82,8 +82,6 @@ class Aspect(db.Model):
     width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
     height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
     thumbnail_path = db.Column(db.String(256))
-    black_shadow_path = db.Column(db.String(256))
-    white_shadow_path = db.Column(db.String(256))
 
 
 class DesignRegion(db.Model):
@@ -101,6 +99,8 @@ class DesignRegion(db.Model):
     left_bottom = db.Column(db.String(16))
     edge_path = db.Column(db.String(256))
     control_point_file = db.Column(db.String(64))
+    black_shadow_path = db.Column(db.String(256))
+    white_shadow_path = db.Column(db.String(256))
 
 
 class SKU(db.Model):

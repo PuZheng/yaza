@@ -75,6 +75,13 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                 dataType: 'json',
                 url: 'http://up.qiniu.com',
                 add: function (e, data) {
+                    // 由于file-upload插件会替换掉原有的input控件，所以要
+                    // 重新找回此控件对应的field
+                    view.$inputs.forEach(function ($input_, index, array) {
+                        if ($input_.data('field-name') === $input.data('field-name')) {
+                            $input_.data('field', field);
+                        }
+                    }, this);
                     dispatcher.trigger('validate');
                     var fileReader = new FileReader();
                     fileReader.onload = (function (a) {
@@ -533,7 +540,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             this.$inputs.forEach(function ($input) {
                 switch ($input.data('field').type) {
                     case 'file':
-                        $input.parent().removeAttr('disabled');
+                        // 由于此时$input已经被file-upload插件替换掉了
+                        this.$form.find(':file[data-field-name="' + $input.data('field-name') + '"]').parent().removeClass('disabled');
                         break;
                     case 'rgb':
                         $input.spectrum();
@@ -541,7 +549,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     default:
                         $input.removeAttr('disabled');
                 } 
-            });
+            }, this);
             this.$nextLevelBtn.removeClass('disabled');
             this.$removeBtn.removeClass('disabled');
             this.$listGroup.children().each(function (idx, el) {
@@ -553,7 +561,8 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
             this.$inputs.forEach(function ($input) {
                 switch ($input.data('field').type) {
                     case 'file':
-                        $input.parent().attr('disabled', '');
+                        // 由于此时$input已经被file-upload插件替换掉了
+                        this.$form.find(':file[data-field-name="' + $input.data('field-name') + '"]').parent().addClass('disabled');
                         break;
                     case 'color':
                         $input.spectrum({
@@ -563,7 +572,7 @@ define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handle
                     default:
                         $input.attr('disabled', '');
                 } 
-            });
+            }, this);
             this.$nextLevelBtn.addClass('disabled');
             this.$removeBtn.addClass('disabled');
             this.$listGroup.children().each(function (idx, el) {

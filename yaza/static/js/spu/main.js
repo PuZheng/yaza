@@ -32,7 +32,7 @@ require.config({
         "filesaver":"components/FileSaver/FileSaver",
         // application
         dispatcher: 'js/dispatcher',
-        'lazy-load': 'js/utils/lazy-load',
+        'utils': 'js/utils',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
         'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
