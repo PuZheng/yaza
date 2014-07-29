@@ -82,12 +82,17 @@ class SPUWrapper(ModelWrapper):
 
                     # 注意， 标注的点， bottom的y大于top的y， 这是由于浏览器
                     # 的原点在左上角
-                    edges = detect_edges(im, {
-                        'lt': map(int, dr.left_bottom.split(',')),
-                        'rt': map(int, dr.right_bottom.split(',')),
-                        'rb': map(int, dr.right_top.split(',')),
-                        'lb': map(int, dr.left_top.split(',')),
-                    })
+                    if dr.left_bottom and dr.right_bottom and dr.right_top \
+                        and dr.left_top:
+                        edges = detect_edges(im, {
+                            'lt': map(int, dr.left_bottom.split(',')),
+                            'rt': map(int, dr.right_bottom.split(',')),
+                            'rb': map(int, dr.right_top.split(',')),
+                            'lb': map(int, dr.left_top.split(',')),
+                        })
+                    else:
+                        edges = detect_edges(im)
+                        
                     key = '.'.join(['design-region', str(dr.id),
                                     md5(json.dumps(edges)).hexdigest(),
                                     'edges'])

@@ -43,7 +43,7 @@ define(['dispatcher', 'spu/views/base-view',
                     this.on('object-created', function () {
                         this.$publishBtn.show();
                         // change the url without loading new page
-                        history.pushState({}, 'page', '/admin/spu/' + this.model.id + '?__back_url__' + decodeURIComponent($.url('?__back_url__')));
+                        history.pushState({}, 'page', '/admin/spu/' + this.model.id + '?__back_url__=' + decodeURIComponent($.url('?__back_url__')));
                     });
                     if (this.model.id == undefined) {
                         this.$publishBtn.hide();
