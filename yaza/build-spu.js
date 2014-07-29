@@ -23,7 +23,6 @@
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
-        'css': 'components/require-css/css.min',
         // application
         dispatcher: 'js/dispatcher',
         'spu': 'js/admin/spu'
@@ -37,10 +36,10 @@
     modules: [
         {
             name: 'js/admin/spu/main',
-            exclude: ['js/admin/spu/infrastructure'],
+            exclude: ['js/admin/spu/infrastructure']
         },
         {
-            name: 'js/admin/spu/infrastructure',
+            name: 'js/admin/spu/infrastructure'
         }
     ],
     shim: {

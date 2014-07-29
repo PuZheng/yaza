@@ -48,33 +48,33 @@
     modules: [
         {
             name: 'js/spu/main',
-            exclude: ['js/infrastructure'],
+            exclude: ['js/infrastructure']
         },
         {
-            name: 'js/infrastructure',
+            name: 'js/infrastructure'
         }
     ],
     shim: {
         'block-ui': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'underscore': {
-            exports: '_',
+            exports: '_'
         },
         'underscore.string': {
-            deps: ['underscore'],
+            deps: ['underscore']
         },
         'backbone': {
             deps: ['jquery', 'underscore'],
-            exports: 'Backbone',
+            exports: 'Backbone'
         },
         'bootstrap': {
             deps: ['jquery'],
-            exports: '$.fn.tooltip',
+            exports: '$.fn.tooltip'
         },
         'lazy-load': {
             deps: ['jquery'],
-            exports: '$.fn.lazyLoad',
+            exports: '$.fn.lazyLoad'
         },
         'color-tools': {
             deps: ['underscore', 'jquery']
@@ -84,31 +84,31 @@
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
-            exports: '$.fn.spectrum',
+            exports: '$.fn.spectrum'
         },
         'svg': {
-            exports: 'SVG',
+            exports: 'SVG'
         },
         'svg.export': {
-            deps: ['svg'],
+            deps: ['svg']
         },
         'select2': {
             deps: ['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
         },
         'buckets': {
-            exports: 'buckets',
+            exports: 'buckets'
         },
         'zlib': {
-            exports: 'Zlib',
+            exports: 'Zlib'
         },
         'jquery.scrollTo': {
             deps: ['jquery']
         },
         'jquery.iframe-transport': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'jquery.ui.widget': {
-            deps: ['jquery'],
+            deps: ['jquery']
         }
-    },
+    }
 })
