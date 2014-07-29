@@ -1,10 +1,5 @@
 ({
     baseUrl: 'static',
-    map: {
-        '*': {
-            'css': 'components/require-css/css.min'
-        }
-    },
     paths: {
         jquery: 'empty:',
         underscore: 'empty:',
@@ -32,6 +27,7 @@
         "getImageData": "components/getImageData/jquery.getimagedata.min",
         "jszip": "empty:",
         "filesaver":"components/FileSaver/FileSaver",
+        'css': 'components/require-css/css.min',
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
