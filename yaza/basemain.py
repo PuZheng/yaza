@@ -11,6 +11,9 @@ from plumbum import CommandNotFound
 import speaklater
 from sqlalchemy.exc import SQLAlchemyError
 
+import sys
+sys.path.append('/usr/lib/python2.7/dist-packages/fontforge.so')
+
 
 class MyFlask(Flask):
 
@@ -207,5 +210,5 @@ def locate_all_fonts():
     print app.config['FONTS_MAP']
 
 # 如果不是windows系统, 并且没有定义FONTS_MAP, 利用fc-list搜索系统的字体
-if not (sys.platform.startswith("win32") and app.config['FONTS_MAP']):
+if not app.config['FONTS_MAP']:
     locate_all_fonts()
