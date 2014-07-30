@@ -1,0 +1,59 @@
+%control-panel {
+    .logo img {
+        max-height: 64px;
+        margin: auto;
+        display: block;
+    }
+    .ocspu-selector {
+        border: 1px dashed gray;
+        margin-top: 10px;
+        min-height: 200px;
+        border-radius: 3px;
+
+        & .thumbnail {
+            height: 64px;
+            width: 64px;
+            img {
+                min-width: 100%;
+                min-height: 100%;
+            }
+            display: inline-block;
+        }
+    }
+    .aspect-selector {
+
+        margin-top: 5px;
+
+        & .thumbnail {
+            height: 80px;
+            width: 80px;
+            display: inline-block;
+
+            & img {
+                margin: auto;
+                max-height: 68px;
+                max-width: 68px;
+            }
+            & .layer {
+                position: absolute;
+            }
+        }
+    }
+    & .design-region-selector .list-group-item {
+        padding: 6px 9px;
+    }
+
+    & .add-object-btns button {
+        width: 100%; 
+    }
+
+    & .text-operators {
+        height: 120px;
+        margin-top: 15px;
+        border: 1px dashed gray;
+        padding: 10px;
+        & .row:last-child {
+            margin-top: 10px;
+        }
+    }
+}

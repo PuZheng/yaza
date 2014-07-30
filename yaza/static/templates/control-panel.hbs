@@ -1,0 +1,59 @@
+<div class="logo">
+  <img src="/static/assets/logo-white.png" alt="logo" />
+</div>
+
+<div class="ocspu-selector">
+  {{#each spu.ocspuList }}
+  <div class="thumbnail">
+    <img src="{{this.cover}}" alt="{{this.name}}" title="{{this.color}}"/>
+  </div>
+  {{/each}}
+</div>
+<div class="aspect-selector text-center">
+</div>
+<div class="design-region-selector">
+  <div class="list-group">
+  </div>
+</div>
+
+
+<div class="add-object-btns">
+  <div class="row">
+    <div class="col-sm-6">
+      <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+        <i class="fa fa-file-image-o"></i>
+        增加图片
+      </button>
+    </div>
+    <div class="col-sm-6">
+      <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
+        <i class="fa fa-pencil-square"></i>
+        增加文字
+      </button>
+    </div> 
+  </div>
+</div>
+
+<div class='row'>
+  <div class="text-operators" style="display: none">
+    <div class="row">
+      <div class="col-sm-6">
+        <button class="btn btn-primary btn-sm btn-change-text">
+          修改文字
+        </button>
+      </div>
+      <div class="col-sm-6">
+        <input type="" class="text-color bg-primary"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-6">
+        <select class="font-size bg-primary"></select>
+      </div>
+      <div class="col-sm-6">
+        <select class="font-family bg-primary"></select>
+      </div>
+    </div>
+  </div>
+</div>

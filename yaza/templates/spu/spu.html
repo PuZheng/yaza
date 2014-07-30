@@ -20,12 +20,16 @@
 <div class="container-fluid">
   <div class="primary">
     {% if spu.published %}
-      <div class="jit-preview">
-        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}> </div>
-      </div>
+      <div class="row">
+        <div class="col-md-8">
+          <div class="play-ground">
+            <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+            </div>
+          </div>
+        </div>
 
-      <div class="play-ground">
-        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+        <div class="col-md-4">
+          <div class="control-panel"></div>
         </div>
       </div>
 

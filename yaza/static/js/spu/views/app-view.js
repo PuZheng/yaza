@@ -1,4 +1,4 @@
-define(['backbone', 'spu/views/play-ground', 'spu/views/jit-preview', 'bootstrap'], function (Backbone, PlayGround, JitPreview) {
+define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'bootstrap'], function (Backbone, PlayGround, ControlPanel) {
     var AppView = Backbone.View.extend({
         el: '.primary',
 
@@ -11,7 +11,9 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/jit-preview', 'bootstrap
                 spu: spu, 
                 tagList: tagList,
             }).render();
-            this._jitPreview = new JitPreview({el: this.$('.jit-preview'), spu: spu, orderId: orderId}).render();
+            this._controlPanel = new ControlPanel({
+                el: this.$('.control-panel'), 
+                spu: spu}).render();
         }
     });
     return AppView;
