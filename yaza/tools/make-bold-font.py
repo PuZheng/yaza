@@ -3,6 +3,8 @@
 """
 read unicode list from stdin and generate a bold version font
 
+http://www.fontforge.org/python.html#Font
+
 SYNOPSIS:
     Usage: make-bold-font.py [OPTIONS]
 
