@@ -1,4 +1,4 @@
-define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, readImageData) {
+define(['jquery', 'buckets', 'utils/read-image-data', 'kineticjs'], function ($, bucket, readImageData, Kinetic) {
         
     function DesignRegion(data) {
         this.id = data.id;
@@ -9,6 +9,9 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
         this.blackShadowUrl = data.blackShadowUrl;
         this.whiteShadowUrl = data.whiteShadowUrl;
         this.aspect = data.aspect;
+        this.previewLayer = new Kinetic.Layer();  // 预览层
+        this.controlLayer = new Kinetic.Layer();  // 操作层
+        this.imageLayer = new Kinetic.Layer();  // 图像层， 即平铺的图像
         return this;
     }
 
@@ -16,7 +19,7 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
     DesignRegion.prototype.getPreviewEdges = function (proportion) {
         var d = $.Deferred();
         if (this.previewEdges) {
-            d.resove(this.previewEdges); 
+            d.resolve(this.previewEdges); 
         } else {
             $.getJSON(this.edgeUrl, function (edges) {
                 var previewEdges = this.previewEdges = {};
@@ -39,6 +42,27 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
             }.bind(this));
         }
         return d; 
+    }
+
+    DesignRegion.prototype.previewTop = function () {
+    }
+
+    DesignRegion.prototype.previewBottom = function () {
+    }
+
+    DesignRegion.prototype.previewLeft = function () {
+    }
+
+    DesignRegion.prototype.previewRight = function () {
+    }
+
+
+    DesignRegion.prototype.previewWidth = function () {
+        return this.previewRight() - this.previewLeft(); 
+    }
+
+    DesignRegion.prototype.previewHeight = function () {
+        return this.previewTop() - this.previewBottom();
     }
 
     DesignRegion.prototype.bounds = function () {
@@ -95,7 +119,7 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
     DesignRegion.prototype.getBlackShadow = function (width, height) {
         var d = $.Deferred();
         if (this.blackShadowImageData) {
-            d.resove(this.blackShadowImageData);  
+            d.resolve(this.blackShadowImageData);  
             return d;
         }
 
@@ -129,7 +153,7 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
     DesignRegion.prototype.getWhiteShadow = function (width, height) {
         var d = $.Deferred();
         if (this.whiteShadowImageData) {
-            d.resove(this.whiteShadowImageData);  
+            d.resolve(this.whiteShadowImageData);  
             return d;
         }
 
@@ -158,6 +182,10 @@ define(['jquery', 'buckets', 'utils/read-image-data'], function ($, bucket, read
         }
 
         return d;
+    }
+
+    DesignRegion.prototype.clearLayers = function () {
+        this.previewLayer.remove();
     }
 
     return DesignRegion;

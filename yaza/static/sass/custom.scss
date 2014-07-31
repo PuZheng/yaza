@@ -8,6 +8,7 @@
         width: 1080px;
     }
     background-image: url('/static/assets/congruent_outline.png');
+    padding-top: 10px;
 }
 
 body {
@@ -22,11 +23,6 @@ body {
 
 .thumbnail.selected {
     border: 2px solid #0088CC;
-}
-
-.mask {
-    width: 100%;
-    height: 100%;
 }
 
 .control-panel {

@@ -380,7 +380,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                 events: {
                     'click .btn-preview-background': function (e) {
-                        debugger;
                         e.preventDefault();
                         return false;  
                     },
