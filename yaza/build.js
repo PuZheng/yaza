@@ -15,6 +15,7 @@
         'spectrum': 'empty:',
         'zClip': 'empty:',
         "jquery.scrollTo": 'empty:',
+        'js-url': 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -105,6 +106,10 @@
         },
         'jquery.ui.widget': {
             deps: ['jquery']
+        },
+        'js-url': {
+            deps: ['jquery'],
+            exports: '$.fn.url'
         }
     }
 })

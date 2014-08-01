@@ -45,15 +45,59 @@ define(['jquery', 'buckets', 'utils/read-image-data', 'kineticjs'], function ($,
     }
 
     DesignRegion.prototype.previewTop = function () {
+        if (!this._previewTop) {
+            this._previewTop = 0;
+            ['top', 'left', 'right'].forEach(function (position) {
+                this.previewEdges[position].forEach(function (point) {
+                    if (point[1] > this._previewTop) {
+                        this._previewTop = point[1];
+                    }
+                }, this);
+            }, this);
+        }
+        return this._previewTop;
     }
 
     DesignRegion.prototype.previewBottom = function () {
+        if (!this._previewBottom) {
+            this._previewBottom = Number.MAX_VALUE;
+            ['bottom', 'left', 'right'].forEach(function (position) {
+                this.previewEdges[position].forEach(function (point) {
+                    if (point[1] < this._previewBottom) {
+                        this._previewBottom = point[1];
+                    }
+                }, this);
+            }, this);
+        }
+        return this._previewBottom;
     }
 
     DesignRegion.prototype.previewLeft = function () {
+        if (!this._previewLeft) {
+            this._previewLeft = Number.MAX_VALUE;
+            ['top', 'bottom', 'left'].forEach(function (position) {
+                this.previewEdges[position].forEach(function (point) {
+                    if (point[0] < this._previewLeft) {
+                        this._previewLeft = point[0];
+                    }
+                }, this);
+            }, this);
+        }
+        return this._previewLeft;
     }
 
     DesignRegion.prototype.previewRight = function () {
+        if (!this._previewRight) {
+            this._previewRight = 0;
+            ['top', 'left', 'right'].forEach(function (position) {
+                this.previewEdges[position].forEach(function (point) {
+                    if (point[0] > this._previewRight) {
+                        this._previewRight = point[0];
+                    }
+                }, this);
+            }, this);
+        }
+        return this._previewRight;
     }
 
 

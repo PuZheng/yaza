@@ -17,15 +17,19 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatc
             .on('design-region-selected', function (designRegion) {
                 this._playGround.trigger('design-region-selected', designRegion);
             }.bind(this));
+            .on('design-image-selected', function (arg) {
+                this._playGround.trigger('design-image-selected', arg); 
+            }.bind(this));
 
             this._playGround = new PlayGround({
                 el: this.$('.play-ground'), 
                 spu: spu, 
-                tagList: tagList,
             }).render();
             this._controlPanel = new ControlPanel({
                 el: this.$('.control-panel'), 
-                spu: spu}).render();
+                spu: spu,
+                tagList: tagList,
+            }).render();
         }
     });
     return AppView;

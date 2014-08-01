@@ -1,4 +1,6 @@
-define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config', 'kineticjs', 'dispatcher', 'color-tools', 'jquery.scrollTo'], function (Backbone, handlebars, playGroundTemplate, config, Kinetic, dispatcher, colorTools) {
+define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config', 'kineticjs', 'dispatcher', 'color-tools', 'jquery.scrollTo', 'js-url'], function ($, Backbone, handlebars, playGroundTemplate, config, Kinetic, dispatcher, colorTools) {
+
+    var __debug__ = ($.url('?debug') == '1');
 
     var PlayGround = Backbone.View.extend({
         _template: handlebars.default.compile(playGroundTemplate),
@@ -16,6 +18,7 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
             this._stage = new Kinetic.Stage({
                 container: this.$container[0]
             });
+
             this._backgroundLayer = new Kinetic.Layer();
             this._stage.add(this._backgroundLayer);
 
@@ -23,6 +26,38 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
                 name: "design-region-animation-layer"
             });
             this._stage.add(this._designRegionAnimationLayer);
+
+            this._controlLayer = new Kinetic.Layer();
+            if (__debug__) {
+                this._controlLayer.add(new Kinetic.Rect({
+                    strokeWidth: '1px',
+                    stroke: 'blue',
+                    name: 'frame',
+                }));
+            }
+            this._stage.add(this._controlLayer);
+
+            this._crossLayer = new Kinetic.Layer();
+            var verticalLine = new Kinetic.Line({
+                points: [],
+                stroke: 'pink',
+                strokeWidth: 1,
+                lineCap: 'round',
+                lineJoin: 'round',
+                name: "vertical"
+            });
+            var horizontalLine = new Kinetic.Line({
+                points: [],
+                stroke: 'pink',
+                strokeWidth: 1,
+                lineCap: 'round',
+                lineJoin: 'round',
+                name: "horizontal"
+            });
+            this._crossLayer.add(verticalLine);
+            this._crossLayer.add(horizontalLine);
+            this._crossLayer.hide();
+            this._stage.add(this._crossLayer);
 
             return this;
         },
@@ -48,9 +83,20 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
                         .done(function () {
                             this.$mask.hide();
                             this._designRegionAnimate(designRegion.previewEdges);
-                            // TODO setup control layer
-                            // TODO setup cross
+                            this._controlLayer.size(designRegion.imageLayer.size()).offset(designRegion.imageLayer.offset());
+                            this._controlLayer.find('.frame')[0].size(this._controlLayer.size());
+                            this._crossLayer.find('.vertical').points([
+                                -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
+                                0, 
+                                -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
+                                this._stage.height()]);
+                            this._crossLayer.find('.horizontal').points([
+                                0, 
+                                -this._controlLayer.offsetY() + this._controlLayer.height() / 2,
+                                this._stage.width(),
+                                -this._controlLayer.offsetY() + this._controlLayer.height() / 2]);
                             // TODO setup object manager
+                            this._stage.draw();
                         }.bind(this));
                     }.bind(this));
                 }.bind(this));
@@ -76,7 +122,7 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
                 var $touchScreenEl = this.$('.touch-screen');
                 if (asPortait) {
                     $touchScreenEl.scrollTo({
-                        left: (this.$container.width() - imageWidth()) / 2, 
+                        left: (this.$container.width() - imageWidth) / 2, 
                         top: config.PLAYGROUND_MARGIN,
                     });
                 } else {
@@ -136,22 +182,27 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
                             // design region平铺的比例一致
                             // 当然这也隐含着一个假设， 就是design region
                             // 只能做刚体形变， 否则图片的控制框，可能包不住
-                            // 预览图片
+                            // 预览图片.
+                            // 这个框的算法是（以portrait为例）， 上边和design
+                            // region的上沿对齐， 下边和design region的下沿对齐，
+                            // 左边和右边到design region的左沿和右沿距离相等
                             if (dr.previewHeight() / dr.previewWidth() > dr.size[1] / dr.size[0]) {
                                 dr.imageLayer.size({
                                     width: dr.size[0] * dr.previewHeight() / dr.size[1],
                                     height: dr.previewHeight(),
-                                }).offset({
-                                    x: backgroundLayer.offsetX() - dr.previewLeft() + dr.previewWidth() / 2,
+                                });
+                                dr.offset({
+                                    x: backgroundLayer.offsetX() - dr.previewLeft() + (dr.imageLayer.width() - dr.previewWidth()) / 2,
                                     y: backgroundLayer.offsetY() - dr.previewBottom(),
                                 });
                             } else {
                                 dr.imageLayer.size({
                                     width: dr.previewWidth(),
                                     height: dr.size[1] * dr.previewWidth() / dr.size[0],
-                                }).offset({
+                                });
+                                dr.imageLayer.offset({
                                     x: backgroundLayer.offsetX() - dr.previewLeft(),
-                                    y: backgroundLayer.offsetY() - dr.previewBottom() + dr.previewHeight() / 2,
+                                    y: backgroundLayer.offsetY() - dr.previewBottom() + (dr.imageLayer.height() - dr.previewHeight()) / 2,
                                 });
                             }
                             stage.add(dr.imageLayer);
@@ -223,6 +274,7 @@ define(['backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config'
                 }
             };
         },
+
     });
 
     return PlayGround;

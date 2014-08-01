@@ -15,6 +15,7 @@ require.config({
         'block-ui': ['http://cdn.bootcss.com/jquery.blockUI/2.66.0-2013.10.09/jquery.blockUI', 'components/blockui/jquery.blockUI'],
         'spectrum': ['http://cdn.bootcss.com/spectrum/1.3.0/js/spectrum.min', 'components/spectrum/spectrum'],
         'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
+        'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
         "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export',
@@ -103,7 +104,11 @@ require.config({
         },
         'getImageData' :{
             deps: ['jquery']
-        }
+        },
+        'js-url': {
+            deps: ['jquery'],
+            exports: '$.fn.url'
+        },
     }
 });
 
