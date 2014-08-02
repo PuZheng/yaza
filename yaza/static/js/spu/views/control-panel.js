@@ -1,4 +1,10 @@
-define(['backbone', 'underscore', 'handlebars', 'text!templates/control-panel.hbs', 'spu/datastructures/design-region', 'dispatcher', 'spu/views/select-image-modal', 'underscore.string'], function (Backbone, _, handlebars, controlPanelTemplate, DesignRegion, dispatcher, SelectImageModal) {
+define(['backbone', 'underscore', 'handlebars', 
+'text!templates/control-panel.hbs', 'spu/datastructures/design-region', 
+'dispatcher', 'spu/views/select-image-modal', 'spu/views/object-manager',  
+'spu/views/add-text-modal',
+'underscore.string', 'bootstrap'], 
+function (Backbone, _, handlebars, controlPanelTemplate, DesignRegion, 
+dispatcher, SelectImageModal, ObjectManager, AddTextModal) {
 
     _.mixin(_.str.exports());
     
@@ -19,6 +25,10 @@ define(['backbone', 'underscore', 'handlebars', 'text!templates/control-panel.hb
             }.bind(this));
             this.$('.ocspu-selector .thumbnail:first-child').click();
             this._selectImageModal = new SelectImageModal({el: this.$('.add-img-modal')}).render();
+            this._addTextModal = new AddTextModal({el: this.$('.add-text-modal')}).render();
+            this._objectManager = new ObjectManager({
+                el: this.$('.object-manager')
+            }).render();
             return this;
         },
 
@@ -86,7 +96,28 @@ define(['backbone', 'underscore', 'handlebars', 'text!templates/control-panel.hb
                         aspect.name);
                     this.$(selector).click();
                 }
-            }); 
+            })
+            .on('design-region-setup', function (designRegion) {
+                this._objectManager.empty();
+                designRegion.imageLayer.getChildren(function (node) {
+                    return node.getClassName() == "Image";
+                }).sort(function (a, b) {
+                    return a.getZIndex() - b.getZIndex();
+                }).forEach(function (node) {
+                    this._objectManager.add(node, node.getAttr("control-group"));
+                }.bind(this));
+            }, this)
+            .on('active-object', function (controlGroup) {
+                this._objectManager.activeObjectIndicator(controlGroup);
+                // TODO resetDashBoard
+            })
+            .on('object-added', function (image, group, oldIm, oldControlGroup) {
+                if (!!oldIm && !!oldControlGroup) {
+                    this._objectManager.replace(image, group, oldIm, oldControlGroup);
+                } else {
+                    this._objectManager.add(image, group);
+                }
+            });
         },
 
         _initSelectImageModal: function () {

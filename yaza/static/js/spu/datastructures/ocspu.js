@@ -10,6 +10,7 @@ define(['spu/datastructures/aspect'], function (Aspect) {
         this.color = data.color;
         this.rgb = data.rgb;
         this.complementaryColor = data.complementaryColor;
+        this.hoveredComplementaryColor = data.hoveredComplementaryColor;
         this.marginColor = data.marginColor;
         this.paddingColor = data.paddingColor;
         return this; 

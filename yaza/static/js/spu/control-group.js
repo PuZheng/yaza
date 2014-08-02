@@ -5,28 +5,22 @@ define(["spu/config"], function (config) {
         return "x: " + group.x() + '; y: ' + group.y() + '; rotation: ' + group.rotation() + "; width: " + rect.width() + "; height: " + rect.height();
     }
 
-    function makeControlGroup(node, title, resizable) {
+    function makeControlGroup(node, title, resizable, backgroundColor, hoveredComplementaryColor) {
         resizable = !!resizable;
         var group = new Kinetic.Group({
-            x: node.x() - node.offsetX() + node.width() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
-            y: node.y() - node.offsetY() + node.height() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+            x: node.x() + node.width() / 2 - node.offsetX(),
+            y: node.y() + node.height() / 2 - node.offsetY(),
             draggable: true,
             name: title,
         });
         // 当进入图像, 临时展示control group
-        node.on('mouseenter', function () {
-            if (group.getAttr('trasient') && !group.visible()) {
-                group.show();
-                group.getLayer().draw();
-            }
-        });
         group.on('dragstart', function () {
             this.moveToTop();
         });
         group.on('dragend', function () {
             node.position({
-                x: group.x() - config.PLAYGROUND_MARGIN - config.PLAYGROUND_PADDING,
-                y: group.y() - config.PLAYGROUND_MARGIN - config.PLAYGROUND_PADDING
+                x: group.x(),
+                y: group.y(),
             });
         });
         var rect = new Kinetic.Rect({
@@ -39,6 +33,12 @@ define(["spu/config"], function (config) {
             dash: [5, 5],
             name: 'rect'
         });
+        rect.on('mouseenter', function () {
+            if (group.getAttr('trasient') && rect.stroke() == backgroundColor) {
+                rect.stroke(hoveredComplementaryColor);
+                group.getLayer().draw();
+            }
+        });
         rect.on("mouseover", function () {
             document.body.style.cursor = 'move';
             this.getLayer().draw();
@@ -46,7 +46,7 @@ define(["spu/config"], function (config) {
             document.body.style.cursor = 'default';
             // 如果是临时控制组, 离开rect要隐藏
             if (group.getAttr('trasient')) {
-                group.hide();
+                group.find('.rect')[0].stroke(backgroundColor);
             }
             this.getLayer().draw();
         });
@@ -77,6 +77,7 @@ define(["spu/config"], function (config) {
                 } else {
                     var angle = Math.PI / 2 - group.rotation() / 180 * Math.PI - Math.atan(node.height() / node.width());
                     var offsetX = pos.x - group.x();
+                    console.log({x: pos.x, y: group.y() + offsetX / Math.tan(angle)});
                     return {x: pos.x, y: group.y() + offsetX / Math.tan(angle)};
                 }
             });
@@ -236,7 +237,19 @@ define(["spu/config"], function (config) {
             name: name,
             draggable: true,
             dragOnTop: false,
-            dragBoundFunc: dragBoundFunc
+            dragBoundFunc: function (pos) {
+                // pos本来是基于整个stage的坐标系， 首先要转成在control layer
+                // 坐标系下， 然后再转回来
+                var layer = group.getLayer();
+                var ret = dragBoundFunc({
+                    x: pos.x + layer.offsetX(),
+                    y: pos.y + layer.offsetY(),
+                });
+                return {
+                    x: ret.x - layer.offsetX(),
+                    y: ret.y - layer.offsetY(),
+                };
+            }
         });
         anchor.on('mouseover', function () {
             var layer = this.getLayer();
@@ -309,7 +322,19 @@ define(["spu/config"], function (config) {
             radius: 7,
             draggable: true,
             dragOnTop: false,
-            dragBoundFunc: dragBoundFunc,
+            dragBoundFunc: function (pos) {
+                // pos本来是基于整个stage的坐标系， 首先要转成在control layer
+                // 坐标系下， 然后再转回来
+                var layer = group.getLayer();
+                var ret = dragBoundFunc({
+                    x: pos.x + layer.offsetX(),
+                    y: pos.y + layer.offsetY(),
+                });
+                return {
+                    x: ret.x - layer.offsetX(),
+                    y: ret.y - layer.offsetY(),
+                };
+            },
             offset: {
                 x: 4,
                 y: 4,

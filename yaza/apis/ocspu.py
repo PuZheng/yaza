@@ -46,7 +46,7 @@ class OCSPUWrapper(ModelWrapper):
         return contrast_color(self.rgb)
 
     @property
-    def hovered_complement_color(self):
+    def hovered_complementary_color(self):
         return darker_color(self.complementary_color, 50)
 
     @property
@@ -73,7 +73,7 @@ class OCSPUWrapper(ModelWrapper):
             "paddingColor" if camel_case else "padding_color": self.padding_color,
             "marginColor" if camel_case else "margin_color": self.margin_color,
             "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
-            "hoveredComplementColor" if camel_case else "hovered_complement_color": self.hovered_complement_color,
+            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color": self.hovered_complementary_color,
             'rgb': self.rgb,
         }
 

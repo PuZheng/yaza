@@ -23,4 +23,8 @@
             color:yellow;
         }
     }
+
+    & .change-text-panel {
+        z-index: 1000;
+    }
 }

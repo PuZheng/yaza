@@ -1,7 +1,9 @@
 @import 'play-ground';
 @import 'control-panel';
 @import 'utils';
+@import 'variable';
 @import "../js/vendor/bootswatch-scss/flatly/variables";
+@import "../components/bootstrap-sass-official/assets/stylesheets/bootstrap/mixins";
 
 .container-fluid {
     @include respond-to(wide-screens) {
@@ -19,6 +21,7 @@ body {
     @include respond-to(wide-screens) {
         height: 816px;
     }
+
 }
 
 .thumbnail.selected {

@@ -235,10 +235,15 @@ DesignImages, Cookies) {
                     var thumbnails = view.$(".builtin-pics .thumbnails");
                     this.each(function (element, index, list) {
                         var s = '<li><div class="thumbnail" style="background-color:%s">' +
-                            '<img src="%s" alt="%s" data-title="%s" data-pic-url="%s"></img>' +
+                            '<img src="%s" alt="%s" data-title="%s" data-pic-url="%s" data-design-image-id="%s"></img>' +
                             '</div></li>';
-                        var e = $(_.sprintf(s, element.get("backgroundColor"), element.get('thumbnail'),
-                        element.get('title'), element.get('title'), element.get('picUrl')));
+                        var e = $(_.sprintf(s, 
+                        element.get("backgroundColor"), 
+                        element.get('thumbnail'),
+                        element.get('title'), 
+                        element.get('title'), 
+                        element.get('picUrl'),
+                        element.get('id')));
                         thumbnails.append(e);
                         $(e).find('img').lazyLoad();
                     });

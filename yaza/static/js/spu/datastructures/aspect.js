@@ -1,4 +1,4 @@
-define(['jquery', 'spu/datastructures/design-region', 'getImageData'], function ($, DesignRegion) {
+define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], function ($, DesignRegion, loadImage) {
     function Aspect(data) {
         this.id = data.id;
         this.picUrl = data.picUrl;
@@ -15,20 +15,9 @@ define(['jquery', 'spu/datastructures/design-region', 'getImageData'], function 
     Aspect.prototype.getImage = function () {
         console.log('get aspect image: ' + this.picUrl);
         var d = $.Deferred();
-        var crossDomain = this.picUrl.indexOf("http") == 0;
-        if ($.support.cors || !crossDomain) {
-            $.ajax({url: this.picUrl, crossDomain: true}).done(function () {
-                d.resolve(this);
-            }.bind(this));
-        } else {
-            $.getImageData({
-                url: this.picUrl,
-                crossDomain: true,
-                success: function (image) {
-                    d.resolve(this);
-                }.bind(this),
-            });
-        }
+        loadImage(this.picUrl).done(function (image) {
+            d.resolve(this); 
+        }.bind(this));
         return d;
     }
 

@@ -1,4 +1,9 @@
-define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 'spu/config', 'kineticjs', 'dispatcher', 'color-tools', 'jquery.scrollTo', 'js-url'], function ($, Backbone, handlebars, playGroundTemplate, config, Kinetic, dispatcher, colorTools) {
+define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 
+'spu/config', 'spu/control-group', 'kineticjs', 'dispatcher', 'color-tools', 
+'utils/load-image', 
+'jquery.scrollTo', 'js-url', 'block-ui'], 
+function ($, Backbone, handlebars, playGroundTemplate, config, makeControlGroup, 
+Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
 
     var __debug__ = ($.url('?debug') == '1');
 
@@ -11,6 +16,7 @@ define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 's
 
         render: function () {
             this.$el.html(this._template());
+
             this._setupEventsHandler();
             this.$mask = this.$(".mask");
             this.$mask.css("line-height", this.$(".hotspot").height() + "px");
@@ -69,8 +75,8 @@ define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 's
                     this.$mask.hide();
                     this._setupAspectImage(aspect); 
                 }.bind(this)); 
-            });
-            this.on('design-region-selected', function (designRegion) {
+            })
+            .on('design-region-selected', function (designRegion) {
                 this.$mask.show();
                 this._currentDesignRegion = designRegion; 
                 designRegion.getPreviewEdges({
@@ -84,7 +90,7 @@ define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 's
                             this.$mask.hide();
                             this._designRegionAnimate(designRegion.previewEdges);
                             this._controlLayer.size(designRegion.imageLayer.size()).offset(designRegion.imageLayer.offset());
-                            this._controlLayer.find('.frame')[0].size(this._controlLayer.size());
+                            this._controlLayer.find('.frame').size(this._controlLayer.size());
                             this._crossLayer.find('.vertical').points([
                                 -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
                                 0, 
@@ -95,12 +101,43 @@ define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 's
                                 -this._controlLayer.offsetY() + this._controlLayer.height() / 2,
                                 this._stage.width(),
                                 -this._controlLayer.offsetY() + this._controlLayer.height() / 2]);
-                            // TODO setup object manager
+
+                            dispatcher.trigger('design-region-setup', designRegion);
                             this._stage.draw();
                         }.bind(this));
                     }.bind(this));
                 }.bind(this));
             })
+            .on('design-image-selected', function (arg) {
+                console.log(arg);
+                this._addDesignImage(arg.url, arg.title, arg.designImageId); 
+            })
+            .on('active-object', function (controlGroup) {
+                var complementaryColor = this._currentAspect.ocspu.complementaryColor;
+                var backgroundColor = this._currentAspect.ocspu.rgb;
+                this._controlLayer.getChildren().forEach(function (group) {
+                    if (group.nodeType == 'Group') {
+                        //group.hide();
+                        group.find('.rect')[0].stroke(backgroundColor);
+                        group.setAttr('trasient', true);
+                    }
+                });
+
+                controlGroup.moveToTop();
+                controlGroup.setAttr('trasient', false);
+                controlGroup.find('.rect')[0].stroke(complementaryColor);
+                this._controlLayer.draw();
+            }, this)
+            .on('mask', function (text) {
+                this.$mask.show();
+                this.$mask.find('p').text(text);
+            })
+            .on('unmask', function (text) {
+                this.$mask.hide(); 
+            })
+            .on('add-text', function (data, text) {
+                this._addText(data, text);
+            });
         },
 
         _setupAspectImage: function (aspect) {
@@ -274,7 +311,215 @@ define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 's
                 }
             };
         },
+        
+        _addDesignImage: function (src, title, designImageId) {
+            if (!title) { // 用户自己上传的图片没有title
+                title = new Date().getTime();
+            }
 
+            loadImage(src).done(function (imageObj) {
+                // 将图片按比例缩小，并且放在正中
+                var imageLayer = this._currentDesignRegion.imageLayer;
+                if (imageObj.height / imageObj.width > imageLayer.height() / imageLayer.width()) {
+                    // portrait
+                    var height = imageLayer.height(); 
+                    var width = imageObj.width * height / imageObj.height;
+                } else {
+                    var width = imageLayer.width();
+                    var height = imageObj.height * width / imageObj.width;
+                }
+                var image = new Kinetic.Image({
+                    x: imageLayer.width() / 2,
+                    y: imageLayer.height() / 2,
+                    image: imageObj,
+                    width: width,
+                    "design-image-id": designImageId,
+                    height: height,
+                    name: title,
+                    offset: {
+                        x: width / 2,
+                        y: height / 2
+                    }
+                });
+                imageLayer.add(image);
+                imageLayer.draw();
+
+                var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
+                var backgroundColor = this._currentAspect.ocspu.rgb;
+                var group = makeControlGroup(image, title, true, backgroundColor, 
+                hoveredComplementaryColor).on('dragend',
+                    function (view) {
+                        return function () {
+                            view._crossLayer.hide();
+                            view._crossLayer.moveToBottom();
+                            view._stage.draw();
+                            if (__debug__) {
+                                imageLayer.moveToTop();
+                                setTimeout(function () {
+                                    imageLayer.moveToBottom();
+                                }, 1000);
+                            }
+                            dispatcher.trigger('update-hotspot', view._imageLayer);
+                        };
+                    }(this)).on('mousedown', function () {
+                        if (this.getAttr('trasient')) {
+                            dispatcher.trigger('active-object', this);
+                        }
+                    }).on("dragmove", function (view) {
+                        return function () {
+                            view._crossLayer.show();
+                            view._crossLayer.moveToTop();
+                            view._stage.draw();
+
+                            this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
+                        }
+                    }(this));
+                image.setAttr("control-group", group);
+                this._controlLayer.add(group).draw();
+                dispatcher.trigger('object-added', image, group);
+                dispatcher.trigger('update-hotspot', imageLayer);
+                
+            }.bind(this));
+
+        },
+
+        _addText: function (data, text, oldIm, oldControlGroup) {
+            var imageObj = new Image();
+            $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', 
+            function (view) {
+                return function () {
+                    var imageLayer = view._currentDesignRegion.imageLayer;
+                    var scale = imageLayer.width() / (view._currentDesignRegion.size[0] * config.PPI);
+                    var width = data.width * scale;
+                    var height = data.height * scale;
+                    // 将文字放在正中
+                    var im = new Kinetic.Image({
+                        x: imageLayer.width() / 2,
+                        y: imageLayer.height() / 2,
+                        width: width,
+                        name: text,
+                        height: height,
+                        image: imageObj,
+                        offset: {
+                            x: width / 2,
+                            y: height / 2
+                        }
+                    });
+                    imageLayer.add(im);
+                    var hoveredComplementaryColor = view._currentAspect.ocspu.hoveredComplementaryColor;
+                    var backgroundColor = view._currentAspect.ocspu.rgb;
+                    var controlGroup = makeControlGroup(im, text, backgroundColor, hoveredComplementaryColor).on('dragend',
+                        function () {
+                            view._crossLayer.hide();
+                            view._stage.draw();
+                            dispatcher.trigger('update-hotspot', view._imageLayer);
+                        }.bind(view))
+                        .on('mousedown', function () {
+                            view._crossLayer.show();
+                            view._crossLayer.moveToTop();
+                            view._stage.draw();
+                            if (this.getAttr('trasient')) {
+                                dispatcher.trigger('active-object', this);
+                            }
+                        })
+                        .on("dragmove", function (view) {
+                            return function () {
+                                this.snap(view._stage.width() / 2, view._stage.height() / 2, config.MAGNET_TOLERANCE);
+                            }
+                        }(view))
+                        .setAttr('object-type', 'text')
+                        .setAttr(
+                            'text-color',
+                            oldControlGroup ? oldControlGroup.getAttr('text-color'): config.DEFAULT_FONT_COLOR)
+                        .setAttr('font-size',
+                            oldControlGroup ? oldControlGroup.getAttr('font-size'): config.DEFAULT_FONT_SIZE)
+                        .setAttr('font-family',
+                            oldControlGroup ? oldControlGroup.getAttr('font-family') : config.DEFAULT_FONT_FAMILY);
+
+                        im.setAttr("control-group", controlGroup);
+
+                        controlGroup.off('dblclick').on('dblclick', function (view) {
+                            return function (evt) {
+                                view._crossLayer.hide();
+                                view._stage.draw();
+                                // 之所以不用position, 是因为chrome下面position方法有bug
+                                var left = controlGroup.x() - (im.width() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
+                                left = Math.max(left, 0);
+                                left += view.$('.editable-region').offset().left;
+                                left -= view.$('.editable-region').parent().offset().left;
+                                var top = controlGroup.y() - (im.height() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
+                                top += view.$('.editable-region').offset().top;
+                                top -= view.$('.editable-region').parent().offset().top;
+                                view.$('.change-text-panel').css({
+                                    left: left + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+                                    top: top + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+                                    position: 'absolute'
+                                }).show();
+                                ['.editable-region', '.object-manager', '.dashboard'].forEach(
+                                    function (className) {
+                                        view.$(className).block({
+                                            message: null,
+                                            overlayCSS: {
+                                                backgroundColor: "#ccc",
+                                                opacity: 0.4
+                                            },
+                                            baseZ: 0
+                                        });
+                                    });
+                                    view.$('.change-text-panel textarea').val(im.name()).trigger('autosize.resize');
+                                    view.$('.change-text-panel textarea').focus();
+                                    view.$('.change-text-panel .btn-primary').off('click').click(function () {
+                                        var text = view.$('.change-text-panel textarea').val().trim();
+                                        if (!text) {
+                                            alert("文字不能为空");
+                                            view.$('.change-text-panel textarea').val(im.name());
+                                            return false;
+                                        }
+                                        view.$('.change-text-panel').hide();
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: '/image/font-image',
+                                            data: {
+                                                text: text,
+                                                'font-family': controlGroup.getAttr('font-family'),
+                                                // 注意, 这里已经是生产大小了
+                                                'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
+                                                'font-color': controlGroup.getAttr('text-color')
+                                            },
+                                            beforeSend: function () {
+                                                dispatcher.trigger("jitPreview-mask");
+                                            }
+                                        }).done(function (data) {
+                                            view._addText(data, text, im, controlGroup);
+                                        }).fail(view._fail).always(function () {
+                                            dispatcher.trigger("jitPreview-unmask");
+                                            view.$('.editable-region ').unblock();
+                                            view.$('.object-manager').unblock();
+                                            view.$('.dashboard').unblock();
+                                        });
+                                    });
+                            };
+                        }(view));
+                        if (oldIm && oldControlGroup) {
+                            im.setZIndex(oldIm.getZIndex());
+                            im.rotation(oldIm.rotation());
+                            im.position(oldIm.position());
+                            controlGroup.position(oldControlGroup.position());
+                            controlGroup.rotation(oldControlGroup.rotation());
+                            oldIm.destroy();
+                            oldControlGroup.destroy();
+                            dispatcher.trigger('object-added', im, controlGroup,
+                            oldIm, oldControlGroup);
+                            view._controlLayer.draw();
+                        } else {
+                            dispatcher.trigger('object-added', im, controlGroup);
+                        }
+                        view._controlLayer.add(controlGroup).draw();
+                        imageLayer.draw();
+                        dispatcher.trigger('update-hotspot', view._imageLayer);
+                }
+            }(this));
+        },
     });
 
     return PlayGround;

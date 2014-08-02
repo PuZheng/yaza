@@ -36,7 +36,7 @@ require.config({
         'utils': 'js/utils',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
-        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
+        //'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {

@@ -1,4 +1,5 @@
 @import 'select-image-modal';
+@import 'object-manager';
 
 %control-panel {
     .logo img {
@@ -63,4 +64,8 @@
         @extend %select-image-modal;
     }
 
+    & .object-manager {
+        margin-top: 15px;
+        @extend %object-manager;
+    }
 }
