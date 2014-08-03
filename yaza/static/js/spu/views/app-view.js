@@ -24,8 +24,8 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatc
             .on('design-region-setup', function (designRegion) {
                 this._controlPanel.trigger('design-region-setup', designRegion);
             }, this)
-            .on('object-added', function (image, group) {
-                this._controlPanel.trigger('object-added', image, group);
+            .on('object-added', function (image, group, oldIm, oldGroup) {
+                this._controlPanel.trigger('object-added', image, group, oldIm, oldGroup);
             }, this)
             .on('active-object', function (controlGroup) {
                 this._controlPanel.trigger('active-object', controlGroup);
@@ -39,6 +39,9 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatc
             }, this)
             .on('add-text', function (data, text) {
                 this._playGround.trigger('add-text', data, text);
+            }, this)
+            .on('text-object-changed', function (type, val) {
+                this._playGround.trigger('text-object-changed', type, val);
             }, this);
 
 

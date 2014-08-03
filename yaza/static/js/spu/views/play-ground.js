@@ -10,9 +10,20 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
     var PlayGround = Backbone.View.extend({
         _template: handlebars.default.compile(playGroundTemplate),
 
+        events: {
+            'click .change-text-panel .btn-default': function (evt) {
+                this.$('.change-text-panel').hide();
+                this.$('.editable-region').unblock();
+                this.$('.dashboard').unblock();
+                this.$('.object-manager').unblock();
+                return false;
+            },
+        },
+
         initialize: function (option) {
             this._spu = option.spu;
         },
+        
 
         render: function () {
             this.$el.html(this._template());
@@ -89,7 +100,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                         .done(function () {
                             this.$mask.hide();
                             this._designRegionAnimate(designRegion.previewEdges);
-                            this._controlLayer.size(designRegion.imageLayer.size()).offset(designRegion.imageLayer.offset());
+                            this._controlLayer.size(designRegion.imageLayer.size()).position(designRegion.imageLayer.position());
                             this._controlLayer.find('.frame').size(this._controlLayer.size());
                             this._crossLayer.find('.vertical').points([
                                 -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
@@ -117,7 +128,6 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 var backgroundColor = this._currentAspect.ocspu.rgb;
                 this._controlLayer.getChildren().forEach(function (group) {
                     if (group.nodeType == 'Group') {
-                        //group.hide();
                         group.find('.rect')[0].stroke(backgroundColor);
                         group.setAttr('trasient', true);
                     }
@@ -126,18 +136,57 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 controlGroup.moveToTop();
                 controlGroup.setAttr('trasient', false);
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
+                this._activeObject = controlGroup;
                 this._controlLayer.draw();
             }, this)
             .on('mask', function (text) {
                 this.$mask.show();
                 this.$mask.find('p').text(text);
-            })
+            }, this)
             .on('unmask', function (text) {
                 this.$mask.hide(); 
-            })
+            }, this)
             .on('add-text', function (data, text) {
                 this._addText(data, text);
-            });
+            }, this)
+            .on('text-object-changed', function (type, val) {
+                var controlGroup = this._activeObject;
+                var im = controlGroup.getAttr('target');
+                switch (type) {
+                    case 'color':
+                        controlGroup.setAttr('text-color', val.toHexString());
+                        break;
+                    case 'font-size':
+                        controlGroup.setAttr('font-size', val);
+                        break;
+                    case 'font-family':
+                        controlGroup.setAttr('font-family', val);
+                        break;
+                    default:
+                        throw "invalid arguments for event text-object-changed";
+                        break;
+                }
+                var playGround = this;
+                $.ajax({
+                    type: 'POST',
+                    url: '/image/font-image',
+                    data: {
+                        text: im.name(),
+                        'font-family': controlGroup.getAttr('font-family'),
+                        'font-color': controlGroup.getAttr('text-color'),
+                        // 注意, 这里已经是生产大小了
+                        'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72)
+                    },
+                    beforeSend: function () {
+                        playGround.$mask.show();
+                    }
+                }).done(function (data) {
+                    playGround._addText(data, im.name(), im,
+                        controlGroup);
+                }).always(function () {
+                    playGround.$mask.hide();
+                }).fail(this._fail);
+            }, this);
         },
 
         _setupAspectImage: function (aspect) {
@@ -179,16 +228,16 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                     offsetY += (this.$el.height() - imageHeight) / 2;
                 }
                 this._backgroundLayer.width(imageWidth).height(imageHeight)
-                    .destroyChildren().offset({
-                        x: -offsetX,
-                        y: -offsetY,
+                    .destroyChildren().position({
+                        x: offsetX,
+                        y: offsetY,
                     });
                 var marginRect = new Kinetic.Rect({
                     width: this._stage.width(),
                     height: this._stage.height(),
                     fill: aspect.ocspu.marginColor,
-                    offsetX: offsetX,
-                    offsetY: offsetY,
+                    x: -offsetX,
+                    y: -offsetY,
                 });
                 this._backgroundLayer.add(marginRect);
                 var backgroundRect = new Kinetic.Rect({
@@ -205,7 +254,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 this._backgroundLayer.add(im);
 
                 this._designRegionAnimationLayer.size(this._backgroundLayer.size())
-                .offset(this._backgroundLayer.offset());
+                .position(this._backgroundLayer.position());
 
                 aspect.designRegionList.forEach(function (stage, backgroundLayer) {
                     return function (dr) {
@@ -227,20 +276,21 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                                 dr.imageLayer.size({
                                     width: dr.size[0] * dr.previewHeight() / dr.size[1],
                                     height: dr.previewHeight(),
-                                });
-                                dr.offset({
-                                    x: backgroundLayer.offsetX() - dr.previewLeft() + (dr.imageLayer.width() - dr.previewWidth()) / 2,
-                                    y: backgroundLayer.offsetY() - dr.previewBottom(),
+                                })
+                                dr.imageLayer.position({
+                                    x: backgroundLayer.x() + dr.previewLeft() - (dr.imageLayer.width() - dr.previewWidth()) / 2,
+                                    y: backgroundLayer.y() + dr.previewBottom(),
                                 });
                             } else {
                                 dr.imageLayer.size({
                                     width: dr.previewWidth(),
                                     height: dr.size[1] * dr.previewWidth() / dr.size[0],
                                 });
-                                dr.imageLayer.offset({
-                                    x: backgroundLayer.offsetX() - dr.previewLeft(),
-                                    y: backgroundLayer.offsetY() - dr.previewBottom() + (dr.imageLayer.height() - dr.previewHeight()) / 2,
+                                dr.imageLayer.position({
+                                    x: backgroundLayer.x() + dr.previewLeft(),
+                                    y: backgroundLayer.y() + dr.previewBottom() - (dr.imageLayer.height() - dr.previewHeight()) / 2,
                                 });
+                                console.log(dr.imageLayer.position());
                             }
                             stage.add(dr.imageLayer);
                             dr.imageLayer.moveToBottom();
@@ -432,9 +482,9 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                             'text-color',
                             oldControlGroup ? oldControlGroup.getAttr('text-color'): config.DEFAULT_FONT_COLOR)
                         .setAttr('font-size',
-                            oldControlGroup ? oldControlGroup.getAttr('font-size'): config.DEFAULT_FONT_SIZE)
+                            oldControlGroup? oldControlGroup.getAttr('font-size'): config.DEFAULT_FONT_SIZE)
                         .setAttr('font-family',
-                            oldControlGroup ? oldControlGroup.getAttr('font-family') : config.DEFAULT_FONT_FAMILY);
+                            oldControlGroup? oldControlGroup.getAttr('font-family') : config.DEFAULT_FONT_FAMILY);
 
                         im.setAttr("control-group", controlGroup);
 
@@ -443,16 +493,12 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                                 view._crossLayer.hide();
                                 view._stage.draw();
                                 // 之所以不用position, 是因为chrome下面position方法有bug
-                                var left = controlGroup.x() - (im.width() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
+                                var left = controlGroup.x() - im.width() / 2 + controlGroup.getLayer().x();
                                 left = Math.max(left, 0);
-                                left += view.$('.editable-region').offset().left;
-                                left -= view.$('.editable-region').parent().offset().left;
-                                var top = controlGroup.y() - (im.height() / 2 + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING);
-                                top += view.$('.editable-region').offset().top;
-                                top -= view.$('.editable-region').parent().offset().top;
+                                var top = controlGroup.y() - im.height() / 2 + controlGroup.getLayer().y();
                                 view.$('.change-text-panel').css({
-                                    left: left + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
-                                    top: top + config.PLAYGROUND_MARGIN + config.PLAYGROUND_PADDING,
+                                    left: left,
+                                    top: top,
                                     position: 'absolute'
                                 }).show();
                                 ['.editable-region', '.object-manager', '.dashboard'].forEach(
@@ -487,12 +533,12 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                                                 'font-color': controlGroup.getAttr('text-color')
                                             },
                                             beforeSend: function () {
-                                                dispatcher.trigger("jitPreview-mask");
+                                                dispatcher.trigger("mask");
                                             }
                                         }).done(function (data) {
                                             view._addText(data, text, im, controlGroup);
                                         }).fail(view._fail).always(function () {
-                                            dispatcher.trigger("jitPreview-unmask");
+                                            dispatcher.trigger("unmask");
                                             view.$('.editable-region ').unblock();
                                             view.$('.object-manager').unblock();
                                             view.$('.dashboard').unblock();
@@ -509,11 +555,12 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                             oldIm.destroy();
                             oldControlGroup.destroy();
                             dispatcher.trigger('object-added', im, controlGroup,
-                            oldIm, oldControlGroup);
+                                oldIm, oldControlGroup);
                             view._controlLayer.draw();
                         } else {
                             dispatcher.trigger('object-added', im, controlGroup);
                         }
+                        dispatcher.trigger('active-object', controlGroup);
                         view._controlLayer.add(controlGroup).draw();
                         imageLayer.draw();
                         dispatcher.trigger('update-hotspot', view._imageLayer);

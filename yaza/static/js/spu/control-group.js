@@ -12,6 +12,7 @@ define(["spu/config"], function (config) {
             y: node.y() + node.height() / 2 - node.offsetY(),
             draggable: true,
             name: title,
+            target: node,
         });
         // 当进入图像, 临时展示control group
         group.on('dragstart', function () {
@@ -26,7 +27,6 @@ define(["spu/config"], function (config) {
         var rect = new Kinetic.Rect({
             x: -node.width() / 2,
             y: -node.height() / 2,
-            stroke: '#CC3333',
             strokeWidth: 1,
             width: node.width(),
             height: node.height(),

@@ -1,10 +1,10 @@
 define(['backbone', 'underscore', 'handlebars', 
 'text!templates/control-panel.hbs', 'spu/datastructures/design-region', 
 'dispatcher', 'spu/views/select-image-modal', 'spu/views/object-manager',  
-'spu/views/add-text-modal',
-'underscore.string', 'bootstrap'], 
+'spu/views/add-text-modal', 'spu/views/text-operators',
+'underscore.string', 'bootstrap', 'spectrum'], 
 function (Backbone, _, handlebars, controlPanelTemplate, DesignRegion, 
-dispatcher, SelectImageModal, ObjectManager, AddTextModal) {
+dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
 
     _.mixin(_.str.exports());
     
@@ -29,6 +29,10 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal) {
             this._objectManager = new ObjectManager({
                 el: this.$('.object-manager')
             }).render();
+            this._textOperators = new TextOperators({
+                el: this.$('.text-operators'),
+            }).render();
+
             return this;
         },
 
@@ -109,7 +113,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal) {
             }, this)
             .on('active-object', function (controlGroup) {
                 this._objectManager.activeObjectIndicator(controlGroup);
-                // TODO resetDashBoard
+                this._textOperators.reset(controlGroup);
             })
             .on('object-added', function (image, group, oldIm, oldControlGroup) {
                 if (!!oldIm && !!oldControlGroup) {
@@ -120,71 +124,6 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal) {
             });
         },
 
-        _initSelectImageModal: function () {
-            var controlPanel = this;
-            this.$('.add-img-modal').on('shown.bs.modal', function (e) {
-                if (!controlPanel._designImagesPerPage) {
-                    var fakeImage = $('<li><div class="thumbnail"></div></li>');
-                    fakeImage = $(fakeImage.appendTo(controlPanel.$('ul.thumbnails'))[0]).hide();
-                    var imagesOneRow = Math.floor($(this).find('.thumbnails').width() / fakeImage.width());
-                    var imagesOneColumn = Math.ceil($(this).find('.thumbnails').height() / fakeImage.height());
-                    fakeImage.remove();
-                    controlPanel._designImagesPerPage = imagesOneColumn * imagesOneRow;
-                }
-                if (!controlPanel.$('.builtin-pics img').length) {
-                    controlPanel._selectTag(controlPanel._currentTagId || 0);
-                }
-                if (!controlPanel.$('.customer-pics img').length) {
-                    controlPanel._renderUserPics();
-                }
-
-                var templateProgress = handlebars.default.compile(uploadingProgressTemplate);
-                var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
-                var templateFail = handlebars.default.compile(uploadingFailTemplate);
-                $(this).find('.upload-img-form').fileupload({
-                    dataType: 'json',
-                    add: function (e, data) {
-                        $('.nav-tabs a:last').tab('show');
-                        $(this).find('.uploading-progress').html(
-                            templateProgress({
-                                fileSize: formatFileSize(data.files[0].size)
-                            })).show();
-                            var reader = new FileReader();
-                            reader.onload = _.bind(function (e) {
-                                $(this).find('.uploading-progress img').attr('src', e.target.result);
-                            }, this);
-                            reader.readAsDataURL(data.files[0]);
-                            // Automatically upload the file once it is added to the queue
-                            var jqXHR = data.submit();
-                            $(this).find('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                    jqXHR.abort();
-                                    $(this).find('.uploading-progress').fadeOut(1000);
-                                });
-                    },
-                    progress: function (e, data) {
-                        // Calculate the completion percentage of the upload
-                        var progress = parseInt(data.loaded / data.total * 100, 10);
-
-                        // Update the hidden input field and trigger a change
-                        // so that the jQuery knob plugin knows to update the dial
-                        $(this).find('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
-                    },
-                    done: function (e, data) {
-                        $(this).find('.uploading-progress').html(templateSuccess());
-                        $(this).find('.uploading-progress').fadeOut(1000);
-                        Cookies.set('upload-images',
-                            data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                            controlPanel._renderUserPics();
-                            _selectFirstCustomerImg();
-                    },
-                    fail: function (e, data) {
-                        $(this).find('.uploading-progress').html(templateFail());
-                        $(this).find('.uploading-progress').fadeOut(1000);
-                    }
-                });
-            });
-        }
     });
     return ControlPanel;
 });
