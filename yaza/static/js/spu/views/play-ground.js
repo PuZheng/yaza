@@ -1,9 +1,9 @@
 define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 
 'spu/config', 'spu/control-group', 'kineticjs', 'dispatcher', 'color-tools', 
-'utils/load-image', 
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc',
 'jquery.scrollTo', 'js-url', 'block-ui'], 
 function ($, Backbone, handlebars, playGroundTemplate, config, makeControlGroup, 
-Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
+Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
 
     var __debug__ = ($.url('?debug') == '1');
 
@@ -120,7 +120,6 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 }.bind(this));
             })
             .on('design-image-selected', function (arg) {
-                console.log(arg);
                 this._addDesignImage(arg.url, arg.title, arg.designImageId); 
             })
             .on('active-object', function (controlGroup) {
@@ -162,6 +161,9 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                     case 'font-family':
                         controlGroup.setAttr('font-family', val);
                         break;
+                    case 'text':
+                        im.name(val);
+                        break;
                     default:
                         throw "invalid arguments for event text-object-changed";
                         break;
@@ -185,6 +187,9 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                         controlGroup);
                 }).always(function () {
                     playGround.$mask.hide();
+                    playGround.$('.editable-region ').unblock();
+                    playGround.$('.object-manager').unblock();
+                    playGround.$('.dashboard').unblock();
                 }).fail(this._fail);
             }, this);
         },
@@ -193,8 +198,8 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
             this._clearAspect();
             this._currentAspect = aspect;
             var imgObj = new Image();
+            imgObj.crossOrigin = 'Anonymous'; // 必须在加载前就设置crossOrigin
             imgObj.onload = function (e) {
-                e.target.crossOrigin = 'Anonymous';
                 // setup dom 
                 var asPortait = aspect.size[1] / aspect.size[0] > this.$el.height() / this.$el.width();
                 if (asPortait) {
@@ -241,7 +246,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 });
                 this._backgroundLayer.add(marginRect);
                 var backgroundRect = new Kinetic.Rect({
-                    width: imageHeight,
+                    width: imageWidth,
                     height: imageHeight,
                     fill: aspect.ocspu.paddingColor,
                 });
@@ -258,7 +263,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
 
                 aspect.designRegionList.forEach(function (stage, backgroundLayer) {
                     return function (dr) {
-                        dr.previewLayer.size(backgroundLayer.size()).offset(backgroundLayer.offset());
+                        dr.previewLayer.size(backgroundLayer.size()).position(backgroundLayer.position());
                         stage.add(dr.previewLayer); 
                         dr.getPreviewEdges({
                             x: backgroundLayer.width() / aspect.size[0],
@@ -290,7 +295,6 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                                     x: backgroundLayer.x() + dr.previewLeft(),
                                     y: backgroundLayer.y() + dr.previewBottom() - (dr.imageLayer.height() - dr.previewHeight()) / 2,
                                 });
-                                console.log(dr.imageLayer.position());
                             }
                             stage.add(dr.imageLayer);
                             dr.imageLayer.moveToBottom();
@@ -299,7 +303,6 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                     }
                 }(this._stage, this._backgroundLayer));
                 this._stage.draw();
-
                 dispatcher.trigger('aspect-image-setup-done', aspect);
 
             }.bind(this);
@@ -427,8 +430,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                 image.setAttr("control-group", group);
                 this._controlLayer.add(group).draw();
                 dispatcher.trigger('object-added', image, group);
-                dispatcher.trigger('update-hotspot', imageLayer);
-                
+                this._generatePreview();
             }.bind(this));
 
         },
@@ -522,27 +524,7 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                                             return false;
                                         }
                                         view.$('.change-text-panel').hide();
-                                        $.ajax({
-                                            type: 'POST',
-                                            url: '/image/font-image',
-                                            data: {
-                                                text: text,
-                                                'font-family': controlGroup.getAttr('font-family'),
-                                                // 注意, 这里已经是生产大小了
-                                                'font-size': parseInt(controlGroup.getAttr('font-size') * config.PPI / 72),
-                                                'font-color': controlGroup.getAttr('text-color')
-                                            },
-                                            beforeSend: function () {
-                                                dispatcher.trigger("mask");
-                                            }
-                                        }).done(function (data) {
-                                            view._addText(data, text, im, controlGroup);
-                                        }).fail(view._fail).always(function () {
-                                            dispatcher.trigger("unmask");
-                                            view.$('.editable-region ').unblock();
-                                            view.$('.object-manager').unblock();
-                                            view.$('.dashboard').unblock();
-                                        });
+                                        dispatcher.trigger('text-object-changed', 'text', text);
                                     });
                             };
                         }(view));
@@ -566,6 +548,186 @@ Kinetic, dispatcher, colorTools, loadImage, ObjectManager) {
                         dispatcher.trigger('update-hotspot', view._imageLayer);
                 }
             }(this));
+        },
+
+        _generatePreview: function () {
+            var imageLayer = this._currentDesignRegion.imageLayer;
+            var previewLayer = this._currentDesignRegion.previewLayer;
+            console.log(previewLayer.size());
+            if (imageLayer.children.length == 0) {
+                previewLayer.getContext().clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                dispatcher.trigger('update-hotspot-done');
+                return;
+            } 
+            var hotspotContext = previewLayer.getContext();
+            var targetWidth = this._backgroundLayer.width();
+            var targetHeight = this._backgroundLayer.height();
+
+            var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
+            this._calcImageData(hotspotImageData, imageLayer, targetWidth, targetHeight);
+            if (__debug__) {
+                var layer = new Kinetic.Layer();
+                var data = [];
+                this._currentDesignRegion.controlPointsMap(imageLayer).forEach(function (pair) {
+                    data.push(pair[0][0]);
+                    data.push(pair[0][1]);
+                    var circle = new Kinetic.Circle({
+                        x: pair[0][0],
+                        y: pair[0][1],
+                        stroke: '#666',
+                        fill: '#ddd',
+                        strokeWidth: 2,
+                        radius: 3
+                    });
+                    layer.add(circle);
+                }.bind(this));
+                data.push(data[0]);
+                data.push(data[1]);
+                var line = new Kinetic.Line({
+                    points: data,
+                    stroke: 'white',
+                    strokeWidth: 1
+                });
+                layer.add(line);
+                layer.position(this._backgroundLayer.position());
+                this._stage.add(layer);
+                this._stage.draw();
+            }
+            hotspotContext.imageSmoothEnabled = true;
+            hotspotContext.putImageData(hotspotImageData, previewLayer.x(), previewLayer.y());
+            dispatcher.trigger('update-hotspot-done', hotspotContext);
+        },
+
+        _calcImageData: function (imageData, imageLayer, width, height) {
+            var srcImageData = imageLayer.getContext().getImageData(imageLayer.x(), imageLayer.y(),
+            imageLayer.width(), imageLayer.height()).data;
+
+            var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, width, height).data;
+
+            var srcWidth = imageLayer.width();
+            var srcHeight = imageLayer.height();
+            var blackShadowImageData = this._currentDesignRegion.blackShadowImageData;
+            var whiteShadowImageData = this._currentDesignRegion.whiteShadowImageData;
+            var controlPointsMap = this._currentDesignRegion.controlPointsMap(imageLayer);
+            var pointsMatrix = [
+                [
+                    new Array(4),
+                    new Array(4),
+                    new Array(4),
+                    new Array(4)
+                ],  // R
+                [
+                    new Array(4),
+                    new Array(4),
+                    new Array(4),
+                    new Array(4)
+                ], // G
+                [
+                    new Array(4),
+                    new Array(4),
+                    new Array(4),
+                    new Array(4)
+                ], // B
+                [
+                    new Array(4),
+                    new Array(4),
+                    new Array(4),
+                    new Array(4)
+                ] // A
+            ];
+            var rgba = this._currentAspect.ocspu.rgb.substr(1);
+            rgba = [
+                parseInt('0x' + rgba.substr(0, 2)),
+                parseInt('0x' + rgba.substr(2, 2)),
+                parseInt('0x' + rgba.substr(4, 2)),
+                255
+            ];
+            console.log(this._currentDesignRegion.imageLayer.position());
+            console.log(this._currentDesignRegion.imageLayer.size());
+            for (var i = 0; i < width; ++i) {
+                for (var j = 0; j < height; ++j) {
+                    if (this._currentDesignRegion.within(i, j)) {
+                        //var origPoint = mvc([i, j], controlPointsMap);
+                        //interpolation.bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
+                        var pos = (j * width + i) * 4;
+                        //if (imageData.data[pos + 3]) {
+                            //if (Math.max(imageData.data[pos], imageData.data[pos + 1], imageData.data[pos + 2]) > 127) {
+                                //var shadowImageData = blackShadowImageData;
+                            //} else {
+                                //shadowImageData = whiteShadowImageData;
+                            //}
+                            //var alpha = shadowImageData[pos + 3] / 255;
+                            //imageData.data[pos] = shadowImageData[pos] * alpha + imageData.data[pos] * (1 - alpha);
+                            //imageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + imageData.data[pos + 1] * (1 - alpha);
+                            //imageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + imageData.data[pos + 2] * (1 - alpha);
+                            imageData.data[pos] = 255;
+                            imageData.data[pos + 1] = 0;
+                            imageData.data[pos + 2] = 0;
+                            imageData.data[pos + 3] = 255;
+                        //}
+                    } else {
+                    }
+                }
+            }
+            return;
+            // for each point on edges, do anti alias (sampling around itself)
+            this._currentDesignRegion.previewEdges['bottom'].forEach(function (point) {
+                // 若对象已经超出边界
+                if (imageData.data[(point[0] + (point[1] + 1) * width) * 4 + 4]) {
+                    [
+                        [point[0], point[1] + 1],
+                        point,
+                        [point[0], point[1] - 1],
+                        [point[0] + 1, point[1] + 1],
+                        [point[0] + 1, point[1]],
+                        [point[0] + 1, point[1] - 1]
+                        ].forEach(function (point) {
+                            interpolation.edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                        });
+                }
+            });
+            this._currentDesignRegion.previewEdges['right'].forEach(function (point) {
+                if (imageData.data[(point[0] - 1 + point[1] * width) * 4 + 4]) {
+                    [
+                        [point[0] - 1, point[1]],
+                        point,
+                        [point[0] + 1, point[1]],
+                        [point[0] - 1, point[1] + 1],
+                        [point[0], point[1] + 1],
+                        [point[0] + 1, point[1] + 1]
+                        ].forEach(function (point) {
+                            interpolation.edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                        });
+                }
+            });
+            this._currentDesignRegion.previewEdges['top'].forEach(function (point) {
+                if (imageData.data[(point[0] + (point[1] - 1) * width) * 4 + 4]) {
+                    [
+                        [point[0], point[1] - 1],
+                        point,
+                        [point[0], point[1] + 1],
+                        [point[0] - 1, point[1] - 1],
+                        [point[0] - 1, point[1]],
+                        [point[0] - 1, point[1] + 1]
+                        ].forEach(function (point) {
+                            interpolation.edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                        });
+                }
+            });
+            this._currentDesignRegion.previewEdges['left'].forEach(function (point) {
+                if (imageData.data[(point[0] + 1 + point[1] * width) * 4 + 4]) {
+                    [
+                        [point[0] + 1, point[1]],
+                        point,
+                        [point[0] - 1, point[1]],
+                        [point[0] + 1, point[1] - 1],
+                        [point[0], point[1] - 1],
+                        [point[0] - 1, point[1] - 1]
+                        ].forEach(function (point) {
+                            interpolation.edgeInterpolation(imageData, point, width, height, backgroundImageData, pointsMatrix);
+                        });
+                }
+            });
         },
     });
 

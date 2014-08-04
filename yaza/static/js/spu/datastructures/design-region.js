@@ -1,4 +1,6 @@
-define(['jquery', 'buckets', 'utils/read-image-data', 'kineticjs'], function ($, bucket, readImageData, Kinetic) {
+define(['jquery', 'underscore', 'buckets', 'utils/read-image-data', 
+'kineticjs', 'spu/config'], 
+function ($, _, bucket, readImageData, Kinetic, config) {
         
     function DesignRegion(data) {
         this.id = data.id;
@@ -230,6 +232,94 @@ define(['jquery', 'buckets', 'utils/read-image-data', 'kineticjs'], function ($,
 
     DesignRegion.prototype.clearLayers = function () {
         this.previewLayer.remove();
+    }
+
+    DesignRegion.prototype.controlPointsMap = function (imageLayer) {
+        if (!this._controlPointsMap) {
+            this._controlPointsMap = this._calcControlPoints(this.previewEdges, 
+                imageLayer.size(),
+                config.CONTROL_POINT_NUM);
+        }
+        return this._controlPointsMap;
+    }
+
+    DesignRegion.prototype._calcControlPoints = function (edges, size, cpNum) {
+        var cpMap = [];
+        var width = size.width;
+        var height = size.height;
+        // top
+        var step1 = edges['top'].length / (cpNum[0] - 1);
+        var step2 = width / (cpNum[0] - 1);
+        // anchor the top right corner
+        var top = _.clone(edges['top']).reverse();
+        cpMap.push([top[top.length - 1], [width - 1, height - 1]]);
+        // note! we omit the top left corner
+        for (var i = cpNum[0] - 2; i > 0; --i) {
+            cpMap.push([
+                top[parseInt(Math.round(i * step1))],
+                [parseInt(Math.round(i * step2)), height - 1]
+            ]);
+        }
+
+        // left
+        var step1 = edges['left'].length / (cpNum[1] - 1);
+        var step2 = height / (cpNum[1] - 1);
+        // anchor the top left corner
+        var left = _.clone(edges['left']).reverse();
+        cpMap.push([left[left.length - 1], [0, height - 1]]);
+        for (var i = cpNum[1] - 2; i > 0; --i) {
+            cpMap.push([
+                left[parseInt(Math.round(i * step1))],
+                [0, parseInt(Math.round(i * step2))]
+            ]);
+        }
+
+        // bottom
+        var step1 = edges['bottom'].length / (cpNum[0] - 1);
+        var step2 = width / (cpNum[0] - 1);
+        var bottom = edges['bottom'];
+        // anchor the left bottom corner
+        cpMap.push([bottom[0], [0, 0]]);
+        for (var i = 1; i < cpNum[0] - 1; ++i) {
+            cpMap.push([
+                bottom[parseInt(Math.round(i * step1))],
+                [parseInt(Math.round(i * step2)), 0]
+            ]);
+        }
+
+        // right
+        var step1 = edges['right'].length / (cpNum[1] - 1);
+        var step2 = height / (cpNum[1] - 1);
+        var right = edges['right'];
+        // anchor the bottom right corner
+        cpMap.push([right[0], [width - 1, 0]]);
+        for (var i = 1; i < cpNum[1] - 1; ++i) {
+            cpMap.push([
+                right[parseInt(Math.round(i * step1))],
+                [width - 1, parseInt(Math.round(i * step2))]
+            ]);
+        }
+        return cpMap;
+    };
+
+    DesignRegion.prototype.within = function (x, y) {
+        var test = 0;
+        var leftRight = this.bounds().leftRight[y];
+        var topBottom = this.bounds().topBottom[x];
+        if (!(leftRight && topBottom)) {
+            return false;
+        }
+        // 必须在四个边界中
+        test += (x > leftRight.left);
+        test += (x < leftRight.right);
+        test += (y > topBottom.bottom);
+        test += (y < topBottom.top);
+        // 必须不能在边界上
+        return test == 4 && !leftRight.innerPoints.some(function (x_) {
+            return x_ == x;
+        }) && !topBottom.innerPoints.some(function (y_) {
+            return y_ == y;
+        });
     }
 
     return DesignRegion;
