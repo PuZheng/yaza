@@ -17,6 +17,7 @@ define(["spu/config"], function (config) {
         // 当进入图像, 临时展示control group
         group.on('dragstart', function () {
             this.moveToTop();
+            node.draw();
         });
         group.on('dragend', function () {
             node.position({
@@ -242,12 +243,12 @@ define(["spu/config"], function (config) {
                 // 坐标系下， 然后再转回来
                 var layer = group.getLayer();
                 var ret = dragBoundFunc({
-                    x: pos.x + layer.offsetX(),
-                    y: pos.y + layer.offsetY(),
+                    x: pos.x - layer.x(),
+                    y: pos.y - layer.y(),
                 });
                 return {
-                    x: ret.x - layer.offsetX(),
-                    y: ret.y - layer.offsetY(),
+                    x: ret.x + layer.x(),
+                    y: ret.y + layer.y(),
                 };
             }
         });
@@ -327,12 +328,12 @@ define(["spu/config"], function (config) {
                 // 坐标系下， 然后再转回来
                 var layer = group.getLayer();
                 var ret = dragBoundFunc({
-                    x: pos.x + layer.offsetX(),
-                    y: pos.y + layer.offsetY(),
+                    x: pos.x - layer.x(),
+                    y: pos.y - layer.y(),
                 });
                 return {
-                    x: ret.x - layer.offsetX(),
-                    y: ret.y - layer.offsetY(),
+                    x: ret.x + layer.x(),
+                    y: ret.y + layer.y(),
                 };
             },
             offset: {

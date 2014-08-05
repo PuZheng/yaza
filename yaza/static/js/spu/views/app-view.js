@@ -42,6 +42,13 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatc
             }, this)
             .on('text-object-changed', function (type, val) {
                 this._playGround.trigger('text-object-changed', type, val);
+            }, this)
+            .on('update-preview-done', function (designRegion, previewLayer) {
+                this._controlPanel.trigger('update-preview-done', designRegion, 
+                previewLayer);
+            }, this)
+            .on('update-preview', function () {
+                this._playGround.trigger('update-preview');
             }, this);
 
 

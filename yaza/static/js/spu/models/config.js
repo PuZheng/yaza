@@ -29,6 +29,7 @@ define(['backbone'], function (Backbone) {
             PLAYGROUND_MARGIN: 180, // 留空部分大小
             PLAYGROUND_PADDING: 50, // 留空部分大小
             DEFAULT_PREVIEW_BACKGROUND_COLOR: '',
+            DESIGN_IMAGE_INTIAL_ZOOMNESS: 0.7,
         }
     });
 

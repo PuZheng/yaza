@@ -52,7 +52,7 @@ function (Backbone, handlebars, template, config, make2DColorArray, dispatcher) 
         },
 
         reset: function (controlGroup) {
-            if (controlGroup.getAttr('object-type') == 'text') {
+            if (!!controlGroup && controlGroup.getAttr('object-type') == 'text') {
                 this.$el.show();
                 this.$('.text-color').spectrum('set',
                         controlGroup.getAttr('text-color') || config.DEFAULT_FONT_COLOR);

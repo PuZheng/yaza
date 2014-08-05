@@ -44,16 +44,6 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             });
             this._stage.add(this._designRegionAnimationLayer);
 
-            this._controlLayer = new Kinetic.Layer();
-            if (__debug__) {
-                this._controlLayer.add(new Kinetic.Rect({
-                    strokeWidth: '1px',
-                    stroke: 'blue',
-                    name: 'frame',
-                }));
-            }
-            this._stage.add(this._controlLayer);
-
             this._crossLayer = new Kinetic.Layer();
             var verticalLine = new Kinetic.Line({
                 points: [],
@@ -93,30 +83,31 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 designRegion.getPreviewEdges({
                     x: this._backgroundLayer.width() / designRegion.aspect.size[0],
                     y: this._backgroundLayer.height() / designRegion.aspect.size[1]
-                }).done(function () {
-                    designRegion.getBlackShadow(this._backgroundLayer.width(), this._backgroundLayer.height())
-                    .done(function () {
-                        designRegion.getWhiteShadow(this._stage.width(), this._stage.height())
-                        .done(function () {
-                            this.$mask.hide();
-                            this._designRegionAnimate(designRegion.previewEdges);
-                            this._controlLayer.size(designRegion.imageLayer.size()).position(designRegion.imageLayer.position());
-                            this._controlLayer.find('.frame').size(this._controlLayer.size());
-                            this._crossLayer.find('.vertical').points([
-                                -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
-                                0, 
-                                -this._controlLayer.offsetX() + this._controlLayer.width() / 2, 
-                                this._stage.height()]);
-                            this._crossLayer.find('.horizontal').points([
-                                0, 
-                                -this._controlLayer.offsetY() + this._controlLayer.height() / 2,
-                                this._stage.width(),
-                                -this._controlLayer.offsetY() + this._controlLayer.height() / 2]);
+                }).done(function (previewEdges) {
+                    this.$mask.hide();
+                    this._designRegionAnimate(previewEdges);
 
-                            dispatcher.trigger('design-region-setup', designRegion);
-                            this._stage.draw();
-                        }.bind(this));
-                    }.bind(this));
+                    this._currentAspect.designRegionList.forEach(function (dr) {
+                        dr.controlLayer().hide();
+                    });
+                    designRegion.controlLayer().show();
+                    designRegion.controlLayer().find('.frame').size(designRegion.controlLayer().size());
+                    var controlLayer = designRegion.controlLayer();
+                    this._crossLayer.find('.vertical').points([
+                        controlLayer.x() + controlLayer.width() / 2, 
+                        0, 
+                        controlLayer.x() + controlLayer.width() / 2, 
+                        this._stage.height()
+                    ]);
+                    this._crossLayer.find('.horizontal').points([
+                        0, 
+                        controlLayer.y() + controlLayer.height() / 2,
+                        this._stage.width(),
+                        controlLayer.y() + controlLayer.height() / 2
+                    ]);
+
+                    dispatcher.trigger('design-region-setup', designRegion);
+                    controlLayer.draw();
                 }.bind(this));
             })
             .on('design-image-selected', function (arg) {
@@ -125,7 +116,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             .on('active-object', function (controlGroup) {
                 var complementaryColor = this._currentAspect.ocspu.complementaryColor;
                 var backgroundColor = this._currentAspect.ocspu.rgb;
-                this._controlLayer.getChildren().forEach(function (group) {
+                controlGroup.getLayer().getChildren().forEach(function (group) {
                     if (group.nodeType == 'Group') {
                         group.find('.rect')[0].stroke(backgroundColor);
                         group.setAttr('trasient', true);
@@ -136,7 +127,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 controlGroup.setAttr('trasient', false);
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
                 this._activeObject = controlGroup;
-                this._controlLayer.draw();
+                controlGroup.getLayer().draw();
             }, this)
             .on('mask', function (text) {
                 this.$mask.show();
@@ -191,7 +182,10 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                     playGround.$('.object-manager').unblock();
                     playGround.$('.dashboard').unblock();
                 }).fail(this._fail);
-            }, this);
+            }, this)
+            .on('update-preview', function () {
+                this._generatePreview();
+            });
         },
 
         _setupAspectImage: function (aspect) {
@@ -260,50 +254,73 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
 
                 this._designRegionAnimationLayer.size(this._backgroundLayer.size())
                 .position(this._backgroundLayer.position());
-
-                aspect.designRegionList.forEach(function (stage, backgroundLayer) {
-                    return function (dr) {
-                        dr.previewLayer.size(backgroundLayer.size()).position(backgroundLayer.position());
-                        stage.add(dr.previewLayer); 
-                        dr.getPreviewEdges({
-                            x: backgroundLayer.width() / aspect.size[0],
-                            y: backgroundLayer.height() / aspect.size[1]
-                        }).done(function () {
-                            // 找到最小的可以包住design region的框, 而且比例要和
-                            // design region平铺的比例一致
-                            // 当然这也隐含着一个假设， 就是design region
-                            // 只能做刚体形变， 否则图片的控制框，可能包不住
-                            // 预览图片.
-                            // 这个框的算法是（以portrait为例）， 上边和design
-                            // region的上沿对齐， 下边和design region的下沿对齐，
-                            // 左边和右边到design region的左沿和右沿距离相等
-                            if (dr.previewHeight() / dr.previewWidth() > dr.size[1] / dr.size[0]) {
-                                dr.imageLayer.size({
-                                    width: dr.size[0] * dr.previewHeight() / dr.size[1],
-                                    height: dr.previewHeight(),
-                                })
-                                dr.imageLayer.position({
-                                    x: backgroundLayer.x() + dr.previewLeft() - (dr.imageLayer.width() - dr.previewWidth()) / 2,
-                                    y: backgroundLayer.y() + dr.previewBottom(),
-                                });
-                            } else {
-                                dr.imageLayer.size({
-                                    width: dr.previewWidth(),
-                                    height: dr.size[1] * dr.previewWidth() / dr.size[0],
-                                });
-                                dr.imageLayer.position({
-                                    x: backgroundLayer.x() + dr.previewLeft(),
-                                    y: backgroundLayer.y() + dr.previewBottom() - (dr.imageLayer.height() - dr.previewHeight()) / 2,
-                                });
-                            }
-                            stage.add(dr.imageLayer);
-                            dr.imageLayer.moveToBottom();
-                            // TODO make the aspect's preview
-                        });
-                    }
-                }(this._stage, this._backgroundLayer));
                 this._stage.draw();
-                dispatcher.trigger('aspect-image-setup-done', aspect);
+
+                var d = $.Deferred();
+
+                d.progress(function (drList) {
+                    return function(dr) {
+                        drList.push(dr);  
+                        if (drList.length == aspect.designRegionList.length) {
+                            dispatcher.trigger('aspect-image-setup-done', aspect); 
+                        }
+                    }
+                }([]));
+
+                aspect.designRegionList.forEach(function (dr) {
+                    var stage = this._stage;
+                    var backgroundLayer = this._backgroundLayer;
+                    dr.previewLayer.size(backgroundLayer.size()).position(backgroundLayer.position());
+                    dr.getPreviewEdges({
+                        x: backgroundLayer.width() / aspect.size[0],
+                        y: backgroundLayer.height() / aspect.size[1]
+                    }).done(function () {
+                        // 找到最小的可以包住design region的框, 而且比例要和
+                        // design region平铺的比例一致
+                        // 当然这也隐含着一个假设， 就是design region
+                        // 只能做刚体形变， 否则图片的控制框，可能包不住
+                        // 预览图片.
+                        // 这个框的算法是（以portrait为例）， 上边和design
+                        // region的上沿对齐， 下边和design region的下沿对齐，
+                        // 左边和右边到design region的左沿和右沿距离相等
+                        if (dr.previewHeight() / dr.previewWidth() > dr.size[1] / dr.size[0]) {
+                            dr.imageLayer().size({
+                                width: dr.size[0] * dr.previewHeight() / dr.size[1],
+                                height: dr.previewHeight(),
+                            })
+                            dr.imageLayer().position({
+                                x: backgroundLayer.x() + dr.previewLeft() - (dr.imageLayer().width() - dr.previewWidth()) / 2,
+                                y: backgroundLayer.y() + dr.previewBottom(),
+                            });
+                        } else {
+                            dr.imageLayer().size({
+                                width: dr.previewWidth(),
+                                height: dr.size[1] * dr.previewWidth() / dr.size[0],
+                            });
+                            dr.imageLayer().position({
+                                x: backgroundLayer.x() + dr.previewLeft(),
+                                y: backgroundLayer.y() + dr.previewBottom() - (dr.imageLayer().height() - dr.previewHeight()) / 2,
+                            });
+                        }
+                        stage.add(dr.imageLayer());
+                        dr.controlLayer().size(dr.imageLayer().size()).position(dr.imageLayer().position());
+                        stage.add(dr.controlLayer());
+                        stage.add(dr.previewLayer);
+                        dr.imageLayer().moveToBottom();
+                        // TODO scale the control group and objects
+                        var view = this;
+                        dr.getBlackShadow(backgroundLayer.width(), backgroundLayer.height())
+                        .done(function () {
+                            dr.getWhiteShadow(backgroundLayer.width(), backgroundLayer.height())
+                            .done(function () {
+                                view._generatePreview(dr);
+                                d.notify(dr);
+                            });
+                        });
+                    }.bind(this));
+                }, this);
+                
+
 
             }.bind(this);
             imgObj.src = aspect.picUrl;
@@ -331,6 +348,17 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 strokeWidth: 1,
                 name: 'highlight-frame'
             });
+
+            var a = edges.right.map(function(p) {return p[1]});
+            for (var i = edges.right[0][1]; i < edges.right[edges.right.length-1][1]; ++i) {
+                if (a.indexOf(i) == -1) {
+                    this._designRegionAnimationLayer.add(new Kinetic.Line({
+                        points: [0, i, 1000, i],
+                        stroke: 'green',
+                        strokeWidth: 1,
+                    }));
+                }
+            }
 
             this._designRegionAnimationLayer.add(designRegionHex);
 
@@ -372,7 +400,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
 
             loadImage(src).done(function (imageObj) {
                 // 将图片按比例缩小，并且放在正中
-                var imageLayer = this._currentDesignRegion.imageLayer;
+                var imageLayer = this._currentDesignRegion.imageLayer();
                 if (imageObj.height / imageObj.width > imageLayer.height() / imageLayer.width()) {
                     // portrait
                     var height = imageLayer.height(); 
@@ -381,6 +409,8 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                     var width = imageLayer.width();
                     var height = imageObj.height * width / imageObj.width;
                 }
+                height *= config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
+                width *= config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
                 var image = new Kinetic.Image({
                     x: imageLayer.width() / 2,
                     y: imageLayer.height() / 2,
@@ -400,35 +430,50 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
                 var backgroundColor = this._currentAspect.ocspu.rgb;
                 var group = makeControlGroup(image, title, true, backgroundColor, 
-                hoveredComplementaryColor).on('dragend',
-                    function (view) {
-                        return function () {
-                            view._crossLayer.hide();
-                            view._crossLayer.moveToBottom();
-                            view._stage.draw();
-                            if (__debug__) {
-                                imageLayer.moveToTop();
-                                setTimeout(function () {
-                                    imageLayer.moveToBottom();
-                                }, 1000);
-                            }
-                            dispatcher.trigger('update-hotspot', view._imageLayer);
-                        };
-                    }(this)).on('mousedown', function () {
-                        if (this.getAttr('trasient')) {
-                            dispatcher.trigger('active-object', this);
+                hoveredComplementaryColor)
+                .on('dragend', function (view) {
+                    return function () {
+                        view._crossLayer.hide();
+                        view._crossLayer.moveToBottom();
+                        view._crossLayer.draw();
+                        // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
+                        // 的预览
+                        view._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(view._backgroundLayer.x(), 
+                        view._backgroundLayer.y(), 
+                        view._backgroundLayer.width(), 
+                        view._backgroundLayer.height());
+                        view._currentDesignRegion.imageLayer().draw();
+                        if (__debug__) {
+                            view._currentDesignRegion.imageLayer().moveToTop();
+                            setTimeout(function () {
+                                view._currentDesignRegion.imageLayer().moveToBottom();
+                            }, 1000);
                         }
-                    }).on("dragmove", function (view) {
-                        return function () {
-                            view._crossLayer.show();
-                            view._crossLayer.moveToTop();
-                            view._stage.draw();
+                        view._generatePreview();
+                    };
+                }(this))
+                .on('mousedown', function () {
+                    if (this.getAttr('trasient')) {
+                        dispatcher.trigger('active-object', this);
+                    }
+                })
+                .on("dragmove", function (view) {
+                    return function () {
+                        view._crossLayer.show();
+                        view._crossLayer.moveToTop();
+                        view._crossLayer.draw();
+                        view._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(view._backgroundLayer.x(), 
+                        view._backgroundLayer.y(), 
+                        view._backgroundLayer.width(), 
+                        view._backgroundLayer.height());
 
-                            this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
-                        }
-                    }(this));
+                        this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
+                    }
+                }(this));
                 image.setAttr("control-group", group);
-                this._controlLayer.add(group).draw();
+                this._currentDesignRegion.controlLayer().add(group).draw();
                 dispatcher.trigger('object-added', image, group);
                 this._generatePreview();
             }.bind(this));
@@ -440,7 +485,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', 
             function (view) {
                 return function () {
-                    var imageLayer = view._currentDesignRegion.imageLayer;
+                    var imageLayer = view._currentDesignRegion.imageLayer();
                     var scale = imageLayer.width() / (view._currentDesignRegion.size[0] * config.PPI);
                     var width = data.width * scale;
                     var height = data.height * scale;
@@ -458,105 +503,123 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         }
                     });
                     imageLayer.add(im);
+                    imageLayer.draw();
                     var hoveredComplementaryColor = view._currentAspect.ocspu.hoveredComplementaryColor;
                     var backgroundColor = view._currentAspect.ocspu.rgb;
-                    var controlGroup = makeControlGroup(im, text, backgroundColor, hoveredComplementaryColor).on('dragend',
-                        function () {
+                    var controlGroup = makeControlGroup(im, text, backgroundColor, 
+                    hoveredComplementaryColor)
+                    .on('dragend', function () {
+                        view._crossLayer.hide();
+                        view._crossLayer.moveToBottom();
+                        view._crossLayer.draw();
+                        // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
+                        // 的预览
+                        view._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(view._backgroundLayer.x(), 
+                        view._backgroundLayer.y(), 
+                        view._backgroundLayer.width(), 
+                        view._backgroundLayer.height());
+                        view._currentDesignRegion.imageLayer().draw();
+                        if (__debug__) {
+                            view._currentDesignRegion.imageLayer().moveToTop();
+                            setTimeout(function () {
+                                view._currentDesignRegion.imageLayer().moveToBottom();
+                            }, 1000);
+                        }
+                        view._generatePreview();
+                    })
+                    .on('mousedown', function () {
+                        if (this.getAttr('trasient')) {
+                            dispatcher.trigger('active-object', this);
+                        }
+                    })
+                    .on("dragmove", function () {
+                        view._crossLayer.show();
+                        view._crossLayer.moveToTop();
+                        view._crossLayer.draw();
+                        view._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(view._backgroundLayer.x(), 
+                        view._backgroundLayer.y(), 
+                        view._backgroundLayer.width(), 
+                        view._backgroundLayer.height());
+
+                        this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
+                    })
+                    .setAttr('object-type', 'text')
+                    .setAttr('text-color',
+                        oldControlGroup ? oldControlGroup.getAttr('text-color'): config.DEFAULT_FONT_COLOR)
+                    .setAttr('font-size',
+                        oldControlGroup? oldControlGroup.getAttr('font-size'): config.DEFAULT_FONT_SIZE)
+                    .setAttr('font-family',
+                        oldControlGroup? oldControlGroup.getAttr('font-family') : config.DEFAULT_FONT_FAMILY);
+
+                    controlGroup.off('dblclick')
+                    .on('dblclick', function (view) {
+                        return function (evt) {
                             view._crossLayer.hide();
                             view._stage.draw();
-                            dispatcher.trigger('update-hotspot', view._imageLayer);
-                        }.bind(view))
-                        .on('mousedown', function () {
-                            view._crossLayer.show();
-                            view._crossLayer.moveToTop();
-                            view._stage.draw();
-                            if (this.getAttr('trasient')) {
-                                dispatcher.trigger('active-object', this);
-                            }
-                        })
-                        .on("dragmove", function (view) {
-                            return function () {
-                                this.snap(view._stage.width() / 2, view._stage.height() / 2, config.MAGNET_TOLERANCE);
-                            }
-                        }(view))
-                        .setAttr('object-type', 'text')
-                        .setAttr(
-                            'text-color',
-                            oldControlGroup ? oldControlGroup.getAttr('text-color'): config.DEFAULT_FONT_COLOR)
-                        .setAttr('font-size',
-                            oldControlGroup? oldControlGroup.getAttr('font-size'): config.DEFAULT_FONT_SIZE)
-                        .setAttr('font-family',
-                            oldControlGroup? oldControlGroup.getAttr('font-family') : config.DEFAULT_FONT_FAMILY);
-
-                        im.setAttr("control-group", controlGroup);
-
-                        controlGroup.off('dblclick').on('dblclick', function (view) {
-                            return function (evt) {
-                                view._crossLayer.hide();
-                                view._stage.draw();
-                                // 之所以不用position, 是因为chrome下面position方法有bug
-                                var left = controlGroup.x() - im.width() / 2 + controlGroup.getLayer().x();
-                                left = Math.max(left, 0);
-                                var top = controlGroup.y() - im.height() / 2 + controlGroup.getLayer().y();
-                                view.$('.change-text-panel').css({
-                                    left: left,
-                                    top: top,
-                                    position: 'absolute'
-                                }).show();
-                                ['.editable-region', '.object-manager', '.dashboard'].forEach(
-                                    function (className) {
-                                        view.$(className).block({
-                                            message: null,
-                                            overlayCSS: {
-                                                backgroundColor: "#ccc",
-                                                opacity: 0.4
-                                            },
-                                            baseZ: 0
-                                        });
+                            // 之所以不用position, 是因为chrome下面position方法有bug
+                            var left = controlGroup.x() - im.width() / 2 + controlGroup.getLayer().x();
+                            left = Math.max(left, 0);
+                            var top = controlGroup.y() - im.height() / 2 + controlGroup.getLayer().y();
+                            view.$('.change-text-panel').css({
+                                left: left,
+                                top: top,
+                                position: 'absolute'
+                            }).show();
+                            ['.editable-region', '.object-manager', '.dashboard'].forEach(
+                                function (className) {
+                                    view.$(className).block({
+                                        message: null,
+                                        overlayCSS: {
+                                            backgroundColor: "#ccc",
+                                            opacity: 0.4
+                                        },
+                                        baseZ: 0
                                     });
-                                    view.$('.change-text-panel textarea').val(im.name()).trigger('autosize.resize');
-                                    view.$('.change-text-panel textarea').focus();
-                                    view.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                        var text = view.$('.change-text-panel textarea').val().trim();
-                                        if (!text) {
-                                            alert("文字不能为空");
-                                            view.$('.change-text-panel textarea').val(im.name());
-                                            return false;
-                                        }
-                                        view.$('.change-text-panel').hide();
-                                        dispatcher.trigger('text-object-changed', 'text', text);
-                                    });
-                            };
-                        }(view));
-                        if (oldIm && oldControlGroup) {
-                            im.setZIndex(oldIm.getZIndex());
-                            im.rotation(oldIm.rotation());
-                            im.position(oldIm.position());
-                            controlGroup.position(oldControlGroup.position());
-                            controlGroup.rotation(oldControlGroup.rotation());
-                            oldIm.destroy();
-                            oldControlGroup.destroy();
-                            dispatcher.trigger('object-added', im, controlGroup,
-                                oldIm, oldControlGroup);
-                            view._controlLayer.draw();
-                        } else {
-                            dispatcher.trigger('object-added', im, controlGroup);
-                        }
-                        dispatcher.trigger('active-object', controlGroup);
-                        view._controlLayer.add(controlGroup).draw();
-                        imageLayer.draw();
-                        dispatcher.trigger('update-hotspot', view._imageLayer);
+                                });
+                                view.$('.change-text-panel textarea').val(im.name()).trigger('autosize.resize');
+                                view.$('.change-text-panel textarea').focus();
+                                view.$('.change-text-panel .btn-primary').off('click').click(function () {
+                                    var text = view.$('.change-text-panel textarea').val().trim();
+                                    if (!text) {
+                                        alert("文字不能为空");
+                                        view.$('.change-text-panel textarea').val(im.name());
+                                        return false;
+                                    }
+                                    view.$('.change-text-panel').hide();
+                                    dispatcher.trigger('text-object-changed', 'text', text);
+                                });
+                        };
+                    }(view));
+                    im.setAttr("control-group", controlGroup);
+                    view._currentDesignRegion.controlLayer().add(controlGroup).draw();
+                    if (oldIm && oldControlGroup) {
+                        im.setZIndex(oldIm.getZIndex());
+                        im.rotation(oldIm.rotation());
+                        im.position(oldIm.position());
+                        controlGroup.position(oldControlGroup.position());
+                        controlGroup.rotation(oldControlGroup.rotation());
+                        oldIm.destroy();
+                        oldControlGroup.destroy();
+                        dispatcher.trigger('object-added', im, controlGroup,
+                        oldIm, oldControlGroup);
+                        view._currentDesignRegion.controlLayer().draw();
+                    } else {
+                        dispatcher.trigger('object-added', im, controlGroup);
+                    }
+                    view._generatePreview();
                 }
             }(this));
         },
 
-        _generatePreview: function () {
-            var imageLayer = this._currentDesignRegion.imageLayer;
-            var previewLayer = this._currentDesignRegion.previewLayer;
-            console.log(previewLayer.size());
+        _generatePreview: function (designRegion) {
+            !designRegion && (designRegion = this._currentDesignRegion); 
+            var imageLayer = designRegion.imageLayer();
+            var previewLayer = designRegion.previewLayer;
             if (imageLayer.children.length == 0) {
-                previewLayer.getContext().clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
-                dispatcher.trigger('update-hotspot-done');
+                previewLayer.getContext().clearRect(0, 0, previewLayer.width(), previewLayer.height());
+                dispatcher.trigger('update-preview-done', designRegion);
                 return;
             } 
             var hotspotContext = previewLayer.getContext();
@@ -564,11 +627,11 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             var targetHeight = this._backgroundLayer.height();
 
             var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
-            this._calcImageData(hotspotImageData, imageLayer, targetWidth, targetHeight);
+            this._calcImageData(hotspotImageData, imageLayer, targetWidth, targetHeight, designRegion);
             if (__debug__) {
                 var layer = new Kinetic.Layer();
                 var data = [];
-                this._currentDesignRegion.controlPointsMap(imageLayer).forEach(function (pair) {
+                designRegion.controlPointsMap(imageLayer).forEach(function (pair) {
                     data.push(pair[0][0]);
                     data.push(pair[0][1]);
                     var circle = new Kinetic.Circle({
@@ -595,10 +658,10 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             }
             hotspotContext.imageSmoothEnabled = true;
             hotspotContext.putImageData(hotspotImageData, previewLayer.x(), previewLayer.y());
-            dispatcher.trigger('update-hotspot-done', hotspotContext);
+            dispatcher.trigger('update-preview-done', designRegion, previewLayer);
         },
 
-        _calcImageData: function (imageData, imageLayer, width, height) {
+        _calcImageData: function (imageData, imageLayer, width, height, designRegion) {
             var srcImageData = imageLayer.getContext().getImageData(imageLayer.x(), imageLayer.y(),
             imageLayer.width(), imageLayer.height()).data;
 
@@ -606,9 +669,9 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
 
             var srcWidth = imageLayer.width();
             var srcHeight = imageLayer.height();
-            var blackShadowImageData = this._currentDesignRegion.blackShadowImageData;
-            var whiteShadowImageData = this._currentDesignRegion.whiteShadowImageData;
-            var controlPointsMap = this._currentDesignRegion.controlPointsMap(imageLayer);
+            var blackShadowImageData = designRegion.blackShadowImageData;
+            var whiteShadowImageData = designRegion.whiteShadowImageData;
+            var controlPointsMap = designRegion.controlPointsMap(imageLayer);
             var pointsMatrix = [
                 [
                     new Array(4),
@@ -642,36 +705,28 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 parseInt('0x' + rgba.substr(4, 2)),
                 255
             ];
-            console.log(this._currentDesignRegion.imageLayer.position());
-            console.log(this._currentDesignRegion.imageLayer.size());
             for (var i = 0; i < width; ++i) {
                 for (var j = 0; j < height; ++j) {
-                    if (this._currentDesignRegion.within(i, j)) {
-                        //var origPoint = mvc([i, j], controlPointsMap);
-                        //interpolation.bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
+                    if (designRegion.within(i, j)) {
+                        var origPoint = mvc([i, j], controlPointsMap);
+                        interpolation.bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
                         var pos = (j * width + i) * 4;
-                        //if (imageData.data[pos + 3]) {
-                            //if (Math.max(imageData.data[pos], imageData.data[pos + 1], imageData.data[pos + 2]) > 127) {
-                                //var shadowImageData = blackShadowImageData;
-                            //} else {
-                                //shadowImageData = whiteShadowImageData;
-                            //}
-                            //var alpha = shadowImageData[pos + 3] / 255;
-                            //imageData.data[pos] = shadowImageData[pos] * alpha + imageData.data[pos] * (1 - alpha);
-                            //imageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + imageData.data[pos + 1] * (1 - alpha);
-                            //imageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + imageData.data[pos + 2] * (1 - alpha);
-                            imageData.data[pos] = 255;
-                            imageData.data[pos + 1] = 0;
-                            imageData.data[pos + 2] = 0;
-                            imageData.data[pos + 3] = 255;
-                        //}
-                    } else {
-                    }
+                        if (imageData.data[pos + 3]) {
+                            if (Math.max(imageData.data[pos], imageData.data[pos + 1], imageData.data[pos + 2]) > 127) {
+                                var shadowImageData = blackShadowImageData;
+                            } else {
+                                shadowImageData = whiteShadowImageData;
+                            }
+                            var alpha = shadowImageData[pos + 3] / 255;
+                            imageData.data[pos] = shadowImageData[pos] * alpha + imageData.data[pos] * (1 - alpha);
+                            imageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + imageData.data[pos + 1] * (1 - alpha);
+                            imageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + imageData.data[pos + 2] * (1 - alpha);
+                        }
+                    } 
                 }
             }
-            return;
             // for each point on edges, do anti alias (sampling around itself)
-            this._currentDesignRegion.previewEdges['bottom'].forEach(function (point) {
+            designRegion.previewEdges['bottom'].forEach(function (point) {
                 // 若对象已经超出边界
                 if (imageData.data[(point[0] + (point[1] + 1) * width) * 4 + 4]) {
                     [
@@ -686,7 +741,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         });
                 }
             });
-            this._currentDesignRegion.previewEdges['right'].forEach(function (point) {
+            designRegion.previewEdges['right'].forEach(function (point) {
                 if (imageData.data[(point[0] - 1 + point[1] * width) * 4 + 4]) {
                     [
                         [point[0] - 1, point[1]],
@@ -700,7 +755,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         });
                 }
             });
-            this._currentDesignRegion.previewEdges['top'].forEach(function (point) {
+            designRegion.previewEdges['top'].forEach(function (point) {
                 if (imageData.data[(point[0] + (point[1] - 1) * width) * 4 + 4]) {
                     [
                         [point[0], point[1] - 1],
@@ -714,7 +769,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         });
                 }
             });
-            this._currentDesignRegion.previewEdges['left'].forEach(function (point) {
+            designRegion.previewEdges['left'].forEach(function (point) {
                 if (imageData.data[(point[0] + 1 + point[1] * width) * 4 + 4]) {
                     [
                         [point[0] + 1, point[1]],

@@ -1,7 +1,11 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data', 
-'kineticjs', 'spu/config'], 
+'kineticjs', 'spu/config', 'js-url'], 
 function ($, _, bucket, readImageData, Kinetic, config) {
         
+    var __debug__ = ($.url('?debug') == '1');
+    var _imageLayerMap = {};
+    var _controlLayerMap = {};
+
     function DesignRegion(data) {
         this.id = data.id;
         this.picUrl = data.picUrl;
@@ -12,11 +16,37 @@ function ($, _, bucket, readImageData, Kinetic, config) {
         this.whiteShadowUrl = data.whiteShadowUrl;
         this.aspect = data.aspect;
         this.previewLayer = new Kinetic.Layer();  // 预览层
-        this.controlLayer = new Kinetic.Layer();  // 操作层
-        this.imageLayer = new Kinetic.Layer();  // 图像层， 即平铺的图像
+        if (__debug__) {
+            this.controlLayer.add(new Kinetic.Rect({
+                strokeWidth: '1px',
+                stroke: 'blue',
+                name: 'frame',
+            }));
+        }
         return this;
     }
 
+
+    // 图像层， 即平铺的图像, 同名的设计区， 使用同一个图像层
+    DesignRegion.prototype.imageLayer = function() {
+        var imageLayer = _imageLayerMap[this.name];
+        if (!imageLayer) {
+            imageLayer = new Kinetic.Layer();
+            _imageLayerMap[this.name] = imageLayer;
+        }
+         
+        return imageLayer;
+    }
+
+    DesignRegion.prototype.controlLayer = function() {
+        var controlLayer = _controlLayerMap[this.name];
+        if (!controlLayer) {
+            controlLayer = new Kinetic.Layer();
+            _controlLayerMap[this.name] = controlLayer;
+        }
+         
+        return controlLayer;
+    }
 
     DesignRegion.prototype.getPreviewEdges = function (proportion) {
         var d = $.Deferred();
@@ -29,6 +59,11 @@ function ($, _, bucket, readImageData, Kinetic, config) {
                 // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
                 // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
                 // 这样会给判断点是否在边界上带来麻烦
+                
+                // 特别注意， 当propotion > 1的时候， 其实是放大， 那么必然产生了
+                // 非闭合曲线，由于在yaza中， 不会出现原图小于浏览器上图片的情况， 
+                // 所以这种情况不予考虑
+
                 var set = new buckets.Set();
                 ['top', 'left', 'bottom', 'right'].forEach(function (position) {
                     previewEdges[position] = [];
@@ -40,6 +75,7 @@ function ($, _, bucket, readImageData, Kinetic, config) {
                         }
                     });
                 });
+                
                 d.resolve(this.previewEdges);
             }.bind(this));
         }
@@ -123,7 +159,8 @@ function ($, _, bucket, readImageData, Kinetic, config) {
         // 注意, 投射区域中, 不是说top边上的任何一个点都在left的右边, 也不是
         // 都在bottom的上面. 这里唯一要求的是, 这四个边组成了一个封闭区域.
         // 那么我们就要将四个边放在一起考虑, 给定任何一个y, 左右边界是什么,
-        // 给定任何一个x, 上下边界是什么
+        // 给定任何一个x, 上下边界是什么, 但是要注意， 有些边界点可能是平行的。
+        // 举例来说， 比如在top上， 有两个边界点有同样的x
         this._bounds = {
             leftRight: {},
             topBottom: {}
@@ -232,6 +269,8 @@ function ($, _, bucket, readImageData, Kinetic, config) {
 
     DesignRegion.prototype.clearLayers = function () {
         this.previewLayer.remove();
+        this.controlLayer().remove();
+        this.imageLayer().remove();
     }
 
     DesignRegion.prototype.controlPointsMap = function (imageLayer) {

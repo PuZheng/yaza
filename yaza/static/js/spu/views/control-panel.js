@@ -59,6 +59,12 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                     $(_.sprintf("<a href='#' class='list-group-item btn btn-warning' aspect='%s' design-region='%s'>%s</a>", aspect.name, designRegion.name, designRegion.name)
                     ).data('design-region', designRegion).appendTo($designRegionEl);
                 });
+                // 若仅有一个设计区， 就不要展示设计区选择器了
+                if (aspect.designRegionList.length == 1) {
+                    $designRegionEl.hide();
+                } else {
+                    $designRegionEl.show();
+                }
 
                 dispatcher.trigger('aspect-selected', aspect);
 
@@ -67,6 +73,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 this.$('.design-region-selector a').removeClass('disabled active');
                 $(evt.currentTarget).addClass("active disabled");
                 var designRegion = $(evt.currentTarget).data('design-region');
+                this._currentDesignRegion = designRegion;
                 dispatcher.trigger('design-region-selected', designRegion);
             }
         },
@@ -77,9 +84,13 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             ocspu.aspectList.forEach(function (aspect) {
                 $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" data-aspectID="%s"/><div></div>',
                 aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
-
-
             }.bind(this));
+            // 若仅有一面， 就不要面选择器了
+            if (ocspu.aspectList.length == 1) {
+                this.$('.aspect-selector').hide(); 
+            } else {
+                this.$('.aspect-selector').show(); 
+            }
             if (!this._currentAspect) {
                 this.$('.aspect-selector .thumbnail:first-child').click();
             } else {
@@ -103,13 +114,14 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             })
             .on('design-region-setup', function (designRegion) {
                 this._objectManager.empty();
-                designRegion.imageLayer.getChildren(function (node) {
+                designRegion.imageLayer().getChildren(function (node) {
                     return node.getClassName() == "Image";
                 }).sort(function (a, b) {
                     return a.getZIndex() - b.getZIndex();
                 }).forEach(function (node) {
                     this._objectManager.add(node, node.getAttr("control-group"));
                 }.bind(this));
+                this._textOperators.reset();
             }, this)
             .on('active-object', function (controlGroup) {
                 this._objectManager.activeObjectIndicator(controlGroup);
@@ -121,9 +133,66 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 } else {
                     this._objectManager.add(image, group);
                 }
+            })
+            .on('update-preview-done', function (designRegion, previewLayer) {
+                if (!previewLayer) {
+                    this._clearThumbnail(this._currentAspect.id, designRegion.id);
+                    this.$('.design-region-selector a[design-region="' + designRegion.name + '"] i').remove();
+                } else {
+                    this._updateThumbnail(this._currentAspect.id,
+                        designRegion.id, previewLayer);
+                    var dom = this.$('.design-region-selector a[design-region="' + designRegion.name + '"]');
+                    if (dom.find("i").size() == 0) {
+                        dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
+                    }
+                }
             });
         },
 
+        _clearThumbnail: function (aspectId, designRegionId) {
+            var $image = this.$('img[data-aspectId=' + aspectId + ']');
+            var designRegionName = "design-region-" + designRegionId;
+            var stage = $image.data("stage");
+            if (!!stage) {
+                stage.getChildren(function (node) {
+                    return node.getName() == designRegionName;
+                }).forEach(function (node) {
+                    node.destroy();
+                });
+            }
+        },
+
+        _updateThumbnail: function (aspectId, designRegionId, previewLayer) {
+            this._clearThumbnail(aspectId, designRegionId);
+            var $image = $('img[data-aspectId=' + aspectId + ']');
+            var designRegionName = "design-region-" + designRegionId;
+            var stage = $image.data("stage");
+            if (!stage) {
+                // img has margin-[left|top], however this margin is not 
+                // calculate into position().[left|top], so I must recaculate
+                // the margin for stage container
+                var $container = $image.prev().css({
+                    width: $image.width(),
+                    height: $image.height(),
+                    'margin-left': ($image.parent().width() - $image.width()) / 2,
+                    'margin-top': ($image.parent().height() - $image.height()) / 2
+                });
+                stage = new Kinetic.Stage({
+                    container: $container[0],
+                    width: $image.width(),
+                    height: $image.height()
+                });
+                $image.data("stage", stage);
+            }
+            var layer = new Kinetic.Layer({
+                name: designRegionName
+            });
+            stage.add(layer);
+            layer.draw();
+            var thumbnailContext = layer.getContext();
+            thumbnailContext.imageSmoothEnabled = true;
+            thumbnailContext.drawImage(previewLayer.getContext().canvas._canvas, previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height(), 0, 0, $image.width(), $image.height());
+        },
     });
     return ControlPanel;
 });
