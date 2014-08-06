@@ -16,6 +16,7 @@
         'zClip': 'empty:',
         "jquery.scrollTo": 'empty:',
         'js-url': 'empty:',
+        'toastr': 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -106,6 +107,9 @@
         },
         'jquery.ui.widget': {
             deps: ['jquery']
+        },
+        'toastr': {
+            deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
         },
         'js-url': {
             deps: ['jquery'],

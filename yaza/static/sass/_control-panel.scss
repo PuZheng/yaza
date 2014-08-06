@@ -2,11 +2,17 @@
 @import 'object-manager';
 
 %control-panel {
+
+    .btn-submit {
+        width: 100%;
+    }
+
     .logo img {
         max-height: 64px;
         margin: auto;
         display: block;
     }
+
     .ocspu-selector {
         border: 1px dashed gray;
         margin-top: 10px;
@@ -39,6 +45,9 @@
             }
             & .layer {
                 position: absolute;
+            }
+            &.selected {
+                border: 1px solid #0088CC;
             }
         }
     }

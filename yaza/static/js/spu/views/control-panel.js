@@ -1,13 +1,13 @@
-define(['backbone', 'underscore', 'handlebars', 
+define(['jquery', 'backbone', 'underscore', 'handlebars',
 'text!templates/control-panel.hbs', 'spu/datastructures/design-region', 
 'dispatcher', 'spu/views/select-image-modal', 'spu/views/object-manager',  
 'spu/views/add-text-modal', 'spu/views/text-operators',
 'underscore.string', 'bootstrap', 'spectrum'], 
-function (Backbone, _, handlebars, controlPanelTemplate, DesignRegion, 
+function ($, Backbone, _, handlebars, controlPanelTemplate, DesignRegion, 
 dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
 
     _.mixin(_.str.exports());
-    
+
     var ControlPanel = Backbone.View.extend({
         _template: handlebars.default.compile(controlPanelTemplate),
 
@@ -32,7 +32,6 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             this._textOperators = new TextOperators({
                 el: this.$('.text-operators'),
             }).render();
-
             return this;
         },
 
@@ -75,7 +74,12 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 var designRegion = $(evt.currentTarget).data('design-region');
                 this._currentDesignRegion = designRegion;
                 dispatcher.trigger('design-region-selected', designRegion);
-            }
+            },
+            'click .btn-submit': function (e) {
+                var $btn = $(e.currentTarget);
+                $btn.bootstrapButton('loading');
+                dispatcher.trigger('submit-design');
+            },
         },
 
 
@@ -146,6 +150,9 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                         dom.append(_.sprintf("<i class='fa  fa-asterisk fa-fw'></i>"))
                     }
                 }
+            })
+            .on('submit-design-done', function (status) {
+                this.$('.btn-submit').bootstrapButton('reset');
             });
         },
 
@@ -193,6 +200,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             thumbnailContext.imageSmoothEnabled = true;
             thumbnailContext.drawImage(previewLayer.getContext().canvas._canvas, previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height(), 0, 0, $image.width(), $image.height());
         },
+
     });
     return ControlPanel;
 });

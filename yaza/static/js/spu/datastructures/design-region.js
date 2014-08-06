@@ -210,7 +210,7 @@ function ($, _, bucket, readImageData, Kinetic, config) {
             var blackImageObj = new Image();
             blackImageObj.crossOrigin = "Anonymous";
             blackImageObj.onload = function () {
-                this.blackShadowImageData = readImageData(blackImageObj, width, height);
+                this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
             $.ajax({url: this.blackShadowUrl, crossDomain: true}).done(
@@ -221,7 +221,7 @@ function ($, _, bucket, readImageData, Kinetic, config) {
             $.getImageData({url: this.blackShadowUrl,
                 crossDomain: true,
                 success: function (blackImageObj) {
-                    this.blackShadowImageData = readImageData(blackImageObj, width, height);
+                    this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                     d.resolve('black');
                 }.bind(this),
                 error: function (xhr, status) {
@@ -244,7 +244,7 @@ function ($, _, bucket, readImageData, Kinetic, config) {
             var whiteImageObj = new Image();
             whiteImageObj.crossOrigin = "Anonymous";
             whiteImageObj.onload = function () {
-                this.whiteShadowImageData = readImageData(whiteImageObj, width, height);
+                this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
             $.ajax({url: this.whiteShadowUrl, crossDomain: true}).done(
@@ -255,7 +255,7 @@ function ($, _, bucket, readImageData, Kinetic, config) {
             $.getImageData({url: this.whiteShadowUrl,
                 crossDomain: true,
                 success: function (whiteImageObj) {
-                    this.whiteShadowImageData = readImageData(whiteImageObj, width, height);
+                    this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                     d.resolve('white');
                 }.bind(this),
                 error: function (xhr, status) {

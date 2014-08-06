@@ -1,9 +1,11 @@
-define(['jquery', 'backbone', 'handlebars', 'text!templates/play-ground.hbs', 
-'spu/config', 'spu/control-group', 'kineticjs', 'dispatcher', 'color-tools', 
-'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc',
-'jquery.scrollTo', 'js-url', 'block-ui'], 
-function ($, Backbone, handlebars, playGroundTemplate, config, makeControlGroup, 
-Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
+define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
+'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group', 
+'kineticjs', 'dispatcher', 'color-tools', 
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data',
+'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver'], 
+function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config, 
+makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation, 
+mvc, readImageData) {
 
     var __debug__ = ($.url('?debug') == '1');
 
@@ -18,15 +20,19 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 this.$('.object-manager').unblock();
                 return false;
             },
+            'click .btn-download-preview': '_downloadPreview',
+            'click .btn-download-design': '_downloadDesign',
         },
 
         initialize: function (option) {
             this._spu = option.spu;
+            this._orderId = option.orderId;
         },
         
 
         render: function () {
-            this.$el.html(this._template());
+            this.$el.prepend(this._template());
+            this._draw = SVG(this.$('.svg-drawing')[0]);
 
             this._setupEventsHandler();
             this.$mask = this.$(".mask");
@@ -65,6 +71,20 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             this._crossLayer.add(horizontalLine);
             this._crossLayer.hide();
             this._stage.add(this._crossLayer);
+            this.$('.preview-background-color').spectrum({
+                allowEmpty: true,
+                color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
+                showInput: true,
+                showAlpha: true,
+            });
+
+            var isAdministrator = !this._orderId;
+            if (config.PREVIEW_DOWNLOADABLE && isAdministrator) {
+                this.$('.btn-download-preview').show(); 
+            }
+            if (config.DESIGN_DOWNLOADABLE && isAdministrator) {
+                this.$('.btn-download-design').show();
+            }
 
             return this;
         },
@@ -107,6 +127,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                     ]);
 
                     dispatcher.trigger('design-region-setup', designRegion);
+                    controlLayer.moveToTop();
                     controlLayer.draw();
                 }.bind(this));
             })
@@ -185,6 +206,32 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
             }, this)
             .on('update-preview', function () {
                 this._generatePreview();
+            })
+            .on('submit-design', function (e) {
+                var ocspu = this._currentAspect.ocspu;
+                if (ocspu.aspectList.every(function (aspect) {
+                    return aspect.designRegionList.every(function (dr) {
+                        return !dr.imageLayer().hasChildren();
+                    });                
+                })) {
+                    dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                    dispatcher.trigger('submit-design-done', 'failed');
+                    return;
+                }
+                var data = {"data": JSON.stringify(this._getDesignData())};
+                data['order_id'] = this._orderId;
+                data["spu_id"] = $("[name=spu]").data("val")["id"];
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/image/design-save',
+                    data: data
+                }).done(function (content) {
+                    dispatcher.trigger('flash', 'success', '您已经成功保存了定制结果');
+                    dispatcher.trigger('submit-design-done', 'success');
+                }).fail(function (jqXHR) {
+                    dispatcher.trigger('submit-design-done', 'failed');
+                });
             });
         },
 
@@ -283,6 +330,7 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         // 这个框的算法是（以portrait为例）， 上边和design
                         // region的上沿对齐， 下边和design region的下沿对齐，
                         // 左边和右边到design region的左沿和右沿距离相等
+                        var oldImageLayerSize = dr.imageLayer().size();
                         if (dr.previewHeight() / dr.previewWidth() > dr.size[1] / dr.size[0]) {
                             dr.imageLayer().size({
                                 width: dr.size[0] * dr.previewHeight() / dr.size[1],
@@ -307,7 +355,22 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                         stage.add(dr.controlLayer());
                         stage.add(dr.previewLayer);
                         dr.imageLayer().moveToBottom();
-                        // TODO scale the control group and objects
+                        // 添加的图像文字， 保持中心位置不变， 但是要缩放
+                        if (oldImageLayerSize.width > 0 && oldImageLayerSize.height > 0) {
+                            var scale = {
+                                x: dr.imageLayer().width() / oldImageLayerSize.width,
+                                y: dr.imageLayer().height() / oldImageLayerSize.height, 
+                            };
+                            dr.imageLayer().getChildren().forEach(function (node) {
+                                node.scale(scale);
+                            });
+                            dr.imageLayer().draw();
+                            dr.controlLayer().getChildren().forEach(function (node) {
+                                node.scale(scale);
+                            });
+                            dr.controlLayer().draw();
+                        }
+
                         var view = this;
                         dr.getBlackShadow(backgroundLayer.width(), backgroundLayer.height())
                         .done(function () {
@@ -784,6 +847,160 @@ Kinetic, dispatcher, colorTools, loadImage, interpolation, mvc) {
                 }
             });
         },
+
+        _getDesignData: function () {
+            this._draw.clear();
+            var data = {};
+            var ocspu = this._currentAspect.ocspu;
+            ocspu.aspectList.forEach(function (asepct) {
+                asepct.designRegionList.forEach(function (designRegion) {
+                    var imageLayer = designRegion.imageLayer();
+                    this._draw.clear();
+                    this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
+                    .data('name', name);
+                    var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
+                    _.each(imageLayer.children, function (node) {
+                        if (node.className === "Image") {
+                            var im = this._draw.image(
+                                readImageData.readImageDataUrl(node.image(), node.width(), node.height()),
+                                node.width() * ratio,
+                                node.height() * ratio)
+                                .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
+                                .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
+                                if (node.image().src.match(/^http/)) {
+                                    im.data("design-image-file", node.image().src)
+                                }
+                        }
+                        data[designRegion.name] = this._draw.exportSvg({whitespace: true});
+                    }, this);
+                }, this);
+            }, this);
+            return data;
+        },
+
+        // 下载当前面的预览
+        _downloadPreview: function () {
+            if (this._currentAspect.designRegionList.every(function (dr) {
+                return !dr.imageLayer().hasChildren();
+            })) {
+                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
+                return false;
+            }
+            var backgroundColor = this.$('input.preview-background-color').spectrum('get');
+            backgroundColor = backgroundColor? backgroundColor.toRgb(): {
+                r: 0, g: 0, b: 0, a: 0
+            }
+            var canvas = document.createElement("canvas");
+            canvas.width = this._backgroundLayer.width();
+            canvas.height = this._backgroundLayer.height();
+            var ctx = canvas.getContext("2d");
+            var previewImageData = ctx.createImageData(canvas.width,
+            canvas.height);
+
+            this._currentAspect.designRegionList.forEach(function (dr) {
+                var previewLayer = dr.previewLayer;
+                if (previewLayer) {
+                    var imageData = previewLayer.getContext().getImageData(previewLayer.x(), previewLayer.y(), canvas.width, canvas.height).data;
+                    var pixel = previewImageData.data.length / 4;
+                    while (pixel--) {
+                        previewImageData.data[pixel * 4] |= imageData[pixel * 4];
+                        previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
+                        previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
+                        previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                    }
+                }
+            });
+
+            var backgroundImageData = this._backgroundLayer.getContext()
+            .getImageData(this._backgroundLayer.x(), this._backgroundLayer.y(), canvas.width, canvas.height).data;
+            var pixel = previewImageData.data.length / 4;
+            // merge the background and preview 
+            while (pixel--) {
+                // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
+                if (backgroundImageData[pixel * 4 + 3] > 0) {
+                    var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                    var dstA = backgroundImageData[pixel * 4 + 3] / 255;
+                    var outA = srcA + dstA * (1 - srcA);
+                    var outR = (previewImageData.data[pixel * 4] * srcA + backgroundImageData[pixel * 4] * dstA * (1 - srcA)) / outA;
+                    var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundImageData[pixel * 4 + 1] * dstA * (1 - srcA)) / outA;
+                    var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundImageData[pixel * 4 + 2] * dstA * (1 - srcA)) / outA;
+                    previewImageData.data[pixel * 4 + 3] = outA * 255;
+                    previewImageData.data[pixel * 4] = outR;
+                    previewImageData.data[pixel * 4 + 1] = outG;
+                    previewImageData.data[pixel * 4 + 2] = outB;
+                } 
+            }
+            if (backgroundColor.a > 0) {
+                pixel = previewImageData.data.length / 4;
+                while (pixel--) {
+                    var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                    var outR = (previewImageData.data[pixel * 4] * srcA + backgroundColor.r * (1 - srcA));
+                    var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundColor.g * (1 - srcA));
+                    var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundColor.b * (1 - srcA));
+                    previewImageData.data[pixel * 4 + 3] = 255;
+                    previewImageData.data[pixel * 4] = outR;
+                    previewImageData.data[pixel * 4 + 1] = outG;
+                    previewImageData.data[pixel * 4 + 2] = outB;
+                }
+            }
+
+            ctx.putImageData(previewImageData, 0, 0);
+            var uri = canvas.toDataURL('image/png');
+            var a = this.$('.btn-download-preview').find('a');
+            if(typeof Blob == "undefined"){
+                var $form = $("#download-form");
+                if(!$form[0]){
+                    $form = $("<form></form>");
+                }else{
+                    $form.empty();
+                }
+                var $input = $("<input></input>").attr({"name": "data", "type":"hidden"}).val(uri);
+                $form.append($input);
+                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/image"});
+                $form.appendTo($("body")).submit();
+            }else{
+                a.attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
+                    evt.stopPropagation();
+                })[0].click();
+            }
+        },
+
+        _downloadDesign: function (evt) {
+            if (this._currentAspect.designRegionList.every(function (dr) {
+                return !dr.imageLayer().hasChildren();
+            })) {
+                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
+                return false;
+            }
+            $(evt.currentTarget).bootstrapButton('loading');
+
+            var data = this._getDesignData();
+
+            var zip = new JSZip();
+            _.each(data, function (val, key) {
+                zip.file(key + ".svg", val);
+            });
+            // 对于IE<10的浏览器，没有Blob对象，所以jszip不能正常的generate blob，并且，generate成base64后
+            // "data:application/zip;base64," + zip.generate({type:"base64"})
+            // ，其生成的链接太长，导致ie出现“传递给系统调用的数据区域太小”异常， 所以，依旧传递到后台拼装
+            if (typeof Blob == "undefined") {
+                var $form = $("#download-form");
+                if (!$form[0]) {
+                    $form = $("<form></form>");
+                } else {
+                    $form.empty();
+                }
+                var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
+                $form.append($input);
+                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/design-pkg"});
+                $form.appendTo($("body")).submit();
+                $(evt.currentTarget).bootstrapButton('reset');
+            } else {
+                var content = zip.generate({type: "blob"});
+                saveAs(content, new Date().getTime() + ".zip");
+                $(evt.currentTarget).bootstrapButton('reset');
+            }       
+        }
     });
 
     return PlayGround;

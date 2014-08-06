@@ -17,6 +17,7 @@ require.config({
         'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
         'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
         "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
+        'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -36,7 +37,7 @@ require.config({
         'utils': 'js/utils',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
-        //'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
+        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -55,7 +56,7 @@ require.config({
         },
         'bootstrap': {
             deps: ['jquery'],
-            exports: '$.fn.tooltip'
+            exports: '$.fn.button',
         },
         'lazy-load': {
             deps: ['jquery'],
@@ -66,8 +67,7 @@ require.config({
         },
         'jquery-file-upload': {
             deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
-                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css', 
-            'jquery.ui.widget']
+                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
@@ -109,13 +109,18 @@ require.config({
             deps: ['jquery'],
             exports: '$.fn.url'
         },
+        'toastr': {
+            deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
+        },
     }
 });
 
 // force loading jquery, svg before infrastructure, since infrastructure need
 // them after compression
-require(['jquery', 'svg'], function () {
-    require(['js/infrastructure'], function () {
+require(['jquery', 'svg', 'bootstrap'], function () {
+    // jquery ui和bootstrap都定义了$.fn.button, 所以要重新定义一个方法
+    $.fn.bootstrapButton = $.fn.button;
+    require(['js/infrastructure', 'bootstrap'], function () {
         require(['spu/app'], function () {});  
     });
 });

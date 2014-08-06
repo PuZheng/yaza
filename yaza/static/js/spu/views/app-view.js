@@ -1,8 +1,27 @@
-define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatcher', 'spu/datastructures/spu', 'bootstrap'], function (Backbone, PlayGround, ControlPanel, dispatcher, Spu) {
+define(['backbone', 'toastr',
+'spu/config', 'spu/views/play-ground', 'spu/views/control-panel', 
+'dispatcher', 'spu/datastructures/spu', 'bootstrap'
+], 
+function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "positionClass": "toast-bottom-left",
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "2000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+
     var AppView = Backbone.View.extend({
         el: '.primary',
-
-        initialize: function () {
+        
+       initialize: function () {
             var spu = this.$('input[name="spu"]').data('val');
             spu = Spu(spu);
             var tagList = this.$('input[name=tag-list]').data('val');
@@ -49,18 +68,29 @@ define(['backbone', 'spu/views/play-ground', 'spu/views/control-panel', 'dispatc
             }, this)
             .on('update-preview', function () {
                 this._playGround.trigger('update-preview');
+            }, this)
+            .on('submit-design', function () {
+                this._playGround.trigger('submit-design');
+            }, this)
+            .on('flash', function (type, msg) {
+                toastr[type](msg);
+            }, this)
+            .on('submit-design-done', function (status) {
+                this._controlPanel.trigger('submit-design-done', status);
             }, this);
 
 
             this._playGround = new PlayGround({
                 el: this.$('.play-ground'), 
                 spu: spu, 
+                orderId: orderId,
             }).render();
             this._controlPanel = new ControlPanel({
                 el: this.$('.control-panel'), 
                 spu: spu,
                 tagList: tagList,
             }).render();
+
         }
     });
     return AppView;
