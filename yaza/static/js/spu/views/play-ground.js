@@ -31,7 +31,7 @@ mvc, readImageData) {
         
 
         render: function () {
-            this.$el.prepend(this._template());
+            this.$el.prepend(this._template({orderId: this._orderId}));
             this._draw = SVG(this.$('.svg-drawing')[0]);
 
             this._setupEventsHandler();
@@ -71,16 +71,17 @@ mvc, readImageData) {
             this._crossLayer.add(horizontalLine);
             this._crossLayer.hide();
             this._stage.add(this._crossLayer);
-            this.$('.preview-background-color').spectrum({
-                allowEmpty: true,
-                color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
-                showInput: true,
-                showAlpha: true,
-            });
 
             var isAdministrator = !this._orderId;
             if (config.PREVIEW_DOWNLOADABLE && isAdministrator) {
                 this.$('.btn-download-preview').show(); 
+                this.$('.preview-background-color').show();
+                this.$('.preview-background-color').spectrum({
+                    allowEmpty: true,
+                    color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
+                    showInput: true,
+                    showAlpha: true,
+                });
             }
             if (config.DESIGN_DOWNLOADABLE && isAdministrator) {
                 this.$('.btn-download-design').show();

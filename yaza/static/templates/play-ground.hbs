@@ -3,7 +3,7 @@
     <span class="input-group-btn">
       <button class="btn btn-default btn-download-preview" style='display: none'><small>下载预览</small><a href=""></a></button>
     </span>
-    <input type="text" class="form-control preview-background-color">
+    <input type="text" class="form-control preview-background-color" style='display: none'>
   </div>
   <!--<button class="btn btn-info pull-left btn-download-preview" style='display: none'>-->
     <!--下载预览-->
@@ -28,6 +28,11 @@
     </div>
   </div>
 </div>
+{{#if orderId}}
+<p>
+  <small class='text-danger'>订单号: {{orderId}}</small>
+</p>
+{{/if}}
 <div class='mask text-center'>
   <i class="fa fa-spinner fa-spin fa-4x"></i>
   <p class='message'>abc</p>
