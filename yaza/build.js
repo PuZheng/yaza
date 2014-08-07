@@ -1,5 +1,10 @@
 ({
     baseUrl: 'static',
+    map: {
+        '*': {
+            'css': 'components/require-css/css.min'
+        }
+    },
     paths: {
         jquery: 'empty:',
         underscore: 'empty:',
@@ -33,6 +38,7 @@
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
+        'utils': 'js/utils',
         'lazy-load': 'js/utils/lazy-load',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu'
