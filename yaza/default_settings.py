@@ -43,14 +43,22 @@ FONTS_MAP = {
 QINIU_ENABLED = True
 
 QINIU_CONF = {
-    "ACCESS_KEY": "2B9o8hHxkw0PFOwUDd0Yl7TVsH_uXCrHicFeHcUI",
-    "SECRET_KEY": "hzeRwpvXzuFzqhkPaWugQLTyHGXltsjNvlvy9zHk",
-    "DESIGN_IMAGE_BUCKET": "yaza-design-images",
-    "SPU_IMAGE_BUCKET": "yaza-spu-images",
-    "ASPECT_MD_SIZE": 400,
+    "ACCESS_KEY": "kQdEWJ6924zBbQYSMuCw71rc-aBNBousngwAtjIE",
+    "SECRET_KEY": "Ukh9-yuxS7gvqHN0gJ1jZPGXmHdEARL9BFVLipBE",
+    "DESIGN_IMAGE_BUCKET": "yaza-designs",
+    "SPU_IMAGE_BUCKET": "yaza-spus",
+    "ASPECT_MD_SIZE": 800,
     "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
+    "EXPIRY_TIME": 12 * 3600  # 30天
 }
 
 DESIGN_IMAGE_LIST_API = "http://diancai.snsunion.cn/cloth/index.php/Uility/designimages"
 
 DESIGNED_FILE_FOLDER = 'static/custom'
+
+ENABLE_DEBUG_TOOLBAR = True
+
+DEBUG_TB_INTERCEPT_REDIRECTS = False
+
+BLACK_ALPHA_THRESHOLD = 80
+WHITE_ALPHA_THRESHOLD = 128

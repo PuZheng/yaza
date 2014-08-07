@@ -1,5 +1,5 @@
-define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools', 'spu/config', 'buckets', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData"],
-    function (bilinear, bicubic, colorTools, config, buckets, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
+define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-tools','utils/read-image-data',  'spu/config', 'underscore', 'backbone', 'dispatcher', 'handlebars', 'text!templates/jit-preview.hbs', 'kineticjs', 'color-tools', 'underscore.string', "jquery-ajaxtransport-xdomainrequest", "getImageData", 'spectrum'],
+    function (bilinear, bicubic, colorTools, readImageData, config, _, Backbone, dispatcher, Handlebars, jitPreviewTemplate, Kineticjs) {
         function getQueryVariable(variable) {
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -27,16 +27,6 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 _template: Handlebars.default.compile(jitPreviewTemplate),
                 _layerCache: {},
 
-                _getImageData: function (image) {
-                    var canvas = document.createElement("canvas");
-                    canvas.width = this._stage.width();
-                    canvas.height = this._stage.height();
-                    var ctx = canvas.getContext("2d");
-                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-                    return ctx.getImageData(0, 0, canvas.width,
-                        canvas.height).data;
-                },
-
                 initialize: function (options) {
                     this._spu = options.spu;
                     this._orderId = options.orderId;
@@ -63,47 +53,53 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 }
                             });
                         }
-                        // 必须使用one， 也就是说只能触发一次，否则加载新的图片，还要出发原有的handler
-                    }.bind(this)).on("design-region-selected", function (designRegion) {
-                        if (!designRegion.previewEdges) {
-                            designRegion.previewEdges = this._getPreviewEdges(designRegion.edges, {
-                                x: this._stage.width() / designRegion.aspect.size[0],
-                                y: this._stage.height() / designRegion.aspect.size[1]
-                            });
-                        }
-                        if (!designRegion.bounds) {
-                            designRegion.bounds = this._getBounds(designRegion.previewEdges);
-                        }
-
-                        var layer = this._layerCache[designRegion.id];
-                        if (!layer) {
-                            layer = new Kinetic.Layer({
-                                name: designRegion.name
-                            });
-                            this._layerCache[designRegion.id] = layer;
-                            this._stage.add(layer);
-                            // 没有缓存， 产生预览
-                        }
-                        this._currentLayer = layer;
+                    }.bind(this)).on("design-region-selected", function (designRegion, tempSelected) {
+                        //tempSelected为了解决选择不同aspect的不是第一个designRegion时 会跳转至第一个designRegion的bug
                         this._currentDesignRegion = designRegion;
-                        this._designRegionAnimate(designRegion.previewEdges);
+                        this.trigger('jitPreview-mask');
+                        var jitPreview = this;
+                        designRegion.getPreviewEdges({
+                            x: jitPreview._stage.width() / designRegion.aspect.size[0],
+                            y: jitPreview._stage.height() / designRegion.aspect.size[1]
+                        }).done(function () {
+                            designRegion.getBlackShadow(jitPreview._stage.width(), 
+                                jitPreview._stage.height()).done(function () {
+                                designRegion.getWhiteShadow(jitPreview._stage.width(), jitPreview._stage.height()).done(function () {
+                                    jitPreview.trigger('jitPreview-unmask');
+                                    if (!tempSelected) {
+                                        var layer = jitPreview._layerCache[designRegion.id];
+                                        if (!layer) {
+                                            layer = new Kinetic.Layer({
+                                                name: designRegion.name
+                                            });
+                                            jitPreview._layerCache[designRegion.id] = layer;
+                                        }
+                                        //切换ocspu时，会将所有缓存的designRegionLayer移除，所以需要重新加入当前选择的layer
+                                        jitPreview._stage.add(layer);
+                                        jitPreview._currentLayer = layer;
+                                        jitPreview._designRegionAnimate(designRegion.previewEdges);
+                                    }
+                                });
+                            });
+                        });
                     }.bind(this)).on("jitPreview-mask", function () {
                         this._mask.show();
                     }.bind(this)).on("jitPreview-unmask", function () {
                         this._mask.hide();
                     }.bind(this)).on('update-hotspot', function (playGroundLayer) {
-                        var hotspotContext = this._currentLayer.getContext();
                         if (playGroundLayer.children.length == 0) {
-                            hotspotContext.clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                            if (!!this._currentLayer) {
+                                this._currentLayer.getContext().clearRect(0, 0, this._currentLayer.width(), this._currentLayer.height());
+                            }
                             dispatcher.trigger('update-hotspot-done');
                             return;
                         }
+                        var hotspotContext = this._currentLayer.getContext();
 
                         this._currentLayer.size(this._stage.size());
                         var targetWidth = this._stage.width();
                         var targetHeight = this._stage.height();
 
-                        this._currentLayer.find(".design-image").destroy();
                         var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
                         this._calcImageData(hotspotImageData, playGroundLayer, targetWidth, targetHeight);
                         if (__debug__) {
@@ -151,8 +147,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                     var srcWidth = playGroundLayer.width();
                     var srcHeight = playGroundLayer.height();
-                    var blackShadowImageData = this._currentAspect.blackShadowImageData;
-                    var whiteShadowImageData = this._currentAspect.whiteShadowImageData;
+                    var blackShadowImageData = this._currentDesignRegion.blackShadowImageData;
+                    var whiteShadowImageData = this._currentDesignRegion.whiteShadowImageData;
                     var controlPointsMap = this._currentDesignRegion.controlPointsMap;
                     var pointsMatrix = [
                         [
@@ -267,10 +263,11 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     });
                 },
 
-                _onMouseover: function (evt, jitPreview) {
+                _onMouseover: function (evt) {
                     dispatcher.trigger('jitPreview-mask');
                     var hdImageObj = new Image();
                     var mouseOverEvent = evt;
+                    var jitPreview = this;
                     $(hdImageObj).attr('src', jitPreview._currentAspect.hdPicUrl).one('load', function (evt) {
                         dispatcher.trigger('jitPreview-unmask');
                         jitPreview._backgroundLayer.hide();
@@ -382,6 +379,10 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 },
 
                 events: {
+                    'click .btn-preview-background': function (e) {
+                        e.preventDefault();
+                        return false;  
+                    },
                     'click .ocspu-selector .thumbnail': function (evt) {
                         this.$(".ocspu-selector .thumbnail").removeClass("selected");
                         $(evt.currentTarget).addClass("selected");
@@ -413,6 +414,10 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                             alert('您尚未作出任何定制，请先定制!');
                             return;
                         }
+                        var backgroundColor = this.$('input.preview-background-color').spectrum('get');
+                        backgroundColor = backgroundColor? backgroundColor.toRgb(): {
+                            r: 0, g: 0, b: 0, a: 0
+                        }
                         var canvas = document.createElement("canvas");
                         canvas.width = this._stage.width();
                         canvas.height = this._stage.height();
@@ -422,13 +427,16 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
 
                         this._currentAspect.designRegionList.forEach(function (jitPreview) {
                             return function (dr) {
-                                var imageData = jitPreview._layerCache[dr.id].getContext().getImageData(0, 0, canvas.width, canvas.height).data;
-                                var pixel = previewImageData.data.length / 4;
-                                while (pixel--) {
-                                    previewImageData.data[pixel * 4] |= imageData[pixel * 4];
-                                    previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
-                                    previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
-                                    previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                                var cache = jitPreview._layerCache[dr.id];
+                                if (cache) {
+                                    var imageData = cache.getContext().getImageData(0, 0, canvas.width, canvas.height).data;
+                                    var pixel = previewImageData.data.length / 4;
+                                    while (pixel--) {
+                                        previewImageData.data[pixel * 4] |= imageData[pixel * 4];
+                                        previewImageData.data[pixel * 4 + 1] |= imageData[pixel * 4 + 1];
+                                        previewImageData.data[pixel * 4 + 2] |= imageData[pixel * 4 + 2];
+                                        previewImageData.data[pixel * 4 + 3] |= imageData[pixel * 4 + 3];
+                                    }
                                 }
                             }
                         }(this));
@@ -438,7 +446,7 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         // merge the background and preview 
                         while (pixel--) {
                             // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
-                            if (backgroundImageData[pixel * 4 + 3] != 0) {
+                            if (backgroundImageData[pixel * 4 + 3] > 0) {
                                 var srcA = previewImageData.data[pixel * 4 + 3] / 255;
                                 var dstA = backgroundImageData[pixel * 4 + 3] / 255;
                                 var outA = srcA + dstA * (1 - srcA);
@@ -449,13 +457,46 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 previewImageData.data[pixel * 4] = outR;
                                 previewImageData.data[pixel * 4 + 1] = outG;
                                 previewImageData.data[pixel * 4 + 2] = outB;
+                            } 
+                        }
+                        if (backgroundColor.a > 0) {
+                            pixel = previewImageData.data.length / 4;
+                            while (pixel--) {
+                                var srcA = previewImageData.data[pixel * 4 + 3] / 255;
+                                var outR = (previewImageData.data[pixel * 4] * srcA + backgroundColor.r * (1 - srcA));
+                                var outG = (previewImageData.data[pixel * 4 + 1] * srcA + backgroundColor.g * (1 - srcA));
+                                var outB = (previewImageData.data[pixel * 4 + 2] * srcA + backgroundColor.b * (1 - srcA));
+                                previewImageData.data[pixel * 4 + 3] = 255;
+                                previewImageData.data[pixel * 4] = outR;
+                                previewImageData.data[pixel * 4 + 1] = outG;
+                                previewImageData.data[pixel * 4 + 2] = outB;
                             }
                         }
+
                         ctx.putImageData(previewImageData, 0, 0);
                         var uri = canvas.toDataURL('image/png');
-                        $(evt.currentTarget).find('a').attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
+                        var a = $(evt.currentTarget).find('a');
+                        if(!a[0]) {
+                            a = $("<a></a>");
+                            $(evt.currentTarget).append(a);
+                        }
+                        if(typeof Blob == "undefined"){
+                            var $form = $("#download-form");
+                            if(!$form[0]){
+                                $form = $("<form></form>");
+                            }else{
+                                $form.empty();
+                            }
+                            var $input = $("<input></input>").attr({"name": "data", "type":"hidden"}).val(uri);
+                            $form.append($input);
+                            $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/image"});
+                            $form.appendTo($("body")).submit();
+                        }else{
+                            a.attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
                             evt.stopPropagation();
                         })[0].click();
+                        }
+
                     }
                 },
 
@@ -482,8 +523,9 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                         jitPreview._backgroundLayer = new Kinetic.Layer({
                             name: "background"
                         });
-                        jitPreview._backgroundLayer.add(im).on('mouseover', function (evt) {
-                            jitPreview._onMouseover(evt, jitPreview);
+                        jitPreview._backgroundLayer.add(im);
+                        jitPreview._backgroundLayer.on('mouseover', function (evt) {
+                            jitPreview._onMouseover(evt);
                         });
                         // 若不隐藏,放大缩小浏览器的比例时,会造成本img和
                         // background layer不重叠
@@ -506,81 +548,12 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                                 node.size(jitPreview._stage.size());
                             }
                         });
-                        // 只有当纹理图片都加载完毕才能开始产生预览
-
-                        var d = function () {
-                            var ret = $.Deferred();
-                            var l = [];
-                            ret.progress(function (arg) {
-                                l.push(arg);
-                                if (l.length == 2) {
-                                    dispatcher.trigger('jitPreview-unmask');
-                                    // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
-                                    if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
-                                        $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
-                                    } else {
-                                        $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
-                                    }
-                                }
-                            });
-                            return ret;
-                        }();
-                        if (!aspect.blackShadowImageData) {
-                            if ($.support.cors || aspect.blackShadowUrl.indexOf("http") !== 0) {
-                                var blackImageObj = new Image();
-                                blackImageObj.crossOrigin = "Anonymous";
-                                blackImageObj.onload = function () {
-                                    aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
-                                    d.notify('black');
-                                };
-                                $.ajax({url: aspect.blackShadowUrl, crossDomain: true}).done(
-                                    function () {
-                                        blackImageObj.src = aspect.blackShadowUrl;
-                                    });
-                            } else {
-                                $.getImageData({url: aspect.blackShadowUrl,
-                                    crossDomain: true,
-                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
-                                    success: function (blackImageObj) {
-                                        aspect.blackShadowImageData = jitPreview._getImageData(blackImageObj);
-                                        d.notify('black');
-                                    },
-                                    error: function (xhr, status) {
-                                        alert("load image error");
-                                    }
-                                })
-                            }
+                        dispatcher.trigger('jitPreview-unmask');
+                        // 当前已经选中了一个design region, 并且没有换面 （只是换了颜色）
+                        if (jitPreview._currentDesignRegion && jitPreview._currentDesignRegion.aspect.name == jitPreview._currentAspect.name) {
+                            $('[name="current-design-region"] a[design-region="' + jitPreview._currentDesignRegion.name + '"]').click();
                         } else {
-                            d.notify('black');
-                        }
-
-                        if (!aspect.whiteShadowImageData) {
-                            if ($.support.cors || aspect.whiteShadowUrl.indexOf("http") !== 0) {
-                                var whiteImageObj = new Image();
-                                whiteImageObj.crossOrigin = "Anonymous";
-                                whiteImageObj.onload = function () {
-                                    aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
-                                    d.notify('white');
-                                };
-                                $.ajax({url: aspect.whiteShadowUrl, crossDomain: true}).done(
-                                    function () {
-                                        whiteImageObj.src = aspect.whiteShadowUrl;
-                                    });
-                            } else {
-                                $.getImageData({url: aspect.whiteShadowUrl,
-                                    crossDomain: true,
-                                    server: 'http://maxnov.com/getimagedata/getImageData.php',
-                                    success: function (whiteImageObj) {
-                                        aspect.whiteShadowImageData = jitPreview._getImageData(whiteImageObj);
-                                        d.notify('white');
-                                    },
-                                    error: function (xhr, status) {
-                                        alert("load image error");
-                                    }
-                                })
-                            }
-                        } else {
-                            d.notify('white');
+                            $(_.sprintf('[name="current-design-region"] a[aspect=%s]:first', jitPreview._currentAspect.name)).click();
                         }
                     });
                 },
@@ -613,43 +586,12 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                     }.bind(this));
 
                     this.$('.ocspu-selector .thumbnail:first-child').click();
-                },
-
-                _getPreviewEdges: function (edges, ratio) {
-                    var ret = {};
-                    // 这里必须要去重，否则边界计算错误
-                    // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
-                    // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
-                    // 这样会给判断点是否在边界上带来麻烦
-                    var set = new buckets.Set();
-                    ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                        ret[position] = [];
-                        edges[position].forEach(function (point) {
-                            var p = [Math.round(point[0] * ratio.x), Math.round(point[1] * ratio.y)];
-                            if (!set.contains(p)) {
-                                set.add(p);
-                                ret[position].push(p);
-                            }
-                        });
+                    this.$('.preview-background-color').spectrum({
+                        allowEmpty: true,
+                        color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
+                        showInput: true,
+                        showAlpha: true,
                     });
-                    return ret;
-                },
-
-                _getEdgeSet: function (edges) {
-                    var edgeSet = new buckets.Set();
-                    edges['left'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['right'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['top'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    edges['bottom'].forEach(function (p) {
-                        edgeSet.add(p);
-                    });
-                    return edgeSet;
                 },
 
                 _getCurrentRgb: function () {
@@ -700,8 +642,8 @@ define(['spu/core/linear-interpolation', 'spu/core/cubic-interpolation', 'color-
                 // 测试一个点是否在边界内
                 _within: function (x, y) {
                     var test = 0;
-                    var leftRight = this._currentDesignRegion.bounds.leftRight[y];
-                    var topBottom = this._currentDesignRegion.bounds.topBottom[x];
+                    var leftRight = this._currentDesignRegion.bounds().leftRight[y];
+                    var topBottom = this._currentDesignRegion.bounds().topBottom[x];
                     if (!(leftRight && topBottom)) {
                         return false;
                     }

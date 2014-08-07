@@ -1,7 +1,7 @@
 define(['backbone', 'spu/models/tag'], function (Backbone, Tag) {
     
     var Tags = Backbone.Collection.extend({
-        model: Agent,
+        model: Tag,
         url: '/image/tag-list',
     });
 

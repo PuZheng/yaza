@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 import os
 import shutil
-from flask import render_template
+import time
+from flask import render_template, redirect, url_for
 
-from flask.ext.databrowser import ModelView, sa, col_spec, filters
+from flask.ext.databrowser import ModelView, sa, col_spec, filters, action
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
 from flask.ext.principal import Permission, RoleNeed, PermissionDenied
@@ -11,7 +12,7 @@ from flask.ext.principal import Permission, RoleNeed, PermissionDenied
 from yaza import ext_validators, const
 from yaza.apis import wraps
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignImageWrapper
-from yaza.basemain import app
+from yaza.basemain import app, admin_nav_bar
 from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
 from yaza.database import db
 from yaza.utils import assert_dir, do_commit
@@ -30,8 +31,24 @@ def allowed_file(filename, types=IMAGES):
 
 img_validator = ext_validators.FileUploadValidator(allowed_file, message=_("Please Upload Picture"), nullable=False)
 
+
+class _RedirectAction(action.RedirectAction):
+    def test(self, *records):
+        return 0 if records[0].published else -1
+
+    def op_upon_list(self, objs, model_view):
+        return redirect(url_for('admin.spu_url_generator', id_=objs[0].id))
+
+    @property
+    def forbidden_msg_formats(self):
+        return {
+            -1: u'请先发布该SPU！'
+        }
+
+
 class SPUAdminModelView(ModelView):
-    edit_template = "admin/spu/spu.html"
+    def get_actions(self, processed_objs=None):
+        return [_RedirectAction(u'生成用户链接')]
 
     def try_edit(self, processed_objs=None):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
@@ -74,7 +91,21 @@ class SPUAdminModelView(ModelView):
     def edit_view(self, id_):
         spu = self._get_one(id_)
         self.try_edit(spu)
-        return render_template(self.edit_template, spu=spu)
+        return render_template('admin/spu.html',
+                               nav_bar=admin_nav_bar, time=time.time(),
+                               model_view=self)
+
+
+    def create_view(self):
+        return render_template('admin/spu.html',
+                               nav_bar=admin_nav_bar, time=time.time(),
+                               model_view=self)
+
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return ["id", col_spec.ColSpec("name", label=u'名称'),
+                col_spec.ColSpec("published", label=u'发布', formatter=lambda v, obj: u'是' if v else u'否')]
 
 
 class OCSPUAdminModelView(ModelView):
@@ -128,6 +159,10 @@ class AspectAdminModelView(ModelView):
 
 
 class DesignResultModelView(ModelView):
+
+    list_template = "admin/design-result/list.html"
+
+
     @ModelView.cached
     @property
     def list_columns(self):
@@ -135,7 +170,8 @@ class DesignResultModelView(ModelView):
                 col_spec.ColSpec("order_id", label=u"订单号"),
                 col_spec.ColSpec('create_time', u"创建时间",
                                  formatter=lambda v, obj:
-                                 v.strftime('%Y-%m-%d %H:%M'))]
+                                 v.strftime('%Y-%m-%d %H:%M')),
+                col_spec.HtmlSnippetColSpec("files", template="admin/spu/design-result-file-list.html")]
 
     def try_view(self, processed_objs=None):
         pass
@@ -151,7 +187,7 @@ class DesignResultModelView(ModelView):
     def edit_columns(self):
         return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("user", u"设计者"), col_spec.ColSpec(
             'create_time', u"创建时间", formatter=lambda v, obj: v.strftime('%Y-%m-%d %H:%M')),
-                col_spec.HtmlSnippetColSpec("file_path",
+                col_spec.HtmlSnippetColSpec("files",
                                             template="admin/spu/resign-result-download-snippet.html")]
 
     def expand_model(self, obj):
@@ -207,7 +243,8 @@ class DesignImageModelView(ModelView):
     @ModelView.cached
     @property
     def edit_columns(self):
-        return [col_spec.InputColSpec("title", label=u"标题"), col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
+        return [col_spec.InputColSpec("title", label=u"标题"),
+                col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
                 col_spec.FileColSpec("pic_path", label=u"上传设计图")]
 
 

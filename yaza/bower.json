@@ -44,8 +44,13 @@
     "bootstrap-sass-official": "~3.2.0",
     "modernizr": "~2.8.2",
     "normalize-css": "~3.0.1",
-    "autosize":"https://github.com/jackmoore/autosize.git",
-    "jquery-ajaxtransport-xdomainrequest":"https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
-    "getImageData": "https://github.com/betamax/getImageData.git"
+    "autosize": "https://github.com/jackmoore/autosize.git",
+    "jszip": "Stuk/jszip#~2.3.0",
+    "toastr": "~2.0.3",
+    "js-url": "~1.8.6",
+    "jquery-ajaxtransport-xdomainrequest": "https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
+    "getImageData": "https://github.com/betamax/getImageData.git",
+    "FileSaver": "latest",
+    "ekko-lightbox": "~3.1.4"
   }
 }

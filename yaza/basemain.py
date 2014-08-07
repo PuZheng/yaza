@@ -7,8 +7,12 @@ from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
                                  PermissionDenied)
 from flask.ext.babel import gettext as _
 from flask.ext.mail import Mail, Message
+from plumbum import CommandNotFound
 import speaklater
 from sqlalchemy.exc import SQLAlchemyError
+
+import sys
+sys.path.append('/usr/lib/python2.7/dist-packages/fontforge.so')
 
 
 class MyFlask(Flask):
@@ -69,7 +73,7 @@ def register_views():
     app.register_blueprint(admin, url_prefix="/admin")
 
     __import__('yaza.portal.index')
-    installed_apps = ['user', "image", "spu"]
+    installed_apps = ['user', "image", "spu", "qiniu"]
     # register web services
     for mod in installed_apps:
         pkg = __import__('yaza.portal.' + mod, fromlist=[mod])
@@ -83,13 +87,10 @@ def register_views():
 def setup_nav_bar():
     from yaza.admin import views, admin
 
+
     default_url = speaklater.make_lazy_string(views.spu_model_view.url_for_list)
     admin_nav_bar.register(admin, name=_('SPU'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/spu'))
-
-    default_url = speaklater.make_lazy_string(views.ocspu_model_view.url_for_list)
-    admin_nav_bar.register(admin, name=_('OCSPU'), default_url=default_url,
-                           enabler=lambda nav: request.path.startswith('/admin/ocspu'))
 
     default_url = speaklater.make_lazy_string(views.design_result_view.url_for_list)
     admin_nav_bar.register(admin, name=_(u'定制结果'), default_url=default_url,
@@ -98,6 +99,7 @@ def setup_nav_bar():
     default_url = speaklater.make_lazy_string(views.design_image_view.url_for_list)
     admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-image'))
+
 
 register_views()
 
@@ -127,21 +129,21 @@ file_handler.setFormatter(
 file_handler.suffix = "%Y%m%d.log"
 app.logger.addHandler(file_handler)
 
+@app.errorhandler(PermissionDenied)
+@app.errorhandler(401)
+def permission_denied(error):
+    if not current_user.is_anonymous():
+        return render_template("error.html",
+                                error=_('You are not permitted to visit '
+                                        'this page or perform this action, '
+                                        'please contact Administrator to '
+                                        'grant you required permission'),
+                                back_url=request.args.get('__back_url__'))
+    return redirect(url_for("user.login", error=_("please login"),
+                            next=request.url))
+
 if not app.debug:
     mail = Mail(app)
-
-    @app.errorhandler(PermissionDenied)
-    @app.errorhandler(401)
-    def permission_denied(error):
-        if not current_user.is_anonymous():
-            return render_template("error.html",
-                                   error=_('You are not permitted to visit '
-                                           'this page or perform this action, '
-                                           'please contact Administrator to '
-                                           'grant you required permission'),
-                                   back_url=request.args.get('__back_url__'))
-        return redirect(url_for("user.login", error=_("please login"),
-                                next=request.url))
 
     def sender_email(traceback):
         recipients = app.config.get("ERROR_LOG_RECIPIENTS", [])
@@ -182,13 +184,16 @@ from yaza.utils import assert_dir
 
 assert_dir(app.config['UPLOAD_FOLDER'])
 
-if app.debug:
+if app.debug and app.config['ENABLE_DEBUG_TOOLBAR']:
     from flask.ext.debugtoolbar import DebugToolbarExtension
     DebugToolbarExtension(app)
 
 
 def locate_all_fonts():
-    from plumbum.cmd import fc_list
+    try:
+        from plumbum.cmd import fc_list
+    except CommandNotFound:
+        return
 
     # TODO 这里并没有处理style
     for l in fc_list[': ', 'file', 'family']().split('\n'):
@@ -205,5 +210,5 @@ def locate_all_fonts():
     print app.config['FONTS_MAP']
 
 # 如果不是windows系统, 并且没有定义FONTS_MAP, 利用fc-list搜索系统的字体
-if not (sys.platform.startswith("win32") and app.config['FONTS_MAP']):
+if not app.config['FONTS_MAP']:
     locate_all_fonts()

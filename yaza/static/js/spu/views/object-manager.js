@@ -18,9 +18,13 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             node.destroy();
                             layer.draw();
                         });
-                        dispatcher.trigger('update-hotspot', this._imageLayer);
+                        dispatcher.trigger('update-preview');
                         parent.remove();
-                        this.$('.list-group-item:first').click();
+                        if (this.$('.list-group-item').length > 0) {
+                            this.$('.list-group-item:first').click();
+                        } else {
+                            dispatcher.trigger('active-object');
+                        }
                         this._setupButtons();
                         return false;
                     }
@@ -40,6 +44,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     }
                     parent.data('control-group').getLayer().draw();
                     parent.data('object').getLayer().draw();
+                    dispatcher.trigger('update-preview');
                     return false;
                 },
                 'click button.up-btn': function (evt) {
@@ -88,7 +93,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         }
                         this._setupButtons();
                         this._orderNodes();
-                        dispatcher.trigger('update-hotspot', this._imageLayer);
+                        dispatcher.trigger('update-preview');
                     }
 
                     return false;
@@ -109,6 +114,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             }
                         }(objectManager, $(this)));
                         objectManager._setupButtons();
+                        $(this).click();
                     }
                 });
             },
@@ -146,7 +152,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
             add: function (im, controlGroup) {
                 // 默认新增的对象要选中
-                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).click();
+                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup);
+                item.click();
                 item.find('img').load(function (objectManager, item) {
                     return function (evt) {
                         objectManager._formatItem(item);
@@ -218,7 +225,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             target.data('object'));
                         objectManager._exchangeNode(source.data('control-group'),
                             target.data('control-group'));
-                        dispatcher.trigger('update-hotspot', objectManager._imageLayer);
+                        dispatcher.trigger('upate-preview');
                     };
                 }(this));
             },

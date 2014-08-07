@@ -1,10 +1,5 @@
 require.config({
     baseUrl: '/static',
-    map: {
-        '*': {
-            'css': 'components/require-css/css.min'
-        }
-    },
     paths: {
         // vendors using bootcss cdn
         jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
@@ -20,7 +15,9 @@ require.config({
         'block-ui': ['http://cdn.bootcss.com/jquery.blockUI/2.66.0-2013.10.09/jquery.blockUI', 'components/blockui/jquery.blockUI'],
         'spectrum': ['http://cdn.bootcss.com/spectrum/1.3.0/js/spectrum.min', 'components/spectrum/spectrum'],
         'zClip': ['http://cdn.bootcss.com/zclip/1.1.2/jquery.zclip.min', "components/zeroclipboard/dist/ZeroClipboard.min"],
+        'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
         "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
+        'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -28,87 +25,102 @@ require.config({
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
+        'css': 'components/require-css/css.min',
         "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
         'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
         "getImageData": "components/getImageData/jquery.getimagedata.min",
+        "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
+        "filesaver":"components/FileSaver/FileSaver",
         // application
         dispatcher: 'js/dispatcher',
-        'lazy-load': 'js/utils/lazy-load',
+        'utils': 'js/utils',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
-        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure'],
+        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
         'block-ui': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'underscore': {
-            exports: '_',
+            exports: '_'
         },
         'underscore.string': {
-            deps: ['underscore'],
+            deps: ['underscore']
         },
         'backbone': {
             deps: ['jquery', 'underscore'],
-            exports: 'Backbone',
+            exports: 'Backbone'
         },
         'bootstrap': {
             deps: ['jquery'],
-            exports: '$.fn.tooltip',
+            exports: '$.fn.button',
         },
         'lazy-load': {
             deps: ['jquery'],
-            exports: '$.fn.lazyLoad', 
+            exports: '$.fn.lazyLoad'
         },
         'color-tools':{
             deps:['underscore', 'jquery']
         },
         'jquery-file-upload': {
-            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 'jquery.ui.widget']
+            deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
+                'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
         },
         'spectrum': {
             deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
             //deps: ['css!components/spectrum/spectrum.css', 'jquery'],
-            exports: '$.fn.spectrum',
+            exports: '$.fn.spectrum'
         },
         'svg': {
-            exports: 'SVG',
+            exports: 'SVG'
         },
         'svg.export': {
-            deps: ['svg'],
+            deps: ['svg']
         },
         'select2':{
             deps:['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
             //deps:['jquery', 'css!components/select2/select2.css', 'css!components/select2/select2-bootstrap.css']
         },
         'buckets': {
-            exports: 'buckets',
+            exports: 'buckets'
         },
         'zlib': {
-            exports: 'Zlib',
+            exports: 'Zlib'
         },
         'jquery.scrollTo': {
             deps: ['jquery']
         },
         'jquery.iframe-transport': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'jquery.ui.widget': {
-            deps: ['jquery'],
+            deps: ['jquery']
         },
         'autosize':{
             deps: ['jquery']
         },
         'getImageData' :{
             deps: ['jquery']
-        }
+        },
+        'js-url': {
+            deps: ['jquery'],
+            exports: '$.fn.url'
+        },
+        'toastr': {
+            deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
+        },
     }
 });
 
-require(['jquery', 'svg'], function () {
-    require(['js/infrastructure'], function () {
+// force loading jquery, svg before infrastructure, since infrastructure need
+// them after compression
+require(['jquery', 'svg', 'bootstrap'], function () {
+    // jquery ui和bootstrap都定义了$.fn.button, 所以要重新定义一个方法
+    $.fn.bootstrapButton = $.fn.button;
+    require(['js/infrastructure', 'bootstrap'], function () {
         require(['spu/app'], function () {});  
     });
 });

@@ -1,0 +1,35 @@
+@import "variable";
+
+%play-ground {
+    .touch-screen {
+        border-radius: 5px;
+        height: $play-ground-height;
+        background-color: #ccc;
+        overflow: scroll;
+        position: relative;
+    }
+
+    .mask {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        line-height: $play-ground-height;
+        display: none;
+
+        & i {
+            vertical-align: middle;
+            color:yellow;
+        }
+    }
+
+    & .change-text-panel {
+        z-index: 1000;
+    }
+
+    & .helpler-btns {
+        margin-left: -120px;
+        position: absolute;
+    }
+}

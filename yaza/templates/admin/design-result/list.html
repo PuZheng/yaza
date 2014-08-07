@@ -1,0 +1,32 @@
+{% extends "data_browser__/list.html" %}
+
+{% block __data_browser__builtin_head_block %}
+  {{ super() }}
+  <script src="http://cdn.bootcss.com/ekko-lightbox/3.0.3a/ekko-lightbox.js"></script>
+  <script>
+    $(function () {
+      $("a[name='design-result-file']").click(function (evt) {
+        evt.preventDefault();
+        $(this).ekkoLightbox();
+      });
+      $('a[name="design-result-file"] img').each(function (idx, el) {
+        if ($(el).height() > $(el).width()) {
+          $(el).addClass('portrait').removeClass('landscape');
+        } else {
+          $(el).removeClass('portrait').addClass('landscape');
+        }
+      })
+    })
+  </script>
+  <style type="text/css">
+    a[name="design-result-file"] {
+      display: inline-block;
+    }
+    img.portrait {
+      max-height: 108px;
+    }
+    img.landscape {
+      max-height: 108px;
+    }
+  </style>
+{% endblock %}

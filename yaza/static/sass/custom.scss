@@ -1,0 +1,34 @@
+@import 'play-ground';
+@import 'control-panel';
+@import 'utils';
+@import 'variable';
+@import "../js/vendor/bootswatch-scss/flatly/variables";
+@import "../components/bootstrap-sass-official/assets/stylesheets/bootstrap/mixins";
+
+.container-fluid {
+    @include respond-to(wide-screens) {
+        width: 1080px;
+    }
+    background-image: url('/static/assets/congruent_outline.png');
+    padding-top: 10px;
+}
+
+body {
+    background-color: #222;
+}
+
+.primary {
+    @include respond-to(wide-screens) {
+        height: 816px;
+    }
+
+}
+
+
+.control-panel {
+    @extend %control-panel;
+}
+
+.play-ground {
+    @extend %play-ground;
+}

@@ -1,11 +1,16 @@
 <div class="row">
   <div class="col-sm-7">
     <div class="hotspot">
-      <div>
-        <button class="btn btn-default btn-download-preview">
-          下载预览图<a href=""></a>
-        </button>
-        <button class="btn btn-default btn-download">下载定制结果<a href=""></a></button>
+      <div class='row'>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button class="btn btn-default btn-download-preview" type="button">下载预览</button>
+            </span>
+            <input type="text" class="form-control preview-background-color">
+          </div>
+          <button class="btn btn-default btn-download">下载定制结果</button>
+        </div>
       </div>
       <div class="design-regions">
       </div>
@@ -25,7 +30,7 @@
           <div class="col-sm-7">
             <div class="alert alert-danger order">
               <p>订单号:</p>
-              <p>{{orderId}}</p>
+              <p name="order_id">{{orderId}}</p>
             </div>
           </div>
         {{/if}}

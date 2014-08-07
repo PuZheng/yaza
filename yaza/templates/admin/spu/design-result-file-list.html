@@ -1,0 +1,5 @@
+{% for obj in obj.files %}
+    <a href="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" class="thumbnail" name="design-result-file" data-title="{{ obj.name }}">
+      <img src="{{ url_for("admin.design_result_file", file_=obj.file_path) }}" alt="{{ obj.name }}" />
+    </a>
+{% endfor %}
