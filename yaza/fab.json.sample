@@ -7,7 +7,7 @@
         "file": ["js/demo.js"],
         "dir": ["js/spu"]
     },
-    "hosts": ["localhost"],
+    "hosts": ["42.121.6.193"],
     "password": "13321244",
     "user": "xiechao"
 }

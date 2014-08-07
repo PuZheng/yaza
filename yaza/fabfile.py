@@ -9,17 +9,17 @@ config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
 env.hosts = config["hosts"]
 env.password = config["password"]
 env.user = config["user"]
-branch = config.get("branch", "master")
 
 yaza_env = "/srv/www/yaza-env"
 dist_dir = "yaza/yaza/static/dist"
 
 
-def prepare_deploy():
+def prepare_deploy(branch):
     with cd(yaza_env):
+        sudo('cd yaza/yaza && bower install', user="www-data")
         sudo('cd yaza && git pull origin %s && git checkout %s' % (branch, branch),
              user="www-data")
-        # sudo('cd yaza/yaza && bower install', user="www-data")
+        sudo('cd yaza/yaza && bower install', user="www-data")
         sudo('cd yaza/yaza/static/js/vendor/bootswatch-scss && grunt build:flatly',
              user="www-data")
         sudo("cd yaza/yaza && r.js -o build.js", user="www-data")
@@ -54,9 +54,10 @@ def upload_file(file_):
                 app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
 
 
-def deploy():
-    local('r.js -o build.js')
-    prepare_deploy()
+def deploy(branch, rebuild=False):
+    if rebuild:
+        local('r.js -o build.js')
+    prepare_deploy(branch)
     with cd(yaza_env):
         with prefix('source env/bin/activate'):
             run('python -c "import sys; print sys.path"')
