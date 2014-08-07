@@ -1,5 +1,5 @@
 require.config({
-    baseUrl: 'static',
+    baseUrl: '/static',
     paths: {
         // vendors using bootcss cdn
         jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
