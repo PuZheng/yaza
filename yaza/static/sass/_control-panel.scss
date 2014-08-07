@@ -27,6 +27,9 @@
                 min-height: 100%;
             }
             display: inline-block;
+            &.selected {
+                border: 1px solid #0088CC;
+            }
         }
     }
     .aspect-selector {
