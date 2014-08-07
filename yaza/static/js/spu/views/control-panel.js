@@ -90,6 +90,8 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                     aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                 }.bind(this));
             } else {
+                // 不要清除原来的thumbnail， 否则预览不能保留下来，
+                // 当然，这个预览可能是不准的， 但可以想象不同颜色的形变不会太大
                 this.$('.aspect-selector .thumbnail').each(function (i) {
                     var aspect = ocspu.aspectList[i]; 
                     $(this).find('img').attr('src', aspect.thumbnail);
