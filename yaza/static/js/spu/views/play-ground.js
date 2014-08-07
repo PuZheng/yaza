@@ -694,7 +694,7 @@ mvc, readImageData) {
             var imageLayer = designRegion.imageLayer();
             var previewLayer = designRegion.previewLayer;
             if (imageLayer.children.length == 0) {
-                previewLayer.getContext().clearRect(0, 0, previewLayer.width(), previewLayer.height());
+                previewLayer.getContext().clearRect(previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height());
                 dispatcher.trigger('update-preview-done', designRegion);
                 return;
             } 

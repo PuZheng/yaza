@@ -83,11 +83,19 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
 
 
         _setupOcspu: function (ocspu) {
-            this.$('.aspect-selector').empty();
-            ocspu.aspectList.forEach(function (aspect) {
-                $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" data-aspectID="%s"/><div></div>',
-                aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
-            }.bind(this));
+            if (this.$('.aspect-selector').children().length == 0) {
+                this.$('.aspect-selector').empty();
+                ocspu.aspectList.forEach(function (aspect) {
+                    $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" data-aspectID="%s"/><div></div>',
+                    aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
+                }.bind(this));
+            } else {
+                this.$('.aspect-selector .thumbnail').each(function (i) {
+                    var aspect = ocspu.aspectList[i]; 
+                    $(this).find('img').attr('src', aspect.thumbnail);
+                    $(this).data('aspect', aspect);
+                });
+            }
             // 若仅有一面， 就不要面选择器了
             if (ocspu.aspectList.length == 1) {
                 this.$('.aspect-selector').hide(); 
@@ -127,8 +135,13 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 this._textOperators.reset();
             }, this)
             .on('active-object', function (controlGroup) {
-                this._objectManager.activeObjectIndicator(controlGroup);
-                this._textOperators.reset(controlGroup);
+                if (!!controlGroup) {
+                    this._objectManager.activeObjectIndicator(controlGroup);
+                    this._textOperators.reset(controlGroup);
+                } else {
+                    // 当前没有任何对象 
+                    this._textOperators.reset();
+                }
             })
             .on('object-added', function (image, group, oldIm, oldControlGroup) {
                 if (!!oldIm && !!oldControlGroup) {

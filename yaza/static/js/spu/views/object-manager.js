@@ -18,9 +18,13 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             node.destroy();
                             layer.draw();
                         });
-                        dispatcher.trigger('upate-preview');
+                        dispatcher.trigger('update-preview');
                         parent.remove();
-                        this.$('.list-group-item:first').click();
+                        if (this.$('.list-group-item').length > 0) {
+                            this.$('.list-group-item:first').click();
+                        } else {
+                            dispatcher.trigger('active-object');
+                        }
                         this._setupButtons();
                         return false;
                     }
