@@ -5,15 +5,65 @@ define(["spu/config"], function (config) {
         return "x: " + group.x() + '; y: ' + group.y() + '; rotation: ' + group.rotation() + "; width: " + rect.width() + "; height: " + rect.height();
     }
 
-    function makeControlGroup(node, title, resizable, backgroundColor, hoveredComplementaryColor) {
+    function makeControlGroup(node, title, resizable, hoveredComplementaryColor) {
         resizable = !!resizable;
-        var group = new Kinetic.Group({
-            x: node.x() + node.width() / 2 - node.offsetX(),
-            y: node.y() + node.height() / 2 - node.offsetY(),
+
+        var containerGroup = new Kinetic.Group({
             draggable: true,
             name: title,
             target: node,
         });
+        containerGroup.hide = function () {
+            group.hide();   
+        };
+        containerGroup.show = function () {
+            group.show();   
+        };
+        containerGroup.position = function (arg) {
+            if (!!arg) {
+                return group.position(arg);
+            }
+            return group.position();
+        }
+        containerGroup.x = function(arg) {
+            if (!!arg) {
+                return group.x(arg);
+            }
+            return group.x();
+        };
+        containerGroup.y = function(arg) {
+            if (!!arg) {
+                return group.y(arg);
+            }
+            return group.y();
+        };
+        var fakeImage = new Kinetic.Rect({
+            x: node.x() + node.width() / 2 - node.offsetX(),
+            y: node.y() + node.height() / 2 - node.offsetY(),
+            width: node.width(),
+            height: node.height(),
+            name: 'fake-image',
+            offset: {
+                x: node.width() / 2,
+                y: node.height() / 2,
+            }
+        });
+        fakeImage.on('mouseenter', function () {
+            if (containerGroup.getAttr('trasient') && !group.visible()) {
+                group.show();
+                rect.stroke(hoveredComplementaryColor);
+                group.getLayer().draw();
+            }
+        });
+        containerGroup.add(fakeImage);
+        var group = new Kinetic.Group({
+            x: node.x() + node.width() / 2 - node.offsetX(),
+            y: node.y() + node.height() / 2 - node.offsetY(),
+            draggable: true,
+            name: 'control',
+            fakeImage: fakeImage,
+        });
+        containerGroup.add(group);
         // 当进入图像, 临时展示control group
         group.on('dragstart', function () {
             this.moveToTop();
@@ -21,9 +71,10 @@ define(["spu/config"], function (config) {
         });
         group.on('dragend', function () {
             node.position({
-                x: group.x(),
-                y: group.y(),
+                x: this.x(),
+                y: this.y(),
             });
+            fakeImage.position(this.position());
         });
         var rect = new Kinetic.Rect({
             x: -node.width() / 2,
@@ -34,20 +85,15 @@ define(["spu/config"], function (config) {
             dash: [5, 5],
             name: 'rect'
         });
-        rect.on('mouseenter', function () {
-            if (group.getAttr('trasient') && rect.stroke() == backgroundColor) {
-                rect.stroke(hoveredComplementaryColor);
-                group.getLayer().draw();
-            }
-        });
         rect.on("mouseover", function () {
             document.body.style.cursor = 'move';
             this.getLayer().draw();
-        }).on("mouseout", function () {
+        })
+        rect.on("mouseout", function () {
             document.body.style.cursor = 'default';
             // 如果是临时控制组, 离开rect要隐藏
-            if (group.getAttr('trasient')) {
-                group.find('.rect')[0].stroke(backgroundColor);
+            if (containerGroup.getAttr('trasient')) {
+                group.hide();
             }
             this.getLayer().draw();
         });
@@ -207,23 +253,24 @@ define(["spu/config"], function (config) {
         _addRotationHandleBar(group, 0,
             -(node.height() / 2 + 50), 'handleBar', node);
 
-        group.snap = function (x, y, snapTolerance) {
-            var centerX = this.x();
-            var centerY = this.y();
+        containerGroup.snap = function (x, y, snapTolerance) {
+            var group = this.find('.control')[0];
+            var centerX = group.x();
+            var centerY = group.y();
 
             var cXs = Math.abs(centerX - x) <= snapTolerance;
             var cYs = Math.abs(centerY - y) <= snapTolerance;
 
             if (cXs) {
-                this.x(x);
+                group.x(x);
             }
             if (cYs) {
-                this.y(y);
+                group.y(y);
             }
 
         };
 
-        return group;
+        return containerGroup;
     }
 
     function _addAnchor(group, x, y, name, node, cursorStyle, dragBoundFunc) {
@@ -303,6 +350,11 @@ define(["spu/config"], function (config) {
                     y: -offsetY
                 });
             });
+            group.getAttr('fakeImage').position(group.position())
+            .size(rect.size()).offset({
+                x: rect.width() / 2,
+                y: rect.height() / 2,
+            });
             group.getLayer().draw();
             group.setDraggable(true);
         });
@@ -381,6 +433,11 @@ define(["spu/config"], function (config) {
                     y: -offsetY
                 });
             });
+            group.getAttr('fakeImage').position(group.position())
+            .size(rect.size()).offset({
+                x: rect.width() / 2,
+                y: rect.height() / 2,
+            });
             group.getLayer().draw();
             group.setDraggable(true);
         });
@@ -423,6 +480,7 @@ define(["spu/config"], function (config) {
             line.points([0, -Math.sqrt(dx * dx + dy * dy), 0, 0]);
             var degree = Math.atan2(dx, -dy) * 180 / Math.PI;
             group.rotate(degree);
+            group.getAttr('fakeImage').rotate(degree);
             this.rotate(-degree);
             node.rotate(degree);
 

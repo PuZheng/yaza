@@ -73,7 +73,7 @@ mvc, readImageData) {
             this._stage.add(this._crossLayer);
 
             var isAdministrator = !this._orderId;
-            if (config.PREVIEW_DOWNLOADABLE && isAdministrator) {
+            if (config.PREVIEW_DOWNLOADABLE || isAdministrator) {
                 this.$('.btn-download-preview').show(); 
                 this.$('.preview-background-color').show();
                 this.$('.preview-background-color').spectrum({
@@ -83,7 +83,7 @@ mvc, readImageData) {
                     showAlpha: true,
                 });
             }
-            if (config.DESIGN_DOWNLOADABLE && isAdministrator) {
+            if (config.DESIGN_DOWNLOADABLE || isAdministrator) {
                 this.$('.btn-download-design').show();
             }
 
@@ -137,16 +137,22 @@ mvc, readImageData) {
             })
             .on('active-object', function (controlGroup) {
                 var complementaryColor = this._currentAspect.ocspu.complementaryColor;
-                var backgroundColor = this._currentAspect.ocspu.rgb;
+                var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
                 controlGroup.getLayer().getChildren().forEach(function (group) {
                     if (group.nodeType == 'Group') {
-                        group.find('.rect')[0].stroke(backgroundColor);
+                        group.hide();
+                        group.find('.rect')[0].stroke(hoveredComplementaryColor);
                         group.setAttr('trasient', true);
+                        group.getLayer().draw();
                     }
                 });
 
-                controlGroup.moveToTop();
+                if (!controlGroup.getAttr('hidden')) {
+                    controlGroup.show();
+                }
+                //controlGroup.moveToTop();
                 controlGroup.setAttr('trasient', false);
+
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
                 this._activeObject = controlGroup;
                 controlGroup.getLayer().draw();
@@ -492,8 +498,7 @@ mvc, readImageData) {
                 imageLayer.draw();
 
                 var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
-                var backgroundColor = this._currentAspect.ocspu.rgb;
-                var group = makeControlGroup(image, title, true, backgroundColor, 
+                var group = makeControlGroup(image, title, true, 
                 hoveredComplementaryColor)
                 .on('dragend', function (view) {
                     return function () {
@@ -537,7 +542,14 @@ mvc, readImageData) {
                     }
                 }(this));
                 image.setAttr("control-group", group);
+                var rect = new Kinetic.Rect({
+                    width: image.width(),
+                    height: image.height(),
+                    position: group.position(),
+                    //fill: 'red',
+                });
                 this._currentDesignRegion.controlLayer().add(group).draw();
+                console.log(rect.size());
                 dispatcher.trigger('object-added', image, group);
                 this._generatePreview();
             }.bind(this));
@@ -569,8 +581,7 @@ mvc, readImageData) {
                     imageLayer.add(im);
                     imageLayer.draw();
                     var hoveredComplementaryColor = view._currentAspect.ocspu.hoveredComplementaryColor;
-                    var backgroundColor = view._currentAspect.ocspu.rgb;
-                    var controlGroup = makeControlGroup(im, text, backgroundColor, 
+                    var controlGroup = makeControlGroup(im, text,
                     hoveredComplementaryColor)
                     .on('dragend', function () {
                         view._crossLayer.hide();
@@ -666,9 +677,10 @@ mvc, readImageData) {
                         controlGroup.rotation(oldControlGroup.rotation());
                         oldIm.destroy();
                         oldControlGroup.destroy();
+                        view._currentDesignRegion.controlLayer().draw();
+                        view._currentDesignRegion.imageLayer().draw();
                         dispatcher.trigger('object-added', im, controlGroup,
                         oldIm, oldControlGroup);
-                        view._currentDesignRegion.controlLayer().draw();
                     } else {
                         dispatcher.trigger('object-added', im, controlGroup);
                     }

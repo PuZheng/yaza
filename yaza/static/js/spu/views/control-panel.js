@@ -14,7 +14,6 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
         initialize: function (option) {
             this._spu = option.spu;
             this._tagList = option.tagList;
-            console.log(this._tagList);
             this._setupEventsHandler();
         },
 

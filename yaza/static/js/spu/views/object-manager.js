@@ -40,6 +40,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     }
                     parent.data('control-group').getLayer().draw();
                     parent.data('object').getLayer().draw();
+                    dispatcher.trigger('update-preview');
                     return false;
                 },
                 'click button.up-btn': function (evt) {
@@ -109,6 +110,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             }
                         }(objectManager, $(this)));
                         objectManager._setupButtons();
+                        $(this).click();
                     }
                 });
             },
