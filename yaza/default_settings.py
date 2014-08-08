@@ -47,7 +47,7 @@ QINIU_CONF = {
     "SECRET_KEY": "Ukh9-yuxS7gvqHN0gJ1jZPGXmHdEARL9BFVLipBE",
     "DESIGN_IMAGE_BUCKET": "yaza-designs",
     "SPU_IMAGE_BUCKET": "yaza-spus",
-    "ASPECT_MD_SIZE": 400,
+    "ASPECT_MD_SIZE": 800,
     "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
     "EXPIRY_TIME": 12 * 3600  # 30天
 }

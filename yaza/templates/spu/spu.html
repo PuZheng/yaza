@@ -20,25 +20,29 @@
 <div class="container-fluid">
   <div class="primary">
     {% if spu.published %}
-      <div class="jit-preview">
-        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}> </div>
-      </div>
+      <div class="row">
+        <div class="col-md-8">
+          <div class="play-ground">
+            <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+            </div>
+          </div>
+        </div>
 
-      <div class="play-ground">
-        <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+        <div class="col-md-4">
+          <div class="control-panel"></div>
         </div>
       </div>
 
       <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
       <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
       <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
+      <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
     {% else %}
     <div class="alert alert-danger">
       <h3>对不起， 该产品已经下架!</h3>
     </div>
     {% endif %}
   </div>
-  <!--/span-->
 </div>
 <!--/row-->
 <footer class="footer visible-md visible-lg">

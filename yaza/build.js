@@ -1,5 +1,10 @@
 ({
     baseUrl: 'static',
+    map: {
+        '*': {
+            'css': 'components/require-css/css.min'
+        }
+    },
     paths: {
         jquery: 'empty:',
         underscore: 'empty:',
@@ -15,6 +20,8 @@
         'spectrum': 'empty:',
         'zClip': 'empty:',
         "jquery.scrollTo": 'empty:',
+        'js-url': 'empty:',
+        'toastr': 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -31,6 +38,7 @@
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
+        'utils': 'js/utils',
         'lazy-load': 'js/utils/lazy-load',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu'
@@ -105,6 +113,13 @@
         },
         'jquery.ui.widget': {
             deps: ['jquery']
+        },
+        'toastr': {
+            deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
+        },
+        'js-url': {
+            deps: ['jquery'],
+            exports: '$.fn.url'
         }
     }
 })

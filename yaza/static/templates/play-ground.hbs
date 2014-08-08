@@ -1,149 +1,39 @@
-<div class="row">
-  <div class="col-sm-7">
-    <aside>
-      <div class="design-region-selector">
-        <div name="current-design-region" class="list-group">
-        </div>
-      </div>
-      <div class="aspect-selector">
-      </div>
-    </aside>
-    <div class="touch-screen" style="position: relative">
-      <div class="editable-region"></div>
-      <div class="change-text-panel panel panel-default" style='display: none'>
-        <div class="panel-body">
-          <textarea name="change-text" id="change-text" cols="24" rows="2">
-          </textarea>
-        </div>
-        <div class="panel-footer">
-          <button class="btn btn-default btn-xs">取消</button>
-          <button class="btn btn-primary btn-xs">确定</button>
-        </div>
-      </div>
-    </div>
+<div class="helpler-btns">
+  <div class="input-group">
+    <span class="input-group-btn">
+      <button class="btn btn-default btn-download-preview" style='display: none'><small>下载预览</small><a href=""></a></button>
+    </span>
+    <input type="text" class="form-control preview-background-color" style='display: none'>
   </div>
-  <div class="dashboard col-sm-5">
-    <div class="row">
-      <div class="col-sm-6">
-        <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
-          <i class="fa fa-file-image-o"></i>
-          增加图片
-        </button>
-      </div>
-      <div class="col-sm-6">
-        <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
-          <i class="fa fa-pencil-square"></i>
-          增加文字
-        </button>
-      </div> 
+  <!--<button class="btn btn-info pull-left btn-download-preview" style='display: none'>-->
+    <!--下载预览-->
+  <!--</button>-->
+  <button type='button' class="btn btn-default btn-download-design" style='display: none' data-loading-text='生成设计...'>
+    <small>
+      下载设计结果
+    </small>
+  </button>
+</div>
+
+<div class="touch-screen">
+  <div class="editable-region"></div>
+  <div class="change-text-panel panel panel-default" style='display: none'>
+    <div class="panel-body">
+      <textarea name="change-text" id="change-text" cols="24" rows="2">
+      </textarea>
     </div>
-
-    <div class='row'>
-      <div class="text-operators" style="display: none">
-        <div class="row">
-          <div class="col-sm-6">
-            <button class="btn btn-primary btn-sm btn-change-text">
-              修改文字
-            </button>
-          </div>
-          <div class="col-sm-6">
-            <input type="" class="text-color bg-primary"/>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-sm-6">
-            <select class="font-size bg-primary"></select>
-          </div>
-          <div class="col-sm-6">
-            <select class="font-family bg-primary"></select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="object-manager">
+    <div class="panel-footer">
+      <button class="btn btn-default btn-xs">取消</button>
+      <button class="btn btn-primary btn-xs">确定</button>
     </div>
   </div>
 </div>
-
-<div class="modal fade add-img-modal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-body">
-        <div class='pull-right'>
-          <button class='btn-tag btn btn-primary'>
-            <i class="fa fa-tag"></i><span class='selected-tag'>不限标签</span>
-          </button>
-          <div class="tags-list" style='display: none'>
-            <div class="row">
-              <div class="panel panel-info col-md-10 col-md-offset-1">
-                <div class="panel-body">
-                  <button type="button" class="close" aria-hidden="true">&times;</button>
-                  <a href="#" class='tag text-success' data-tag-id="0"><b>不限标签</b></a>
-                    {{#each tagList}}
-                      <a href="#" class='tag text-danger' data-tag-id="{{this.id}}"><b>{{this.tag}}</b></a>
-                    {{/each}}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <ul class="nav nav-tabs">
-          <li><a data-toggle="tab" href=".builtin-pics">默认图片</a></li>
-          <li><a href=".customer-pics" data-toggle="tab">自定义图片</a></li>
-        </ul>
-        <div class="tab-content">
-          <div class="tab-pane fade builtin-pics">
-            <ul class="thumbnails gallery picker"></ul>
-          </div>
-          <div class="tab-pane fade customer-pics">
-          </div>
-          <div class="toast" style='display: none'>
-              <span>
-                没有设计图了
-              </span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <form class='upload-img-form' method="post" action="/image/upload" enctype="multipart/form-data">
-            <span class="btn btn-success fileinput-button">
-              <i class="glyphicon glyphicon-plus"></i>
-              <span>上传新图片</span>
-              <input type="file" name="files[]">
-            </span>
-
-          <div class='uploading-progress'>
-            <!-- The file uploads will be shown here -->
-          </div>
-        </form>
-        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-        <button type="button" class="btn-ok btn btn-primary" data-dismiss="modal">确认</button>
-      </div>
-    </div>
-    <!-- /.modal-content -->
-  </div>
-  <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
-<div class="modal fade add-text-modal">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-body">
-        <div class="modal-header">
-          <h4 class="modal-title">请输入文字</h4>
-        </div>
-        <div class="modal-body">
-          <div class="text-center">
-            <textarea cols="24" rows="2" placeholder="请输入文字"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-          <button type="button" class="btn btn-ok btn-primary" data-dimiss="modal">确认</button>
-        </div>
-      </div>
-    </div>
-  </div>
+{{#if orderId}}
+<p>
+  <small class='text-danger'>订单号: {{orderId}}</small>
+</p>
+{{/if}}
+<div class='mask text-center'>
+  <i class="fa fa-spinner fa-spin fa-4x"></i>
+  <p class='message'>abc</p>
 </div>
