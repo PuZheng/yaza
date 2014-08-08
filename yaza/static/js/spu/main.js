@@ -37,7 +37,7 @@ require.config({
         'utils': 'js/utils',
         'color-tools': 'js/color-tools',
         'spu': 'js/spu',
-        'js/infrastructure': ['http://yaza.qiniudn.com/js/infrastructure', 'js/infrastructure']
+        'js/infrastructure': 'js/infrastructure'
     },
     urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
@@ -56,7 +56,7 @@ require.config({
         },
         'bootstrap': {
             deps: ['jquery'],
-            exports: '$.fn.button',
+            exports: '$.fn.button'
         },
         'lazy-load': {
             deps: ['jquery'],
@@ -111,7 +111,7 @@ require.config({
         },
         'toastr': {
             deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
-        },
+        }
     }
 });
 
