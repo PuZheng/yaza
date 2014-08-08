@@ -127,7 +127,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             })
             .on('design-region-setup', function (designRegion) {
                 this._objectManager.empty();
-                designRegion.imageLayer().getChildren(function (node) {
+                designRegion.getImageLayer().getChildren(function (node) {
                     return node.getClassName() == "Image";
                 }).sort(function (a, b) {
                     return a.getZIndex() - b.getZIndex();

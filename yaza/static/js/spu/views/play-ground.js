@@ -32,6 +32,7 @@ mvc, readImageData) {
 
         render: function () {
             this.$el.prepend(this._template({orderId: this._orderId}));
+            this.$touchScreenEl = this.$('.touch-screen');
             this._draw = SVG(this.$('.svg-drawing')[0]);
 
             this._setupEventsHandler();
@@ -109,11 +110,11 @@ mvc, readImageData) {
                     this._designRegionAnimate(previewEdges);
 
                     this._currentAspect.designRegionList.forEach(function (dr) {
-                        dr.controlLayer().hide();
+                        dr.getControlLayer().hide();
                     });
-                    designRegion.controlLayer().show();
-                    designRegion.controlLayer().find('.frame').size(designRegion.controlLayer().size());
-                    var controlLayer = designRegion.controlLayer();
+                    designRegion.getControlLayer().show();
+                    designRegion.getControlLayer().find('.frame').size(designRegion.getControlLayer().size());
+                    var controlLayer = designRegion.getControlLayer();
                     this._crossLayer.find('.vertical').points([
                         controlLayer.x() + controlLayer.width() / 2, 
                         0, 
@@ -218,7 +219,7 @@ mvc, readImageData) {
                 var ocspu = this._currentAspect.ocspu;
                 if (ocspu.aspectList.every(function (aspect) {
                     return aspect.designRegionList.every(function (dr) {
-                        return !dr.imageLayer().hasChildren();
+                        return !dr.getImageLayer().hasChildren();
                     });                
                 })) {
                     dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
@@ -249,13 +250,14 @@ mvc, readImageData) {
             imgObj.crossOrigin = 'Anonymous'; // 必须在加载前就设置crossOrigin
             imgObj.onload = function (e) {
                 // setup dom 
-                var asPortait = aspect.size[1] / aspect.size[0] > this.$el.height() / this.$el.width();
+                debugger;
+                var asPortait = aspect.size[1] / aspect.size[0] > this.$touchScreenEl.height() / this.$touchScreenEl.width();
                 if (asPortait) {
-                    var imageWidth = aspect.size[0] * this.$el.height() / aspect.size[1];
-                    var imageHeight = this.$el.height();
+                    var imageWidth = aspect.size[0] * this.$touchScreenEl.height() / aspect.size[1];
+                    var imageHeight = this.$touchScreenEl.height();
                 } else {
-                    var imageHeight = aspect.size[1] * this.$el.width() / aspect.size[0];
-                    var imageWidth = this.$el.width();
+                    var imageHeight = aspect.size[1] * this.$touchScreenEl.width() / aspect.size[0];
+                    var imageWidth = this.$touchScreenEl.width();
                 }
                 this.$container.width(imageWidth + config.PLAYGROUND_MARGIN * 2).height(imageHeight + config.PLAYGROUND_MARGIN * 2);
                 var $touchScreenEl = this.$('.touch-screen');
@@ -276,9 +278,9 @@ mvc, readImageData) {
                 var offsetX = config.PLAYGROUND_MARGIN;
                 var offsetY = config.PLAYGROUND_MARGIN;
                 if (asPortait) {
-                    offsetX +=  (this.$el.width() - imageWidth) / 2;
+                    offsetX +=  (this.$touchScreenEl.width() - imageWidth) / 2;
                 } else {
-                    offsetY += (this.$el.height() - imageHeight) / 2;
+                    offsetY += (this.$touchScreenEl.height() - imageHeight) / 2;
                 }
                 this._backgroundLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
@@ -337,45 +339,45 @@ mvc, readImageData) {
                         // 这个框的算法是（以portrait为例）， 上边和design
                         // region的上沿对齐， 下边和design region的下沿对齐，
                         // 左边和右边到design region的左沿和右沿距离相等
-                        var oldImageLayerSize = dr.imageLayer().size();
-                        if (dr.previewHeight() / dr.previewWidth() > dr.size[1] / dr.size[0]) {
-                            dr.imageLayer().size({
-                                width: dr.size[0] * dr.previewHeight() / dr.size[1],
-                                height: dr.previewHeight(),
+                        var oldImageLayerSize = dr.getImageLayer().size();
+                        if (dr.getPreviewHeight() / dr.getPreviewWidth() > dr.size[1] / dr.size[0]) {
+                            dr.getImageLayer().size({
+                                width: dr.size[0] * dr.getPreviewHeight() / dr.size[1],
+                                height: dr.getPreviewHeight(),
                             })
-                            dr.imageLayer().position({
-                                x: backgroundLayer.x() + dr.previewLeft() - (dr.imageLayer().width() - dr.previewWidth()) / 2,
-                                y: backgroundLayer.y() + dr.previewBottom(),
+                            dr.getImageLayer().position({
+                                x: backgroundLayer.x() + dr.getPreviewLeft() - (dr.getImageLayer().width() - dr.getPreviewWidth()) / 2,
+                                y: backgroundLayer.y() + dr.getPreviewBottom(),
                             });
                         } else {
-                            dr.imageLayer().size({
-                                width: dr.previewWidth(),
-                                height: dr.size[1] * dr.previewWidth() / dr.size[0],
+                            dr.getImageLayer().size({
+                                width: dr.getPreviewWidth(),
+                                height: dr.size[1] * dr.getPreviewWidth() / dr.size[0],
                             });
-                            dr.imageLayer().position({
-                                x: backgroundLayer.x() + dr.previewLeft(),
-                                y: backgroundLayer.y() + dr.previewBottom() - (dr.imageLayer().height() - dr.previewHeight()) / 2,
+                            dr.getImageLayer().position({
+                                x: backgroundLayer.x() + dr.getPreviewLeft(),
+                                y: backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2,
                             });
                         }
-                        stage.add(dr.imageLayer());
-                        dr.controlLayer().size(dr.imageLayer().size()).position(dr.imageLayer().position());
-                        stage.add(dr.controlLayer());
+                        stage.add(dr.getImageLayer());
+                        dr.getControlLayer().size(dr.getImageLayer().size()).position(dr.getImageLayer().position());
+                        stage.add(dr.getControlLayer());
                         stage.add(dr.previewLayer);
-                        dr.imageLayer().moveToBottom();
+                        dr.getImageLayer().moveToBottom();
                         // 添加的图像文字， 保持中心位置不变， 但是要缩放
                         if (oldImageLayerSize.width > 0 && oldImageLayerSize.height > 0) {
                             var scale = {
-                                x: dr.imageLayer().width() / oldImageLayerSize.width,
-                                y: dr.imageLayer().height() / oldImageLayerSize.height, 
+                                x: dr.getImageLayer().width() / oldImageLayerSize.width,
+                                y: dr.getImageLayer().height() / oldImageLayerSize.height,
                             };
-                            dr.imageLayer().getChildren().forEach(function (node) {
+                            dr.getImageLayer().getChildren().forEach(function (node) {
                                 node.scale(scale);
                             });
-                            dr.imageLayer().draw();
-                            dr.controlLayer().getChildren().forEach(function (node) {
+                            dr.getImageLayer().draw();
+                            dr.getControlLayer().getChildren().forEach(function (node) {
                                 node.scale(scale);
                             });
-                            dr.controlLayer().draw();
+                            dr.getControlLayer().draw();
                         }
 
                         var view = this;
@@ -419,17 +421,6 @@ mvc, readImageData) {
                 name: 'highlight-frame'
             });
 
-            var a = edges.right.map(function(p) {return p[1]});
-            for (var i = edges.right[0][1]; i < edges.right[edges.right.length-1][1]; ++i) {
-                if (a.indexOf(i) == -1) {
-                    this._designRegionAnimationLayer.add(new Kinetic.Line({
-                        points: [0, i, 1000, i],
-                        stroke: 'green',
-                        strokeWidth: 1,
-                    }));
-                }
-            }
-
             this._designRegionAnimationLayer.add(designRegionHex);
 
             var period = 2000;
@@ -470,7 +461,7 @@ mvc, readImageData) {
 
             loadImage(src).done(function (imageObj) {
                 // 将图片按比例缩小，并且放在正中
-                var imageLayer = this._currentDesignRegion.imageLayer();
+                var imageLayer = this._currentDesignRegion.getImageLayer();
                 if (imageObj.height / imageObj.width > imageLayer.height() / imageLayer.width()) {
                     // portrait
                     var height = imageLayer.height(); 
@@ -512,11 +503,11 @@ mvc, readImageData) {
                         view._backgroundLayer.y(), 
                         view._backgroundLayer.width(), 
                         view._backgroundLayer.height());
-                        view._currentDesignRegion.imageLayer().draw();
+                        view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
-                            view._currentDesignRegion.imageLayer().moveToTop();
+                            view._currentDesignRegion.getImageLayer().moveToTop();
                             setTimeout(function () {
-                                view._currentDesignRegion.imageLayer().moveToBottom();
+                                view._currentDesignRegion.getImageLayer().moveToBottom();
                             }, 1000);
                         }
                         view._generatePreview();
@@ -527,17 +518,19 @@ mvc, readImageData) {
                         dispatcher.trigger('active-object', this);
                     }
                 })
+                .on('dragstart', function () {
+                    this._crossLayer.show();
+                    this._crossLayer.moveToTop();
+                    this._crossLayer.draw();
+                    if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
+                        this._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(this._backgroundLayer.x(), this._backgroundLayer.y(), 
+                        this._backgroundLayer.width(), 
+                        this._backgroundLayer.height());
+                    }
+                }.bind(this))
                 .on("dragmove", function (view) {
                     return function () {
-                        view._crossLayer.show();
-                        view._crossLayer.moveToTop();
-                        view._crossLayer.draw();
-                        view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._backgroundLayer.x(), 
-                        view._backgroundLayer.y(), 
-                        view._backgroundLayer.width(), 
-                        view._backgroundLayer.height());
-
                         this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
                     }
                 }(this));
@@ -548,7 +541,7 @@ mvc, readImageData) {
                     position: group.position(),
                     //fill: 'red',
                 });
-                this._currentDesignRegion.controlLayer().add(group).draw();
+                this._currentDesignRegion.getControlLayer().add(group).draw();
                 console.log(rect.size());
                 dispatcher.trigger('object-added', image, group);
                 this._generatePreview();
@@ -561,7 +554,7 @@ mvc, readImageData) {
             $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', 
             function (view) {
                 return function () {
-                    var imageLayer = view._currentDesignRegion.imageLayer();
+                    var imageLayer = view._currentDesignRegion.getImageLayer();
                     var scale = imageLayer.width() / (view._currentDesignRegion.size[0] * config.PPI);
                     var width = data.width * scale;
                     var height = data.height * scale;
@@ -594,11 +587,11 @@ mvc, readImageData) {
                         view._backgroundLayer.y(), 
                         view._backgroundLayer.width(), 
                         view._backgroundLayer.height());
-                        view._currentDesignRegion.imageLayer().draw();
+                        view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
-                            view._currentDesignRegion.imageLayer().moveToTop();
+                            view._currentDesignRegion.getImageLayer().moveToTop();
                             setTimeout(function () {
-                                view._currentDesignRegion.imageLayer().moveToBottom();
+                                view._currentDesignRegion.getImageLayer().moveToBottom();
                             }, 1000);
                         }
                         view._generatePreview();
@@ -668,7 +661,7 @@ mvc, readImageData) {
                         };
                     }(view));
                     im.setAttr("control-group", controlGroup);
-                    view._currentDesignRegion.controlLayer().add(controlGroup).draw();
+                    view._currentDesignRegion.getControlLayer().add(controlGroup).draw();
                     if (oldIm && oldControlGroup) {
                         im.setZIndex(oldIm.getZIndex());
                         im.rotation(oldIm.rotation());
@@ -677,8 +670,8 @@ mvc, readImageData) {
                         controlGroup.rotation(oldControlGroup.rotation());
                         oldIm.destroy();
                         oldControlGroup.destroy();
-                        view._currentDesignRegion.controlLayer().draw();
-                        view._currentDesignRegion.imageLayer().draw();
+                        view._currentDesignRegion.getControlLayer().draw();
+                        view._currentDesignRegion.getImageLayer().draw();
                         dispatcher.trigger('object-added', im, controlGroup,
                         oldIm, oldControlGroup);
                     } else {
@@ -691,7 +684,7 @@ mvc, readImageData) {
 
         _generatePreview: function (designRegion) {
             !designRegion && (designRegion = this._currentDesignRegion); 
-            var imageLayer = designRegion.imageLayer();
+            var imageLayer = designRegion.getImageLayer();
             var previewLayer = designRegion.previewLayer;
             if (imageLayer.children.length == 0) {
                 previewLayer.getContext().clearRect(previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height());
@@ -867,7 +860,7 @@ mvc, readImageData) {
             var ocspu = this._currentAspect.ocspu;
             ocspu.aspectList.forEach(function (asepct) {
                 asepct.designRegionList.forEach(function (designRegion) {
-                    var imageLayer = designRegion.imageLayer();
+                    var imageLayer = designRegion.getImageLayer();
                     this._draw.clear();
                     this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
                     .data('name', name);
@@ -894,7 +887,7 @@ mvc, readImageData) {
         // 下载当前面的预览
         _downloadPreview: function () {
             if (this._currentAspect.designRegionList.every(function (dr) {
-                return !dr.imageLayer().hasChildren();
+                return !dr.getImageLayer().hasChildren();
             })) {
                 dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
                 return false;
@@ -980,7 +973,7 @@ mvc, readImageData) {
 
         _downloadDesign: function (evt) {
             if (this._currentAspect.designRegionList.every(function (dr) {
-                return !dr.imageLayer().hasChildren();
+                return !dr.getImageLayer().hasChildren();
             })) {
                 dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
                 return false;
