@@ -419,17 +419,6 @@ mvc, readImageData) {
                 name: 'highlight-frame'
             });
 
-            var a = edges.right.map(function(p) {return p[1]});
-            for (var i = edges.right[0][1]; i < edges.right[edges.right.length-1][1]; ++i) {
-                if (a.indexOf(i) == -1) {
-                    this._designRegionAnimationLayer.add(new Kinetic.Line({
-                        points: [0, i, 1000, i],
-                        stroke: 'green',
-                        strokeWidth: 1,
-                    }));
-                }
-            }
-
             this._designRegionAnimationLayer.add(designRegionHex);
 
             var period = 2000;
@@ -527,17 +516,19 @@ mvc, readImageData) {
                         dispatcher.trigger('active-object', this);
                     }
                 })
+                .on('dragstart', function () {
+                    this._crossLayer.show();
+                    this._crossLayer.moveToTop();
+                    this._crossLayer.draw();
+                    if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
+                        this._currentDesignRegion.previewLayer.getContext()
+                        .clearRect(this._backgroundLayer.x(), this._backgroundLayer.y(), 
+                        this._backgroundLayer.width(), 
+                        this._backgroundLayer.height());
+                    }
+                }.bind(this))
                 .on("dragmove", function (view) {
                     return function () {
-                        view._crossLayer.show();
-                        view._crossLayer.moveToTop();
-                        view._crossLayer.draw();
-                        view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._backgroundLayer.x(), 
-                        view._backgroundLayer.y(), 
-                        view._backgroundLayer.width(), 
-                        view._backgroundLayer.height());
-
                         this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
                     }
                 }(this));

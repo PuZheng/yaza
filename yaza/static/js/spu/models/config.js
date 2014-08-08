@@ -32,6 +32,7 @@ define(['backbone'], function (Backbone) {
             DESIGN_IMAGE_INTIAL_ZOOMNESS: 0.7,
             PREVIEW_DOWNLOADABLE: true,
             DESIGN_DOWNLOADABLE: true,
+            CLEAR_PREVIEW_BEFORE_DRAG: false,
         }
     });
 
