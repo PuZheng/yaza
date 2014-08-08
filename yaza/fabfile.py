@@ -2,7 +2,7 @@
 import os
 import json
 
-from fabric.api import cd, sudo, local, env, run, prefix
+from fabric.api import cd, sudo, local, env, prefix, run
 
 config = json.load(file(os.path.join(os.path.split(__file__)[0], "fab.json")))
 
@@ -11,59 +11,81 @@ env.password = config["password"]
 env.user = config["user"]
 
 yaza_env = "/srv/www/yaza-env"
-dist_dir = "yaza/yaza/static/dist"
 
 
 def prepare_deploy(branch):
     with cd(yaza_env):
-        sudo('cd yaza/yaza && bower install', user="www-data")
-        sudo('cd yaza && git pull origin %s && git checkout %s' % (branch, branch),
-             user="www-data")
-        sudo('cd yaza/yaza && bower install', user="www-data")
-        sudo('cd yaza/yaza/static/js/vendor/bootswatch-scss && grunt build:flatly',
-             user="www-data")
-        sudo("cd yaza/yaza && r.js -o build.js", user="www-data")
+        if branch == 'master':
+            cmd = '&& '.join(['cd yaza', 'git checkout master',
+                              'git pull origin master'])
+        else:
+            cmd = '&& '.join(['cd yaza', 'git checkout master',
+                             'eval "$(git branch -D ' + branch + ')"',
+                             'git fetch origin',
+                             'git checkout -b ' + branch])
+        run(cmd)
+        #with prefix('source env/bin/activate'):
+            #run("cd yaza && pip install -r requirements.txt -i http://pypi.douban.com/simple && python setup.py develop")
+        run('cd yaza/yaza && bower install')
+        cmd = '&& '.join([
+            'cd yaza/yaza/static/js/vendor/bootswatch-scss',
+            'rbenv local 2.1.2',
+            'grunt build:flatly',
+        ])
+        run(cmd)
+
+
+def build():
+    with cd(yaza_env):
+        run("cd yaza/yaza && r.js -o build.js")
 
 
 def upload():
+
+    base = config['upload-files']['base']
+    included_dirs = config['upload-files']["include"].get("dirs", [])
+    included_files = config['upload-files']["include"].get("files", [])
+    excluded_dirs = config['upload-files']["exclude"].get("dirs", [])
+    excluded_files = config['upload-files']["exclude"].get("files", [])
+
+    def upload_file(file_):
+        from yaza.qiniu_handler import upload_text
+        from yaza.basemain import app
+
+        print "uploading ..." + file_
+        file_name = os.path.relpath(file_, yaza_env + base)
+        upload_text(file_name, open(file_).read(),
+                    app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+
     with cd(yaza_env):
-        included_dirs = [os.path.normpath(os.path.join(dist_dir, d)) for d in config["include"].get("dir", [])]
-        included_files = [os.path.normpath(os.path.join(dist_dir, f)) for f in config["include"].get("file", [])]
+        with prefix('source env/bin/activate'):
+            with cd(yaza_env):
+                included_dirs = [os.path.normpath(os.path.join(base, d))
+                                 for d in included_dirs]
+                included_files = [os.path.normpath(os.path.join(base, f))
+                                  for f in included_files]
+                excluded_dirs = [os.path.normpath(os.path.join(base, d))
+                                 for d in excluded_dirs]
+                excluded_files = [os.path.normpath(os.path.join(base, f))
+                                  for f in excluded_files]
 
-        excluded_dirs = [os.path.normpath(os.path.join(dist_dir, d)) for d in config["exclude"].get("dir", [])]
-        excluded_files = [os.path.normpath(os.path.join(dist_dir, f)) for f in config["exclude"].get("file", [])]
+                for d in included_dirs:
+                    for root, dir, files in os.walk(d):
+                        if root not in excluded_dirs:
+                            for file_ in files:
+                                if os.path.join(root, file_) not in excluded_files:
+                                    upload_file(os.path.join(root, file_))
 
-        for d in included_dirs:
-            for root, dir, files in os.walk(d):
-                if root not in excluded_dirs:
-                    for file_ in files:
-                        if os.path.join(root, file_) not in excluded_files:
-                            upload_file(os.path.join(root, file_))
-
-        for f in included_files:
-            upload_file(f)
-
-
-def upload_file(file_):
-    from yaza.qiniu_handler import upload_text
-    from yaza.basemain import app
-
-    print "uploading ..." + file_
-    file_name = os.path.relpath(file_, yaza_env + dist_dir)
-    upload_text(file_name, open(file_).read(),
-                app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
+                for f in included_files:
+                    upload_file(f)
 
 
-def deploy(branch, rebuild=False):
+def deploy(branch='master', rebuild=False):
     if rebuild:
         local('r.js -o build.js')
     prepare_deploy(branch)
-    with cd(yaza_env):
-        with prefix('source env/bin/activate'):
-            run('python -c "import sys; print sys.path"')
-            sudo("cd yaza && pip install -r requirements.txt && python setup.py install",
-                 user="www-data")
-            upload()
+    build()
+    upload()
 
     sudo("service nginx restart")
     sudo("service uwsgi restart yaza")
