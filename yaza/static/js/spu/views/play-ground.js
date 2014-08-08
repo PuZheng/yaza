@@ -32,6 +32,7 @@ mvc, readImageData) {
 
         render: function () {
             this.$el.prepend(this._template({orderId: this._orderId}));
+            this.$touchScreenEl = this.$('.touch-screen');
             this._draw = SVG(this.$('.svg-drawing')[0]);
 
             this._setupEventsHandler();
@@ -249,13 +250,14 @@ mvc, readImageData) {
             imgObj.crossOrigin = 'Anonymous'; // 必须在加载前就设置crossOrigin
             imgObj.onload = function (e) {
                 // setup dom 
-                var asPortait = aspect.size[1] / aspect.size[0] > this.$el.height() / this.$el.width();
+                debugger;
+                var asPortait = aspect.size[1] / aspect.size[0] > this.$touchScreenEl.height() / this.$touchScreenEl.width();
                 if (asPortait) {
-                    var imageWidth = aspect.size[0] * this.$el.height() / aspect.size[1];
-                    var imageHeight = this.$el.height();
+                    var imageWidth = aspect.size[0] * this.$touchScreenEl.height() / aspect.size[1];
+                    var imageHeight = this.$touchScreenEl.height();
                 } else {
-                    var imageHeight = aspect.size[1] * this.$el.width() / aspect.size[0];
-                    var imageWidth = this.$el.width();
+                    var imageHeight = aspect.size[1] * this.$touchScreenEl.width() / aspect.size[0];
+                    var imageWidth = this.$touchScreenEl.width();
                 }
                 this.$container.width(imageWidth + config.PLAYGROUND_MARGIN * 2).height(imageHeight + config.PLAYGROUND_MARGIN * 2);
                 var $touchScreenEl = this.$('.touch-screen');
@@ -276,9 +278,9 @@ mvc, readImageData) {
                 var offsetX = config.PLAYGROUND_MARGIN;
                 var offsetY = config.PLAYGROUND_MARGIN;
                 if (asPortait) {
-                    offsetX +=  (this.$el.width() - imageWidth) / 2;
+                    offsetX +=  (this.$touchScreenEl.width() - imageWidth) / 2;
                 } else {
-                    offsetY += (this.$el.height() - imageHeight) / 2;
+                    offsetY += (this.$touchScreenEl.height() - imageHeight) / 2;
                 }
                 this._backgroundLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
