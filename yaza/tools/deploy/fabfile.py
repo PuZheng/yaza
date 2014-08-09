@@ -29,7 +29,7 @@ def prepare_deploy(branch):
             run("cd yaza && pip install -r requirements.txt -i http://pypi.douban.com/simple && python setup.py develop")
         run('cd yaza/yaza && bower install')
         cmd = '&& '.join([
-            'cd yaza/yaza/static/css/vendor/bootswatch-scss',
+            'cd yaza/yaza/static/vendor/bootswatch-scss',
             'rbenv local 2.1.2',
             'grunt build:flatly',
         ])

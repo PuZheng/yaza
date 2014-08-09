@@ -7,6 +7,6 @@ static/dist/css/admin.css
 static/dist/css/custom.css
 static/dist/css/login.css
 static/dist/css/style.css
-static/dist/css/vendor/bootswatch-scss/flatly/bootstrap.css
+static/dist/vendor/bootswatch-scss/flatly/bootstrap.css
 static/dist/assets/congruent_outline.png
 static/dist/favicon.ico
