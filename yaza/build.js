@@ -41,7 +41,7 @@
         'utils': 'js/utils',
         'lazy-load': 'js/utils/lazy-load',
         'color-tools': 'js/color-tools',
-        'spu': 'js/spu'
+        //'spu': 'js/spu'
     },
     removeCombined: true,
     preserveLicenseComments: false,

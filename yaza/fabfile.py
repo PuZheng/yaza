@@ -34,13 +34,7 @@ def prepare_deploy(branch):
         ])
         run(cmd)
 
-
-def build():
-    with cd(yaza_env):
-        run("cd yaza/yaza && r.js -o build.js")
-
-
-def upload():
+def upload2cdn():
 
     base = config['upload-files']['base']
     included_dirs = config['upload-files']["include"].get("dirs", [])
@@ -49,43 +43,40 @@ def upload():
     excluded_files = config['upload-files']["exclude"].get("files", [])
 
     def upload_file(file_):
-        from yaza.qiniu_handler import upload_text
         from yaza.basemain import app
+        from yaza.qiniu_handler import upload_text
 
         print "uploading ..." + file_
         file_name = os.path.relpath(file_, yaza_env + base)
         upload_text(file_name, open(file_).read(),
                     app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"])
 
-    with cd(yaza_env):
-        with prefix('source env/bin/activate'):
-            with cd(yaza_env):
-                included_dirs = [os.path.normpath(os.path.join(base, d))
-                                 for d in included_dirs]
-                included_files = [os.path.normpath(os.path.join(base, f))
-                                  for f in included_files]
-                excluded_dirs = [os.path.normpath(os.path.join(base, d))
-                                 for d in excluded_dirs]
-                excluded_files = [os.path.normpath(os.path.join(base, f))
-                                  for f in excluded_files]
+        included_dirs = [os.path.normpath(os.path.join(base, d))
+                            for d in included_dirs]
+        included_files = [os.path.normpath(os.path.join(base, f))
+                            for f in included_files]
+        excluded_dirs = [os.path.normpath(os.path.join(base, d))
+                            for d in excluded_dirs]
+        excluded_files = [os.path.normpath(os.path.join(base, f))
+                            for f in excluded_files]
+        print included_dirs
+        for d in included_dirs:
+            for root, dir, files in os.walk(d):
+                if root not in excluded_dirs:
+                    for file_ in files:
+                        if os.path.join(root, file_) not in excluded_files:
+                            upload_file(os.path.join(root, file_))
 
-                for d in included_dirs:
-                    for root, dir, files in os.walk(d):
-                        if root not in excluded_dirs:
-                            for file_ in files:
-                                if os.path.join(root, file_) not in excluded_files:
-                                    upload_file(os.path.join(root, file_))
-
-                for f in included_files:
-                    upload_file(f)
+        for f in included_files:
+            upload_file(f)
 
 
 def deploy(branch='master', rebuild=False):
+    prepare_deploy(branch)
     if rebuild:
         local('r.js -o build.js')
-    prepare_deploy(branch)
-    build()
-    upload()
+    local('git checkout ' + branch)
+    upload2cdn()
 
     sudo("service nginx restart")
     sudo("service uwsgi restart yaza")

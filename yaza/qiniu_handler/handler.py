@@ -78,8 +78,6 @@ def upload_text(key, data, bucket):
     else:
         print ret
 
-    if os.path.altsep in key:
-        key = key.replace("\\", "%5C")
     return "http://" + bucket + '.qiniudn.com/' + key
 
 def delete_file(bucket, key):

@@ -4,11 +4,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
   {% if config.QINIU_ENABLED and not config.DEBUG %}
-    <link rel="stylesheet" href="http://yaza.qiniudn.com/js/vendor/bootswatch-scss/flatly/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://yaza.qiniudn.com/css/vendor/bootswatch-scss/flatly/bootstrap.min.css" />
     <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin.css"/>
     <link rel="stylesheet" href="http://yaza.qiniudn.com/css/admin/spu.css"/>
   {% else %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/spu.css') }}"/>
   {% endif %}
