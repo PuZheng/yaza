@@ -1,6 +1,6 @@
-define(['dispatcher', 'spu/views/base-view',
-        'spu/views/ocspu-view',
-        'spu/models/ocspu'],
+define(['dispatcher', 'admin/spu/views/base-view',
+        'admin/spu/views/ocspu-view',
+        'admin/spu/models/ocspu'],
     function (dispatcher, BaseView, OCSPUView, OCSPU) {
         var SPUView = BaseView.extend({
             //注意 events不能写在BaseView, 否则每层都会触发

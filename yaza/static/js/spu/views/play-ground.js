@@ -250,8 +250,7 @@ mvc, readImageData) {
             imgObj.crossOrigin = 'Anonymous'; // 必须在加载前就设置crossOrigin
             imgObj.onload = function (e) {
                 // setup dom 
-                debugger;
-                var asPortait = aspect.size[1] / aspect.size[0] > this.$touchScreenEl.height() / this.$touchScreenEl.width();
+                var asPortait = aspect.size[2] / aspect.size[0] > this.$touchScreenEl.height() / this.$touchScreenEl.width();
                 if (asPortait) {
                     var imageWidth = aspect.size[0] * this.$touchScreenEl.height() / aspect.size[1];
                     var imageHeight = this.$touchScreenEl.height();

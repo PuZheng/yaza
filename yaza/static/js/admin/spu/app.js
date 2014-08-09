@@ -1,4 +1,4 @@
-define(['spu/views/app-view', 'spu/models/spu', 'jquery', 'js-url'], function (AppView, SPU, $) {
+define(['admin/spu/views/app-view', 'admin/spu/models/spu', 'jquery', 'js-url'], function (AppView, SPU, $) {
     var spuId = $.url('filename');
     if (spuId === 'spu') {
         var appView = new AppView();

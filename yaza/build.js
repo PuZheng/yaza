@@ -22,6 +22,8 @@
         "jquery.scrollTo": 'empty:',
         'js-url': 'empty:',
         'toastr': 'empty:',
+        "ekko-lightbox": 'empty:',
+        'fancybox': 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -41,7 +43,8 @@
         'utils': 'js/utils',
         'lazy-load': 'js/utils/lazy-load',
         'color-tools': 'js/color-tools',
-        //'spu': 'js/spu'
+        'spu': 'js/spu',
+        'admin/spu': 'js/admin/spu'
     },
     removeCombined: true,
     preserveLicenseComments: false,
@@ -56,6 +59,13 @@
         },
         {
             name: 'js/infrastructure'
+        },
+        {
+            name: 'js/admin/spu/main',
+            exclude: ['js/admin/spu/infrastructure']
+        },
+        {
+            name: 'js/admin/spu/infrastructure'
         }
     ],
     shim: {

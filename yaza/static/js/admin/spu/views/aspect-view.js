@@ -1,6 +1,6 @@
-define(['spu/views/base-view', 
-    'spu/views/design-region-view', 
-    'spu/models/design-region'], 
+define(['admin/spu/views/base-view', 
+    'admin/spu/views/design-region-view', 
+    'admin/spu/models/design-region'], 
     function (BaseView, DesignRegionView, DesignRegion) {
         var AspectView = BaseView.extend({
             label: '面',

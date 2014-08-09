@@ -8,12 +8,13 @@
       {% endblock %}
     </title>
     {% block head_block %}
-      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
       <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
       {% if config.QINIU_ENABLED and not config.DEBUG %}
-        <link rel="stylesheet" href="http://yaza.qiniudn.com/js/vendor/bootswatch-scss/flatly/bootstrap.min.css" />
+        <link rel="shortcut icon" href="{{"http://%s.qiniudn.com/static/favicon.ico"|format(config.QINIU_CONF.STATIC_BUCKET)}}">
+        <link rel="stylesheet" href="{{ "http://%s.qiniudn.com/static/css/vendor/bootswatch-scss/flatly/bootstrap.css"|format(config.QINIU_CONF.STATIC_BUCKET) }}" />
       {% else %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='js/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/vendor/bootswatch-scss/flatly/bootstrap.min.css') }}" />
       {% endif %}
       <!--[if lt IE 9]>
           <script src="{{ url_for('static', filename='components/html5shiv/dist/html5shiv.js') }}"></script>

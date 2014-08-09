@@ -1,0 +1,16 @@
+{
+    "upload-files": {
+        "base": "static/dist",
+        "include": {
+            "files": ["js/infrastructure.js", "spu/main.js"],
+            "dirs": ["css"]
+        },
+        "exclude": {
+            "files": [],
+            "dirs": ["css/vendor"]
+        }
+    },
+    "hosts": ["42.121.6.193"],
+    "password": "1qaz2wsx",
+    "user": "yaza"
+}

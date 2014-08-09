@@ -1,4 +1,4 @@
-define(['jquery', 'dispatcher', 'spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url', "ekko-lightbox"], function ($, dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
+define(['jquery', 'dispatcher', 'admin/spu/context', 'underscore', 'backbone', 'handlebars', 'text!templates/admin/spu/view.hbs', 'text!templates/admin/spu/entry.hbs', 'spectrum', 'fancybox', 'jquery-file-upload', 'underscore.string', 'js-url', "ekko-lightbox"], function ($, dispatcher, context, _, Backbone, handlebars, template, entryTemplate) {
     _.mixin(_.str.exports());
     handlebars.default.registerHelper('eq', function (a, b, opts) {
         if (a == b) // Or === depending on your needs

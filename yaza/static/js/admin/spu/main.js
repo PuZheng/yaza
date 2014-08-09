@@ -1,6 +1,11 @@
 (function () {
     var config = {
         baseUrl: '/static',
+        map: {
+            '*': {
+                'css': 'components/require-css/css.min'
+            }
+        },
         paths: {
             // vendors using bootcss cdn
             jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
@@ -23,7 +28,7 @@
             'css': 'components/require-css/css.min',
             // application
             dispatcher: 'js/dispatcher',
-            'spu': 'js/admin/spu',
+            'admin/spu': 'js/admin/spu',
         },
         shim: {
             'underscore': {
@@ -94,7 +99,7 @@
     }();
 
     if (QueryString.develop != '1') {
-        config.paths['js/admin/spu/infrastructure'] = 'http://yaza.qiniudn.com/js/admin/spu/infrastructure';
+        config.paths['js/admin/spu/infrastructure'] = 'http://yaza-static.qiniudn.com/static/js/admin/spu/infrastructure';
     } else {
         config.urlArgs = "bust=" + (new Date()).getTime();
     }

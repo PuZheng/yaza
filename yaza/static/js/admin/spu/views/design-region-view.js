@@ -1,4 +1,4 @@
-define(['spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-selector.hbs', 'handlebars', 'kineticjs'], 
+define(['admin/spu/views/base-view', 'text!templates/admin/spu/design-region-vertex-selector.hbs', 'handlebars', 'kineticjs'], 
     function (BaseView, vertexSelectorTemplate, handlebars, Kinetic) {
         var DesignRegionView = BaseView.extend({
             

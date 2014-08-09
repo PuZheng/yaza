@@ -48,7 +48,7 @@ QINIU_CONF = {
     "DESIGN_IMAGE_BUCKET": "yaza-designs",
     "SPU_IMAGE_BUCKET": "yaza-spus",
     "ASPECT_MD_SIZE": 800,
-    "STATIC_BUCKET": 'yaza',
+    "STATIC_BUCKET": 'yaza-static',
     "DESIGN_IMAGE_THUMNAIL_SIZE": 96,
     "EXPIRY_TIME": 12 * 3600  # 30天
 }
