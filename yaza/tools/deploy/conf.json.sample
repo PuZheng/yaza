@@ -10,7 +10,8 @@
             "dirs": ["css/vendor"]
         }
     },
-    "hosts": ["42.121.6.193"],
-    "password": "1qaz2wsx",
+    "hosts": ["121.40.78.129"],
+    "password": "fee0fe3D",
+    "sudoer": "xiechao",
     "user": "yaza"
 }
