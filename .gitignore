@@ -1,4 +1,6 @@
+/yaza/tools/deploy/conf.json
 /yaza/static/custom/*
+/yaza/fab.json
 /yaza/tags
 /yaza/npm-debug.log
 /yaza/.Session.vim

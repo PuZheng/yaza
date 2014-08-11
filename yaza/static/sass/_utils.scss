@@ -1,4 +1,4 @@
-@import "../js/vendor/bootswatch-scss/flatly/variables";
+@import "../vendor/bootswatch-scss/flatly/variables";
 
 @mixin respond-to($media) {
   @if $media == handhelds {

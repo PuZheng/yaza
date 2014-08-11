@@ -60,6 +60,24 @@ def upload_image_str(key, data, bucket, force=False):
     return "http://" + bucket + '.qiniudn.com/' + key
 
 
+def upload_text(key, data, bucket, force=False):
+    qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
+    qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
+    ret, err = qiniu.rs.Client().stat(bucket, key)
+    if ret is not None:
+        delete_file(bucket, key)
+    policy = qiniu.rs.PutPolicy(bucket)
+    uptoken = policy.token()
+    extra = qiniu.io.PutExtra()
+
+    data = StringIO(data)
+    ret, err = qiniu.io.put(uptoken, key, data, extra)
+    if err is not None:
+        app.logger.error('error: %s ' % err)
+        raise UploadException(err, key)
+
+    return "http://" + bucket + '.qiniudn.com/' + key
+
 def delete_file(bucket, key):
     qiniu.rs.Client().delete(bucket, key)
 

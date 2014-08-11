@@ -1,6 +1,11 @@
 (function () {
     var config = {
         baseUrl: '/static',
+        map: {
+            '*': {
+                'css': 'components/require-css/css.min'
+            }
+        },
         paths: {
             // vendors using bootcss cdn
             jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
@@ -139,7 +144,7 @@
 
 
     if (QueryString.develop != '1') {
-        config.paths['js/infrastructure'] = 'http://yaza.qiniudn.com/js/infrastructure';
+        config.paths['js/infrastructure'] = 'http://yaza-static.qiniudn.com/static/js/infrastructure';
     } else {
         config.urlArgs = "bust=" + (new Date()).getTime();
     }

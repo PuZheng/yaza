@@ -1,8 +1,8 @@
-define(['jquery', 'dispatcher', 'spu/views/base-view', 
-    'spu/views/ocspu-view',
-    'spu/views/aspect-view',
-    'spu/models/aspect', 
-    'spu/models/ocspu'], 
+define(['jquery', 'dispatcher', 'admin/spu/views/base-view', 
+    'admin/spu/views/ocspu-view',
+    'admin/spu/views/aspect-view',
+    'admin/spu/models/aspect', 
+    'admin/spu/models/ocspu'], 
     function ($, dispatcher, BaseView, OCSPUView, AspectView, Aspect, OCSPU) {
         var OCSPUView = BaseView.extend({
             label: 'OCSPU',

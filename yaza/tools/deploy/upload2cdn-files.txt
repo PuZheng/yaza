@@ -1,0 +1,12 @@
+static/dist/js/admin/spu/infrastructure.js
+static/dist/js/admin/spu/main.js
+static/dist/js/infrastructure.js
+static/dist/js/spu/main.js
+static/dist/css/admin/spu.css
+static/dist/css/admin.css
+static/dist/css/custom.css
+static/dist/css/login.css
+static/dist/css/style.css
+static/dist/vendor/bootswatch-scss/flatly/bootstrap.css
+static/dist/assets/congruent_outline.png
+static/dist/favicon.ico
