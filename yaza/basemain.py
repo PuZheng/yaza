@@ -11,9 +11,6 @@ from plumbum import CommandNotFound
 import speaklater
 from sqlalchemy.exc import SQLAlchemyError
 
-import sys
-sys.path.append('/usr/lib/python2.7/dist-packages/fontforge.so')
-
 
 class MyFlask(Flask):
 
