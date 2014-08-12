@@ -1,3 +1,4 @@
+/yaza/tools/deploy/remote-config.py
 /yaza/tools/deploy/conf.json
 /yaza/static/custom/*
 /yaza/fab.json
