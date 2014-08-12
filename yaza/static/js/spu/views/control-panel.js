@@ -86,7 +86,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             if (this.$('.aspect-selector').children().length == 0) {
                 this.$('.aspect-selector').empty();
                 ocspu.aspectList.forEach(function (aspect) {
-                    $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" data-aspectID="%s"/><div></div>',
+                    $(_.sprintf('<div class="thumbnail"><div><div class="layer"></div><img src="%s" alt="%s" title="%s" aspect-id="%s"/><div></div>',
                     aspect.thumbnail, aspect.name, aspect.name, aspect.id)).appendTo(this.$('.aspect-selector')).data('aspect', aspect);
                 }.bind(this));
             } else {
@@ -94,7 +94,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 // 当然，这个预览可能是不准的， 但可以想象不同颜色的形变不会太大
                 this.$('.aspect-selector .thumbnail').each(function (i) {
                     var aspect = ocspu.aspectList[i]; 
-                    $(this).find('img').attr('src', aspect.thumbnail);
+                    $(this).find('img').attr('src', aspect.thumbnail).attr('aspect-id', aspect.id).attr('alt', aspect.name).attr('title', aspect.name);
                     $(this).data('aspect', aspect);
                 });
             }
@@ -171,7 +171,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
         },
 
         _clearThumbnail: function (aspectId, designRegionId) {
-            var $image = this.$('img[data-aspectId=' + aspectId + ']');
+            var $image = this.$('img[aspect-id=' + aspectId + ']');
             var designRegionName = "design-region-" + designRegionId;
             var stage = $image.data("stage");
             if (!!stage) {
@@ -185,7 +185,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
 
         _updateThumbnail: function (aspectId, designRegionId, previewLayer) {
             this._clearThumbnail(aspectId, designRegionId);
-            var $image = $('img[data-aspectId=' + aspectId + ']');
+            var $image = $('img[aspect-id=' + aspectId + ']');
             var designRegionName = "design-region-" + designRegionId;
             var stage = $image.data("stage");
             if (!stage) {
