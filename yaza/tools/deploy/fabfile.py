@@ -22,9 +22,8 @@ def sync_code(branch):
                             'git pull origin ' + branch])
         else:
             cmd = '&& '.join(['cd yaza', 'git checkout master',
-                            'git branch -D ' + branch,
                             'git fetch origin',
-                            'git checkout ' + branch])
+                            'git checkout -b ' + branch])
         run(cmd)
 
 def install():

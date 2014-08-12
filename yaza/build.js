@@ -46,6 +46,7 @@
         'spu': 'js/spu',
         'admin/spu': 'js/admin/spu'
     },
+    skipDirOptimize: true,
     removeCombined: true,
     preserveLicenseComments: false,
     //optimize: "none",

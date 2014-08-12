@@ -131,6 +131,45 @@ mvc, readImageData) {
                     dispatcher.trigger('design-region-setup', designRegion);
                     controlLayer.moveToTop();
                     controlLayer.draw();
+                    if (__debug__) {
+                        var layer = new Kinetic.Layer();
+                        var data = [];
+                        var imageLayer = designRegion.getImageLayer();
+                        designRegion.controlPointsMap(imageLayer).forEach(function (pair) {
+                            data.push(pair[0][0]);
+                            data.push(pair[0][1]);
+                            var circle = new Kinetic.Circle({
+                                x: pair[0][0],
+                                y: pair[0][1],
+                                stroke: '#666',
+                                fill: '#ddd',
+                                strokeWidth: 2,
+                                radius: 3
+                            });
+                            layer.add(circle);
+                        }.bind(this));
+                        data.push(data[0]);
+                        data.push(data[1]);
+                        var line = new Kinetic.Line({
+                            points: data,
+                            stroke: 'white',
+                            strokeWidth: 1
+                        });
+                        layer.add(line);
+                        var backgroundLayer = this._backgroundLayer;
+                        designRegion.controlPointsMap(imageLayer).forEach(function (pair) {
+                            var points = pair[0];
+                            points = points.concat([pair[1][0] + imageLayer.x() - backgroundLayer.x(), pair[1][1] + imageLayer.y() - backgroundLayer.y()]);
+                            layer.add(new Kinetic.Line({
+                                points: points,
+                                stroke: 'yellow',
+                                strokeWidth: 1,
+                            }));
+                        });
+                        layer.position(this._backgroundLayer.position());
+                        this._stage.add(layer);
+                        this._stage.draw();
+                    }
                 }.bind(this));
             })
             .on('design-image-selected', function (arg) {
@@ -151,7 +190,6 @@ mvc, readImageData) {
                 if (!controlGroup.getAttr('hidden')) {
                     controlGroup.show();
                 }
-                //controlGroup.moveToTop();
                 controlGroup.setAttr('trasient', false);
 
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
@@ -277,9 +315,9 @@ mvc, readImageData) {
                 var offsetX = config.PLAYGROUND_MARGIN;
                 var offsetY = config.PLAYGROUND_MARGIN;
                 if (asPortait) {
-                    offsetX +=  (this.$touchScreenEl.width() - imageWidth) / 2;
+                    offsetX +=  Math.round((this.$touchScreenEl.width() - imageWidth) / 2);
                 } else {
-                    offsetY += (this.$touchScreenEl.height() - imageHeight) / 2;
+                    offsetY += Math.round((this.$touchScreenEl.height() - imageHeight) / 2);
                 }
                 this._backgroundLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
@@ -340,22 +378,23 @@ mvc, readImageData) {
                         // 左边和右边到design region的左沿和右沿距离相等
                         var oldImageLayerSize = dr.getImageLayer().size();
                         if (dr.getPreviewHeight() / dr.getPreviewWidth() > dr.size[1] / dr.size[0]) {
+                            // portrait
                             dr.getImageLayer().size({
-                                width: dr.size[0] * dr.getPreviewHeight() / dr.size[1],
+                                width: Math.round(dr.size[0] * dr.getPreviewHeight() / dr.size[1]),
                                 height: dr.getPreviewHeight(),
                             })
                             dr.getImageLayer().position({
-                                x: backgroundLayer.x() + dr.getPreviewLeft() - (dr.getImageLayer().width() - dr.getPreviewWidth()) / 2,
+                                x: Math.round(backgroundLayer.x() + dr.getPreviewLeft() - (dr.getImageLayer().width() - dr.getPreviewWidth()) / 2),
                                 y: backgroundLayer.y() + dr.getPreviewBottom(),
                             });
                         } else {
                             dr.getImageLayer().size({
                                 width: dr.getPreviewWidth(),
-                                height: dr.size[1] * dr.getPreviewWidth() / dr.size[0],
+                                height: Math.round(dr.size[1] * dr.getPreviewWidth() / dr.size[0]),
                             });
                             dr.getImageLayer().position({
                                 x: backgroundLayer.x() + dr.getPreviewLeft(),
-                                y: backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2,
+                                y: Math.round(backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2),
                             });
                         }
                         stage.add(dr.getImageLayer());
@@ -476,8 +515,8 @@ mvc, readImageData) {
                     y: imageLayer.height() / 2,
                     image: imageObj,
                     width: width,
-                    "design-image-id": designImageId,
                     height: height,
+                    "design-image-id": designImageId,
                     name: title,
                     offset: {
                         x: width / 2,
@@ -534,14 +573,7 @@ mvc, readImageData) {
                     }
                 }(this));
                 image.setAttr("control-group", group);
-                var rect = new Kinetic.Rect({
-                    width: image.width(),
-                    height: image.height(),
-                    position: group.position(),
-                    //fill: 'red',
-                });
                 this._currentDesignRegion.getControlLayer().add(group).draw();
-                console.log(rect.size());
                 dispatcher.trigger('object-added', image, group);
                 this._generatePreview();
             }.bind(this));
@@ -696,34 +728,6 @@ mvc, readImageData) {
 
             var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
             this._calcImageData(hotspotImageData, imageLayer, targetWidth, targetHeight, designRegion);
-            if (__debug__) {
-                var layer = new Kinetic.Layer();
-                var data = [];
-                designRegion.controlPointsMap(imageLayer).forEach(function (pair) {
-                    data.push(pair[0][0]);
-                    data.push(pair[0][1]);
-                    var circle = new Kinetic.Circle({
-                        x: pair[0][0],
-                        y: pair[0][1],
-                        stroke: '#666',
-                        fill: '#ddd',
-                        strokeWidth: 2,
-                        radius: 3
-                    });
-                    layer.add(circle);
-                }.bind(this));
-                data.push(data[0]);
-                data.push(data[1]);
-                var line = new Kinetic.Line({
-                    points: data,
-                    stroke: 'white',
-                    strokeWidth: 1
-                });
-                layer.add(line);
-                layer.position(this._backgroundLayer.position());
-                this._stage.add(layer);
-                this._stage.draw();
-            }
             hotspotContext.imageSmoothEnabled = true;
             hotspotContext.putImageData(hotspotImageData, previewLayer.x(), previewLayer.y());
             dispatcher.trigger('update-preview-done', designRegion, previewLayer);
@@ -773,6 +777,7 @@ mvc, readImageData) {
                 parseInt('0x' + rgba.substr(4, 2)),
                 255
             ];
+
             for (var i = 0; i < width; ++i) {
                 for (var j = 0; j < height; ++j) {
                     if (designRegion.within(i, j)) {
