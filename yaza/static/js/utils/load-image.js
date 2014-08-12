@@ -2,7 +2,7 @@ define(['jquery', 'getImageData'], function ($) {
 
     return function loadImage(url) {
         var d = $.Deferred();
-        if ($.support.cors || src.indexOf("http") !== 0) {
+        if ($.support.cors || url.indexOf("http") !== 0) {
             var imageObj = new Image();
             imageObj.crossOrigin = 'Anonymous';
             imageObj.onload = function () {
