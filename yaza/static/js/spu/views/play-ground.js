@@ -44,7 +44,20 @@ mvc, readImageData) {
             });
 
             this._backgroundLayer = new Kinetic.Layer();
+            var marginRect = new Kinetic.Rect({
+                width: this._stage.width(),
+                height: this._stage.height(),
+                name: 'margin-rect',
+            });
+            this._backgroundLayer.add(marginRect);
+            var aspectImageBackgroundRect = new Kinetic.Rect({
+                name: 'background-rect',
+            });
+            this._backgroundLayer.add(aspectImageBackgroundRect);
             this._stage.add(this._backgroundLayer);
+
+            this._aspectImageLayer = new Kinetic.Layer();
+            this._stage.add(this._aspectImageLayer);
 
             this._designRegionAnimationLayer = new Kinetic.Layer({
                 name: "design-region-animation-layer"
@@ -103,8 +116,8 @@ mvc, readImageData) {
                 this.$mask.show();
                 this._currentDesignRegion = designRegion; 
                 designRegion.getPreviewEdges({
-                    x: this._backgroundLayer.width() / designRegion.aspect.size[0],
-                    y: this._backgroundLayer.height() / designRegion.aspect.size[1]
+                    x: this._aspectImageLayer.width() / designRegion.aspect.size[0],
+                    y: this._aspectImageLayer.height() / designRegion.aspect.size[1]
                 }).done(function (previewEdges) {
                     this.$mask.hide();
                     this._designRegionAnimate(previewEdges);
@@ -156,7 +169,7 @@ mvc, readImageData) {
                             strokeWidth: 1
                         });
                         layer.add(line);
-                        var backgroundLayer = this._backgroundLayer;
+                        var backgroundLayer = this._aspectImageLayer;
                         designRegion.controlPointsMap(imageLayer).forEach(function (pair) {
                             var points = pair[0];
                             points = points.concat([pair[1][0] + imageLayer.x() - backgroundLayer.x(), pair[1][1] + imageLayer.y() - backgroundLayer.y()]);
@@ -166,7 +179,7 @@ mvc, readImageData) {
                                 strokeWidth: 1,
                             }));
                         });
-                        layer.position(this._backgroundLayer.position());
+                        layer.position(this._aspectImageLayer.position());
                         this._stage.add(layer);
                         this._stage.draw();
                     }
@@ -176,6 +189,9 @@ mvc, readImageData) {
                 this._addDesignImage(arg.url, arg.title, arg.designImageId); 
             })
             .on('active-object', function (controlGroup) {
+                if (!controlGroup) {
+                    return;
+                }
                 var complementaryColor = this._currentAspect.ocspu.complementaryColor;
                 var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
                 controlGroup.getLayer().getChildren().forEach(function (group) {
@@ -319,34 +335,23 @@ mvc, readImageData) {
                 } else {
                     offsetY += Math.round((this.$touchScreenEl.height() - imageHeight) / 2);
                 }
-                this._backgroundLayer.width(imageWidth).height(imageHeight)
+                this._aspectImageLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
                         x: offsetX,
                         y: offsetY,
                     });
-                var marginRect = new Kinetic.Rect({
-                    width: this._stage.width(),
-                    height: this._stage.height(),
-                    fill: aspect.ocspu.marginColor,
-                    x: -offsetX,
-                    y: -offsetY,
-                });
-                this._backgroundLayer.add(marginRect);
-                var backgroundRect = new Kinetic.Rect({
-                    width: imageWidth,
-                    height: imageHeight,
-                    fill: aspect.ocspu.paddingColor,
-                });
-                this._backgroundLayer.add(backgroundRect);
+                this._backgroundLayer.find('.margin-rect')[0].fill(aspect.ocspu.marginColor);
+                this._backgroundLayer.find('.background-rect')[0].fill(aspect.ocspu.paddingColor).size(this._aspectImageLayer.size()).position(this._aspectImageLayer.position());
+                this._backgroundLayer.draw();
                 var im = new Kinetic.Image({
                     image: e.target,
                     width: imageWidth,
                     height: imageHeight
                 });
-                this._backgroundLayer.add(im);
+                this._aspectImageLayer.add(im);
 
-                this._designRegionAnimationLayer.size(this._backgroundLayer.size())
-                .position(this._backgroundLayer.position());
+                this._designRegionAnimationLayer.size(this._aspectImageLayer.size())
+                .position(this._aspectImageLayer.position());
                 this._stage.draw();
 
                 var d = $.Deferred();
@@ -362,7 +367,7 @@ mvc, readImageData) {
 
                 aspect.designRegionList.forEach(function (dr) {
                     var stage = this._stage;
-                    var backgroundLayer = this._backgroundLayer;
+                    var backgroundLayer = this._aspectImageLayer;
                     dr.previewLayer.size(backgroundLayer.size()).position(backgroundLayer.position());
                     dr.getPreviewEdges({
                         x: backgroundLayer.width() / aspect.size[0],
@@ -537,10 +542,10 @@ mvc, readImageData) {
                         // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
                         // 的预览
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._backgroundLayer.x(), 
-                        view._backgroundLayer.y(), 
-                        view._backgroundLayer.width(), 
-                        view._backgroundLayer.height());
+                        .clearRect(view._aspectImageLayer.x(), 
+                        view._aspectImageLayer.y(), 
+                        view._aspectImageLayer.width(), 
+                        view._aspectImageLayer.height());
                         view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
                             view._currentDesignRegion.getImageLayer().moveToTop();
@@ -562,9 +567,9 @@ mvc, readImageData) {
                     this._crossLayer.draw();
                     if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
                         this._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(this._backgroundLayer.x(), this._backgroundLayer.y(), 
-                        this._backgroundLayer.width(), 
-                        this._backgroundLayer.height());
+                        .clearRect(this._aspectImageLayer.x(), this._aspectImageLayer.y(), 
+                        this._aspectImageLayer.width(), 
+                        this._aspectImageLayer.height());
                     }
                 }.bind(this))
                 .on("dragmove", function (view) {
@@ -614,10 +619,10 @@ mvc, readImageData) {
                         // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
                         // 的预览
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._backgroundLayer.x(), 
-                        view._backgroundLayer.y(), 
-                        view._backgroundLayer.width(), 
-                        view._backgroundLayer.height());
+                        .clearRect(view._aspectImageLayer.x(), 
+                        view._aspectImageLayer.y(), 
+                        view._aspectImageLayer.width(), 
+                        view._aspectImageLayer.height());
                         view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
                             view._currentDesignRegion.getImageLayer().moveToTop();
@@ -637,10 +642,10 @@ mvc, readImageData) {
                         view._crossLayer.moveToTop();
                         view._crossLayer.draw();
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._backgroundLayer.x(), 
-                        view._backgroundLayer.y(), 
-                        view._backgroundLayer.width(), 
-                        view._backgroundLayer.height());
+                        .clearRect(view._aspectImageLayer.x(), 
+                        view._aspectImageLayer.y(), 
+                        view._aspectImageLayer.width(), 
+                        view._aspectImageLayer.height());
 
                         this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
                     })
@@ -723,8 +728,8 @@ mvc, readImageData) {
                 return;
             } 
             var hotspotContext = previewLayer.getContext();
-            var targetWidth = this._backgroundLayer.width();
-            var targetHeight = this._backgroundLayer.height();
+            var targetWidth = this._aspectImageLayer.width();
+            var targetHeight = this._aspectImageLayer.height();
 
             var hotspotImageData = hotspotContext.createImageData(targetWidth, targetHeight);
             this._calcImageData(hotspotImageData, imageLayer, targetWidth, targetHeight, designRegion);
@@ -737,7 +742,7 @@ mvc, readImageData) {
             var srcImageData = imageLayer.getContext().getImageData(imageLayer.x(), imageLayer.y(),
             imageLayer.width(), imageLayer.height()).data;
 
-            var backgroundImageData = this._backgroundLayer.getContext().getImageData(0, 0, width, height).data;
+            var backgroundImageData = this._aspectImageLayer.getContext().getImageData(0, 0, width, height).data;
 
             var srcWidth = imageLayer.width();
             var srcHeight = imageLayer.height();
@@ -901,8 +906,8 @@ mvc, readImageData) {
                 r: 0, g: 0, b: 0, a: 0
             }
             var canvas = document.createElement("canvas");
-            canvas.width = this._backgroundLayer.width();
-            canvas.height = this._backgroundLayer.height();
+            canvas.width = this._aspectImageLayer.width();
+            canvas.height = this._aspectImageLayer.height();
             var ctx = canvas.getContext("2d");
             var previewImageData = ctx.createImageData(canvas.width,
             canvas.height);
@@ -921,8 +926,8 @@ mvc, readImageData) {
                 }
             });
 
-            var backgroundImageData = this._backgroundLayer.getContext()
-            .getImageData(this._backgroundLayer.x(), this._backgroundLayer.y(), canvas.width, canvas.height).data;
+            var backgroundImageData = this._aspectImageLayer.getContext()
+            .getImageData(this._aspectImageLayer.x(), this._aspectImageLayer.y(), canvas.width, canvas.height).data;
             var pixel = previewImageData.data.length / 4;
             // merge the background and preview 
             while (pixel--) {
