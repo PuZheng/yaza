@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import json
 from hashlib import md5
+import os.path
 
 import requests
 from PIL import Image
@@ -10,7 +11,7 @@ from yaza.basemain import app
 from yaza.apis import ModelWrapper
 from yaza.utils import do_commit
 from yaza.tools.utils import create_shadow_im, detect_edges
-from yaza.qiniu_handler import upload_image_str, AlreadyExists
+from yaza.qiniu_handler import upload_image_str, AlreadyExists, upload_str
 
 
 class SPUWrapper(ModelWrapper):
@@ -45,40 +46,50 @@ class SPUWrapper(ModelWrapper):
                         app.config['BLACK_ALPHA_THRESHOLD'],
                         app.config['WHITE_ALPHA_THRESHOLD'])
                     digest = md5(black_shadow_im.tostring()).hexdigest()
-                    black_shadow_full_path = '.'.join(['black-shadow',
-                                                       str(dr.id),
-                                                       digest,
-                                                       'png'])
+                    black_shadow_path = '.'.join(['black-shadow',
+                                                     str(dr.id),
+                                                     digest,
+                                                     'png'])
                     digest = md5(white_shadow_im.tostring()).hexdigest()
-                    white_shadow_full_path = '.'.join(['white-shadow',
-                                                       str(dr.id),
-                                                       digest,
-                                                       'png'])
+                    white_shadow_path = '.'.join(['white-shadow',
+                                                     str(dr.id),
+                                                     digest,
+                                                     'png'])
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'],
+                                           black_shadow_path)) as file_:
+                        black_shadow_im.save(file_, 'PNG')
                     si = StringIO()
                     black_shadow_im.save(si, 'PNG')
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
-                        dr.black_shadow_path = upload_image_str(
-                            black_shadow_full_path, si.getvalue(), bucket)
+                        upload_image_str(black_shadow_path,
+                                         si.getvalue(), bucket)
+                        dr.black_shadow_path = black_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.black_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            dr.black_shadow_path = upload_image_str(
-                                black_shadow_full_path, si.getvalue(),
-                                bucket, True)
+                            upload_image_str(black_shadow_path, si.getvalue(),
+                                             bucket, True)
+                            dr.black_shadow_path = black_shadow_path
+
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'],
+                                           white_shadow_path)) as file_:
+                        white_shadow_im.save(file_, 'PNG')
                     si = StringIO()
                     white_shadow_im.save(si, 'PNG')
                     try:
-                        dr.white_shadow_path = upload_image_str(
-                            white_shadow_full_path, si.getvalue(), bucket)
+                        upload_image_str(white_shadow_path,
+                                         si.getvalue(), bucket)
+                        dr.white_shadow_path = white_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.white_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            dr.white_shadow_path = upload_image_str(
-                                white_shadow_full_path, si.getvalue(),
-                                bucket, True)
+                            upload_image_str(white_shadow_path,
+                                             si.getvalue(),
+                                             bucket, True)
+                            dr.white_shadow_path = white_shadow_path
 
                     # 注意， 标注的点， bottom的y大于top的y， 这是由于浏览器
                     # 的原点在左上角
@@ -92,14 +103,15 @@ class SPUWrapper(ModelWrapper):
                         })
                     else:
                         edges = detect_edges(im)
-                        
+
                     key = '.'.join(['design-region', str(dr.id),
                                     md5(json.dumps(edges)).hexdigest(),
                                     'edges'])
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
-                        dr.edge_path = upload_image_str(key, json.dumps(edges),
-                                                        bucket)
+                        dr.edge_path = upload_str(key, json.dumps(edges),
+                                                   bucket,
+                                                   mime_type='application/json')
                     except AlreadyExists, e:
                         print e
                         if not dr.edge_path:

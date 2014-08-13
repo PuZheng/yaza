@@ -33,7 +33,6 @@
         'text': 'components/text/text',
         "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
-        "getImageData": "components/getImageData/jquery.getimagedata.min",
         "jszip": "empty:",
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',

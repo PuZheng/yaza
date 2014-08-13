@@ -106,6 +106,7 @@ mvc, readImageData) {
 
         _setupEventsHandler: function () {
             this.on('aspect-selected', function (aspect) {
+                console.log('aspect selected ' + aspect.name);
                 this.$mask.show();
                 aspect.getImage().done(function (aspect) {
                     this.$mask.hide();
@@ -113,6 +114,7 @@ mvc, readImageData) {
                 }.bind(this)); 
             })
             .on('design-region-selected', function (designRegion) {
+                console.log('design region selected ' + designRegion.name);
                 this.$mask.show();
                 this._currentDesignRegion = designRegion; 
                 designRegion.getPreviewEdges({
@@ -428,6 +430,7 @@ mvc, readImageData) {
                         .done(function () {
                             dr.getWhiteShadow(backgroundLayer.width(), backgroundLayer.height())
                             .done(function () {
+                                console.log('shadow gotten');
                                 view._generatePreview(dr);
                                 d.notify(dr);
                             });

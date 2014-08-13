@@ -7,6 +7,7 @@ from flask import json
 from PIL import Image, ImageColor
 
 from yaza import const
+from yaza.qiniu_handler import upload_image, upload_file, upload_str
 
 
 ARCHIVES = ('zip', )
@@ -166,7 +167,8 @@ def calc_design_region_image(design_region_path):
     edges = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
     edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
-    serialize(edges, edge_filename)
+    with open(edge_filename, 'w') as file_:
+        file_.write(json.dumps(edges))
     control_point_filename = design_region_path.replace(img_extension,
                                                         "." + DesignRegionWrapper
                                                         .CONTROL_POINT_EXTENSION)
@@ -231,7 +233,6 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
-    from yaza.qiniu_handler import upload_image
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -332,17 +333,22 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                                     start_dir)
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    black_shadow_path = upload_image(black_shadow_full_path,
-                                                     bucket, True)
-                    white_shadow_path = upload_image(white_shadow_full_path,
-                                                     bucket, True)
+                    upload_str(black_shadow_path,
+                               open(black_shadow_full_path, 'rb').read(),
+                               bucket, True, 'image/png')
+                    upload_str(white_shadow_path,
+                                open(white_shadow_full_path, 'rb').read(),
+                                bucket, True, 'image/pnd')
 
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        height=height,
-                                       edge_path=upload_image(edge_file, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True),
+                                       edge_path=upload_file(edge_file,
+                                                             app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                                             True,
+                                                             mime_type='application/json'),
                                        control_point_file=control_point_file,
                                        black_shadow_path=black_shadow_path,
                                        white_shadow_path=white_shadow_path))

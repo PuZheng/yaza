@@ -35,7 +35,6 @@
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
             'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
                 "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
-            "getImageData": "components/getImageData/jquery.getimagedata.min",
             "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
             "filesaver":"components/FileSaver/FileSaver",
             // application
@@ -104,9 +103,6 @@
                 deps: ['jquery']
             },
             'autosize':{
-                deps: ['jquery']
-            },
-            'getImageData' :{
                 deps: ['jquery']
             },
             'js-url': {
