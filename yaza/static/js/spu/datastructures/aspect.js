@@ -1,7 +1,7 @@
 define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], function ($, DesignRegion, loadImage) {
     function Aspect(data) {
         this.id = data.id;
-        this.picUrl = data.picUrl;
+        this.picUrl = $.support.cors? data.picUrl: data.localPicUrl;
         this.hdPicUrl = data.hdPicUrl;
         this.thumbnail = data.thumbnail;
         this.designRegionList = data.designRegionList.map(function (dr) {

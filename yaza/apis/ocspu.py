@@ -103,11 +103,14 @@ class OCSPUWrapper(ModelWrapper):
 class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
-        if self.pic_path:
-            return self.pic_path + '?imageView2/0/w/' + str(
-                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-                if self.pic_path.startswith("http") else url_for("image.serve", filename=self.pic_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
+
+    @property
+    def local_pic_url(self):
+        return url_for('image.serve', filename=self.pic_path)
 
     @property
     def hd_pic_url(self):
@@ -127,6 +130,7 @@ class AspectWrapper(ModelWrapper):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'localPicUrl' if camel_case else 'local_pic_url': self.local_pic_url,
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
@@ -210,14 +214,14 @@ class DesignRegionWrapper(ModelWrapper):
         '''
         in case browser doesn't support cors
         '''
-        return url_for('image.serve', self.black_shadow_path)
+        return url_for('image.serve', filename=self.black_shadow_path)
 
     @property
     def local_white_shadow_url(self):
         '''
         in case browser doesn't support cors
         '''
-        return url_for('image.serve', self.white_shadow_path)
+        return url_for('image.serve', filename=self.white_shadow_path)
 
     def as_dict(self, camel_case):
         return {
@@ -231,9 +235,9 @@ class DesignRegionWrapper(ModelWrapper):
             'whiteShadowUrl' if camel_case else 'white_shadow_url':
             self.white_shadow_url,
             'localBlackShadowUrl' if camel_case else 'local_black_shadow_url':
-            self.black_shadow_url,
+            self.local_black_shadow_url,
             'localWhiteShadowUrl' if camel_case else 'local_white_shadow_url':
-            self.white_shadow_url,
+            self.local_white_shadow_url,
         }
 
     def delete(self):

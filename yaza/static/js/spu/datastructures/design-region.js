@@ -15,6 +15,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             // 若不支持cors， 需要从本地获取数据
             this.blackShadowUrl = $.support.cors? data.blackShadowUrl: data.localBlackShadowUrl;
             this.whiteShadowUrl = $.support.cors? data.whiteShadowUrl: data.localWhiteShadowUrl;
+            this.crossDomain = $.support.cors;
             this.aspect = data.aspect;
             this.previewLayer = new Kinetic.Layer();  // 预览层
             if (__debug__) {
@@ -225,7 +226,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
-            $.ajax({url: this.blackShadowUrl, crossDomain: true}).done(
+            $.ajax({url: this.blackShadowUrl, crossDomain: this.crossDomain}).done(
                 function () {
                     blackImageObj.src = this.blackShadowUrl;
                 }.bind(this));
@@ -245,7 +246,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
-            $.ajax({url: this.whiteShadowUrl, crossDomain: true}).done(
+            $.ajax({url: this.whiteShadowUrl, crossDomain: this.crossDomain}).done(
                 function () {
                     whiteImageObj.src = this.whiteShadowUrl;
                 }.bind(this));

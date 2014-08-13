@@ -143,17 +143,29 @@ DesignImages, Cookies) {
                 this.$(".gallery .thumbnail").removeClass("selected");
                 this.$(evt.currentTarget).addClass("selected");
                 this.$el.modal('hide');
-                this.$el.one('hidden.bs.modal', function () {
-                    var $img = this.$(".gallery .thumbnail.selected img");
-                    dispatcher.trigger('design-image-selected', {
-                        url: $img.data("pic-url") || $img.attr('src'),
-                        title: $img.data('title'), 
-                        designImageId: $img.data("design-image-id"),
-                    });
-                }.bind(this));
+                // 注意，ie9-由于不支持css transition, hide的同时就会触发hidden.bs.modal,
+                // 会造成假死， 所以不能在hide之前绑定这个事件， 而是之后
+                if (Modernizr.csstransitions) {
+                    this.$el.one('hidden.bs.modal', function () {
+                        var $img = this.$(".gallery .thumbnail.selected img");
+                        dispatcher.trigger('design-image-selected', {
+                            url: $img.data("pic-url") || $img.attr('src'),
+                            title: $img.data('title'), 
+                            designImageId: $img.data("design-image-id"),
+                        });
+                    }.bind(this));
+                } else {
+                    setTimeout(function () {
+                        var $img = this.$(".gallery .thumbnail.selected img");
+                        dispatcher.trigger('design-image-selected', {
+                            url: $img.data("pic-url") || $img.attr('src'),
+                            title: $img.data('title'), 
+                            designImageId: $img.data("design-image-id"),
+                        });
+                    }.bind(this), 50);
+                }
             },
             'click .btn-ok': function (evt) {
-                this.$el.modal('hide');
                 this.$el.one('hidden.bs.modal', function () {
                     var $img = this.$(".gallery .thumbnail.selected img");
                     dispatcher.trigger('design-image-selected', {
@@ -162,6 +174,7 @@ DesignImages, Cookies) {
                         designImageId: $img.data("design-image-id"),
                     });
                 }.bind(this));
+                this.$el.modal('hide');
             },
             'click .btn-tag': function (evt) {
                 if (this.$('.tags-list').is(':visible')) {

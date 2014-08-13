@@ -35,6 +35,9 @@ class SPUWrapper(ModelWrapper):
             for aspect in ocspu.aspect_list:
                 # download aspect from qiniu
                 r = requests.get(aspect.pic_path)
+                # save the local copy
+                with open(os.path.basename(aspect.pic_path), 'w') as file_:
+                    file_.write(r.content)
                 aspect.thumbnail_path = aspect.pic_path + \
                     '?imageView2/0/w/' + \
                     str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
