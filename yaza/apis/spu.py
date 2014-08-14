@@ -34,7 +34,7 @@ class SPUWrapper(ModelWrapper):
         for ocspu in self.ocspu_list:
             for aspect in ocspu.aspect_list:
                 # download aspect from qiniu
-                r = requests.get(aspect.pic_path)
+                r = requests.get(aspect.pic_url)
                 # save the local copy
                 local_aspect_image_file = os.path.join(app.config['UPLOAD_FOLDER'],
                                                        os.path.basename(aspect.pic_path))
