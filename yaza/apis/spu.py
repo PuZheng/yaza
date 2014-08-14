@@ -60,8 +60,9 @@ class SPUWrapper(ModelWrapper):
                                                      str(dr.id),
                                                      digest,
                                                      'png'])
+                    # local shadow
                     with open(os.path.join(app.config['UPLOAD_FOLDER'],
-                                           black_shadow_path)) as file_:
+                                           black_shadow_path), 'w') as file_:
                         black_shadow_im.save(file_, 'PNG')
                     si = StringIO()
                     black_shadow_im.save(si, 'PNG')
@@ -78,8 +79,9 @@ class SPUWrapper(ModelWrapper):
                                              bucket, True)
                             dr.black_shadow_path = black_shadow_path
 
+                    # local shadow
                     with open(os.path.join(app.config['UPLOAD_FOLDER'],
-                                           white_shadow_path)) as file_:
+                                           white_shadow_path), 'w') as file_:
                         white_shadow_im.save(file_, 'PNG')
                     si = StringIO()
                     white_shadow_im.save(si, 'PNG')
