@@ -51,6 +51,7 @@
     "jquery-ajaxtransport-xdomainrequest": "https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
     "getImageData": "https://github.com/betamax/getImageData.git",
     "FileSaver": "*",
-    "ekko-lightbox": "~3.1.4"
+    "ekko-lightbox": "~3.1.4",
+    "jquery.browser": "~0.0.6"
   }
 }

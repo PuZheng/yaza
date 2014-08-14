@@ -24,6 +24,10 @@
         'toastr': 'empty:',
         "ekko-lightbox": 'empty:',
         'fancybox': 'empty:',
+        "jszip": "empty:",
+        "autosize": 'empty:',
+        'jquery.browser': 'empty:',
+        'jquery-ajaxtransport-xdomainrequest': "empty:",
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -31,9 +35,6 @@
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
         'text': 'components/text/text',
-        "autosize": 'empty:',
-        'jquery-ajaxtransport-xdomainrequest': "empty:",
-        "jszip": "empty:",
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',
         // application

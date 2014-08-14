@@ -8,8 +8,7 @@
         },
         paths: {
             // vendors using bootcss cdn
-            //jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
-            jquery: "http://cdn.bootcss.com/jquery/1.11.1-rc2/jquery.min",
+            jquery: ['http://cdn.bootcss.com/jquery/2.1.1/jquery.min', 'components/jquery/dist/jquery.min'],
             underscore: ['http://cdn.bootcss.com/underscore.js/1.6.0/underscore-min', 'components/underscore/underscore'],
             backbone: ['http://cdn.bootcss.com/backbone.js/1.1.2/backbone-min', 'components/backbone/backbone'],
             bootstrap: ['http://cdn.bootcss.com/bootstrap/3.2.0/js/bootstrap.min', 'components/bootstrap-sass-official/assets/javascripts/bootstrap'],
@@ -25,6 +24,9 @@
             'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
             "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
             'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
+            "jszip": "http://cdn.bootcss.com/jszip/2.3.0/jszip.min",
+            'jquery-ajaxtransport-xdomainrequest': "http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
+            'jquery.browser': "http://cdn.bootcss.com/jquery-browser/0.0.6/jquery.browser.min",
             // vendors not using cdn
             'svg.export': 'components/svg.export.js/svg.export',
             kineticjs: 'components/kineticjs/kinetic.min',
@@ -34,10 +36,8 @@
             'text': 'components/text/text',
             'css': 'components/require-css/css.min',
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
-            'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
-                "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
-            "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
             "filesaver":"components/FileSaver/FileSaver",
+            "jquery.jsonp": "components/jquery-jsonp/src/jquery.jsonp.js",
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -112,7 +112,11 @@
             },
             'toastr': {
                 deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
-            }
+            },
+            'jquery.browser': {
+                deps: ['jquery'],
+                exports: '$.fn.browser',
+            },
         }
     }
 

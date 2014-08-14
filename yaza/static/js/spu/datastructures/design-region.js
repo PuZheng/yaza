@@ -1,5 +1,5 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
-        'kineticjs', 'spu/config', 'js-url'],
+        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 'jquery.browser'],
     function ($, _, bucket, readImageData, Kinetic, config) {
 
         var __debug__ = ($.url('?debug') == '1');
@@ -12,9 +12,11 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             this.edgeUrl = data.edgeUrl;
             this.size = data.size;
             this.name = data.name;
-            // 若不支持cors， 需要从本地获取数据
-            this.blackShadowUrl = $.support.cors? data.blackShadowUrl: data.localBlackShadowUrl;
-            this.whiteShadowUrl = $.support.cors? data.whiteShadowUrl: data.localWhiteShadowUrl;
+            // 若不支持cors， 需要从本地获取数据, 注意， ie10虽然支持cors， 但是
+            // 不支持对cors的image执行getImageData. 所以仍然要从本地读取数据
+            var use_cdn = $.support.cors && (!$.browser.msie || $.browser.versionNumber != '10');
+            this.blackShadowUrl = use_cdn? data.blackShadowUrl: data.localBlackShadowUrl;
+            this.whiteShadowUrl = use_cdn? data.whiteShadowUrl: data.localWhiteShadowUrl;
             this.crossDomain = $.support.cors;
             this.aspect = data.aspect;
             this.previewLayer = new Kinetic.Layer();  // 预览层
@@ -82,17 +84,24 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                         d.resolve(dr.previewEdges);
                     };
                 }(this);
-                if ($.support.cors) {
-                    $.getJSON(this.edgeUrl, success);
-                } else {
-                    var xdr = new XDomainRequest();
-                    console.log('get edges :' + this.edgeUrl + "?bust=" + new Date().getTime());
-                    xdr.open("get", this.edgeUrl);
-                    xdr.onload = function () {
-                        success(JSON.parse(xdr.responseText));
-                    }
-                    xdr.send();
-                }
+                //$.jsonp({
+                    //url: this.edgeUrl,
+                    //success: function (json, textStatus, xOptions) {
+                        //debugger;
+                    //}
+                //});
+                $.getJSON(this.edgeUrl, success);
+                //if ($.support.cors) {
+                    //$.getJSON(this.edgeUrl, success);
+                //} else {
+                    //var xdr = new XDomainRequest();
+                    //console.log('get edges :' + this.edgeUrl + "?bust=" + new Date().getTime());
+                    //xdr.open("get", this.edgeUrl);
+                    //xdr.onload = function () {
+                        //success(JSON.parse(xdr.responseText));
+                    //}
+                    //xdr.send();
+                //}
             }
             return d;
         };
