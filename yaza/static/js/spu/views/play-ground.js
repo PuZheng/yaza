@@ -109,7 +109,6 @@ mvc, readImageData) {
                 console.log('aspect selected ' + aspect.name);
                 this.$mask.show();
                 aspect.getImage().done(function (aspect) {
-                    this.$mask.hide();
                     this._setupAspectImage(aspect); 
                 }.bind(this)); 
             })
