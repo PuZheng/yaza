@@ -319,7 +319,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 edge_file, control_point_file = calc_design_region_image(
                     full_path)
                 black_shadow_im, white_shadow_im = create_shadow_im(
-                    Image.open(full_path), aspect.ocspu.rgb)
+                    Image.open(full_path), aspect.ocspu.rgb,
+                    app.config['BLACK_ALPHA_THRESHOLD'],
+                    app.config['WHITE_ALPHA_THRESHOLD'])
                 black_shadow_full_path = os.path.join(design_region_dir,
                                                       fname +
                                                       '.black_shadow.png')

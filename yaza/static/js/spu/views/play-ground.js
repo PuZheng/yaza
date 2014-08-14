@@ -375,6 +375,7 @@ mvc, readImageData) {
                         x: backgroundLayer.width() / aspect.size[0],
                         y: backgroundLayer.height() / aspect.size[1]
                     }).done(function () {
+                        console.log('preview edges gotten');
                         // 找到最小的可以包住design region的框, 而且比例要和
                         // design region平铺的比例一致
                         // 当然这也隐含着一个假设， 就是design region

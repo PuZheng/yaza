@@ -86,6 +86,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                     $.getJSON(this.edgeUrl, success);
                 } else {
                     var xdr = new XDomainRequest();
+                    console.log('get edges :' + this.edgeUrl + "?bust=" + new Date().getTime());
                     xdr.open("get", this.edgeUrl);
                     xdr.onload = function () {
                         success(JSON.parse(xdr.responseText));
