@@ -274,9 +274,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     pic_path = os.path.relpath(full_path, start_dir)
                     if app.config.get("QINIU_ENABLED"):
                         bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                        upload_str(pic_path, open(full_path, 'rb').read(),
+                        thumbnail_path = upload_str(pic_path, open(full_path, 'rb').read(),
                                    bucket, True, 'image/png')
-                        thumbnail_path = pic_path + '?imageView2/0/w/' + \
+                        thumbnail_path += '?imageView2/0/w/' + \
                             str(app.config['QINIU_CONF']
                                 ['DESIGN_IMAGE_THUMNAIL_SIZE'])
                     else:

@@ -121,10 +121,7 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def thumbnail(self):
-        if self.thumbnail_path:
-            return self.thumbnail_path if self.thumbnail_path.startswith(
-                "http") else url_for("image.serve", filename=self.thumbnail_path)
-        return ""
+        return self.thumbnail_path
 
     def as_dict(self, camel_case=True):
         return {
