@@ -94,7 +94,7 @@ if __name__ == '__main__':
     dest_im = Image.open(dest_file)
     projection_im = Image.new('RGBA', dest_im.size, (0, 0, 0, 0))
     projection_data = projection_im.load()
-    edges = detect_edges(dest_im)
+    edges, _ = detect_edges(dest_im)
     cp_map = calc_control_points(edges, src_im.size, cp_num)
 
     for p in point_series(dest_im, edges):

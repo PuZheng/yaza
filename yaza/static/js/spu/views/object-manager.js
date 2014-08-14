@@ -225,7 +225,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                             target.data('object'));
                         objectManager._exchangeNode(source.data('control-group'),
                             target.data('control-group'));
-                        dispatcher.trigger('upate-preview');
+                        dispatcher.trigger('update-preview');
                     };
                 }(this));
             },

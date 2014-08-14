@@ -12,7 +12,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     im = Image.open(sys.argv[1])
-    edges = detect_edges(im)
+    edges, _ = detect_edges(im)
 
     for border in ['top', 'right', 'bottom', 'left']:
         print '\t'.join(str(p[0]) + ',' + str(p[1]) for p in edges[border])

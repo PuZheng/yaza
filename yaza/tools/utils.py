@@ -157,14 +157,19 @@ def detect_edges(im, corner_dict=None):
                 edges['right'].append((i, j))
                 break
 
-    return edges
+    return edges, {
+        'lt': lt,
+        'rt': rt,
+        'lb': lb,
+        'rb': rb
+    }
 
 
 def calc_design_region_image(design_region_path):
     from yaza.apis.ocspu import DesignRegionWrapper
 
     im = Image.open(design_region_path)
-    edges = detect_edges(im)
+    edges, vertex = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
     edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
     with open(edge_filename, 'w') as file_:
@@ -177,7 +182,7 @@ def calc_design_region_image(design_region_path):
               lambda data: json.dumps(
                   {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
                    k, v in dict_.iteritems()}))
-    return edge_filename, control_point_filename
+    return edge_filename, control_point_filename, vertex
 
 
 def _get_rel_path(file_path, relpath_start):
@@ -316,12 +321,12 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     pic_path = upload_image(full_path, bucket, True)
-                edge_file, control_point_file = calc_design_region_image(
+                edge_file, control_point_file, vertex = calc_design_region_image(
                     full_path)
                 black_shadow_im, white_shadow_im = create_shadow_im(
                     Image.open(full_path), aspect.ocspu.rgb,
                     app.config['BLACK_ALPHA_THRESHOLD'],
-                    app.config['WHITE_ALPHA_THRESHOLD'])
+                    app.config['WHITE_ALPHA_THRESHOLD'], vertex.values())
                 black_shadow_full_path = os.path.join(design_region_dir,
                                                       fname +
                                                       '.black_shadow.png')
@@ -384,10 +389,12 @@ def marked_as_corner(pixel):
 
 
 def create_shadow_im(im, color, black_alpha_threshold=80,
-                     white_alpha_threshold=108):
+                     white_alpha_threshold=108, vertex=[]):
+    """
+    一定不能考虑vertex, 因为顶点是人工标记出来的， 是噪音
+    """
     im = im.convert('LA')
     pa = im.load()
-    #v = max(ImageColor.getrgb(color))
 
     black_dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
     black_dest_pa = black_dest_im.load()
@@ -403,7 +410,7 @@ def create_shadow_im(im, color, black_alpha_threshold=80,
                           xrange(im.size[0])]
     for i in xrange(im.size[0]):
         for j in xrange(im.size[1]):
-            if pa[(i, j)][1] == 255:
+            if pa[(i, j)][1] == 255 and (i, j) not in vertex:
                 black_alpha_matrix[i][j] = 255 - pa[(i, j)][0]
                 white_alpha_matrix[i][j] = pa[(i, j)][0]
 
