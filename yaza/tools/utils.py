@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import os
 import zipfile
+import binascii
 
 from flask import json
 from PIL import Image, ImageColor
@@ -284,6 +285,11 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                         thumbnail_path += '?imageView2/0/w/' + \
                             str(app.config['QINIU_CONF']
                                 ['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                        duri_path = pic_path.rstrip('.png') + '.duri'
+                        upload_str(duri_path,
+                                   'data:image/png;base64,' +
+                                   binascii.b2a_base64(open(full_path, 'rb').read()).strip(),
+                                   bucket, True, 'text/plain')
                     else:
                         thumbnail_path = _make_thumbnail(full_path, start_dir)
 
@@ -336,17 +342,19 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 black_shadow_im.save(black_shadow_full_path)
                 white_shadow_im.save(white_shadow_full_path)
                 black_shadow_path = os.path.relpath(black_shadow_full_path,
-                                                    start_dir)
+                                                    start_dir).rstrip('.png') + '.duri'
                 white_shadow_path = os.path.relpath(white_shadow_full_path,
-                                                    start_dir)
+                                                    start_dir).rstrip('.png') + '.duri'
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     upload_str(black_shadow_path,
-                               open(black_shadow_full_path, 'rb').read(),
-                               bucket, True, 'image/png')
+                               'data:image/png;base64,' +
+                               binascii.b2a_base64(open(black_shadow_full_path, 'rb').read()).strip(),
+                               bucket, True, 'text/plain')
                     upload_str(white_shadow_path,
-                                open(white_shadow_full_path, 'rb').read(),
-                                bucket, True, 'image/pnd')
+                               'data:image/png;base64,' +
+                               binascii.b2a_base64(open(white_shadow_full_path, 'rb').read()).strip(),
+                               bucket, True, 'text/plain')
 
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,

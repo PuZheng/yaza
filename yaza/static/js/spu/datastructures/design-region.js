@@ -1,7 +1,7 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
         'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 'jquery.browser'],
-    function ($, _, bucket, readImageData, Kinetic, config) {
 
+    function ($, _, bucket, readImageData, Kinetic, config) {
         var __debug__ = ($.url('?debug') == '1');
         var _imageLayerMap = {};
         var _controlLayerMap = {};
@@ -14,10 +14,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             this.name = data.name;
             // 若不支持cors， 需要从本地获取数据, 注意， ie10虽然支持cors， 但是
             // 不支持对cors的image执行getImageData. 所以仍然要从本地读取数据
-            var use_cdn = $.support.cors && (!$.browser.msie || $.browser.versionNumber != '10');
-            this.blackShadowUrl = use_cdn? data.blackShadowUrl: data.localBlackShadowUrl;
-            this.whiteShadowUrl = use_cdn? data.whiteShadowUrl: data.localWhiteShadowUrl;
-            this.crossDomain = $.support.cors;
+            this.blackShadowUrl = data.blackShadowUrl;
+            this.whiteShadowUrl = data.whiteShadowUrl;
             this.aspect = data.aspect;
             this.previewLayer = new Kinetic.Layer();  // 预览层
             if (__debug__) {
@@ -236,9 +234,9 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
-            $.ajax({url: this.blackShadowUrl, crossDomain: this.crossDomain}).done(
-                function () {
-                    blackImageObj.src = this.blackShadowUrl;
+            $.ajax({url: this.blackShadowUrl, crossDomain: true}).done(
+                function (data, status, jqXHR) {
+                    blackImageObj.src = data;
                 }.bind(this));
 
             return d;
@@ -256,9 +254,9 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
-            $.ajax({url: this.whiteShadowUrl, crossDomain: this.crossDomain}).done(
-                function () {
-                    whiteImageObj.src = this.whiteShadowUrl;
+            $.ajax({url: this.whiteShadowUrl, crossDomain: true}).done(
+                function (data, status, jqXHR) {
+                    whiteImageObj.src = data;
                 }.bind(this));
             return d;
         };

@@ -1,7 +1,8 @@
 define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], function ($, DesignRegion, loadImage) {
     function Aspect(data) {
         this.id = data.id;
-        this.picUrl = $.support.cors? data.picUrl: data.localPicUrl;
+        this.picUrl = data.picUrl;
+        this.duriUrl = data.duriUrl;
         this.hdPicUrl = data.hdPicUrl;
         this.thumbnail = data.thumbnail;
         this.designRegionList = data.designRegionList.map(function (dr) {
@@ -13,10 +14,11 @@ define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], funct
     }
 
     Aspect.prototype.getImage = function () {
-        console.log('get aspect image: ' + this.picUrl);
+        console.log('get aspect image: ' + this.duriUrl);
         var d = $.Deferred();
-        loadImage(this.picUrl).done(function (image) {
-            d.resolve(this); 
+        $.ajax({url: this.duriUrl, crossDomain: true}).done(function (data) {
+            this.dataUri = data;
+            d.resolve(this);
         }.bind(this));
         return d;
     }

@@ -26,7 +26,6 @@
         'fancybox': 'empty:',
         "jszip": "empty:",
         "autosize": 'empty:',
-        'jquery.browser': 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',

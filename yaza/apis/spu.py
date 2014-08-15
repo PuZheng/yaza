@@ -2,6 +2,7 @@
 import json
 from hashlib import md5
 import os.path
+import binascii
 
 import requests
 from PIL import Image
@@ -43,6 +44,12 @@ class SPUWrapper(ModelWrapper):
                 aspect.thumbnail_path = aspect.pic_path + \
                     '?imageView2/0/w/' + \
                     str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                duri_path = os.path.basename(aspect.pic_path.rstrip('.png')
+                                             + '.duri')
+                upload_str(duri_path,
+                           'data:image/png;base64,' +
+                           binascii(r.content).strip(),
+                           bucket, 'text/plain')
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
                     im = Image.open(StringIO(r.content))
@@ -68,15 +75,20 @@ class SPUWrapper(ModelWrapper):
                     black_shadow_im.save(si, 'PNG')
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
-                        upload_image_str(black_shadow_path,
-                                         si.getvalue(), bucket)
+                        black_shadow_path = black_shadow_path.strip('.png') + '.duri'
+                        upload_str(black_shadow_path,
+                                   'data:image/png;base64,' +
+                                   binascii.b2a_base64(si.getvalue()).strip(),
+                                   bucket, 'text/plain')
                         dr.black_shadow_path = black_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.black_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            upload_image_str(black_shadow_path, si.getvalue(),
-                                             bucket, True)
+                            upload_str(black_shadow_path,
+                                       'data:image/png;base64,' +
+                                       binascii.b2a_base64(si.getvalue()).strip(),
+                                       bucket, True, 'text/plain')
                             dr.black_shadow_path = black_shadow_path
 
                     # local shadow
@@ -86,16 +98,20 @@ class SPUWrapper(ModelWrapper):
                     si = StringIO()
                     white_shadow_im.save(si, 'PNG')
                     try:
-                        upload_image_str(white_shadow_path,
-                                         si.getvalue(), bucket)
+                        white_shadow_path = white_shadow_path.strip('.png') + '.duri'
+                        upload_str(white_shadow_path,
+                                   'data:image/png;base64,' +
+                                   binascii.b2a_base64(si.getvalue()).strip(),
+                                   bucket, 'text/plain')
                         dr.white_shadow_path = white_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.white_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            upload_image_str(white_shadow_path,
-                                             si.getvalue(),
-                                             bucket, True)
+                            upload_str(white_shadow_path,
+                                             'data:image/png;base64,' +
+                                             binascii.b2a_base64(si.getvalue()).strip(),
+                                             bucket, True, 'text/plain')
                             dr.white_shadow_path = white_shadow_path
 
                     # 注意， 标注的点， bottom的y大于top的y， 这是由于浏览器
@@ -114,11 +130,10 @@ class SPUWrapper(ModelWrapper):
                     key = '.'.join(['design-region', str(dr.id),
                                     md5(json.dumps(edges)).hexdigest(),
                                     'edges'])
-                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
                         dr.edge_path = upload_str(key, json.dumps(edges),
-                                                   bucket,
-                                                   mime_type='application/json')
+                                                  bucket,
+                                                  mime_type='application/json')
                     except AlreadyExists, e:
                         print e
                         if not dr.edge_path:
