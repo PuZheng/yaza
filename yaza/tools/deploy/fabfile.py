@@ -25,7 +25,7 @@ def install():
     with cd(yaza_env):
         with prefix('source env/bin/activate'):
             cmd = [
-                'cd yaza/yaza',
+                'cd yaza',
                 'pip install -r requirements.txt -i http://pypi.douban.com/simple',
                 'python setup.py develop',
             ]
@@ -79,6 +79,7 @@ def take_effect(remote_config_file, sudoer):
 
 def deploy(sudoer, branch='master', remote_config_file=None):
     sync_code(branch)
+    install()
     build()
     optimization()
     upload2cdn()
