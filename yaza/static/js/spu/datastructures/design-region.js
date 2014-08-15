@@ -16,6 +16,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             // 不支持对cors的image执行getImageData. 所以仍然要从本地读取数据
             this.blackShadowUrl = data.blackShadowUrl;
             this.whiteShadowUrl = data.whiteShadowUrl;
+            this.blackShadowDataUri = data.blackShadowDataUri;
+            this.whiteShadowDataUri = data.whiteShadowDataUri;
             this.aspect = data.aspect;
             this.previewLayer = new Kinetic.Layer();  // 预览层
             if (__debug__) {
@@ -234,9 +236,11 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
-            $.ajax({url: this.blackShadowUrl, crossDomain: true}).done(
+            var useDataUri = !$.support.cors;
+            $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl, 
+            crossDomain: true}).done(
                 function (data, status, jqXHR) {
-                    blackImageObj.src = data;
+                    blackImageObj.src = useDataUri? data: this.blackShadowUrl;
                 }.bind(this));
 
             return d;
@@ -254,9 +258,11 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
-            $.ajax({url: this.whiteShadowUrl, crossDomain: true}).done(
+            var useDataUri = !$.support.cors;
+            $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl, 
+            crossDomain: true}).done(
                 function (data, status, jqXHR) {
-                    whiteImageObj.src = data;
+                    whiteImageObj.src = useDataUri? data: this.whiteShadowUrl;
                 }.bind(this));
             return d;
         };

@@ -3,12 +3,14 @@ from collections import OrderedDict
 import os
 import zipfile
 import binascii
+from StringIO import StringIO
 
 from flask import json
 from PIL import Image, ImageColor
 
 from yaza import const
 from yaza.qiniu_handler import upload_image, upload_file, upload_str
+from yaza.basemain import app
 
 
 ARCHIVES = ('zip', )
@@ -278,6 +280,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
+                    im = Image.open(full_path)
+                    width, height = im.size
                     if app.config.get("QINIU_ENABLED"):
                         bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                         thumbnail_path = upload_str(pic_path, open(full_path, 'rb').read(),
@@ -286,15 +290,20 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                             str(app.config['QINIU_CONF']
                                 ['DESIGN_IMAGE_THUMNAIL_SIZE'])
                         duri_path = pic_path.rstrip('.png') + '.duri'
+                        md_size = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                        if height > width:
+                            im.resize((md_size, md_size * width / height))
+                        else:
+                            im.resize((md_size * height / width, md_size))
+                        si = StringIO()
+                        im.save(si, 'png')
                         upload_str(duri_path,
                                    'data:image/png;base64,' +
-                                   binascii.b2a_base64(open(full_path, 'rb').read()).strip(),
+                                   binascii.b2a_base64(si.getvalue()).strip(),
                                    bucket, True, 'text/plain')
                     else:
                         thumbnail_path = _make_thumbnail(full_path, start_dir)
 
-                    im = Image.open(full_path)
-                    width, height = im.size
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu,
                                thumbnail_path=thumbnail_path, width=width,
@@ -342,16 +351,25 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 black_shadow_im.save(black_shadow_full_path)
                 white_shadow_im.save(white_shadow_full_path)
                 black_shadow_path = os.path.relpath(black_shadow_full_path,
-                                                    start_dir).rstrip('.png') + '.duri'
+                                                    start_dir)
                 white_shadow_path = os.path.relpath(white_shadow_full_path,
-                                                    start_dir).rstrip('.png') + '.duri'
+                                                    start_dir)
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     upload_str(black_shadow_path,
+                               open(black_shadow_full_path, 'rb'),
+                               bucket, True, 'image/png')
+                    upload_str(white_shadow_path,
+                               open(white_shadow_full_path, 'rb').read(),
+                               bucket, True, 'image/png')
+                    black_shadow_duri_path = black_shadow_path.rstrip('.png') + '.duri'
+                    white_shadow_duri_path = white_shadow_path.rstrip('.png') + '.duri'
+                    print white_shadow_duri_path
+                    upload_str(black_shadow_duri_path,
                                'data:image/png;base64,' +
                                binascii.b2a_base64(open(black_shadow_full_path, 'rb').read()).strip(),
                                bucket, True, 'text/plain')
-                    upload_str(white_shadow_path,
+                    upload_str(white_shadow_duri_path,
                                'data:image/png;base64,' +
                                binascii.b2a_base64(open(white_shadow_full_path, 'rb').read()).strip(),
                                bucket, True, 'text/plain')

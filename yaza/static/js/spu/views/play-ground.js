@@ -441,7 +441,7 @@ mvc, readImageData) {
 
 
             }.bind(this);
-            imgObj.src = aspect.dataUri
+            imgObj.src = aspect.picUrl;
         },
 
         _clearAspect: function () {

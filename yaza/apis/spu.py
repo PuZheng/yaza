@@ -77,18 +77,21 @@ class SPUWrapper(ModelWrapper):
                     try:
                         black_shadow_path = black_shadow_path.strip('.png') + '.duri'
                         upload_str(black_shadow_path,
+                                   si.getvalue(),
+                                   bucket, 'image/png')
+                        dr.black_shadow_path = black_shadow_path
+                        black_shadow_data_uri_path = black_shadow_path.strip('.png') + '.duri'
+                        upload_str(black_shadow_data_uri_path,
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
                                    bucket, 'text/plain')
-                        dr.black_shadow_path = black_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.black_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
                             upload_str(black_shadow_path,
-                                       'data:image/png;base64,' +
-                                       binascii.b2a_base64(si.getvalue()).strip(),
-                                       bucket, True, 'text/plain')
+                                       si.getvalue(),
+                                       bucket, True, 'image/png')
                             dr.black_shadow_path = black_shadow_path
 
                     # local shadow
@@ -100,18 +103,21 @@ class SPUWrapper(ModelWrapper):
                     try:
                         white_shadow_path = white_shadow_path.strip('.png') + '.duri'
                         upload_str(white_shadow_path,
+                                   si.getvalue(),
+                                   bucket, 'image/png')
+                        dr.white_shadow_path = white_shadow_path
+                        white_shadow_data_uri_path = white_shadow_path.strip('.png') + '.duri'
+                        upload_str(white_shadow_data_uri_path,
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
                                    bucket, 'text/plain')
-                        dr.white_shadow_path = white_shadow_path
                     except AlreadyExists, e:
                         print e
                         if not dr.white_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
                             upload_str(white_shadow_path,
-                                             'data:image/png;base64,' +
-                                             binascii.b2a_base64(si.getvalue()).strip(),
-                                             bucket, True, 'text/plain')
+                                       si.getvalue(),
+                                       bucket, True, 'image/png')
                             dr.white_shadow_path = white_shadow_path
 
                     # 注意， 标注的点， bottom的y大于top的y， 这是由于浏览器

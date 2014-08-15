@@ -16,8 +16,12 @@ define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], funct
     Aspect.prototype.getImage = function () {
         console.log('get aspect image: ' + this.duriUrl);
         var d = $.Deferred();
-        $.ajax({url: this.duriUrl, crossDomain: true}).done(function (data) {
-            this.dataUri = data;
+        // 当不支持cors时， 直接取data uri
+        var useDataUri = !$.support.cors;
+        $.ajax({url: useDataUri? this.picUrl: this.duriUrl, crossDomain: true}).done(function (data) {
+            if (useDataUri) {
+                this.picUrl = data;
+            }
             d.resolve(this);
         }.bind(this));
         return d;

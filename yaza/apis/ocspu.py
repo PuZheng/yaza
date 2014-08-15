@@ -194,15 +194,25 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def black_shadow_url(self):
-        return 'http://%s.qiniudn.com/%s' % (
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
             app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
-            self.black_shadow_path)
+            self.black_shadow_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def white_shadow_url(self):
-        return 'http://%s.qiniudn.com/%s' % (
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
             app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
-            self.white_shadow_path)
+            self.white_shadow_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
+
+    @property
+    def black_shadow_data_uri(self):
+        return self.black_shadow_url.split('?')[0].strip('.png') + '.duri'
+
+    @property
+    def white_shadow_data_uri(self):
+        return self.white_shadow_url.split('?')[0].strip('.png') + '.duri'
 
     def as_dict(self, camel_case):
         return {
@@ -215,6 +225,10 @@ class DesignRegionWrapper(ModelWrapper):
             self.black_shadow_url,
             'whiteShadowUrl' if camel_case else 'white_shadow_url':
             self.white_shadow_url,
+            'blackShadowDataUri' if camel_case else 'black_shadow_data_uri':
+            self.black_shadow_data_uri,
+            'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri':
+            self.white_shadow_data_uri,
         }
 
     def delete(self):
