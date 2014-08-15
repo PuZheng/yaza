@@ -1,5 +1,5 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
-        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 'jquery.browser'],
+        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest'],
 
     function ($, _, bucket, readImageData, Kinetic, config) {
         var __debug__ = ($.url('?debug') == '1');
