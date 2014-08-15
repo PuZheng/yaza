@@ -84,24 +84,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                         d.resolve(dr.previewEdges);
                     };
                 }(this);
-                //$.jsonp({
-                    //url: this.edgeUrl,
-                    //success: function (json, textStatus, xOptions) {
-                        //debugger;
-                    //}
-                //});
                 $.getJSON(this.edgeUrl, success);
-                //if ($.support.cors) {
-                    //$.getJSON(this.edgeUrl, success);
-                //} else {
-                    //var xdr = new XDomainRequest();
-                    //console.log('get edges :' + this.edgeUrl + "?bust=" + new Date().getTime());
-                    //xdr.open("get", this.edgeUrl);
-                    //xdr.onload = function () {
-                        //success(JSON.parse(xdr.responseText));
-                    //}
-                    //xdr.send();
-                //}
             }
             return d;
         };
