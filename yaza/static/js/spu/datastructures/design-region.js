@@ -220,8 +220,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
-            // ie 10 虽然支持cors， 但是不支持getImageData
-            var useDataUri = !$.support.cors || (!!$.browser.msie && $.browser.versionNumber == '10');
+            // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
+            var useDataUri = !$.support.cors || !!$.browser.msie;
             $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl, 
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
@@ -243,8 +243,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
-            // ie 10 虽然支持cors， 但是不支持getImageData
-            var useDataUri = !$.support.cors || (!!$.browser.msie && $.browser.versionNumber == '10');
+            // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
+            var useDataUri = !$.support.cors || !!$.browser.msie;
             $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl, 
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
