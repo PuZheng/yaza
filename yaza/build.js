@@ -36,6 +36,7 @@
         'text': 'components/text/text',
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',
+        'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
@@ -130,6 +131,9 @@
         'js-url': {
             deps: ['jquery'],
             exports: '$.fn.url'
+        },
+        'jquery.browser': {
+            deps: ['jquery'],
         }
     }
 })

@@ -7,5 +7,6 @@ define(['jquery'], function () {
         'jquery.iframe-transport',
         'text',
         'css',
+        'jquery.browser',
         'filesaver'], function () {});
 });

@@ -36,6 +36,7 @@
             'css': 'components/require-css/css.min',
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
             "filesaver":"components/FileSaver/FileSaver",
+            'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -111,6 +112,10 @@
             'toastr': {
                 deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
             },
+            'jquery.browser': {
+                deps: ['jquery'],
+                exports: '$.fn.browser',
+            }
         }
     }
 

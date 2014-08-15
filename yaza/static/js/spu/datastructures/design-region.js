@@ -1,5 +1,6 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
-        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest'],
+        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 
+        'jquery.browser'],
 
     function ($, _, bucket, readImageData, Kinetic, config) {
         var __debug__ = ($.url('?debug') == '1');
@@ -219,7 +220,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
                 d.resolve('black');
             }.bind(this);
-            var useDataUri = !$.support.cors;
+            // ie 10 虽然支持cors， 但是不支持getImageData
+            var useDataUri = !$.support.cors || (!!$.browser.msie && $.browser.versionNumber == '10');
             $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl, 
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
@@ -241,7 +243,8 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
                 d.resolve('white');
             }.bind(this);
-            var useDataUri = !$.support.cors;
+            // ie 10 虽然支持cors， 但是不支持getImageData
+            var useDataUri = !$.support.cors || (!!$.browser.msie && $.browser.versionNumber == '10');
             $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl, 
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
