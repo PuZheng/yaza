@@ -47,7 +47,8 @@ class SPUWrapper(ModelWrapper):
                 duri_path = os.path.basename(aspect.pic_path.rstrip('.png')
                                              + '.duri')
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                upload_str(duri_path,
+                
+                upload_str(duri_path.encode('utf-8'),
                            'data:image/png;base64,' +
                            binascii.b2a_base64(r.content).strip(),
                            bucket, 'text/plain')
@@ -76,12 +77,12 @@ class SPUWrapper(ModelWrapper):
                     black_shadow_im.save(si, 'PNG')
                     try:
                         black_shadow_path = black_shadow_path.strip('.png') + '.duri'
-                        upload_str(black_shadow_path,
+                        upload_str(black_shadow_path.encode('utf-8'),
                                    si.getvalue(),
                                    bucket, 'image/png')
                         dr.black_shadow_path = black_shadow_path
                         black_shadow_data_uri_path = black_shadow_path.strip('.png') + '.duri'
-                        upload_str(black_shadow_data_uri_path,
+                        upload_str(black_shadow_data_uri_path.encode('utf-8'),
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
                                    bucket, 'text/plain')
