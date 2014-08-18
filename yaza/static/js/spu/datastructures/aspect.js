@@ -18,7 +18,7 @@ define(['jquery', 'spu/datastructures/design-region', 'utils/load-image'], funct
         var d = $.Deferred();
         // 当不支持cors时， 直接取data uri
         var useDataUri = !$.support.cors;
-        $.ajax({url: useDataUri? this.duriUrl: this.picUrl, crossDomain: true}).done(function (data) {
+        $.ajax({url: useDataUri? encodeURI(this.duriUrl): this.picUrl, crossDomain: true}).done(function (data) {
             if (useDataUri) {
                 this.picUrl = data;
             }
