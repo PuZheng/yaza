@@ -46,9 +46,22 @@ class SPUWrapper(ModelWrapper):
                     str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
                 duri_path = os.path.basename(aspect.pic_path.rstrip('.png')
                                              + '.duri')
-                upload_str(duri_path,
+                bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+
+                im = Image.open(StringIO(r.content))
+                if im.size[1] > im.size[0]:  # portrait
+                    height = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                    width = im.size[0] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[1]
+                else:
+                    width = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                    height = im.size[1] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[0]
+                    im.resize((height, width), PIL.Image.BICUBIC)
+
+                si = StringIO()
+                im.save(si, 'png')
+                upload_str(duri_path.encode('utf-8'),
                            'data:image/png;base64,' +
-                           binascii(r.content).strip(),
+                           binascii.b2a_base64(si.getvalue()).strip(),
                            bucket, 'text/plain')
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
@@ -73,15 +86,14 @@ class SPUWrapper(ModelWrapper):
                         black_shadow_im.save(file_, 'PNG')
                     si = StringIO()
                     black_shadow_im.save(si, 'PNG')
-                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     try:
                         black_shadow_path = black_shadow_path.strip('.png') + '.duri'
-                        upload_str(black_shadow_path,
+                        upload_str(black_shadow_path.encode('utf-8'),
                                    si.getvalue(),
                                    bucket, 'image/png')
                         dr.black_shadow_path = black_shadow_path
                         black_shadow_data_uri_path = black_shadow_path.strip('.png') + '.duri'
-                        upload_str(black_shadow_data_uri_path,
+                        upload_str(black_shadow_data_uri_path.encode('utf-8'),
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
                                    bucket, 'text/plain')
