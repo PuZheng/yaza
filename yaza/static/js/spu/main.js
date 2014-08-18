@@ -24,6 +24,8 @@
             'js-url': 'http://cdn.bootcss.com/js-url/1.8.4/url',
             "jquery.scrollTo": ['http://cdn.bootcss.com/jquery-scrollTo/1.4.11/jquery.scrollTo.min', "components/jquery.scrollTo/jquery.scrollTo.min"],
             'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
+            "jszip": "http://cdn.bootcss.com/jszip/2.3.0/jszip.min",
+            'jquery-ajaxtransport-xdomainrequest': "http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             // vendors not using cdn
             'svg.export': 'components/svg.export.js/svg.export',
             kineticjs: 'components/kineticjs/kinetic.min',
@@ -33,11 +35,8 @@
             'text': 'components/text/text',
             'css': 'components/require-css/css.min',
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
-            'jquery-ajaxtransport-xdomainrequest': ["http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
-                "components/jquery-ajaxtransport-xdomainrequest/jquery.xdomainrequest.min"],
-            "getImageData": "components/getImageData/jquery.getimagedata.min",
-            "jszip": ["http://cdn.bootcss.com/jszip/2.3.0/jszip.min", "components/jszip/dist/jszip.min"],
             "filesaver":"components/FileSaver/FileSaver",
+            'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -106,15 +105,16 @@
             'autosize':{
                 deps: ['jquery']
             },
-            'getImageData' :{
-                deps: ['jquery']
-            },
             'js-url': {
                 deps: ['jquery'],
                 exports: '$.fn.url'
             },
             'toastr': {
                 deps: ["css!http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css"]
+            },
+            'jquery.browser': {
+                deps: ['jquery'],
+                exports: '$.fn.browser',
             }
         }
     }

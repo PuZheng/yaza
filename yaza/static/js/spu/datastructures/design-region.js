@@ -1,7 +1,8 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
-        'kineticjs', 'spu/config', 'js-url'],
-    function ($, _, bucket, readImageData, Kinetic, config) {
+        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 
+        'jquery.browser'],
 
+    function ($, _, bucket, readImageData, Kinetic, config) {
         var __debug__ = ($.url('?debug') == '1');
         var _imageLayerMap = {};
         var _controlLayerMap = {};
@@ -12,8 +13,12 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             this.edgeUrl = data.edgeUrl;
             this.size = data.size;
             this.name = data.name;
+            // 若不支持cors， 需要从本地获取数据, 注意， ie10虽然支持cors， 但是
+            // 不支持对cors的image执行getImageData. 所以仍然要从本地读取数据
             this.blackShadowUrl = data.blackShadowUrl;
             this.whiteShadowUrl = data.whiteShadowUrl;
+            this.blackShadowDataUri = data.blackShadowDataUri;
+            this.whiteShadowDataUri = data.whiteShadowDataUri;
             this.aspect = data.aspect;
             this.previewLayer = new Kinetic.Layer();  // 预览层
             if (__debug__) {
@@ -53,31 +58,34 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             if (this.previewEdges) {
                 d.resolve(this.previewEdges);
             } else {
-                $.getJSON(this.edgeUrl, function (edges) {
-                    var previewEdges = this.previewEdges = {};
-                    // 这里必须要去重，否则边界计算错误
-                    // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
-                    // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
-                    // 这样会给判断点是否在边界上带来麻烦
+                var success = function (dr) {
+                    return function (edges) {
+                        var previewEdges = dr.previewEdges = {};
+                        // 这里必须要去重，否则边界计算错误
+                        // 而且需要注意的是， 缩放过的线段可能会产生锯齿.
+                        // 比如一种典型的情况是： top上， 有两个点x一样， y相邻,
+                        // 这样会给判断点是否在边界上带来麻烦
 
-                    // 特别注意， 当propotion > 1的时候， 其实是放大， 那么必然产生了
-                    // 非闭合曲线，由于在yaza中， 不会出现原图小于浏览器上图片的情况，
-                    // 所以这种情况不予考虑
+                        // 特别注意， 当propotion > 1的时候， 其实是放大， 那么必然产生了
+                        // 非闭合曲线，由于在yaza中， 不会出现原图小于浏览器上图片的情况，
+                        // 所以这种情况不予考虑
 
-                    var set = new buckets.Set();
-                    ['top', 'left', 'bottom', 'right'].forEach(function (position) {
-                        previewEdges[position] = [];
-                        edges[position].forEach(function (point) {
-                            var p = [Math.round(point[0] * proportion.x), Math.round(point[1] * proportion.y)];
-                            if (!set.contains(p)) {
-                                set.add(p);
-                                previewEdges[position].push(p);
-                            }
+                        var set = new buckets.Set();
+                        ['top', 'left', 'bottom', 'right'].forEach(function (position) {
+                            previewEdges[position] = [];
+                            edges[position].forEach(function (point) {
+                                var p = [Math.round(point[0] * proportion.x), Math.round(point[1] * proportion.y)];
+                                if (!set.contains(p)) {
+                                    set.add(p);
+                                    previewEdges[position].push(p);
+                                }
+                            });
                         });
-                    });
 
-                    d.resolve(this.previewEdges);
-                }.bind(this));
+                        d.resolve(dr.previewEdges);
+                    };
+                }(this);
+                $.getJSON(this.edgeUrl, success);
             }
             return d;
         };
@@ -206,29 +214,19 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 return d;
             }
 
-            if ($.support.cors || this.blackShadowUrl.indexOf("http") !== 0) {
-                var blackImageObj = new Image();
-                blackImageObj.crossOrigin = "Anonymous";
-                blackImageObj.onload = function () {
-                    this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
-                    d.resolve('black');
-                }.bind(this);
-                $.ajax({url: this.blackShadowUrl, crossDomain: true}).done(
-                    function () {
-                        blackImageObj.src = this.blackShadowUrl;
-                    }.bind(this));
-            } else {
-                $.getImageData({url: this.blackShadowUrl,
-                    crossDomain: true,
-                    success: function (blackImageObj) {
-                        this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
-                        d.resolve('black');
-                    }.bind(this),
-                    error: function (xhr, status) {
-                        alert("load image error");
-                    }
-                })
-            }
+            var blackImageObj = new Image();
+            blackImageObj.crossOrigin = "Anonymous";
+            blackImageObj.onload = function () {
+                this.blackShadowImageData = readImageData.readImageData(blackImageObj, width, height);
+                d.resolve('black');
+            }.bind(this);
+            // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
+            var useDataUri = !$.support.cors || !!$.browser.msie;
+            $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl, 
+            crossDomain: true}).done(
+                function (data, status, jqXHR) {
+                    blackImageObj.src = useDataUri? data: this.blackShadowUrl;
+                }.bind(this));
 
             return d;
         };
@@ -239,31 +237,19 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
                 d.resolve(this.whiteShadowImageData);
                 return d;
             }
-
-            if ($.support.cors || this.whiteShadowUrl.indexOf("http") !== 0) {
-                var whiteImageObj = new Image();
-                whiteImageObj.crossOrigin = "Anonymous";
-                whiteImageObj.onload = function () {
-                    this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
-                    d.resolve('white');
-                }.bind(this);
-                $.ajax({url: this.whiteShadowUrl, crossDomain: true}).done(
-                    function () {
-                        whiteImageObj.src = this.whiteShadowUrl;
-                    }.bind(this));
-            } else {
-                $.getImageData({url: this.whiteShadowUrl,
-                    crossDomain: true,
-                    success: function (whiteImageObj) {
-                        this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
-                        d.resolve('white');
-                    }.bind(this),
-                    error: function (xhr, status) {
-                        alert("load image error");
-                    }
-                })
-            }
-
+            var whiteImageObj = new Image();
+            whiteImageObj.crossOrigin = "Anonymous";
+            whiteImageObj.onload = function () {
+                this.whiteShadowImageData = readImageData.readImageData(whiteImageObj, width, height);
+                d.resolve('white');
+            }.bind(this);
+            // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
+            var useDataUri = !$.support.cors || !!$.browser.msie;
+            $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl, 
+            crossDomain: true}).done(
+                function (data, status, jqXHR) {
+                    whiteImageObj.src = useDataUri? data: this.whiteShadowUrl;
+                }.bind(this));
             return d;
         };
 

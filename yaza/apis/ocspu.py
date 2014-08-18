@@ -103,11 +103,14 @@ class OCSPUWrapper(ModelWrapper):
 class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
-        if self.pic_path:
-            return self.pic_path + '?imageView2/0/w/' + str(
-                app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-                if self.pic_path.startswith("http") else url_for("image.serve", filename=self.pic_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
+
+    @property
+    def duri_url(self):
+        return self.pic_url.split('?')[0].rstrip('.png') + '.duri'
 
     @property
     def hd_pic_url(self):
@@ -118,15 +121,13 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def thumbnail(self):
-        if self.thumbnail_path:
-            return self.thumbnail_path if self.thumbnail_path.startswith(
-                "http") else url_for("image.serve", filename=self.thumbnail_path)
-        return ""
+        return self.thumbnail_path
 
     def as_dict(self, camel_case=True):
         return {
             'id': self.id,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            'duriUrl' if camel_case else 'duri_url': self.duri_url,
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
             'designRegionList' if camel_case else 'design_region_list':
@@ -193,17 +194,25 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def black_shadow_url(self):
-        return self.black_shadow_path + '?imageView2/0/w/' + str(
-            app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-            if self.black_shadow_path.startswith("http") else \
-            url_for('image.serve', filename=self.black_shadow_path)
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.black_shadow_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def white_shadow_url(self):
-        return self.white_shadow_path + '?imageView2/0/w/' + str(
-            app.config['QINIU_CONF']['ASPECT_MD_SIZE']) \
-            if self.white_shadow_path.startswith("http") else \
-            url_for('image.serve', filename=self.white_shadow_path)
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.white_shadow_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
+
+    @property
+    def black_shadow_data_uri(self):
+        return self.black_shadow_url.split('?')[0].strip('.png') + '.duri'
+
+    @property
+    def white_shadow_data_uri(self):
+        return self.white_shadow_url.split('?')[0].strip('.png') + '.duri'
 
     def as_dict(self, camel_case):
         return {
@@ -212,8 +221,14 @@ class DesignRegionWrapper(ModelWrapper):
             'edgeUrl' if camel_case else 'edge_url': self.edge_url,
             'size': [self.width, self.height],
             'name': self.name,
-            'blackShadowUrl' if camel_case else 'black_shadow_url': self.black_shadow_url,
-            'whiteShadowUrl' if camel_case else 'white_shadow_url': self.white_shadow_url,
+            'blackShadowUrl' if camel_case else 'black_shadow_url':
+            self.black_shadow_url,
+            'whiteShadowUrl' if camel_case else 'white_shadow_url':
+            self.white_shadow_url,
+            'blackShadowDataUri' if camel_case else 'black_shadow_data_uri':
+            self.black_shadow_data_uri,
+            'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri':
+            self.white_shadow_data_uri,
         }
 
     def delete(self):

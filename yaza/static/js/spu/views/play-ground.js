@@ -106,13 +106,14 @@ mvc, readImageData) {
 
         _setupEventsHandler: function () {
             this.on('aspect-selected', function (aspect) {
+                console.log('aspect selected ' + aspect.name);
                 this.$mask.show();
                 aspect.getImage().done(function (aspect) {
-                    this.$mask.hide();
                     this._setupAspectImage(aspect); 
                 }.bind(this)); 
             })
             .on('design-region-selected', function (designRegion) {
+                console.log('design region selected ' + designRegion.name);
                 this.$mask.show();
                 this._currentDesignRegion = designRegion; 
                 designRegion.getPreviewEdges({
@@ -373,6 +374,7 @@ mvc, readImageData) {
                         x: backgroundLayer.width() / aspect.size[0],
                         y: backgroundLayer.height() / aspect.size[1]
                     }).done(function () {
+                        console.log('preview edges gotten');
                         // 找到最小的可以包住design region的框, 而且比例要和
                         // design region平铺的比例一致
                         // 当然这也隐含着一个假设， 就是design region
@@ -428,6 +430,7 @@ mvc, readImageData) {
                         .done(function () {
                             dr.getWhiteShadow(backgroundLayer.width(), backgroundLayer.height())
                             .done(function () {
+                                console.log('shadow gotten');
                                 view._generatePreview(dr);
                                 d.notify(dr);
                             });

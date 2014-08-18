@@ -2,11 +2,15 @@
 from collections import OrderedDict
 import os
 import zipfile
+import binascii
+from StringIO import StringIO
 
 from flask import json
 from PIL import Image, ImageColor
 
 from yaza import const
+from yaza.qiniu_handler import upload_image, upload_file, upload_str
+from yaza.basemain import app
 
 
 ARCHIVES = ('zip', )
@@ -156,17 +160,23 @@ def detect_edges(im, corner_dict=None):
                 edges['right'].append((i, j))
                 break
 
-    return edges
+    return edges, {
+        'lt': lt,
+        'rt': rt,
+        'lb': lb,
+        'rb': rb
+    }
 
 
 def calc_design_region_image(design_region_path):
     from yaza.apis.ocspu import DesignRegionWrapper
 
     im = Image.open(design_region_path)
-    edges = detect_edges(im)
+    edges, vertex = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
     edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
-    serialize(edges, edge_filename)
+    with open(edge_filename, 'w') as file_:
+        file_.write(json.dumps(edges))
     control_point_filename = design_region_path.replace(img_extension,
                                                         "." + DesignRegionWrapper
                                                         .CONTROL_POINT_EXTENSION)
@@ -175,7 +185,7 @@ def calc_design_region_image(design_region_path):
               lambda data: json.dumps(
                   {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
                    k, v in dict_.iteritems()}))
-    return edge_filename, control_point_filename
+    return edge_filename, control_point_filename, vertex
 
 
 def _get_rel_path(file_path, relpath_start):
@@ -231,7 +241,6 @@ def serialize(data, filename, encode_func=None):
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
     from yaza.basemain import app
-    from yaza.qiniu_handler import upload_image
     from yaza.utils import do_commit
     from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
@@ -271,17 +280,30 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
             if os.path.isfile(full_path):
                 if fname.split('.')[-1].lower() == 'png':
                     pic_path = os.path.relpath(full_path, start_dir)
+                    im = Image.open(full_path)
+                    width, height = im.size
                     if app.config.get("QINIU_ENABLED"):
                         bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                        pic_path = upload_image(full_path, bucket, True)
-                        thumbnail_path = pic_path + '?imageView2/0/w/' + \
+                        thumbnail_path = upload_str(pic_path, open(full_path, 'rb').read(),
+                                   bucket, True, 'image/png')
+                        thumbnail_path += '?imageView2/0/w/' + \
                             str(app.config['QINIU_CONF']
                                 ['DESIGN_IMAGE_THUMNAIL_SIZE'])
+                        duri_path = pic_path.rstrip('.png') + '.duri'
+                        md_size = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                        if height > width:
+                            im.resize((md_size, md_size * width / height))
+                        else:
+                            im.resize((md_size * height / width, md_size))
+                        si = StringIO()
+                        im.save(si, 'png')
+                        upload_str(duri_path,
+                                   'data:image/png;base64,' +
+                                   binascii.b2a_base64(si.getvalue()).strip(),
+                                   bucket, True, 'text/plain')
                     else:
                         thumbnail_path = _make_thumbnail(full_path, start_dir)
 
-                    im = Image.open(full_path)
-                    width, height = im.size
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu,
                                thumbnail_path=thumbnail_path, width=width,
@@ -314,10 +336,12 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     pic_path = upload_image(full_path, bucket, True)
-                edge_file, control_point_file = calc_design_region_image(
+                edge_file, control_point_file, vertex = calc_design_region_image(
                     full_path)
                 black_shadow_im, white_shadow_im = create_shadow_im(
-                    Image.open(full_path), aspect.ocspu.rgb)
+                    Image.open(full_path), aspect.ocspu.rgb,
+                    app.config['BLACK_ALPHA_THRESHOLD'],
+                    app.config['WHITE_ALPHA_THRESHOLD'], vertex.values())
                 black_shadow_full_path = os.path.join(design_region_dir,
                                                       fname +
                                                       '.black_shadow.png')
@@ -332,17 +356,33 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                                     start_dir)
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    black_shadow_path = upload_image(black_shadow_full_path,
-                                                     bucket, True)
-                    white_shadow_path = upload_image(white_shadow_full_path,
-                                                     bucket, True)
+                    upload_str(black_shadow_path,
+                               open(black_shadow_full_path, 'rb').read(),
+                               bucket, True, 'image/png')
+                    upload_str(white_shadow_path,
+                               open(white_shadow_full_path, 'rb').read(),
+                               bucket, True, 'image/png')
+                    black_shadow_duri_path = black_shadow_path.rstrip('.png') + '.duri'
+                    white_shadow_duri_path = white_shadow_path.rstrip('.png') + '.duri'
+                    print white_shadow_duri_path
+                    upload_str(black_shadow_duri_path,
+                               'data:image/png;base64,' +
+                               binascii.b2a_base64(open(black_shadow_full_path, 'rb').read()).strip(),
+                               bucket, True, 'text/plain')
+                    upload_str(white_shadow_duri_path,
+                               'data:image/png;base64,' +
+                               binascii.b2a_base64(open(white_shadow_full_path, 'rb').read()).strip(),
+                               bucket, True, 'text/plain')
 
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        height=height,
-                                       edge_path=upload_image(edge_file, app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True),
+                                       edge_path=upload_file(edge_file,
+                                                             app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                                             True,
+                                                             mime_type='application/json'),
                                        control_point_file=control_point_file,
                                        black_shadow_path=black_shadow_path,
                                        white_shadow_path=white_shadow_path))
@@ -375,10 +415,12 @@ def marked_as_corner(pixel):
 
 
 def create_shadow_im(im, color, black_alpha_threshold=80,
-                     white_alpha_threshold=108):
+                     white_alpha_threshold=108, vertex=[]):
+    """
+    一定不能考虑vertex, 因为顶点是人工标记出来的， 是噪音
+    """
     im = im.convert('LA')
     pa = im.load()
-    #v = max(ImageColor.getrgb(color))
 
     black_dest_im = Image.new('RGBA', im.size, (0, 0, 0, 0))
     black_dest_pa = black_dest_im.load()
@@ -394,7 +436,7 @@ def create_shadow_im(im, color, black_alpha_threshold=80,
                           xrange(im.size[0])]
     for i in xrange(im.size[0]):
         for j in xrange(im.size[1]):
-            if pa[(i, j)][1] == 255:
+            if pa[(i, j)][1] == 255 and (i, j) not in vertex:
                 black_alpha_matrix[i][j] = 255 - pa[(i, j)][0]
                 white_alpha_matrix[i][j] = pa[(i, j)][0]
 

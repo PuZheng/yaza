@@ -177,7 +177,7 @@ define(['jquery', 'dispatcher', 'admin/spu/context', 'underscore', 'backbone', '
                                 view.$form.find('.uploading-progress').fadeOut(1000);
                                 dispatcher.trigger('flash', {
                                     type: 'success',
-                                    msg: '成功修改' + field.label + '为' + 'http://yaza-spus.qiniudn.com/' + data.formData.key,
+                                    msg: '成功修改' + field.label + '为' + data.formData.key,
                                 });
                                 view.$form.find('input').removeAttr('disabled');
                             },
@@ -524,7 +524,7 @@ define(['jquery', 'dispatcher', 'admin/spu/context', 'underscore', 'backbone', '
                     if ($input.attr('type') != 'file') {
                         this.model.set(fieldName, val);
                     } else {
-                        var path = 'http://yaza-spus.qiniudn.com/' + data.formData.key;
+                        var path = data.formData.key;
                         this.model.set(fieldName, path);
                     }
                 }
