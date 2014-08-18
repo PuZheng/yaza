@@ -48,7 +48,7 @@ class SPUWrapper(ModelWrapper):
                                              + '.duri')
                 upload_str(duri_path,
                            'data:image/png;base64,' +
-                           binascii(r.content).strip(),
+                           binascii.b2a_base64(r.content).strip(),
                            bucket, 'text/plain')
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
