@@ -47,10 +47,21 @@ class SPUWrapper(ModelWrapper):
                 duri_path = os.path.basename(aspect.pic_path.rstrip('.png')
                                              + '.duri')
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                
+
+                im = Image.open(StringIO(r.content))
+                if im.size[1] > im.size[0]:  # portrait
+                    height = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                    width = im.size[0] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[1]
+                else:
+                    width = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                    height = im.size[1] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[0]
+                    im.resize((height, width), PIL.Image.BICUBIC)
+
+                si = StringIO()
+                im.save(si, 'png')
                 upload_str(duri_path.encode('utf-8'),
                            'data:image/png;base64,' +
-                           binascii.b2a_base64(r.content).strip(),
+                           binascii.b2a_base64(si.getvalue()).strip(),
                            bucket, 'text/plain')
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
