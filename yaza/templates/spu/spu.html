@@ -1,5 +1,20 @@
 {% extends "layout.html" %}
 
+{% block check_canvas %}
+  <script type='text/javascript'>
+(function () {
+ if (!Modernizr.canvas) {
+    var primaryEl = document.getElementsByClassName('primary')[0];
+    var s = '<div class="alert alert-danger">';
+    s += "<p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>";
+    s += "<ul><li>ie9或这以上浏览器</li><li>火狐浏览器</li><li>chrome浏览器</li><li>猎豹浏览器</li><li>360极速浏览器（极速模式）</li></ul>"
+    s += '</div>';
+    primaryEl.innerHtml = s;
+ }
+})();
+  </script>
+{% endblock %}
+
 {% block customized_head_block %}
   {% if config.QINIU_ENABLED and not config.DEBUG %}
     <link rel="stylesheet" href="{{"http://%s.qiniudn.com/static/css/custom.css"|format(config.QINIU_CONF.STATIC_BUCKET)}}"/>
