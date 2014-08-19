@@ -14,4 +14,8 @@
     "password": "fee0fe3D",
     "sudoer": "xiechao",
     "user": "yaza"
+    "remote-config": "remote-config.py"
+    "branch": "yaza-290",
+    "github-user": "xiechao06",
+    "github-password": "HangZhou@82"
 }
