@@ -87,7 +87,6 @@ class SPUWrapper(ModelWrapper):
                     si = StringIO()
                     black_shadow_im.save(si, 'PNG')
                     try:
-                        black_shadow_path = black_shadow_path.strip('.png') + '.duri'
                         upload_str(black_shadow_path.encode('utf-8'),
                                    si.getvalue(),
                                    bucket, 'image/png')
@@ -113,7 +112,6 @@ class SPUWrapper(ModelWrapper):
                     si = StringIO()
                     white_shadow_im.save(si, 'PNG')
                     try:
-                        white_shadow_path = white_shadow_path.strip('.png') + '.duri'
                         upload_str(white_shadow_path,
                                    si.getvalue(),
                                    bucket, 'image/png')
