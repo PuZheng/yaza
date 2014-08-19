@@ -35,13 +35,14 @@
             'text': 'components/text/text',
             'css': 'components/require-css/css.min',
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
-            "filesaver":"components/FileSaver/FileSaver",
+            "filesaver": "components/FileSaver/FileSaver",
             'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
+            "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
             'color-tools': 'js/color-tools',
-            'spu': 'js/spu',
+            'spu': 'js/spu'
         },
         shim: {
             'block-ui': {
@@ -65,11 +66,11 @@
                 deps: ['jquery'],
                 exports: '$.fn.lazyLoad'
             },
-            'color-tools':{
-                deps:['underscore', 'jquery']
+            'color-tools': {
+                deps: ['underscore', 'jquery']
             },
             'jquery-file-upload': {
-                deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css', 
+                deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css',
                     'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
             },
             'spectrum': {
@@ -83,8 +84,8 @@
             'svg.export': {
                 deps: ['svg']
             },
-            'select2':{
-                deps:['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
+            'select2': {
+                deps: ['jquery', 'css!http://cdn.bootcss.com/select2/3.5.0/select2.min.css', 'css!http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css']
                 //deps:['jquery', 'css!components/select2/select2.css', 'css!components/select2/select2-bootstrap.css']
             },
             'buckets': {
@@ -102,7 +103,7 @@
             'jquery.ui.widget': {
                 deps: ['jquery']
             },
-            'autosize':{
+            'autosize': {
                 deps: ['jquery']
             },
             'js-url': {
@@ -114,10 +115,10 @@
             },
             'jquery.browser': {
                 deps: ['jquery'],
-                exports: '$.fn.browser',
+                exports: '$.fn.browser'
             }
         }
-    }
+    };
 
     var QueryString = function () {
         // This function is anonymous, is executed immediately and 

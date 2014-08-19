@@ -1,6 +1,11 @@
 # -*- coding: UTF-8 -*-
-from flask import redirect, url_for, jsonify
+import base64
+from io import BytesIO
+from time import time
+
+from flask import redirect, url_for, jsonify, request, send_file
 from flask.ext.login import current_user
+
 
 from yaza.basemain import app
 
@@ -23,3 +28,14 @@ def config():
     if fonts:
         config_["DEFAULT_FONT_FAMILY"] = fonts[0]
     return jsonify(config_)
+
+
+@app.route("/gen-image", methods=["POST"])
+def gen_image():
+    data = request.form["data"]
+    base64_code = data[data.index(",") + 1:]
+    sio = BytesIO()
+    sio.write(base64.decodestring(base64_code))
+    sio.seek(0)
+
+    return send_file(sio, "image/png", True, str(int(time() * 100)) + ".png")
