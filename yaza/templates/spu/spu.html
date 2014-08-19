@@ -1,18 +1,6 @@
 {% extends "layout.html" %}
 
 {% block check_canvas %}
-  <script type='text/javascript'>
-(function () {
- if (!Modernizr.canvas) {
-    var primaryEl = document.getElementsByClassName('primary')[0];
-    var s = '<div class="alert alert-danger">';
-    s += "<p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>";
-    s += "<ul><li>ie9或这以上浏览器</li><li>火狐浏览器</li><li>chrome浏览器</li><li>猎豹浏览器</li><li>360极速浏览器（极速模式）</li></ul>"
-    s += '</div>';
-    primaryEl.innerHtml = s;
- }
-})();
-  </script>
 {% endblock %}
 
 {% block customized_head_block %}
@@ -24,11 +12,26 @@
 {% endblock %}
 
 {% block customized_tail_block %}
-  {% if config.QINIU_ENABLED and not config.DEBUG %}
-  <script type="text/javascript" data-main="{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
-  {% else %}
-    <script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
-  {% endif %}
+  <script type='text/javascript'>
+  (function () {
+    if (!Modernizr.canvas) {
+        var primaryEl = document.getElementsByClassName('primary')[0];
+        var noCanvasEl = document.getElementsByClassName('no-canvas')[0];
+        primaryEl.innerHTML = noCanvasEl.innerHTML;
+    } else {
+        var el = document.createElement('script');
+        el.src = "http://cdn.bootcss.com/require.js/2.1.14/require.js";
+        var dataMain = "{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}";
+        el.setAttribute('data-main', dataMain);
+        document.getElementsByTagName('head')[0].appendChild(el);
+    }
+    })();
+  </script>
+  <!--{% if config.QINIU_ENABLED and not config.DEBUG %}-->
+  <!--<script type="text/javascript" data-main="{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
+  <!--{% else %}-->
+    <!--<script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
+  <!--{% endif %}-->
 {% endblock %}
 
 {% block main %}
@@ -57,6 +60,24 @@
       <h3>对不起， 该产品已经下架!</h3>
     </div>
     {% endif %}
+  </div>
+  <div class="no-canvas" style='display: none'>
+      <div class="alert alert-danger">
+          <p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>
+          <ul>
+              <li>ie9或以上浏览器</li>
+              <li>火狐浏览器<a href="http://www.firefox.com.cn/"><em>下载地址</em></a></li>
+              <li>chrome浏览器
+                <a href="http://rj.baidu.com/soft/detail/14744.html?ald"><em>下载地址</em></a>
+              </li>
+              <li>搜狗高速浏览器
+              <a href="http://ie.sogou.com/"><em>下载地址</em></a>
+              </li>
+              <li>360极速浏览器（极速模式）
+                <a href="http://chrome.360.cn/"><em>下载地址</em></a>
+              </li>
+          </ul>
+      </div>
   </div>
 </div>
 <!--/row-->

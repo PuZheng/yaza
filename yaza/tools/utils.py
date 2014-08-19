@@ -357,7 +357,7 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                 if app.config.get("QINIU_ENABLED"):
                     bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                     upload_str(black_shadow_path,
-                               open(black_shadow_full_path, 'rb'),
+                               open(black_shadow_full_path, 'rb').read(),
                                bucket, True, 'image/png')
                     upload_str(white_shadow_path,
                                open(white_shadow_full_path, 'rb').read(),
