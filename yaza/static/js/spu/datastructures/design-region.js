@@ -1,5 +1,5 @@
 define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
-        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest', 
+        'kineticjs', 'spu/config', 'js-url', 'jquery-ajaxtransport-xdomainrequest',
         'jquery.browser'],
 
     function ($, _, bucket, readImageData, Kinetic, config) {
@@ -222,7 +222,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             }.bind(this);
             // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
             var useDataUri = !$.support.cors || !!$.browser.msie;
-            $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl, 
+            $.ajax({url: useDataUri? this.blackShadowDataUri: this.blackShadowUrl,
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
                     blackImageObj.src = useDataUri? data: this.blackShadowUrl;
@@ -245,7 +245,7 @@ define(['jquery', 'underscore', 'buckets', 'utils/read-image-data',
             }.bind(this);
             // ie 10 虽然支持cors， 但是不支持getImageData, ie 11不能通过ajax获取图片
             var useDataUri = !$.support.cors || !!$.browser.msie;
-            $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl, 
+            $.ajax({url: useDataUri? this.whiteShadowDataUri: this.whiteShadowUrl,
             crossDomain: true}).done(
                 function (data, status, jqXHR) {
                     whiteImageObj.src = useDataUri? data: this.whiteShadowUrl;
