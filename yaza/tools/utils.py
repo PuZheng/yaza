@@ -133,32 +133,89 @@ def detect_edges(im, corner_dict=None):
 
     # top
     edges['top'].append(rt)
+    last_point = rt
     for i in xrange(rt[0] - 1, lt[0], -1):
         for j in xrange(im.size[1] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
+                # 一定保证闭合, 下同
+                if abs(j - last_point[1]) > 1:
+                    if j > last_point[1]:
+                        min_ = last_point[1] + 1
+                        max_ = j
+                    else:
+                        min_ = j + 1
+                        max_ = last_point[1]
+                    for k in xrange(min_, max_):
+                        edges['top'].append((last_point[0], k))
                 edges['top'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            # 一定保证闭合，下同
+            edges['top'].append((i, last_point[1]))
+
     # left
     edges['left'].append(lt)
+    last_point = lt
     for j in xrange(lt[1] - 1, lb[1], -1):
         for i in xrange(im.size[0]):
             if pa[(i, j)][3] != 0:
+                if abs(i - last_point[0]) > 1:
+                    if i > last_point[0]:
+                        min_ = last_point[0] + 1
+                        max_ = i
+                    else:
+                        min_ = i + 1
+                        max_ = last_point[0]
+                    for k in xrange(min_, max_):
+                        edges['left'].append((k, last_point[1]))
                 edges['left'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['left'].append((last_point[0], j))
+
     # bottom
     edges['bottom'].append(lb)
+    last_point = lb
     for i in xrange(lb[0] + 1, rb[0]):
         for j in xrange(im.size[1]):
             if pa[(i, j)][3] != 0:
+                if abs(j - last_point[1])  > 1:
+                    if j > last_point[1]:
+                        min_ = last_point[1] + 1
+                        max_ = j
+                    else:
+                        min_ = j + 1
+                        max_ = last_point[1]
+                    for k in xrange(min_, max_):
+                        edges['bottom'].append((last_point[0], k))
                 edges['bottom'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['bottom'].append((i, last_point[1]))
+
     # right
     edges['right'].append(rb)
+    last_point = rb
     for j in xrange(rb[1] + 1, rt[1]):
         for i in xrange(im.size[0] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
+                if abs(i - last_point[0]) > 1:
+                    if i > last_point[0]:
+                        min_ = last_point[0] + 1
+                        max_ = i
+                    else:
+                        min_ = i + 1
+                        max_ = last_point[0]
+                    for k in xrange(min_, max_):
+                        edges['right'].append((k, last_point[1]))
                 edges['right'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['right'].append((last_point[0], j))
 
     return edges, {
         'lt': lt,
@@ -364,7 +421,6 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                bucket, True, 'image/png')
                     black_shadow_duri_path = black_shadow_path.rstrip('.png') + '.duri'
                     white_shadow_duri_path = white_shadow_path.rstrip('.png') + '.duri'
-                    print white_shadow_duri_path
                     upload_str(black_shadow_duri_path,
                                'data:image/png;base64,' +
                                binascii.b2a_base64(open(black_shadow_full_path, 'rb').read()).strip(),
