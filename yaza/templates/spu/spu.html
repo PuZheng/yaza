@@ -5,7 +5,7 @@
 
 {% block customized_head_block %}
   {% if config.QINIU_ENABLED and not config.DEBUG %}
-    <link rel="stylesheet" href="{{"http://%s.qiniudn.com/static/css/custom.css"|format(config.QINIU_CONF.STATIC_BUCKET)}}"/>
+    <link rel="stylesheet" href="{{ "http://%s.qiniudn.com/static/css/custom.css"|format(config.QINIU_CONF.STATIC_BUCKET) }}"/>
   {% else %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}"/>
   {% endif %}
@@ -13,31 +13,33 @@
 
 {% block customized_tail_block %}
   <script type='text/javascript'>
-  (function () {
-    if (!Modernizr.canvas) {
-        var style = document.createStyleSheet(),
-        select = function (selector, maxCount) {
-          var all = document.all,
-          l = all.length,
-          i,
-          resultSet = [];
+    (function () {
+      if (!Modernizr.canvas) {
+        //IE11起移除了 document.createStyleSheet()
 
-          style.addRule(selector, "foo:bar");
-          for (i = 0; i < l; i += 1) {
-          if (all[i].currentStyle.foo === "bar") {
-              resultSet.push(all[i]);
-              if (resultSet.length > maxCount) {
-              break;
+        var style = document.createStyleSheet(),
+            select = function (selector, maxCount) {
+              var all = document.all,
+                  l = all.length,
+                  i,
+                  resultSet = [];
+
+              style.addRule(selector, "foo:bar");
+              for (i = 0; i < l; i += 1) {
+                if (all[i].currentStyle.foo === "bar") {
+                  resultSet.push(all[i]);
+                  if (resultSet.length > maxCount) {
+                    break;
+                  }
+                }
               }
-          }
-          }
-          style.removeRule(0);
-          return resultSet;
-        };
+              style.removeRule(0);
+              return resultSet;
+            };
 
         //  be rly sure not to destroy a thing!
         if (document.querySelectorAll || document.querySelector) {
-            return;
+          return;
         }
 
         // patch querySelectorAll for ie7-
@@ -47,85 +49,81 @@
         document.querySelector = function (selector) {
           return select(selector, 1)[0] || null;
         };
+
         var primaryEl = document.querySelector('.primary');
         var noCanvasEl = document.querySelector('.noCanvas');
         primaryEl.innerHTML = noCanvasEl.innerHTML;
-    } else {
+      } else {
         // 动态加载， 避免在不支持canvas的情况下还要加载一堆js
         var el = document.createElement('script');
         el.src = "http://cdn.bootcss.com/require.js/2.1.14/require.js";
         {% if config.QINIU_ENABLED and not config.DEBUG %}
-        var dataMain = "{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}";
+          var dataMain = "{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}";
         {% else %}
-        var dataMain = "{{ url_for('static', filename='js/spu/main.js', bust=time) }}";
+          var dataMain = "{{ url_for('static', filename='js/spu/main.js', bust=time) }}";
         {% endif %}
         el.setAttribute('data-main', dataMain);
         document.getElementsByTagName('head')[0].appendChild(el);
-    }
+      }
     })();
   </script>
-  <!--{% if config.QINIU_ENABLED and not config.DEBUG %}-->
-  <!--<script type="text/javascript" data-main="{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
-  <!--{% else %}-->
-    <!--<script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
-  <!--{% endif %}-->
 {% endblock %}
 
 {% block main %}
-<div class="container-fluid">
-  <div class="primary">
-    {% if spu.published %}
-      <div class="row">
-        <div class="col-md-8">
-          <div class="play-ground">
-            <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+  <div class="container-fluid">
+    <div class="primary">
+      {% if spu.published %}
+        <div class="row">
+          <div class="col-md-8">
+            <div class="play-ground">
+              <div class="svg-drawing" {% if request.args['debug'] != '1' %}style="display: none"{% endif %}>
+              </div>
             </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="control-panel"></div>
           </div>
         </div>
 
-        <div class="col-md-4">
-          <div class="control-panel"></div>
+        <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
+        <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
+        <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
+        <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
+      {% else %}
+        <div class="alert alert-danger">
+          <h3>对不起， 该产品已经下架!</h3>
         </div>
-      </div>
-
-      <input name="spu" type="hidden" data-val='{{ spu.as_dict()|tojson|safe }}'/>
-      <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
-      <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
-      <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
-    {% else %}
-    <div class="alert alert-danger">
-      <h3>对不起， 该产品已经下架!</h3>
+      {% endif %}
     </div>
-    {% endif %}
-  </div>
-  <div class="noCanvas" style='display: none'>
+    <div class="noCanvas" style='display: none'>
       <div class="alert alert-danger">
-          <p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>
-          <ul>
-              <li>ie9或以上浏览器
-                <a href="http://windows.microsoft.com/zh-cn/internet-explorer/download-ie"><em>下载链接</em></a>
-              </li>
-              <li>火狐浏览器<a href="http://www.firefox.com.cn/"><em>下载地址</em></a></li>
-              <li>chrome浏览器
-                <a href="http://rj.baidu.com/soft/detail/14744.html?ald"><em>下载地址</em></a>
-              </li>
-              <li>搜狗高速浏览器
-              <a href="http://ie.sogou.com/"><em>下载地址</em></a>
-              </li>
-              <li>360极速浏览器（极速模式）
-                <a href="http://chrome.360.cn/"><em>下载地址</em></a>
-              </li>
-          </ul>
+        <p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>
+        <ul>
+          <li>ie9或以上浏览器
+            <a href="http://windows.microsoft.com/zh-cn/internet-explorer/download-ie"><em>下载链接</em></a>
+          </li>
+          <li>火狐浏览器<a href="http://www.firefox.com.cn/"><em>下载地址</em></a></li>
+          <li>chrome浏览器
+            <a href="http://rj.baidu.com/soft/detail/14744.html?ald"><em>下载地址</em></a>
+          </li>
+          <li>搜狗高速浏览器
+            <a href="http://ie.sogou.com/"><em>下载地址</em></a>
+          </li>
+          <li>360极速浏览器（极速模式）
+            <a href="http://chrome.360.cn/"><em>下载地址</em></a>
+          </li>
+        </ul>
       </div>
+    </div>
   </div>
-</div>
-<!--/row-->
-<footer class="footer visible-md visible-lg">
-<div class="container">
-  <div class="text-muted">
-    copyright@374路
-  </div>
-</div>
-</footer>
+  <!--/row-->
+  <footer class="footer visible-md visible-lg">
+    <div class="container">
+      <div class="text-muted">
+        copyright@374路
+      </div>
+    </div>
+  </footer>
   <!-- /.container -->
 {% endblock %}
