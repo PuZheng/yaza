@@ -2,7 +2,8 @@ define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
 'kineticjs', 'dispatcher', 'color-tools',
 'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data',
-'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver'],
+'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob"],
+>>>>>>> bb36a7829a3aeeb9c18e87603e93f6d3961b96f5
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
 mvc, readImageData) {
@@ -21,7 +22,7 @@ mvc, readImageData) {
                 return false;
             },
             'click .btn-download-preview': '_downloadPreview',
-            'click .btn-download-design': '_downloadDesign',
+            'click .btn-download-design': '_downloadDesign'
         },
 
         initialize: function (option) {
@@ -47,11 +48,11 @@ mvc, readImageData) {
             var marginRect = new Kinetic.Rect({
                 width: this._stage.width(),
                 height: this._stage.height(),
-                name: 'margin-rect',
+                name: 'margin-rect'
             });
             this._backgroundLayer.add(marginRect);
             var aspectImageBackgroundRect = new Kinetic.Rect({
-                name: 'background-rect',
+                name: 'background-rect'
             });
             this._backgroundLayer.add(aspectImageBackgroundRect);
             this._stage.add(this._backgroundLayer);
@@ -94,7 +95,7 @@ mvc, readImageData) {
                     allowEmpty: true,
                     color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
                     showInput: true,
-                    showAlpha: true,
+                    showAlpha: true
                 });
             }
             if (config.DESIGN_DOWNLOADABLE || isAdministrator) {
@@ -177,7 +178,7 @@ mvc, readImageData) {
                             layer.add(new Kinetic.Line({
                                 points: points,
                                 stroke: 'yellow',
-                                strokeWidth: 1,
+                                strokeWidth: 1
                             }));
                         });
                         layer.position(this._aspectImageLayer.position());
@@ -318,12 +319,12 @@ mvc, readImageData) {
                 if (asPortait) {
                     $touchScreenEl.scrollTo({
                         left: (this.$container.width() - imageWidth) / 2,
-                        top: config.PLAYGROUND_MARGIN,
+                        top: config.PLAYGROUND_MARGIN
                     });
                 } else {
                     $touchScreenEl.scrollTo({
                         left: config.PLAYGROUND_MARGIN,
-                        top: (this.$container.height() - imageHeight) / 2,
+                        top: (this.$container.height() - imageHeight) / 2
                     });
                 }
                 // setup canvas
@@ -339,7 +340,7 @@ mvc, readImageData) {
                 this._aspectImageLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
                         x: offsetX,
-                        y: offsetY,
+                        y: offsetY
                     });
                 this._backgroundLayer.find('.margin-rect')[0].fill(aspect.ocspu.marginColor);
                 this._backgroundLayer.find('.background-rect')[0].fill(aspect.ocspu.paddingColor).size(this._aspectImageLayer.size()).position(this._aspectImageLayer.position());
@@ -388,20 +389,20 @@ mvc, readImageData) {
                             // portrait
                             dr.getImageLayer().size({
                                 width: Math.round(dr.size[0] * dr.getPreviewHeight() / dr.size[1]),
-                                height: dr.getPreviewHeight(),
-                            })
+                                height: dr.getPreviewHeight()
+                            });
                             dr.getImageLayer().position({
                                 x: Math.round(backgroundLayer.x() + dr.getPreviewLeft() - (dr.getImageLayer().width() - dr.getPreviewWidth()) / 2),
-                                y: backgroundLayer.y() + dr.getPreviewBottom(),
+                                y: backgroundLayer.y() + dr.getPreviewBottom()
                             });
                         } else {
                             dr.getImageLayer().size({
                                 width: dr.getPreviewWidth(),
-                                height: Math.round(dr.size[1] * dr.getPreviewWidth() / dr.size[0]),
+                                height: Math.round(dr.size[1] * dr.getPreviewWidth() / dr.size[0])
                             });
                             dr.getImageLayer().position({
                                 x: backgroundLayer.x() + dr.getPreviewLeft(),
-                                y: Math.round(backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2),
+                                y: Math.round(backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2)
                             });
                         }
                         stage.add(dr.getImageLayer());
@@ -413,7 +414,7 @@ mvc, readImageData) {
                         if (oldImageLayerSize.width > 0 && oldImageLayerSize.height > 0) {
                             var scale = {
                                 x: dr.getImageLayer().width() / oldImageLayerSize.width,
-                                y: dr.getImageLayer().height() / oldImageLayerSize.height,
+                                y: dr.getImageLayer().height() / oldImageLayerSize.height
                             };
                             dr.getImageLayer().getChildren().forEach(function (node) {
                                 node.scale(scale);
@@ -963,9 +964,8 @@ mvc, readImageData) {
             }
 
             ctx.putImageData(previewImageData, 0, 0);
-            var uri = canvas.toDataURL('image/png');
-            var a = this.$('.btn-download-preview').find('a');
             if(typeof Blob == "undefined"){
+                var uri = canvas.toDataURL('image/png');
                 var $form = $("#download-form");
                 if(!$form[0]){
                     $form = $("<form></form>");
@@ -974,12 +974,12 @@ mvc, readImageData) {
                 }
                 var $input = $("<input></input>").attr({"name": "data", "type":"hidden"}).val(uri);
                 $form.append($input);
-                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/image"});
+                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/gen-image"});
                 $form.appendTo($("body")).submit();
             }else{
-                a.attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
-                    evt.stopPropagation();
-                })[0].click();
+                canvas.toBlob(function(blob) {
+                    saveAs(blob, new Date().getTime() + ".png");
+                })
             }
         },
 

@@ -49,9 +49,9 @@
     "toastr": "~2.0.3",
     "js-url": "~1.8.6",
     "jquery-ajaxtransport-xdomainrequest": "https://github.com/MoonScript/jQuery-ajaxTransport-XDomainRequest.git",
-    "getImageData": "https://github.com/betamax/getImageData.git",
     "FileSaver": "*",
     "ekko-lightbox": "~3.1.4",
-    "jquery.browser": "~0.0.6"
+    "jquery.browser": "~0.0.6",
+    "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git"
   }
 }
