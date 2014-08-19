@@ -963,7 +963,6 @@ mvc, readImageData) {
             }
 
             ctx.putImageData(previewImageData, 0, 0);
-            var a = this.$('.btn-download-preview').find('a');
             if(typeof Blob == "undefined"){
                 var uri = canvas.toDataURL('image/png');
                 var $form = $("#download-form");
