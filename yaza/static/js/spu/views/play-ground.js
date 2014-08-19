@@ -3,7 +3,6 @@ define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'kineticjs', 'dispatcher', 'color-tools',
 'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data',
 'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob"],
->>>>>>> bb36a7829a3aeeb9c18e87603e93f6d3961b96f5
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
 mvc, readImageData) {
