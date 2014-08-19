@@ -39,6 +39,7 @@
         return;
     }
 
+    // patch querySelectorAll for ie7-
     document.querySelectorAll = function (selector) {
       return select(selector, Infinity);
     };
@@ -52,6 +53,7 @@
         var noCanvasEl = document.querySelector('.noCanvas');
         primaryEl.innerHTML = noCanvasEl.innerHTML;
     } else {
+        // 动态加载， 避免在不支持canvas的情况下还要加载一堆js
         var el = document.createElement('script');
         el.src = "http://cdn.bootcss.com/require.js/2.1.14/require.js";
         {% if config.QINIU_ENABLED and not config.DEBUG %}
