@@ -15,13 +15,17 @@
   <script type='text/javascript'>
   (function () {
     if (!Modernizr.canvas) {
-        var primaryEl = document.getElementsByClassName('primary')[0];
-        var noCanvasEl = document.getElementsByClassName('no-canvas')[0];
+        var primaryEl = document.querySelector('.primary');
+        var noCanvasEl = document.querySelector('.noCanvas');
         primaryEl.innerHTML = noCanvasEl.innerHTML;
     } else {
         var el = document.createElement('script');
         el.src = "http://cdn.bootcss.com/require.js/2.1.14/require.js";
+        {% if config.QINIU_ENABLED and not config.DEBUG %}
         var dataMain = "{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}";
+        {% else %}
+        var dataMain = "{{ url_for('static', filename='js/spu/main.js', bust=time) }}";
+        {% endif %}
         el.setAttribute('data-main', dataMain);
         document.getElementsByTagName('head')[0].appendChild(el);
     }
@@ -61,7 +65,7 @@
     </div>
     {% endif %}
   </div>
-  <div class="no-canvas" style='display: none'>
+  <div class="noCanvas" style='display: none'>
       <div class="alert alert-danger">
           <p>对不起！ 您的浏览器已经太古老了， 请使用如下浏览器:</p>
           <ul>
