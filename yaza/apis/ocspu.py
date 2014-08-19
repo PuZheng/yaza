@@ -170,15 +170,14 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def edge_url(self):
-        return self.edge_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.edge_path)
+        return self.edge_path
 
     @property
     def spu(self):

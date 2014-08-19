@@ -164,7 +164,7 @@ def aspect_api(id_=None):
     return jsonify({
         'id': aspect.id,
         'name': aspect.name,
-        'pic-path': aspect.pic_path,
+        'pic-path': aspect.pic_url,
         'ocspu-id': aspect.ocspu_id,
         'design-region-id-list': [dr.id for dr in aspect.design_region_list]
     })
@@ -226,7 +226,7 @@ def design_region_api(id_=None):
         'width': design_region.width,
         'height': design_region.height,
         'aspect-id': design_region.aspect.id,
-        'pic-path': design_region.pic_path,
+        'pic-path': design_region.pic_url,
         'id': design_region.id,
         'left-top': design_region.left_top,
         'right-top': design_region.right_top,
