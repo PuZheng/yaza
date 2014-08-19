@@ -1,10 +1,10 @@
 define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
-'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group', 
-'kineticjs', 'dispatcher', 'color-tools', 
+'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
+'kineticjs', 'dispatcher', 'color-tools',
 'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data',
-'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver'], 
-function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config, 
-makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation, 
+'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob"],
+function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
+makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
 mvc, readImageData) {
 
     var __debug__ = ($.url('?debug') == '1');
@@ -21,14 +21,14 @@ mvc, readImageData) {
                 return false;
             },
             'click .btn-download-preview': '_downloadPreview',
-            'click .btn-download-design': '_downloadDesign',
+            'click .btn-download-design': '_downloadDesign'
         },
 
         initialize: function (option) {
             this._spu = option.spu;
             this._orderId = option.orderId;
         },
-        
+
 
         render: function () {
             this.$el.prepend(this._template({orderId: this._orderId}));
@@ -47,11 +47,11 @@ mvc, readImageData) {
             var marginRect = new Kinetic.Rect({
                 width: this._stage.width(),
                 height: this._stage.height(),
-                name: 'margin-rect',
+                name: 'margin-rect'
             });
             this._backgroundLayer.add(marginRect);
             var aspectImageBackgroundRect = new Kinetic.Rect({
-                name: 'background-rect',
+                name: 'background-rect'
             });
             this._backgroundLayer.add(aspectImageBackgroundRect);
             this._stage.add(this._backgroundLayer);
@@ -88,13 +88,13 @@ mvc, readImageData) {
 
             var isAdministrator = !this._orderId;
             if (config.PREVIEW_DOWNLOADABLE || isAdministrator) {
-                this.$('.btn-download-preview').show(); 
+                this.$('.btn-download-preview').show();
                 this.$('.preview-background-color').show();
                 this.$('.preview-background-color').spectrum({
                     allowEmpty: true,
                     color: config.DEFAULT_PREVIEW_BACKGROUND_COLOR,
                     showInput: true,
-                    showAlpha: true,
+                    showAlpha: true
                 });
             }
             if (config.DESIGN_DOWNLOADABLE || isAdministrator) {
@@ -109,13 +109,13 @@ mvc, readImageData) {
                 console.log('aspect selected ' + aspect.name);
                 this.$mask.show();
                 aspect.getImage().done(function (aspect) {
-                    this._setupAspectImage(aspect); 
-                }.bind(this)); 
+                    this._setupAspectImage(aspect);
+                }.bind(this));
             })
             .on('design-region-selected', function (designRegion) {
                 console.log('design region selected ' + designRegion.name);
                 this.$mask.show();
-                this._currentDesignRegion = designRegion; 
+                this._currentDesignRegion = designRegion;
                 designRegion.getPreviewEdges({
                     x: this._aspectImageLayer.width() / designRegion.aspect.size[0],
                     y: this._aspectImageLayer.height() / designRegion.aspect.size[1]
@@ -130,13 +130,13 @@ mvc, readImageData) {
                     designRegion.getControlLayer().find('.frame').size(designRegion.getControlLayer().size());
                     var controlLayer = designRegion.getControlLayer();
                     this._crossLayer.find('.vertical').points([
-                        controlLayer.x() + controlLayer.width() / 2, 
-                        0, 
-                        controlLayer.x() + controlLayer.width() / 2, 
+                        controlLayer.x() + controlLayer.width() / 2,
+                        0,
+                        controlLayer.x() + controlLayer.width() / 2,
                         this._stage.height()
                     ]);
                     this._crossLayer.find('.horizontal').points([
-                        0, 
+                        0,
                         controlLayer.y() + controlLayer.height() / 2,
                         this._stage.width(),
                         controlLayer.y() + controlLayer.height() / 2
@@ -177,7 +177,7 @@ mvc, readImageData) {
                             layer.add(new Kinetic.Line({
                                 points: points,
                                 stroke: 'yellow',
-                                strokeWidth: 1,
+                                strokeWidth: 1
                             }));
                         });
                         layer.position(this._aspectImageLayer.position());
@@ -187,7 +187,7 @@ mvc, readImageData) {
                 }.bind(this));
             })
             .on('design-image-selected', function (arg) {
-                this._addDesignImage(arg.url, arg.title, arg.designImageId); 
+                this._addDesignImage(arg.url, arg.title, arg.designImageId);
             })
             .on('active-object', function (controlGroup) {
                 if (!controlGroup) {
@@ -218,7 +218,7 @@ mvc, readImageData) {
                 this.$mask.find('p').text(text);
             }, this)
             .on('unmask', function (text) {
-                this.$mask.hide(); 
+                this.$mask.hide();
             }, this)
             .on('add-text', function (data, text) {
                 this._addText(data, text);
@@ -275,7 +275,7 @@ mvc, readImageData) {
                 if (ocspu.aspectList.every(function (aspect) {
                     return aspect.designRegionList.every(function (dr) {
                         return !dr.getImageLayer().hasChildren();
-                    });                
+                    });
                 })) {
                     dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
                     dispatcher.trigger('submit-design-done', 'failed');
@@ -304,7 +304,7 @@ mvc, readImageData) {
             var imgObj = new Image();
             imgObj.crossOrigin = 'Anonymous'; // 必须在加载前就设置crossOrigin
             imgObj.onload = function (e) {
-                // setup dom 
+                // setup dom
                 var asPortait = aspect.size[2] / aspect.size[0] > this.$touchScreenEl.height() / this.$touchScreenEl.width();
                 if (asPortait) {
                     var imageWidth = aspect.size[0] * this.$touchScreenEl.height() / aspect.size[1];
@@ -317,13 +317,13 @@ mvc, readImageData) {
                 var $touchScreenEl = this.$('.touch-screen');
                 if (asPortait) {
                     $touchScreenEl.scrollTo({
-                        left: (this.$container.width() - imageWidth) / 2, 
-                        top: config.PLAYGROUND_MARGIN,
+                        left: (this.$container.width() - imageWidth) / 2,
+                        top: config.PLAYGROUND_MARGIN
                     });
                 } else {
                     $touchScreenEl.scrollTo({
-                        left: config.PLAYGROUND_MARGIN, 
-                        top: (this.$container.height() - imageHeight) / 2, 
+                        left: config.PLAYGROUND_MARGIN,
+                        top: (this.$container.height() - imageHeight) / 2
                     });
                 }
                 // setup canvas
@@ -339,7 +339,7 @@ mvc, readImageData) {
                 this._aspectImageLayer.width(imageWidth).height(imageHeight)
                     .destroyChildren().position({
                         x: offsetX,
-                        y: offsetY,
+                        y: offsetY
                     });
                 this._backgroundLayer.find('.margin-rect')[0].fill(aspect.ocspu.marginColor);
                 this._backgroundLayer.find('.background-rect')[0].fill(aspect.ocspu.paddingColor).size(this._aspectImageLayer.size()).position(this._aspectImageLayer.position());
@@ -359,9 +359,9 @@ mvc, readImageData) {
 
                 d.progress(function (drList) {
                     return function(dr) {
-                        drList.push(dr);  
+                        drList.push(dr);
                         if (drList.length == aspect.designRegionList.length) {
-                            dispatcher.trigger('aspect-image-setup-done', aspect); 
+                            dispatcher.trigger('aspect-image-setup-done', aspect);
                         }
                     }
                 }([]));
@@ -388,20 +388,20 @@ mvc, readImageData) {
                             // portrait
                             dr.getImageLayer().size({
                                 width: Math.round(dr.size[0] * dr.getPreviewHeight() / dr.size[1]),
-                                height: dr.getPreviewHeight(),
-                            })
+                                height: dr.getPreviewHeight()
+                            });
                             dr.getImageLayer().position({
                                 x: Math.round(backgroundLayer.x() + dr.getPreviewLeft() - (dr.getImageLayer().width() - dr.getPreviewWidth()) / 2),
-                                y: backgroundLayer.y() + dr.getPreviewBottom(),
+                                y: backgroundLayer.y() + dr.getPreviewBottom()
                             });
                         } else {
                             dr.getImageLayer().size({
                                 width: dr.getPreviewWidth(),
-                                height: Math.round(dr.size[1] * dr.getPreviewWidth() / dr.size[0]),
+                                height: Math.round(dr.size[1] * dr.getPreviewWidth() / dr.size[0])
                             });
                             dr.getImageLayer().position({
                                 x: backgroundLayer.x() + dr.getPreviewLeft(),
-                                y: Math.round(backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2),
+                                y: Math.round(backgroundLayer.y() + dr.getPreviewBottom() - (dr.getImageLayer().height() - dr.getPreviewHeight()) / 2)
                             });
                         }
                         stage.add(dr.getImageLayer());
@@ -413,7 +413,7 @@ mvc, readImageData) {
                         if (oldImageLayerSize.width > 0 && oldImageLayerSize.height > 0) {
                             var scale = {
                                 x: dr.getImageLayer().width() / oldImageLayerSize.width,
-                                y: dr.getImageLayer().height() / oldImageLayerSize.height,
+                                y: dr.getImageLayer().height() / oldImageLayerSize.height
                             };
                             dr.getImageLayer().getChildren().forEach(function (node) {
                                 node.scale(scale);
@@ -437,7 +437,7 @@ mvc, readImageData) {
                         });
                     }.bind(this));
                 }, this);
-                
+
 
 
             }.bind(this);
@@ -448,7 +448,7 @@ mvc, readImageData) {
             if (this._currentAspect) {
                 this._currentAspect.designRegionList.forEach(function (dr) {
                     dr.clearLayers();
-                });         
+                });
             }
         },
 
@@ -499,7 +499,7 @@ mvc, readImageData) {
                 }
             };
         },
-        
+
         _addDesignImage: function (src, title, designImageId) {
             if (!title) { // 用户自己上传的图片没有title
                 title = new Date().getTime();
@@ -510,7 +510,7 @@ mvc, readImageData) {
                 var imageLayer = this._currentDesignRegion.getImageLayer();
                 if (imageObj.height / imageObj.width > imageLayer.height() / imageLayer.width()) {
                     // portrait
-                    var height = imageLayer.height(); 
+                    var height = imageLayer.height();
                     var width = imageObj.width * height / imageObj.height;
                 } else {
                     var width = imageLayer.width();
@@ -535,7 +535,7 @@ mvc, readImageData) {
                 imageLayer.draw();
 
                 var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
-                var group = makeControlGroup(image, title, true, 
+                var group = makeControlGroup(image, title, true,
                 hoveredComplementaryColor)
                 .on('dragend', function (view) {
                     return function () {
@@ -545,9 +545,9 @@ mvc, readImageData) {
                         // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
                         // 的预览
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._aspectImageLayer.x(), 
-                        view._aspectImageLayer.y(), 
-                        view._aspectImageLayer.width(), 
+                        .clearRect(view._aspectImageLayer.x(),
+                        view._aspectImageLayer.y(),
+                        view._aspectImageLayer.width(),
                         view._aspectImageLayer.height());
                         view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
@@ -570,8 +570,8 @@ mvc, readImageData) {
                     this._crossLayer.draw();
                     if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
                         this._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(this._aspectImageLayer.x(), this._aspectImageLayer.y(), 
-                        this._aspectImageLayer.width(), 
+                        .clearRect(this._aspectImageLayer.x(), this._aspectImageLayer.y(),
+                        this._aspectImageLayer.width(),
                         this._aspectImageLayer.height());
                     }
                 }.bind(this))
@@ -590,7 +590,7 @@ mvc, readImageData) {
 
         _addText: function (data, text, oldIm, oldControlGroup) {
             var imageObj = new Image();
-            $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load', 
+            $(imageObj).attr('src', "data:image/png;base64," + data.data).one('load',
             function (view) {
                 return function () {
                     var imageLayer = view._currentDesignRegion.getImageLayer();
@@ -622,9 +622,9 @@ mvc, readImageData) {
                         // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
                         // 的预览
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._aspectImageLayer.x(), 
-                        view._aspectImageLayer.y(), 
-                        view._aspectImageLayer.width(), 
+                        .clearRect(view._aspectImageLayer.x(),
+                        view._aspectImageLayer.y(),
+                        view._aspectImageLayer.width(),
                         view._aspectImageLayer.height());
                         view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
@@ -645,9 +645,9 @@ mvc, readImageData) {
                         view._crossLayer.moveToTop();
                         view._crossLayer.draw();
                         view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._aspectImageLayer.x(), 
-                        view._aspectImageLayer.y(), 
-                        view._aspectImageLayer.width(), 
+                        .clearRect(view._aspectImageLayer.x(),
+                        view._aspectImageLayer.y(),
+                        view._aspectImageLayer.width(),
                         view._aspectImageLayer.height());
 
                         this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
@@ -722,14 +722,14 @@ mvc, readImageData) {
         },
 
         _generatePreview: function (designRegion) {
-            !designRegion && (designRegion = this._currentDesignRegion); 
+            !designRegion && (designRegion = this._currentDesignRegion);
             var imageLayer = designRegion.getImageLayer();
             var previewLayer = designRegion.previewLayer;
             if (imageLayer.children.length == 0) {
                 previewLayer.getContext().clearRect(previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height());
                 dispatcher.trigger('update-preview-done', designRegion);
                 return;
-            } 
+            }
             var hotspotContext = previewLayer.getContext();
             var targetWidth = this._aspectImageLayer.width();
             var targetHeight = this._aspectImageLayer.height();
@@ -803,7 +803,7 @@ mvc, readImageData) {
                             imageData.data[pos + 1] = shadowImageData[pos + 1] * alpha + imageData.data[pos + 1] * (1 - alpha);
                             imageData.data[pos + 2] = shadowImageData[pos + 2] * alpha + imageData.data[pos + 2] * (1 - alpha);
                         }
-                    } 
+                    }
                 }
             }
             // for each point on edges, do anti alias (sampling around itself)
@@ -901,7 +901,7 @@ mvc, readImageData) {
             if (this._currentAspect.designRegionList.every(function (dr) {
                 return !dr.getImageLayer().hasChildren();
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
+                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
                 return false;
             }
             var backgroundColor = this.$('input.preview-background-color').spectrum('get');
@@ -932,7 +932,7 @@ mvc, readImageData) {
             var backgroundImageData = this._aspectImageLayer.getContext()
             .getImageData(this._aspectImageLayer.x(), this._aspectImageLayer.y(), canvas.width, canvas.height).data;
             var pixel = previewImageData.data.length / 4;
-            // merge the background and preview 
+            // merge the background and preview
             while (pixel--) {
                 // alpha composition, refer to `http://en.wikipedia.org/wiki/Alpha_compositing`
                 if (backgroundImageData[pixel * 4 + 3] > 0) {
@@ -946,7 +946,7 @@ mvc, readImageData) {
                     previewImageData.data[pixel * 4] = outR;
                     previewImageData.data[pixel * 4 + 1] = outG;
                     previewImageData.data[pixel * 4 + 2] = outB;
-                } 
+                }
             }
             if (backgroundColor.a > 0) {
                 pixel = previewImageData.data.length / 4;
@@ -963,9 +963,8 @@ mvc, readImageData) {
             }
 
             ctx.putImageData(previewImageData, 0, 0);
-            var uri = canvas.toDataURL('image/png');
-            var a = this.$('.btn-download-preview').find('a');
             if(typeof Blob == "undefined"){
+                var uri = canvas.toDataURL('image/png');
                 var $form = $("#download-form");
                 if(!$form[0]){
                     $form = $("<form></form>");
@@ -974,12 +973,12 @@ mvc, readImageData) {
                 }
                 var $input = $("<input></input>").attr({"name": "data", "type":"hidden"}).val(uri);
                 $form.append($input);
-                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/image"});
+                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/gen-image"});
                 $form.appendTo($("body")).submit();
             }else{
-                a.attr('href', uri).attr('download', new Date().getTime() + ".png").click(function (evt) {
-                    evt.stopPropagation();
-                })[0].click();
+                canvas.toBlob(function(blob) {
+                    saveAs(blob, new Date().getTime() + ".png");
+                })
             }
         },
 
@@ -987,7 +986,7 @@ mvc, readImageData) {
             if (this._currentAspect.designRegionList.every(function (dr) {
                 return !dr.getImageLayer().hasChildren();
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!'); 
+                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
                 return false;
             }
             $(evt.currentTarget).bootstrapButton('loading');
@@ -1017,7 +1016,7 @@ mvc, readImageData) {
                 var content = zip.generate({type: "blob"});
                 saveAs(content, new Date().getTime() + ".zip");
                 $(evt.currentTarget).bootstrapButton('reset');
-            }       
+            }
         }
     });
 
