@@ -37,6 +37,7 @@
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',
         'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
+        "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
