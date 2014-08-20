@@ -103,9 +103,7 @@ class OCSPUWrapper(ModelWrapper):
 class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
-        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
-            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
-            self.pic_path,
+        return '%s?imageView2/0/w/%s' % (self.pic_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
@@ -114,14 +112,12 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def hd_pic_url(self):
-        if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
-        return ""
+        return pic_path
 
     @property
     def thumbnail(self):
-        return self.thumbnail_path
+        return '%s?imageView2/0/w/%s' % (self.pic_path,
+            app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
 
     def as_dict(self, camel_case=True):
         return {
@@ -170,15 +166,13 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
-        return ""
+        return '%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            self.pic_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def edge_url(self):
-        return self.edge_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.edge_path)
+        return self.edge_path
 
     @property
     def spu(self):
@@ -194,15 +188,13 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def black_shadow_url(self):
-        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
-            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+        return '%s?imageView2/0/w/%s' % (
             self.black_shadow_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def white_shadow_url(self):
-        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
-            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+        return '%s?imageView2/0/w/%s' % (
             self.white_shadow_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 

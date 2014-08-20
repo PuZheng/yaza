@@ -48,24 +48,13 @@ class SPUWrapper(ModelWrapper):
                                              + '.duri')
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
 
-                im = Image.open(StringIO(r.content))
-                if im.size[1] > im.size[0]:  # portrait
-                    height = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
-                    width = im.size[0] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[1]
-                else:
-                    width = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
-                    height = im.size[1] * app.config['QINIU_CONF']['ASPECT_MD_SIZE'] / im.size[0]
-                    im.resize((height, width), PIL.Image.BICUBIC)
-
-                si = StringIO()
-                im.save(si, 'png')
                 upload_str(duri_path.encode('utf-8'),
                            'data:image/png;base64,' +
-                           binascii.b2a_base64(si.getvalue()).strip(),
-                           bucket, 'text/plain')
+                           binascii.b2a_base64(r.content).strip(),
+                           bucket, mime_type='text/plain')
+                im = Image.open(StringIO(r.content))
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
-                    im = Image.open(StringIO(r.content))
                     black_shadow_im, white_shadow_im = create_shadow_im(
                         Image.open(StringIO(r.content)), ocspu.rgb,
                         app.config['BLACK_ALPHA_THRESHOLD'],
@@ -87,21 +76,20 @@ class SPUWrapper(ModelWrapper):
                     si = StringIO()
                     black_shadow_im.save(si, 'PNG')
                     try:
-                        black_shadow_path = black_shadow_path.strip('.png') + '.duri'
                         upload_str(black_shadow_path.encode('utf-8'),
                                    si.getvalue(),
-                                   bucket, 'image/png')
+                                   bucket, mime_type='image/png')
                         dr.black_shadow_path = black_shadow_path
                         black_shadow_data_uri_path = black_shadow_path.strip('.png') + '.duri'
                         upload_str(black_shadow_data_uri_path.encode('utf-8'),
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
-                                   bucket, 'text/plain')
+                                   bucket, mime_type='text/plain')
                     except AlreadyExists, e:
                         print e
                         if not dr.black_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            upload_str(black_shadow_path,
+                            upload_str(black_shadow_path.encode('utf-8'),
                                        si.getvalue(),
                                        bucket, True, 'image/png')
                             dr.black_shadow_path = black_shadow_path
@@ -113,21 +101,20 @@ class SPUWrapper(ModelWrapper):
                     si = StringIO()
                     white_shadow_im.save(si, 'PNG')
                     try:
-                        white_shadow_path = white_shadow_path.strip('.png') + '.duri'
-                        upload_str(white_shadow_path,
+                        upload_str(white_shadow_path.encode('utf-8'),
                                    si.getvalue(),
-                                   bucket, 'image/png')
+                                   bucket, mime_type='image/png')
                         dr.white_shadow_path = white_shadow_path
                         white_shadow_data_uri_path = white_shadow_path.strip('.png') + '.duri'
                         upload_str(white_shadow_data_uri_path,
                                    'data:image/png;base64,' +
                                    binascii.b2a_base64(si.getvalue()).strip(),
-                                   bucket, 'text/plain')
+                                   bucket, mime_type='text/plain')
                     except AlreadyExists, e:
                         print e
                         if not dr.white_shadow_path:
                             # 出现这种情况， 只能说明以前留存了垃圾数据
-                            upload_str(white_shadow_path,
+                            upload_str(white_shadow_path.encode('utf-8'),
                                        si.getvalue(),
                                        bucket, True, 'image/png')
                             dr.white_shadow_path = white_shadow_path
