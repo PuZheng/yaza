@@ -5,6 +5,7 @@ from StringIO import StringIO
 import qiniu.conf
 import qiniu.rs
 import qiniu.io
+
 from yaza.basemain import app
 
 qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
@@ -18,26 +19,26 @@ class AlreadyExists(Exception):
 
     @property
     def message(self):
-        return '%s exists in %s' % (self.key, self.bucket)
+        return u'%s exists in %s' % (self.key, self.bucket)
 
     def __str__(self):
         return self.message
 
 
-def _md5sum(file, blocksize=65536):
-    hash = hashlib.md5()
-    with open(file, "rb") as f:
-        for block in iter(lambda: f.read(blocksize), ""):
-            hash.update(block)
-    return hash.hexdigest()
+def upload_image(file_path, bucket, force=False, mime_type="image/png", block_size=65535):
+    data = b""
+    hash_ = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for block in iter(lambda: f.read(block_size), ""):
+            data += block
+            hash_.update(block)
+
+    key = hash_.hexdigest() + os.path.splitext(file_path)[-1]
+
+    return upload_image_str(key, data, bucket, force, mime_type)
 
 
-def upload_image(file_path, bucket, force=False):
-    key = _md5sum(file_path) + os.path.splitext(file_path)[-1]
-    return upload_image_str(key, open(file_path, "rb").read(), bucket, force)
-
-
-def upload_image_str(key, data, bucket, force=False):
+def upload_image_str(key, data, bucket, force=False, mime_type="image/png"):
     exists = is_exists(bucket, key)
     if not force and exists:
         raise AlreadyExists(bucket, key)
@@ -48,14 +49,15 @@ def upload_image_str(key, data, bucket, force=False):
     policy = qiniu.rs.PutPolicy(bucket)
     uptoken = policy.token()
     extra = qiniu.io.PutExtra()
-    extra.mime_type = "image/png"
+    if mime_type:
+        extra.mime_type = mime_type
 
     data = StringIO(data)
     ret, err = qiniu.io.put(uptoken, key, data, extra)
     if err is not None:
         app.logger.error('error: %s ' % err)
         raise UploadException(err, key)
-    return "http://" + bucket + '.qiniudn.com/' + key
+    return u"http://%s.qiniudn.com/%s" % (bucket, key)
 
 
 def upload_file(file_path, bucket, force=False, mime_type=''):
@@ -85,7 +87,7 @@ def upload_str(key, data, bucket, force=False, mime_type=''):
         app.logger.error('error: %s ' % err)
         raise UploadException(err, key)
 
-    return "http://" + bucket + '.qiniudn.com/' + key
+    return u"http://%s.qiniudn.com/%s" % (bucket, key)
 
 
 def delete_file(bucket, key):
@@ -99,7 +101,7 @@ def is_exists(bucket, key):
 
 class UploadException(Exception):
     def __init__(self, err, filename):
-        self.msg = "error: %s, when uploading %s" % (err, filename)
+        self.msg = u"error: %s, when uploading %s" % (err, filename)
 
     def __str__(self):
         return repr(self.msg)

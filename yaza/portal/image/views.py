@@ -17,17 +17,32 @@ from flask.ext.login import current_user
 from yaza.basemain import app
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
-from yaza.utils import random_str, do_commit, assert_dir
+from yaza.utils import random_str, do_commit, assert_dir, md5sum
 from yaza.apis import wraps
+from yaza.qiniu_handler import upload_str
 
 
 @image.route('/upload', methods=['POST'])
 def upload():
     fs = request.files['files[]']
     filename = random_str(32) + '.' + fs.filename.split('.')[-1]
-    fs.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    fs.save(file_path)
+    # upload to qiniu
+    bucket_ = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+
+    key = md5sum(file_path)
+    data = open(file_path, "rb").read()
+    qiniu_url = upload_str(key + os.path.splitext(file_path)[-1],
+                           data, bucket_, True, "image/png")
+
+    qiniu_duri = upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data), bucket_,
+                            True, "text/plain")
+
     return jsonify({
         'status': 'success',
+        "duri":qiniu_duri,
+        "picUrl" : qiniu_url,
         'filename': url_for('image.serve', filename=filename)
     })
 

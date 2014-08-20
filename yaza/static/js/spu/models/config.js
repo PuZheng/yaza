@@ -33,6 +33,7 @@ define(['backbone'], function (Backbone) {
             PREVIEW_DOWNLOADABLE: true,
             DESIGN_DOWNLOADABLE: true,
             CLEAR_PREVIEW_BEFORE_DRAG: false,
+            DESIGN_IMAGE_QINIU_ENABLED: true //所有设计图从七牛取
         }
     });
 

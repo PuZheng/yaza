@@ -10,14 +10,16 @@ define([
     'text!templates/uploading-fail.hbs',
     'spu/collections/design-images', 
     'cookies-js',
+    'spu/config',
     'utils/lazy-load',
     'underscore.string',
     'jquery.iframe-transport', 
     'jquery-file-upload',
+    'jquery.browser'
 ], 
 function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, 
 uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, 
-DesignImages, Cookies) {
+DesignImages, Cookies, config) {
 
     _.mixin(_.str.exports());
 
@@ -96,10 +98,17 @@ DesignImages, Cookies) {
                         view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
                     },
                     done: function (e, data) {
+                        var url = data.result.filename;
+                        if(config.DESIGN_IMAGE_QINIU_ENABLED) {
+                            url = data.result.picUrl;
+                        }
+                        if ($.browser.name !== "msie") {
+                            url = data.result.duri;
+                        }
                         view.$('.uploading-progress').html(templateSuccess());
                         view.$('.uploading-progress').fadeOut(1000);
                         Cookies.set('upload-images',
-                            data.result.filename + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                            url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
                             view._renderUserPics();
                             $(".thumbnails .thumbnail").removeClass("selected");
                             $(".customer-pics").find(".thumbnail:first").addClass("selected");
@@ -204,24 +213,40 @@ DesignImages, Cookies) {
             var template = handlebars.default.compile(galleryTemplate);
             var rows = [];
             var upload_images = (Cookies.get('upload-images') || '').trim();
+            var deferreds = [];
             if (!!upload_images) {
                 upload_images = _.filter(upload_images.split('||'), function (val) {
                     return !!val;
                 });
                 var row = [];
                 _.each(upload_images, function (img, idx) {
-                    if (idx > 0 && idx % 4 == 0) {
-                        rows.push(row);
-                        row = [];
+                    if(img.indexOf(".duri") >=0) {
+                        var d = $.get(img, function (data) {
+                            if (idx > 0 && idx % 4 == 0) {
+                                rows.push(row);
+                                row = [];
+                            }
+                            row.push(data);
+                        }.bind(idx));
+                        deferreds.push(d);
+                    }else{
+                        if (idx > 0 && idx % 4 == 0) {
+                            rows.push(row);
+                            row = [];
+                        }
+                        row.push(img);
                     }
-                    row.push(img);
+
                 });
+
+            }
+            $.when(deferreds).done(function () {
                 if (row.length > 0) {
                     rows.push(row);
                 }
-            }
-            var gallery = $(template(rows));
-            this.$('.customer-pics').html(gallery);
+                var gallery = $(template(rows));
+                this.$('.customer-pics').html(gallery);
+            }.bind(this));
         },
 
         _selectTag: function (tagId, tag) {
