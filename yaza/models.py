@@ -81,8 +81,6 @@ class Aspect(db.Model):
     pic_path = db.Column(db.String(256))
     width = db.Column(db.Integer, doc=u"图片宽度，单位px", default=0)
     height = db.Column(db.Integer, doc=u"图片高度，单位px", default=0)
-    thumbnail_path = db.Column(db.String(256))
-
 
 class DesignRegion(db.Model):
     __tablename__ = "TB_DESIGN_REGION"

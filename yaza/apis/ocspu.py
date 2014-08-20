@@ -36,10 +36,9 @@ class OCSPUWrapper(ModelWrapper):
 
     @property
     def cover(self):
-        if self.cover_path:
-            return self.cover_path if self.cover_path.startswith("http") else url_for("image.serve",
-                                                                                      filename=self.cover_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.cover_path)
 
     @property
     def complementary_color(self):
@@ -103,7 +102,9 @@ class OCSPUWrapper(ModelWrapper):
 class AspectWrapper(ModelWrapper):
     @property
     def pic_url(self):
-        return '%s?imageView2/0/w/%s' % (self.pic_path,
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
@@ -112,11 +113,15 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def hd_pic_url(self):
-        return pic_path
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path)
 
     @property
     def thumbnail(self):
-        return '%s?imageView2/0/w/%s' % (self.pic_path,
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
             app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
 
     def as_dict(self, camel_case=True):
@@ -166,13 +171,22 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        return '%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
             self.pic_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
+    def hd_pic_url(self):
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path)
+
+    @property
     def edge_url(self):
-        return self.edge_path
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.edge_path)
 
     @property
     def spu(self):
@@ -188,13 +202,15 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def black_shadow_url(self):
-        return '%s?imageView2/0/w/%s' % (
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
             self.black_shadow_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
     @property
     def white_shadow_url(self):
-        return '%s?imageView2/0/w/%s' % (
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
             self.white_shadow_path,
             app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
 
