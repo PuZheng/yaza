@@ -91,9 +91,12 @@ def deploy(sudoer, branch='master', remote_config_file=None):
 
 def alembic_upgrade(target, remote_alembic_ini=None):
     action = 'downgrade' if target[0] == '-' else 'upgrade'
-    prompt_ = 'Are you sure to %s to %s, type in "%s" to assure!'
+    prompt_ = 'Are you sure to %s to %s, type in "%s" to assure!' % (action,
+                                                                     target,
+                                                                     action)
     if prompt(prompt_).strip() == action:
         with cd(yaza_env + '/yaza'):
-            if remote_alembic_ini:
-                put(remote_alembic_ini, 'alembic.ini')
-            sudo("alembic " + action + ' ' + target)
+            with prefix('source ../env/bin/activate'):
+                if remote_alembic_ini:
+                    put(remote_alembic_ini, 'alembic.ini')
+                run("alembic " + action + ' ' + target)
