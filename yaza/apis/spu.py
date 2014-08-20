@@ -51,7 +51,7 @@ class SPUWrapper(ModelWrapper):
                 upload_str(duri_path.encode('utf-8'),
                            'data:image/png;base64,' +
                            binascii.b2a_base64(r.content).strip(),
-                           bucket, 'text/plain')
+                           bucket, mime_type='text/plain')
                 im = Image.open(StringIO(r.content))
                 for dr in aspect.design_region_list:
                     r = requests.get(dr.pic_path)
