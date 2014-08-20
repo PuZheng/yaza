@@ -18,3 +18,4 @@ WTForms==1.0.5
 requests>=2.3.0
 pexpect
 fabric
+alembic==0.6.6

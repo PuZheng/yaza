@@ -87,3 +87,13 @@ def deploy(sudoer, branch='master', remote_config_file=None):
         remote_config_file = os.path.join(__file__.split()[0],
                                           'remote-config.json')
     take_effect(remote_config_file, sudoer)
+
+
+def alembic_upgrade(target, remote_alembic_ini=None):
+    action = 'downgrade' if target[0] == '-' else 'upgrade'
+    prompt_ = 'Are you sure to %s to %s, type in "%s" to assure!'
+    if prompt(prompt_).strip() == action:
+        with cd(yaza_env + '/yaza'):
+            if remote_alembic_ini:
+                put(remote_alembic_ini, 'alembic.ini')
+            sudo("alembic " + action + ' ' + target)
