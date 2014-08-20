@@ -66,11 +66,13 @@ def upload_file(file_path, bucket, force=False, mime_type=''):
 def upload_str(key, data, bucket, force=False, mime_type=''):
     qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
     qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
-    ret, err = qiniu.rs.Client().stat(bucket, key)
-    if ret is not None and force:
-        delete_file(bucket, key)
-    else:
-        raise AlreadyExists(bucket, key)
+    exists = is_exists(bucket, key)
+    if exists:
+        if force:
+            delete_file(bucket, key)
+        else:
+            raise AlreadyExists(bucket, key)
+
     policy = qiniu.rs.PutPolicy(bucket)
     uptoken = policy.token()
     extra = qiniu.io.PutExtra()
