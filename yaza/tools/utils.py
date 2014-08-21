@@ -318,10 +318,10 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
     def _create_ocspu(ocspu_dir, cover_full_path, color, rgb, spu, config):
         cover_path = os.path.relpath(cover_full_path, start_dir)
-        cover_path = upload_str(cover_path,
-                                open(cover_full_path, 'rb').read(),
-                                app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                True, 'image/png')
+        upload_str(cover_path,
+                   open(cover_full_path, 'rb').read(),
+                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                   True, 'image/png')
 
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
