@@ -100,7 +100,7 @@ define([
                             if (config.DESIGN_IMAGE_QINIU_ENABLED) {
                                 url = data.result.picUrl;
                             }
-                            if ($.browser.name !== "msie") {
+                            if ($.browser.name == "msie" && $.browser.versionNumber !== 11) {
                                 url = data.result.duri;
                             }
                             view.$('.uploading-progress').html(templateSuccess());
