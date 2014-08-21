@@ -73,7 +73,8 @@ class OCSPUWrapper(ModelWrapper):
             "paddingColor" if camel_case else "padding_color": self.padding_color,
             "marginColor" if camel_case else "margin_color": self.margin_color,
             "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
-            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color": self.hovered_complementary_color,
+            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color":
+                self.hovered_complementary_color,
             'rgb': self.rgb,
         }
 
@@ -178,7 +179,7 @@ class DesignRegionWrapper(ModelWrapper):
     @property
     def edge_url(self):
         return self.edge_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.edge_path)
+                                                                               filename=self.edge_path)
 
     @property
     def spu(self):
@@ -222,13 +223,13 @@ class DesignRegionWrapper(ModelWrapper):
             'size': [self.width, self.height],
             'name': self.name,
             'blackShadowUrl' if camel_case else 'black_shadow_url':
-            self.black_shadow_url,
+                self.black_shadow_url,
             'whiteShadowUrl' if camel_case else 'white_shadow_url':
-            self.white_shadow_url,
+                self.white_shadow_url,
             'blackShadowDataUri' if camel_case else 'black_shadow_data_uri':
-            self.black_shadow_data_uri,
+                self.black_shadow_data_uri,
             'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri':
-            self.white_shadow_data_uri,
+                self.white_shadow_data_uri,
         }
 
     def delete(self):
@@ -271,7 +272,13 @@ class DesignImageWrapper(ModelWrapper):
             "id": self.id,
             "title": self.title,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            "duri": self.duri,
             'thumbnail': self.thumbnail,
             'tags': [wraps(tag).as_dict(camel_case) for tag in self.tags],
             'backgroundColor' if camel_case else "background_color": self.background_color
         }
+
+    @property
+    def duri(self):
+        if app.config["QINIU_ENABLED"]:
+            return os.path.splitext(self.pic_url)[0] + ".duri"
