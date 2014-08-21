@@ -1,2 +1,2 @@
 # -*- coding:utf-8 -*-
-from .handler import (AlreadyExists, upload_str)
+from .handler import (delete_file, AlreadyExists, upload_str)
