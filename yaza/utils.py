@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import hashlib
 import os
 import types
 import string
@@ -44,3 +45,11 @@ def get_or_404(cls, id_):
 def random_str(size=6, chars=string.ascii_uppercase + string.digits):
     random.seed = (os.urandom(1024))
     return ''.join(random.choice(chars) for x in range(size))
+
+
+def md5sum(file_, block_size=65536):
+    hash_ = hashlib.md5()
+    with open(file_, "rb") as f:
+        for block in iter(lambda: f.read(block_size), ""):
+            hash_.update(block)
+    return hash_.hexdigest()
