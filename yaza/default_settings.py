@@ -40,7 +40,6 @@ FONTS_MAP = {
     # u'文泉驿微米黑': '/usr/local/share/fonts/wqy-ywmh.ttf'
 }
 
-QINIU_ENABLED = True
 
 QINIU_CONF = {
     "ACCESS_KEY": "kQdEWJ6924zBbQYSMuCw71rc-aBNBousngwAtjIE",

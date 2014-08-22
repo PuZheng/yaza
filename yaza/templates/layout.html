@@ -12,7 +12,7 @@
       {% block check_canvas %}
       {% endblock %}
       <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
-      {% if config.QINIU_ENABLED and not config.DEBUG %}
+      {% if not config.DEBUG %}
         <link rel="shortcut icon" href="{{"http://%s.qiniudn.com/static/favicon.ico"|format(config.QINIU_CONF.STATIC_BUCKET)}}">
         <link rel="stylesheet" href="{{ "http://%s.qiniudn.com/static/vendor/bootswatch-scss/flatly/bootstrap.css"|format(config.QINIU_CONF.STATIC_BUCKET) }}" />
       {% else %}

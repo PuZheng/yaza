@@ -96,10 +96,7 @@ define([
                             view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
                         },
                         done: function (e, data) {
-                            var url = data.result.filename;
-                            if (config.DESIGN_IMAGE_QINIU_ENABLED) {
-                                url = data.result.picUrl;
-                            }
+                            url = data.result.picUrl;
                             if ($.browser.name == "msie" && $.browser.versionNumber !== 11) {
                                 url = data.result.duri;
                             }

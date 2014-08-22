@@ -1,9 +1,7 @@
 # -*- coding:utf-8 -*-
 import base64
 import os
-import shutil
 import time
-from hashlib import md5
 
 from flask import render_template, redirect, url_for
 from flask.ext.databrowser import ModelView, sa, col_spec, filters, action
@@ -13,12 +11,12 @@ from flask.ext.principal import Permission, RoleNeed, PermissionDenied
 
 from yaza import ext_validators, const
 from yaza.apis import wraps
-from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignImageWrapper
+from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app, admin_nav_bar
 from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
 from yaza.database import db
 from yaza.tools.color_tools import dominant_colorz
-from yaza.utils import assert_dir, do_commit
+from yaza.utils import assert_dir, do_commit, md5sum
 from yaza.tools.utils import allowed_file, unzip, create_or_update_spu
 from yaza.qiniu_handler import upload_str
 
@@ -235,25 +233,17 @@ class DesignImageModelView(ModelView):
         return ["id", "title", col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image(Image.SMALL))]
 
     def save_pic(self, pic_path):
-        if app.config["QINIU_ENABLED"]:
-            # key = md5sum(pic_path)
-            key = os.path.splitext(pic_path)[0]
-            data = open(pic_path, "rb").read()
-            qiniu_url = upload_str(key + os.path.splitext(pic_path)[-1], data,
-                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True, "image/png")
+        key = md5sum(pic_path)
+        data = open(pic_path, "rb").read()
+        qiniu_url = upload_str(key + os.path.splitext(pic_path)[-1], data,
+                               app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True, "image/png")
 
-            qiniu_duri = upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
-                                    app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                    True, "text/plain")
-            return qiniu_url
+        # upload duri
+        upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
+                                app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                True, "text/plain")
+        return qiniu_url
 
-        else:
-            file_name = os.path.join(DesignImageWrapper.StoredDir,
-                                     md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1])
-            assert_dir(DesignImageWrapper.StoredDir)
-            shutil.copy(pic_path, file_name)
-            os.unlink(pic_path)
-            return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
 
     @ModelView.cached
     @property

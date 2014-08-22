@@ -3,7 +3,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="http://cdn.bootcss.com/font-awesome/4.1.0/css/font-awesome.min.css" />
-  {% if config.QINIU_ENABLED and not config.DEBUG %}
+  {% if not config.DEBUG %}
     <link rel="stylesheet" href="{{"http://%s.qiniudn.com/static/vendor/bootswatch-scss/flatly/bootstrap.css"|format(config.QINIU_CONF.STATIC_BUCKET)}}" />
       <link rel="stylesheet" href="{{"http://%s.qiniudn.com/static/css/admin.css"|format(config.QINIU_CONF.STATIC_BUCKET)}}"/>
         <link rel="stylesheet" href="{{"http://%s.qiniudn.com/static/css/admin/spu.css"|format(config.QINIU_CONF.STATIC_BUCKET)}}"/>
@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block __data_browser__tail_block %}
-  {% if config.QINIU_ENABLED and not config.DEBUG %}
+  {% if not config.DEBUG %}
     <script type="text/javascript" data-main="{{"http://%s.qiniudn.com/static/js/admin/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>
   {% else %}
     <script type="text/javascript" data-main="{{ url_for('static', filename='js/admin/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>

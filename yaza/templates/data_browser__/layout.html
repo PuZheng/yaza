@@ -1,6 +1,6 @@
 {% extends "data_browser__/base_layout.html" %}
 {% block __data_browser__customized_head_block %}
-  {% if config.QINIU_ENABLED and not config.DEBUG %}
+  {% if not config.DEBUG %}
     <link href="http://cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
     <link href="http://cdn.bootcss.com/select2/3.5.0/select2.min.css" rel="stylesheet">
   {% else %}
