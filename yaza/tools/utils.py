@@ -2,15 +2,18 @@
 from collections import OrderedDict
 import os
 import zipfile
-import binascii
+from binascii import b2a_base64
 from StringIO import StringIO
 
 from flask import json
-from PIL import Image, ImageColor
+from PIL import Image
 
-from yaza import const
-from yaza.qiniu_handler import upload_image, upload_file, upload_str
 from yaza.basemain import app
+from yaza import const
+from yaza.qiniu_handler import upload_str
+from yaza.apis.ocspu import DesignRegionWrapper
+from yaza.utils import do_commit
+from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
 
 ARCHIVES = ('zip', )
@@ -133,32 +136,127 @@ def detect_edges(im, corner_dict=None):
 
     # top
     edges['top'].append(rt)
+    last_point = rt
     for i in xrange(rt[0] - 1, lt[0], -1):
         for j in xrange(im.size[1] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
+                # 一定保证闭合, 下同
+                if abs(j - last_point[1]) > 1:
+                    if j > last_point[1]:
+                        min_ = last_point[1] + 1
+                        max_ = j
+                    else:
+                        min_ = j + 1
+                        max_ = last_point[1]
+                    for k in xrange(min_, max_):
+                        edges['top'].append((last_point[0], k))
                 edges['top'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            # 一定保证闭合，下同
+            edges['top'].append((i, last_point[1]))
+
     # left
+        # 保证顶点处的闭合， 下同
+    if abs(lt[1] - last_point[1]) > 1:
+        if lt[1] > last_point[1]:
+            min_ = last_point[1] + 1
+            max_ = lt[1] + 1
+        else:
+            min_ = lt[1] + 1
+            max_ = last_point[1]
+        for k in xrange(min_, max_):
+            edges['top'].append((last_point[0], k))
     edges['left'].append(lt)
+    last_point = lt
     for j in xrange(lt[1] - 1, lb[1], -1):
         for i in xrange(im.size[0]):
             if pa[(i, j)][3] != 0:
+                if abs(i - last_point[0]) > 1:
+                    if i > last_point[0]:
+                        min_ = last_point[0] + 1
+                        max_ = i
+                    else:
+                        min_ = i + 1
+                        max_ = last_point[0]
+                    for k in xrange(min_, max_):
+                        edges['left'].append((k, last_point[1]))
                 edges['left'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['left'].append((last_point[0], j))
+
     # bottom
+    if abs(lb[0] - last_point[0]) > 1:
+        if lb[0] > last_point[0]:
+            min_ = last_point[0] + 1
+            max_ = lb[0]
+        else:
+            min_ = lb[0] + 1
+            max_ = last_point[0]
+        for k in xrange(min_, max_):
+            edges['left'].append((k, last_point[1]))
     edges['bottom'].append(lb)
+    last_point = lb
     for i in xrange(lb[0] + 1, rb[0]):
         for j in xrange(im.size[1]):
             if pa[(i, j)][3] != 0:
+                if abs(j - last_point[1]) > 1:
+                    if j > last_point[1]:
+                        min_ = last_point[1] + 1
+                        max_ = j
+                    else:
+                        min_ = j + 1
+                        max_ = last_point[1]
+                    for k in xrange(min_, max_):
+                        edges['bottom'].append((last_point[0], k))
                 edges['bottom'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['bottom'].append((i, last_point[1]))
+
     # right
+    if abs(rb[1] - last_point[1]) > 1:
+        if rb[1] > last_point[1]:
+            min_ = last_point[1] + 1
+            max_ = rb[1]
+        else:
+            min_ = rb[1]
+            max_ = last_point[1]
+        for k in xrange(min_, max_):
+            edges['bottom'].append((last_point[0], k))
     edges['right'].append(rb)
+    last_point = rb
     for j in xrange(rb[1] + 1, rt[1]):
         for i in xrange(im.size[0] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
+                if abs(i - last_point[0]) > 1:
+                    if i > last_point[0]:
+                        min_ = last_point[0] + 1
+                        max_ = i
+                    else:
+                        min_ = i + 1
+                        max_ = last_point[0]
+                    for k in xrange(min_, max_):
+                        edges['right'].append((k, last_point[1]))
                 edges['right'].append((i, j))
+                last_point = (i, j)
                 break
+        else:
+            edges['right'].append((last_point[0], j))
+
+    if abs(rt[0] - last_point[0]) > 1:
+        if rt[0] > last_point[0]:
+            min_ = last_point[0] + 1
+            max_ = rt[0]
+        else:
+            min_ = rt[0] + 1
+            max_ = last_point[0]
+        for k in xrange(min_, max_):
+            edges['top'].append((k, last_point[1]))
 
     return edges, {
         'lt': lt,
@@ -169,60 +267,29 @@ def detect_edges(im, corner_dict=None):
 
 
 def calc_design_region_image(design_region_path):
-    from yaza.apis.ocspu import DesignRegionWrapper
 
     im = Image.open(design_region_path)
     edges, vertex = detect_edges(im)
     img_extension = os.path.splitext(design_region_path)[-1]
-    edge_filename = design_region_path.replace(img_extension, "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
+    edge_filename = design_region_path.replace(
+        img_extension,
+        "." + DesignRegionWrapper.DETECT_EDGE_EXTENSION)
     with open(edge_filename, 'w') as file_:
         file_.write(json.dumps(edges))
-    control_point_filename = design_region_path.replace(img_extension,
-                                                        "." + DesignRegionWrapper
-                                                        .CONTROL_POINT_EXTENSION)
+    control_point_filename = design_region_path.replace(
+        img_extension,
+        "." + DesignRegionWrapper.CONTROL_POINT_EXTENSION)
     control_points = calc_control_points(edges, im.size, CONTROL_POINTS_NUMBER)
     serialize(control_points, control_point_filename,
               lambda data: json.dumps(
-                  {key: [[list(k), list(v)]] for key, dict_ in data.iteritems() for
-                   k, v in dict_.iteritems()}))
+                  {key: [[list(k), list(v)]] for key, dict_ in data.iteritems()
+                   for k, v in dict_.iteritems()}))
     return edge_filename, control_point_filename, vertex
 
 
 def _get_rel_path(file_path, relpath_start):
     rel_path = os.path.relpath(file_path, relpath_start)
     return rel_path
-
-
-def extract_images(dir_, relpath_start="", front_aspect_name="aa.png"):
-    result = {}
-    # aspect_list
-    for aspect_dir in os.listdir(dir_):
-        for name in os.listdir(os.path.join(dir_, aspect_dir)):
-            file_path = os.path.join(aspect_dir, name)
-            abs_path = os.path.join(dir_, file_path)
-            if os.path.isfile(abs_path) and allowed_file(file_path, IMAGES):
-                aspect = result.setdefault(aspect_dir, {})
-                aspect["file_path"] = _get_rel_path(abs_path, relpath_start)
-                if os.path.split(file_path)[-1].lower() == front_aspect_name:
-                    aspect["part"] = "front"
-                else:
-                    aspect["part"] = "other"
-
-            elif os.path.isdir(abs_path):
-
-                # design_region_list
-                for root, walk_dirs, files in os.walk(abs_path):
-                    for design_file in files:
-                        if allowed_file(design_file, IMAGES):
-                            design_region_path = os.path.join(root, design_file)
-                            calc_design_region_image(design_region_path)
-
-                            aspect = result.setdefault(aspect_dir, {})
-                            design_region_list = aspect.setdefault("design_region_list", {})
-                            key = os.path.splitext(design_file)[0].lower()
-                            design_region_list[key] = _get_rel_path(design_region_path, relpath_start)
-
-    return result
 
 
 def unzip(source_filename, dest_dir):
@@ -240,31 +307,21 @@ def serialize(data, filename, encode_func=None):
 
 
 def create_or_update_spu(spu_dir, start_dir, spu=None):
-    from yaza.basemain import app
-    from yaza.utils import do_commit
-    from yaza.models import OCSPU, Aspect, DesignRegion, SPU
 
     def _get_value_from_list(list_, key, condition):
         for item in list_:
-            if all(item.get(conditionKey) == conditionVal for conditionKey, conditionVal in
+            if all(item.get(conditionKey) == conditionVal for conditionKey,
+                   conditionVal in
                    condition.iteritems()):
                 return item.get(key)
         return None
 
-    def _make_thumbnail(pic_path, start_dir):
-        path = ".thumbnail".join(os.path.splitext(pic_path))
-
-        im = Image.open(pic_path)
-        im.thumbnail(const.ASPECT_THUMBNAIL_SIZE, Image.ANTIALIAS)
-        im.save(path)
-        return os.path.relpath(path, start_dir)
-
-    def _create_ocspu(ocspu_dir, cover_file, color, rgb, spu, config):
-        cover_path = os.path.relpath(cover_file, start_dir)
-        if app.config.get("QINIU_ENABLED"):
-            cover_path = upload_image(cover_file,
-                                      app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                      True)
+    def _create_ocspu(ocspu_dir, cover_full_path, color, rgb, spu, config):
+        cover_path = os.path.relpath(cover_full_path, start_dir)
+        upload_str(cover_path,
+                   open(cover_full_path, 'rb').read(),
+                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                   True, 'image/png')
 
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
@@ -272,7 +329,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         for aspect_config in aspect_configs:
             aspect_dir = os.path.join(ocspu_dir, aspect_config["dir"])
             if os.path.isdir(aspect_dir):
-                _create_aspect(aspect_dir, aspect_config["name"], config, ocspu)
+                _create_aspect(aspect_dir, aspect_config["name"], config,
+                               ocspu)
 
     def _create_aspect(aspect_dir, name, config, ocspu):
         for fname in os.listdir(aspect_dir):
@@ -282,32 +340,24 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     pic_path = os.path.relpath(full_path, start_dir)
                     im = Image.open(full_path)
                     width, height = im.size
-                    if app.config.get("QINIU_ENABLED"):
-                        bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                        thumbnail_path = upload_str(pic_path, open(full_path, 'rb').read(),
-                                   bucket, True, 'image/png')
-                        thumbnail_path += '?imageView2/0/w/' + \
-                            str(app.config['QINIU_CONF']
-                                ['DESIGN_IMAGE_THUMNAIL_SIZE'])
-                        duri_path = pic_path.rstrip('.png') + '.duri'
-                        md_size = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
-                        if height > width:
-                            im.resize((md_size, md_size * width / height))
-                        else:
-                            im.resize((md_size * height / width, md_size))
-                        si = StringIO()
-                        im.save(si, 'png')
-                        upload_str(duri_path,
-                                   'data:image/png;base64,' +
-                                   binascii.b2a_base64(si.getvalue()).strip(),
-                                   bucket, True, 'text/plain')
+                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+                    upload_str(pic_path, open(full_path, 'rb').read(),
+                               bucket, True, 'image/png')
+                    duri_path = pic_path.rstrip('.png') + '.duri'
+                    md_size = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
+                    if height > width:
+                        im.resize((md_size, md_size * width / height))
                     else:
-                        thumbnail_path = _make_thumbnail(full_path, start_dir)
-
+                        im.resize((md_size * height / width, md_size))
+                    si = StringIO()
+                    im.save(si, 'png')
+                    upload_str(duri_path,
+                               'data:image/png;base64,' +
+                               b2a_base64(si.getvalue()).strip(),
+                               bucket, True, 'text/plain')
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu,
-                               thumbnail_path=thumbnail_path, width=width,
-                               height=height))
+                               width=width, height=height))
                     for fname in os.listdir(aspect_dir):
                         full_path = os.path.join(aspect_dir, fname)
                         if os.path.isdir(full_path):
@@ -333,11 +383,17 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     design_region_configs, "name",
                     {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
-                if app.config.get("QINIU_ENABLED"):
-                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    pic_path = upload_image(full_path, bucket, True)
-                edge_file, control_point_file, vertex = calc_design_region_image(
-                    full_path)
+                bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+                pic_path = upload_str(pic_path, file(full_path, 'rb').read(),
+                                      bucket, True, 'image/png')
+                edge_full_path, control_point_file, vertex = \
+                    calc_design_region_image(full_path)
+                edge_path = os.path.relpath(edge_full_path, start_dir)
+                upload_str(edge_path,
+                           open(edge_full_path, 'rb').read(),
+                           app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                           True,
+                           mime_type='application/json')
                 black_shadow_im, white_shadow_im = create_shadow_im(
                     Image.open(full_path), aspect.ocspu.rgb,
                     app.config['BLACK_ALPHA_THRESHOLD'],
@@ -354,35 +410,35 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                                     start_dir)
                 white_shadow_path = os.path.relpath(white_shadow_full_path,
                                                     start_dir)
-                if app.config.get("QINIU_ENABLED"):
-                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    upload_str(black_shadow_path,
-                               open(black_shadow_full_path, 'rb').read(),
-                               bucket, True, 'image/png')
-                    upload_str(white_shadow_path,
-                               open(white_shadow_full_path, 'rb').read(),
-                               bucket, True, 'image/png')
-                    black_shadow_duri_path = black_shadow_path.rstrip('.png') + '.duri'
-                    white_shadow_duri_path = white_shadow_path.rstrip('.png') + '.duri'
-                    print white_shadow_duri_path
-                    upload_str(black_shadow_duri_path,
-                               'data:image/png;base64,' +
-                               binascii.b2a_base64(open(black_shadow_full_path, 'rb').read()).strip(),
-                               bucket, True, 'text/plain')
-                    upload_str(white_shadow_duri_path,
-                               'data:image/png;base64,' +
-                               binascii.b2a_base64(open(white_shadow_full_path, 'rb').read()).strip(),
-                               bucket, True, 'text/plain')
-
+                bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+                upload_str(black_shadow_path,
+                           open(black_shadow_full_path, 'rb').read(),
+                           bucket, True, 'image/png')
+                upload_str(white_shadow_path,
+                           open(white_shadow_full_path, 'rb').read(),
+                           bucket, True, 'image/png')
+                black_shadow_duri_path = black_shadow_path.rstrip('.png') + \
+                    '.duri'
+                white_shadow_duri_path = white_shadow_path.rstrip('.png') + \
+                    '.duri'
+                upload_str(black_shadow_duri_path,
+                           'data:image/png;base64,' +
+                           b2a_base64(
+                               open(black_shadow_full_path, 'rb')
+                               .read()).strip(),
+                           bucket, True, 'text/plain')
+                upload_str(white_shadow_duri_path,
+                           'data:image/png;base64,' +
+                           b2a_base64(
+                               open(white_shadow_full_path, 'rb')
+                               .read()).strip(),
+                           bucket, True, 'text/plain')
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,
                                        width=width,
                                        height=height,
-                                       edge_path=upload_file(edge_file,
-                                                             app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                                             True,
-                                                             mime_type='application/json'),
+                                       edge_path=edge_path,
                                        control_point_file=control_point_file,
                                        black_shadow_path=black_shadow_path,
                                        white_shadow_path=white_shadow_path))
@@ -391,7 +447,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
         for key, value in kwargs.iteritems():
             setattr(spu, key, value)
 
-    config = json.load(file(os.path.join(spu_dir, app.config["SPU_CONFIG_FILE"])))
+    config = json.load(file(os.path.join(spu_dir,
+                                         app.config["SPU_CONFIG_FILE"])))
     if spu:
         print "updating spu:" + str(spu.id)
         _update(spu, name=config['name'])

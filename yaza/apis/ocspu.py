@@ -1,9 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 import colorsys
-from zipfile import ZipFile
 
-from flask import url_for, json
+from flask import json
 from werkzeug.utils import cached_property
 
 from yaza.apis import ModelWrapper, wraps
@@ -36,10 +35,9 @@ class OCSPUWrapper(ModelWrapper):
 
     @property
     def cover(self):
-        if self.cover_path:
-            return self.cover_path if self.cover_path.startswith("http") else url_for("image.serve",
-                                                                                      filename=self.cover_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.cover_path)
 
     @property
     def complementary_color(self):
@@ -73,8 +71,7 @@ class OCSPUWrapper(ModelWrapper):
             "paddingColor" if camel_case else "padding_color": self.padding_color,
             "marginColor" if camel_case else "margin_color": self.margin_color,
             "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
-            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color":
-                self.hovered_complementary_color,
+            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color": self.hovered_complementary_color,
             'rgb': self.rgb,
         }
 
@@ -115,14 +112,16 @@ class AspectWrapper(ModelWrapper):
 
     @property
     def hd_pic_url(self):
-        if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path)
 
     @property
     def thumbnail(self):
-        return self.thumbnail_path
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
+            app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
 
     def as_dict(self, camel_case=True):
         return {
@@ -171,15 +170,22 @@ class DesignRegionWrapper(ModelWrapper):
 
     @property
     def pic_url(self):
-        if self.pic_path:
-            return self.pic_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                                  filename=self.pic_path)
-        return ""
+        return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path,
+            app.config['QINIU_CONF']['ASPECT_MD_SIZE'])
+
+    @property
+    def hd_pic_url(self):
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.pic_path)
 
     @property
     def edge_url(self):
-        return self.edge_path if self.pic_path.startswith("http") else url_for("image.serve",
-                                                                               filename=self.edge_path)
+        return 'http://%s.qiniudn.com/%s' % (
+            app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
+            self.edge_path)
 
     @property
     def spu(self):
@@ -223,13 +229,13 @@ class DesignRegionWrapper(ModelWrapper):
             'size': [self.width, self.height],
             'name': self.name,
             'blackShadowUrl' if camel_case else 'black_shadow_url':
-                self.black_shadow_url,
+            self.black_shadow_url,
             'whiteShadowUrl' if camel_case else 'white_shadow_url':
-                self.white_shadow_url,
+            self.white_shadow_url,
             'blackShadowDataUri' if camel_case else 'black_shadow_data_uri':
-                self.black_shadow_data_uri,
+            self.black_shadow_data_uri,
             'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri':
-                self.white_shadow_data_uri,
+            self.white_shadow_data_uri,
         }
 
     def delete(self):

@@ -67,11 +67,6 @@
       }
     })();
   </script>
-  <!--{% if config.QINIU_ENABLED and not config.DEBUG %}-->
-    <!--<script type="text/javascript" data-main="{{"http://%s.qiniudn.com/static/js/spu/main.js"|format(config.QINIU_CONF.STATIC_BUCKET)}}{% if config.DEBUG %}?bust={{time}}{% endif %}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
-    <!--{% else %}-->
-    <!--<script type="text/javascript" data-main="{{ url_for('static', filename='js/spu/main.js', bust=time) }}" src="http://cdn.bootcss.com/require.js/2.1.14/require.js"></script>-->
-    <!--{% endif %}-->
 {% endblock %}
 
 {% block main %}

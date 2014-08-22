@@ -8,5 +8,6 @@ define(['jquery'], function () {
         'text',
         'css',
         'jquery.browser',
+        "canvas-toBlob",
         'filesaver'], function () {});
 });
