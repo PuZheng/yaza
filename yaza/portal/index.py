@@ -24,6 +24,7 @@ def config():
     config_ = {
         "FONT_FAMILY_LIST": fonts,
         "DEFAULT_PREVIEW_BACKGROUND_COLOR": '#1b5a71',
+        "DESIGN_IMAGE_QINIU_ENABLED": app.config["QINIU_ENABLED"]
     }
     if fonts:
         config_["DEFAULT_FONT_FAMILY"] = fonts[0]

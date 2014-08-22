@@ -281,13 +281,18 @@ define([
                             var s = '<li><div class="thumbnail" style="background-color:%s">' +
                                 '<img src="%s" alt="%s" data-title="%s" data-pic-url="%s" data-design-image-id="%s"></img>' +
                                 '</div></li>';
+                            var thumbnail = element.get('thumbnail');
+                            if ($.browser.name == "msie" && $.browser.versionNumber !== 11) {
+                                thumbnail = element.get("duri");
+                            }
                             var e = $(_.sprintf(s,
                                 element.get("backgroundColor"),
-                                element.get('thumbnail'),
+                                thumbnail,
                                 element.get('title'),
                                 element.get('title'),
                                 element.get('picUrl'),
-                                element.get('id')));
+                                element.get('id')
+                            ));
                             thumbnails.append(e);
                             $(e).find('img').lazyLoad();
                         });
@@ -296,7 +301,7 @@ define([
                     }
                 }(this));
                 return d;
-            },
+            }
 
         });
 

@@ -4,9 +4,10 @@ define(['backbone'], function (Backbone) {
             id: '',
             thumbnail: '',
             picUrl: '',
+            duri: '',
             title: '',
             tags: [],
-            backgroundColor: '',
+            backgroundColor: ''
         }
     });
     return DesignImage;

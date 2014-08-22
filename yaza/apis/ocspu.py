@@ -278,7 +278,13 @@ class DesignImageWrapper(ModelWrapper):
             "id": self.id,
             "title": self.title,
             'picUrl' if camel_case else 'pic_url': self.pic_url,
+            "duri": self.duri,
             'thumbnail': self.thumbnail,
             'tags': [wraps(tag).as_dict(camel_case) for tag in self.tags],
             'backgroundColor' if camel_case else "background_color": self.background_color
         }
+
+    @property
+    def duri(self):
+        if app.config["QINIU_ENABLED"]:
+            return os.path.splitext(self.pic_url)[0] + ".duri"

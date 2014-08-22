@@ -1,43 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import sys
-import urllib
+import base64
 import json
 from StringIO import StringIO
+from hashlib import md5
 
 import qiniu.conf
 import qiniu.io
 import qiniu.rs
+import requests
 
 from yaza.basemain import app
 from yaza.models import Tag, DesignImage
 from yaza.utils import do_commit
+from yaza.qiniu_handler import upload_str
 from yaza.tools import color_tools
 
 
-def push_to_qiniu(url, file_name, uptoken, extra):
-    data = StringIO(urllib.urlopen(url).read())
-    dominant_color = color_tools.dominant_colorz(data, 1)[0]
-    ret, err = qiniu.io.put(uptoken, file_name + ".png", data, extra)
-    if err is not None:
-        sys.stderr.write('error: %s ' % err)
-        return None, None
-
-    return "http://" + app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"] + \
-           '.qiniudn.com/' + file_name + ".png", dominant_color
-
 if __name__ == '__main__':
 
-    ud = urllib.urlopen(app.config["DESIGN_IMAGE_LIST_API"])
-    data = json.loads(ud.read())
+    ud = requests.get(app.config["DESIGN_IMAGE_LIST_API"])
+    data = json.loads(ud.content)
 
     qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
     qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
-    policy = qiniu.rs.PutPolicy(
-        app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"])
-    uptoken = policy.token()
-    extra = qiniu.io.PutExtra()
-    extra.mime_type = "text/plain"
 
     for record in data:
         no_corresponding_image = DesignImage.query.filter(
@@ -53,9 +39,19 @@ if __name__ == '__main__':
                 else:
                     tag_record = do_commit(Tag(tag=tag))
                 tag_record_list.append(tag_record)
+
+            data = requests.get(record["url"]).content
+
+            key = md5(data).hexdigest()
             # push img to qiniu
-            pic_url, dominant_color = push_to_qiniu(record['url'], record['file_name'],
-                                                    uptoken, extra)
+            pic_url = upload_str(key + ".png", data,
+                                 app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"], True, "image/png")
+
+            upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
+                       app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"], True, "text/plain")
+
+            dominant_color = color_tools.dominant_colorz(StringIO(data), 1)[0]
+
             if pic_url:
                 do_commit(DesignImage(title=record['file_name'],
                                       pic_url=pic_url,

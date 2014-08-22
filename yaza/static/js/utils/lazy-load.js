@@ -18,6 +18,7 @@ require(['jquery'], function (jQuery) {
                         width: $obj.parent().width()
                     }).appendTo($obj.parent());
                     var src = $obj.attr('src');
+
                     $obj.hide();
                     $obj.one("load", function () {
                         $mask.remove();
@@ -26,7 +27,15 @@ require(['jquery'], function (jQuery) {
                         $mask.remove();
                         $obj.show();
                     });
-                    $obj.src = src;
+                    if(src.indexOf(".duri")){
+                        $.get(src).done(function(data){
+                            $obj.attr("src", data);
+                        }).fail(function(){
+                            $obj.attr("src", $obj.data("pic-url"))
+                        })
+                    }else{
+                        $obj.attr("src", src);
+                    }
                 });
             }
         });

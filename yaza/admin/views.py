@@ -1,9 +1,11 @@
 # -*- coding:utf-8 -*-
+import base64
 import os
 import shutil
 import time
-from flask import render_template, redirect, url_for
+from hashlib import md5
 
+from flask import render_template, redirect, url_for
 from flask.ext.databrowser import ModelView, sa, col_spec, filters, action
 from flask.ext.babel import lazy_gettext, _
 from flask.ext.databrowser.extra_widgets import Image
@@ -15,8 +17,10 @@ from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper, DesignImageWrapper
 from yaza.basemain import app, admin_nav_bar
 from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
 from yaza.database import db
+from yaza.tools.color_tools import dominant_colorz
 from yaza.utils import assert_dir, do_commit
 from yaza.tools.utils import allowed_file, unzip, create_or_update_spu
+from yaza.qiniu_handler import upload_str
 
 
 CONTROL_POINTS_NUMBER = (4, 4)
@@ -213,9 +217,8 @@ class DesignImageModelView(ModelView):
                 col_spec.FileColSpec("pic_upload", label=u"上传设计图", validators=[img_validator])]
 
     def on_record_created(self, obj):
-        obj.pic_path = self.save_pic(obj.pic_upload)
-        from yaza.utils import do_commit
-
+        obj.dominant_color = dominant_colorz(obj.pic_upload, 1)[0]
+        obj.pic_url = self.save_pic(obj.pic_upload)
         do_commit(obj)
 
     def expand_model(self, obj):
@@ -223,7 +226,8 @@ class DesignImageModelView(ModelView):
 
     def on_model_change(self, form, model):
         if hasattr(model, "pic_upload"):
-            model.pic_path = self.save_pic(model.pic_upload)
+            model.dominant_color = dominant_colorz(model.pic_upload, 1)[0]
+            model.pic_url = self.save_pic(model.pic_upload)
 
     @ModelView.cached
     @property
@@ -231,14 +235,25 @@ class DesignImageModelView(ModelView):
         return ["id", "title", col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image(Image.SMALL))]
 
     def save_pic(self, pic_path):
-        from hashlib import md5
+        if app.config["QINIU_ENABLED"]:
+            # key = md5sum(pic_path)
+            key = os.path.splitext(pic_path)[0]
+            data = open(pic_path, "rb").read()
+            qiniu_url = upload_str(key + os.path.splitext(pic_path)[-1], data,
+                                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"], True, "image/png")
 
-        file_name = os.path.join(DesignImageWrapper.StoredDir,
-                                 md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1])
-        assert_dir(DesignImageWrapper.StoredDir)
-        shutil.copy(pic_path, file_name)
-        os.unlink(pic_path)
-        return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
+            qiniu_duri = upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
+                                    app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                    True, "text/plain")
+            return qiniu_url
+
+        else:
+            file_name = os.path.join(DesignImageWrapper.StoredDir,
+                                     md5(pic_path).hexdigest() + os.path.splitext(pic_path)[-1])
+            assert_dir(DesignImageWrapper.StoredDir)
+            shutil.copy(pic_path, file_name)
+            os.unlink(pic_path)
+            return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
 
     @ModelView.cached
     @property
