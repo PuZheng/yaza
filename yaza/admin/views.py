@@ -255,10 +255,6 @@ class DesignImageModelView(ModelView):
             os.unlink(pic_path)
             return os.path.relpath(file_name, app.config["UPLOAD_FOLDER"])
 
-
-
-
-
     @ModelView.cached
     @property
     def edit_columns(self):
