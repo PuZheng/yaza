@@ -224,10 +224,9 @@ define([
                         row.push(img);
 
                     });
-
-                }
-                if (row.length > 0) {
-                    rows.push(row);
+                    if (row.length > 0) {
+                        rows.push(row);
+                    }
                 }
                 var gallery = $(template(rows));
                 this.$('.customer-pics').html(gallery);
