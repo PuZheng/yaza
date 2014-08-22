@@ -71,7 +71,8 @@ class OCSPUWrapper(ModelWrapper):
             "paddingColor" if camel_case else "padding_color": self.padding_color,
             "marginColor" if camel_case else "margin_color": self.margin_color,
             "complementaryColor" if camel_case else "complementaryColor": self.complementary_color,
-            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color": self.hovered_complementary_color,
+            "hoveredComplementaryColor" if camel_case else "hovered_complementary_color":
+                self.hovered_complementary_color,
             'rgb': self.rgb,
         }
 
@@ -130,8 +131,8 @@ class AspectWrapper(ModelWrapper):
             'duriUrl' if camel_case else 'duri_url': self.duri_url,
             'hdPicUrl' if camel_case else 'hd_pic_url': self.hd_pic_url,
             'thumbnail': self.thumbnail,
-            'designRegionList' if camel_case else 'design_region_list':
-                [dr.as_dict(camel_case) for dr in self.design_region_list],
+            'designRegionList' if camel_case else 'design_region_list': [dr.as_dict(camel_case) for dr in
+                                                                         self.design_region_list],
             'name': self.name,
             'size': self.size,
         }
@@ -228,14 +229,10 @@ class DesignRegionWrapper(ModelWrapper):
             'edgeUrl' if camel_case else 'edge_url': self.edge_url,
             'size': [self.width, self.height],
             'name': self.name,
-            'blackShadowUrl' if camel_case else 'black_shadow_url':
-            self.black_shadow_url,
-            'whiteShadowUrl' if camel_case else 'white_shadow_url':
-            self.white_shadow_url,
-            'blackShadowDataUri' if camel_case else 'black_shadow_data_uri':
-            self.black_shadow_data_uri,
-            'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri':
-            self.white_shadow_data_uri,
+            'blackShadowUrl' if camel_case else 'black_shadow_url': self.black_shadow_url,
+            'whiteShadowUrl' if camel_case else 'white_shadow_url': self.white_shadow_url,
+            'blackShadowDataUri' if camel_case else 'black_shadow_data_uri': self.black_shadow_data_uri,
+            'whiteShadowDataUri' if camel_case else 'white_shadow_data_uri': self.white_shadow_data_uri,
         }
 
     def delete(self):
@@ -256,10 +253,7 @@ class DesignImageWrapper(ModelWrapper):
     def thumbnail(self):
         # ref
         # `http://developer.qiniu.com/docs/v6/api/reference/fop/image/imageview2.html`
-        if app.config['QINIU_ENABLED']:
-            return self.pic_url + '?imageView2/0/w/' + \
-                   str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
-        return self.pic_url
+        return self.pic_url + '?imageView2/0/w/' + str(app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
 
     @property
     def background_color(self):
@@ -286,5 +280,4 @@ class DesignImageWrapper(ModelWrapper):
 
     @property
     def duri(self):
-        if app.config["QINIU_ENABLED"]:
-            return os.path.splitext(self.pic_url)[0] + ".duri"
+        return os.path.splitext(self.pic_url)[0] + ".duri"

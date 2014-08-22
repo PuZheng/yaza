@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block customized_head_block %}
-  {% if config.QINIU_ENABLED and not config.DEBUG %}
+  {% if not config.DEBUG %}
     <link rel="stylesheet" href="{{ "http://%s.qiniudn.com/static/css/login.css"|format(config.QINIU_CONF.STATIC_BUCKET) }}"/>
   {% else %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
