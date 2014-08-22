@@ -13,15 +13,15 @@ from yaza.utils import do_commit
 from yaza.qiniu_handler import delete_file
 
 
-def split_pic_url(pic_url):
+def _split_pic_url(pic_url):
     http_, key = pic_url.split(".qiniudn.com/")
     bucket = http_.split("//")[-1]
     return bucket.encode('utf-8'), key.encode('utf-8')
 
 
-def delete_file_from_path(path):
+def _delete_file(path):
     if path.startswith("http"):  # 说明是存在qiniu的
-        delete_file(*split_pic_url(path))
+        delete_file(*_split_pic_url(path))
     else:
         # 删除本地文件
         local_file = os.path.join(app.config['UPLOAD_FOLDER'], path)
@@ -94,7 +94,7 @@ class OCSPUWrapper(ModelWrapper):
             aspect.delete()
 
         if self.cover_path:
-            delete_file_from_path(self.cover_path)
+            _delete_file(self.cover_path)
 
         do_commit(self, "delete")
 
@@ -150,16 +150,16 @@ class AspectWrapper(ModelWrapper):
             design_region.delete()
 
         if self.pic_path:
-            delete_file_from_path(self.pic_path)
+            _delete_file(self.pic_path)
 
         if self.black_shadow_path:
-            delete_file_from_path(self.black_shadow_path)
+            _delete_file(self.black_shadow_path)
 
         if self.white_shadow_path:
-            delete_file_from_path(self.white_shadow_path)
+            _delete_file(self.white_shadow_path)
 
         if self.thumbnail_path:
-            delete_file_from_path(self.thumbnail_path)
+            _delete_file(self.thumbnail_path)
 
         do_commit(self, "delete")
 
@@ -237,7 +237,7 @@ class DesignRegionWrapper(ModelWrapper):
 
     def delete(self):
         if self.pic_path:
-            delete_file_from_path(self.pic_path)
+            _delete_file(self.pic_path)
         if self.edge_path and os.path.exists(self.edge_path):
             os.unlink(self.edge_path)
         if self.control_point_file and os.path.exists(self.control_point_file):
