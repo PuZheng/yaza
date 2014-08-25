@@ -27,7 +27,7 @@ require(['jquery'], function (jQuery) {
                         $mask.remove();
                         $obj.show();
                     });
-                    if(src.indexOf(".duri")){
+                    if (src.indexOf(".duri") >= 0) {
                         $.get(src).done(function(data){
                             $obj.attr("src", data);
                         }).fail(function(){
