@@ -4,6 +4,7 @@ import os
 import zipfile
 from binascii import b2a_base64
 from StringIO import StringIO
+import math
 
 from flask import json
 from PIL import Image
@@ -90,6 +91,40 @@ def calc_control_points(edges, size, cp_num):
     return cp_map
 
 
+def _adjust_vertex(point, pa):
+    if pa[point][3]:  # if this point is not transparent, then just return
+        return point
+    range = 1
+    hit = []
+    x, y = point
+    while not hit:
+        for i in xrange(x - range, x + range):
+            # top
+            if pa[(i, y + range)][3]:
+                hit.append((i, y + range), math.sqrt((i - x) * (i - x) +
+                                                     range * range))
+            # bottom
+            if pa[(i, y - range)][3]:
+                hit.append((i, y - range), math.sqrt((i - x) * (i - x) +
+                                                     range * range))
+
+        for j in xrange(y - range, y + range):
+            # right
+            if pa[(i + range, j)][3]:
+                hit.append((i + range, j), math.sqrt(range * range +
+                                                     (j - y) * (j - y)))
+            # left
+            if pa[(i - range, j)][3]:
+                hit.append((i - range, j), math.sqrt(range * range +
+                                                     (j - y) * (j - y)))
+
+        range += 1
+
+    return sorted(hit, key=lambda v: v[1])[0]
+
+
+
+
 def detect_edges(im, corner_dict=None):
     '''
     Warning !
@@ -129,10 +164,10 @@ def detect_edges(im, corner_dict=None):
         # 下面的一定是左下角和右下角, 而左下角在右下角的左面
         lb, rb = sorted(corners[:2], key=lambda p: p[0])
     else:
-        lt = corner_dict['lt']
-        rt = corner_dict['rt']
-        lb = corner_dict['lb']
-        rb = corner_dict['rb']
+        lt = _adjust_vertex(corner_dict['lt'], pa)
+        rt = _adjust_vertex(corner_dict['rt'], pa)
+        lb = _adjust_vertex(corner_dict['lb'], pa)
+        rb = _adjust_vertex(corner_dict['rb'], pa)
 
     # top
     edges['top'].append(rt)
