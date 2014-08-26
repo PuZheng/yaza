@@ -172,7 +172,7 @@ def detect_edges(im, corner_dict=None):
     # top
     edges['top'].append(rt)
     last_point = rt
-    for i in xrange(rt[0] - 1, lt[0], -1):
+    for i in xrange(rt[0] - 1, lt[0] -1):
         for j in xrange(im.size[1] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
                 # 一定保证闭合, 下同
