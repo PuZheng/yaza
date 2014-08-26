@@ -52,6 +52,7 @@
     "FileSaver": "*",
     "ekko-lightbox": "~3.1.4",
     "jquery.browser": "~0.0.6",
-    "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git"
+    "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git",
+    "JS-Image-Resizer": "https://github.com/grantgalitz/JS-Image-Resizer.git"
   }
 }
