@@ -101,22 +101,22 @@ def _adjust_vertex(point, pa):
         for i in xrange(x - range, x + range):
             # top
             if pa[(i, y + range)][3]:
-                hit.append((i, y + range), math.sqrt((i - x) * (i - x) +
-                                                     range * range))
+                hit.append(((i, y + range), math.sqrt((i - x) * (i - x) +
+                                                      range * range)))
             # bottom
             if pa[(i, y - range)][3]:
-                hit.append((i, y - range), math.sqrt((i - x) * (i - x) +
-                                                     range * range))
+                hit.append(((i, y - range), math.sqrt((i - x) * (i - x) +
+                                                      range * range)))
 
         for j in xrange(y - range, y + range):
             # right
             if pa[(i + range, j)][3]:
-                hit.append((i + range, j), math.sqrt(range * range +
-                                                     (j - y) * (j - y)))
+                hit.append(((i + range, j), math.sqrt(range * range +
+                                                      (j - y) * (j - y))))
             # left
             if pa[(i - range, j)][3]:
-                hit.append((i - range, j), math.sqrt(range * range +
-                                                     (j - y) * (j - y)))
+                hit.append(((i - range, j), math.sqrt(range * range +
+                                                      (j - y) * (j - y))))
 
         range += 1
 
