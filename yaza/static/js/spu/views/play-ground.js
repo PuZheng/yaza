@@ -786,7 +786,6 @@ mvc, readImageData) {
                 255
             ];
 
-            debugger;
             for (var i = 0; i < width; ++i) {
                 for (var j = 0; j < height; ++j) {
                     if (designRegion.within(i, j)) {
