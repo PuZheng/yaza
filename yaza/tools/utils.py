@@ -120,9 +120,7 @@ def _adjust_vertex(point, pa):
 
         range += 1
 
-    return sorted(hit, key=lambda v: v[1])[0]
-
-
+    return sorted(hit, key=lambda v: v[1])[0][0]
 
 
 def detect_edges(im, corner_dict=None):
