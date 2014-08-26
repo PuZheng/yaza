@@ -419,8 +419,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                pic_path = upload_str(pic_path, file(full_path, 'rb').read(),
-                                      bucket, True, 'image/png')
+                upload_str(pic_path, file(full_path, 'rb').read(),
+                           bucket, True, 'image/png')
                 edge_full_path, control_point_file, vertex = \
                     calc_design_region_image(full_path)
                 edge_path = os.path.relpath(edge_full_path, start_dir)
