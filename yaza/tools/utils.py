@@ -4,6 +4,7 @@ import os
 import zipfile
 from binascii import b2a_base64
 from StringIO import StringIO
+import math
 
 from flask import json
 from PIL import Image
@@ -90,6 +91,38 @@ def calc_control_points(edges, size, cp_num):
     return cp_map
 
 
+def _adjust_vertex(point, pa):
+    if pa[tuple(point)][3]:  # if this point is not transparent, then just return
+        return point
+    range = 1
+    hit = []
+    x, y = point
+    while not hit:
+        for i in xrange(x - range, x + range):
+            # top
+            if pa[(i, y + range)][3]:
+                hit.append(((i, y + range), math.sqrt((i - x) * (i - x) +
+                                                      range * range)))
+            # bottom
+            if pa[(i, y - range)][3]:
+                hit.append(((i, y - range), math.sqrt((i - x) * (i - x) +
+                                                      range * range)))
+
+        for j in xrange(y - range, y + range):
+            # right
+            if pa[(i + range, j)][3]:
+                hit.append(((i + range, j), math.sqrt(range * range +
+                                                      (j - y) * (j - y))))
+            # left
+            if pa[(i - range, j)][3]:
+                hit.append(((i - range, j), math.sqrt(range * range +
+                                                      (j - y) * (j - y))))
+
+        range += 1
+
+    return sorted(hit, key=lambda v: v[1])[0][0]
+
+
 def detect_edges(im, corner_dict=None):
     '''
     Warning !
@@ -129,15 +162,15 @@ def detect_edges(im, corner_dict=None):
         # 下面的一定是左下角和右下角, 而左下角在右下角的左面
         lb, rb = sorted(corners[:2], key=lambda p: p[0])
     else:
-        lt = corner_dict['lt']
-        rt = corner_dict['rt']
-        lb = corner_dict['lb']
-        rb = corner_dict['rb']
+        lt = _adjust_vertex(corner_dict['lt'], pa)
+        rt = _adjust_vertex(corner_dict['rt'], pa)
+        lb = _adjust_vertex(corner_dict['lb'], pa)
+        rb = _adjust_vertex(corner_dict['rb'], pa)
 
     # top
     edges['top'].append(rt)
     last_point = rt
-    for i in xrange(rt[0] - 1, lt[0], -1):
+    for i in xrange(rt[0] - 1, lt[0] -1):
         for j in xrange(im.size[1] - 1, -1, -1):
             if pa[(i, j)][3] != 0:
                 # 一定保证闭合, 下同
@@ -384,8 +417,8 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                pic_path = upload_str(pic_path, file(full_path, 'rb').read(),
-                                      bucket, True, 'image/png')
+                upload_str(pic_path, file(full_path, 'rb').read(),
+                           bucket, True, 'image/png')
                 edge_full_path, control_point_file, vertex = \
                     calc_design_region_image(full_path)
                 edge_path = os.path.relpath(edge_full_path, start_dir)

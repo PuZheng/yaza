@@ -12,7 +12,6 @@ from yaza.tools.color_tools import contrast_color, darker_color
 from yaza.utils import do_commit
 from yaza.qiniu_handler import delete_file
 
-
 def _split_pic_url(pic_url):
     http_, key = pic_url.split(".qiniudn.com/")
     bucket = http_.split("//")[-1]
@@ -165,6 +164,7 @@ class AspectWrapper(ModelWrapper):
 
 
 class DesignRegionWrapper(ModelWrapper):
+
     DETECT_EDGE_EXTENSION = "edge"
 
     CONTROL_POINT_EXTENSION = "cpmap"
