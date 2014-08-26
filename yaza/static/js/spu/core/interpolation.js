@@ -119,7 +119,7 @@ function (bicubic, bilinear) {
         return ret;
     }
 
-    function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, srcImageData, srcPoint, srcWidth, srcHeight, backgrounColor, pointsMatrix) {
+    function bicubicInterpolation(destImageData, destPoint, destWidth, destHeight, srcImageData, srcPoint, srcWidth, srcHeight, backgroundColor, pointsMatrix) {
         // find the 16 points
         var pos = (destPoint[0] + destPoint[1] * destWidth) * 4;
 
@@ -128,7 +128,7 @@ function (bicubic, bilinear) {
 
         var x = srcPoint[0] - Math.floor(srcPoint[0]);
         var y = srcPoint[1] - Math.floor(srcPoint[1]);
-        composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, backgrounColor, pointsMatrix);
+        composeBicubicMatrix(left, bottom, srcImageData, srcWidth, srcHeight, backgroundColor, pointsMatrix);
         destImageData.data[pos + 3] = bicubic(pointsMatrix[3], x, y);
         if (destImageData.data[pos + 3] == 0) {
             return;

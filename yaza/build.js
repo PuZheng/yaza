@@ -38,6 +38,7 @@
         'css': 'components/require-css/css.min',
         'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
         "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
+        "image-resizer": "components/JS-Image-Resizer/resize",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
@@ -133,6 +134,9 @@
             deps: ['jquery'],
             exports: '$.fn.url'
         },
+        'image-resizer': {
+            exports: 'Resize', 
+        }
         'jquery.browser': {
             deps: ['jquery'],
         }
