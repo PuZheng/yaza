@@ -1,8 +1,9 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import json
 from hashlib import md5
 from binascii import b2a_base64
 import os.path
+import urllib
 
 import requests
 from PIL import Image
@@ -40,7 +41,9 @@ class SPUWrapper(ModelWrapper):
                 bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
                 duri_path = os.path.basename(aspect.pic_path.rstrip('.png')
                                              + '.duri')
-                upload_str(duri_path.encode('utf-8'),
+                # duri_path may contain Chinese, so we must quote it
+                # (encodeURIComponent in javascript)
+                upload_str(urllib.quote(duri_path.encode('utf-8')),
                            'data:image/png;base64,' +
                            b2a_base64(r.content).strip(),
                            bucket, 'text/plain')
@@ -52,17 +55,17 @@ class SPUWrapper(ModelWrapper):
                         app.config['BLACK_ALPHA_THRESHOLD'],
                         app.config['WHITE_ALPHA_THRESHOLD'])
                     digest = md5(black_shadow_im.tostring()).hexdigest()
-                    black_shadow_path = '.'.join(['black-shadow',
-                                                  str(dr.id),
-                                                  digest,
-                                                  'png']).encode('utf-8')
+                    black_shadow_path = urllib.quote('.'.join(['black-shadow',
+                                                               str(dr.id),
+                                                               digest,
+                                                               'png']))
                     black_shadow_data_uri_path = \
                         black_shadow_path.strip('.png') + '.duri'
                     digest = md5(white_shadow_im.tostring()).hexdigest()
-                    white_shadow_path = '.'.join(['white-shadow',
-                                                  str(dr.id),
-                                                  digest,
-                                                  'png']).encode('utf-8')
+                    white_shadow_path = urllib.quote('.'.join(['white-shadow',
+                                                               str(dr.id),
+                                                               digest,
+                                                               'png']))
                     white_shadow_data_uri_path = \
                         white_shadow_path.strip('.png') + '.duri'
                     si = StringIO()
