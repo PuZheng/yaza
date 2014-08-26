@@ -1,13 +1,15 @@
 define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
 'kineticjs', 'dispatcher', 'color-tools',
-'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data',
-'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob"],
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer',
+'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob", "underscore.string"],
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
-mvc, readImageData) {
+mvc, readImageData, Resize) {
 
     var __debug__ = ($.url('?debug') == '1');
+
+    _.mixin(_.string.exports());
 
     var PlayGround = Backbone.View.extend({
         _template: handlebars.default.compile(playGroundTemplate),
@@ -516,39 +518,40 @@ mvc, readImageData) {
                     var width = imageLayer.width();
                     var height = imageObj.height * width / imageObj.width;
                 }
-                height *= config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
-                width *= config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
-                var image = new Kinetic.Image({
-                    x: imageLayer.width() / 2,
-                    y: imageLayer.height() / 2,
-                    image: imageObj,
-                    width: width,
-                    height: height,
-                    "design-image-id": designImageId,
-                    name: title,
-                    offset: {
-                        x: width / 2,
-                        y: height / 2
-                    }
-                });
-                imageLayer.add(image);
-                imageLayer.draw();
+                height = parseInt(height * config.DESIGN_IMAGE_INTIAL_ZOOMNESS);
+                width = parseInt(width * config.DESIGN_IMAGE_INTIAL_ZOOMNESS);
+                imageObj.onload = function () {
+                    var image = new Kinetic.Image({
+                        x: imageLayer.width() / 2,
+                        y: imageLayer.height() / 2,
+                        image: imageObj,
+                        width: width,
+                        height: height,
+                        "design-image-id": designImageId,
+                        name: title,
+                        offset: {
+                            x: width / 2,
+                            y: height / 2
+                        }
+                    });
+                    imageLayer.add(image);
+                    imageLayer.draw();
 
-                var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
-                var group = makeControlGroup(image, title, true,
-                hoveredComplementaryColor)
-                .on('dragend', function (view) {
-                    return function () {
-                        view._crossLayer.hide();
-                        view._crossLayer.moveToBottom();
-                        view._crossLayer.draw();
-                        // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
-                        // 的预览
-                        view._currentDesignRegion.previewLayer.getContext()
-                        .clearRect(view._aspectImageLayer.x(),
-                        view._aspectImageLayer.y(),
-                        view._aspectImageLayer.width(),
-                        view._aspectImageLayer.height());
+                    var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
+                    var group = makeControlGroup(image, title, true,
+                            hoveredComplementaryColor)
+                        .on('dragend', function (view) {
+                            return function () {
+                                view._crossLayer.hide();
+                                view._crossLayer.moveToBottom();
+                                view._crossLayer.draw();
+                                // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
+                                // 的预览
+                                view._currentDesignRegion.previewLayer.getContext()
+                            .clearRect(view._aspectImageLayer.x(),
+                                view._aspectImageLayer.y(),
+                                view._aspectImageLayer.width(),
+                                view._aspectImageLayer.height());
                         view._currentDesignRegion.getImageLayer().draw();
                         if (__debug__) {
                             view._currentDesignRegion.getImageLayer().moveToTop();
@@ -557,33 +560,56 @@ mvc, readImageData) {
                             }, 1000);
                         }
                         view._generatePreview();
-                    };
-                }(this))
-                .on('mousedown', function () {
-                    if (this.getAttr('trasient')) {
-                        dispatcher.trigger('active-object', this);
-                    }
-                })
-                .on('dragstart', function () {
-                    this._crossLayer.show();
-                    this._crossLayer.moveToTop();
-                    this._crossLayer.draw();
-                    if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
-                        this._currentDesignRegion.previewLayer.getContext()
+                            };
+                        }(this))
+                    .on('mousedown', function () {
+                        if (this.getAttr('trasient')) {
+                            dispatcher.trigger('active-object', this);
+                        }
+                    })
+                    .on('dragstart', function () {
+                        this._crossLayer.show();
+                        this._crossLayer.moveToTop();
+                        this._crossLayer.draw();
+                        if (config.CLEAR_PREVIEW_BEFORE_DRAG) {
+                            this._currentDesignRegion.previewLayer.getContext()
                         .clearRect(this._aspectImageLayer.x(), this._aspectImageLayer.y(),
-                        this._aspectImageLayer.width(),
-                        this._aspectImageLayer.height());
-                    }
-                }.bind(this))
-                .on("dragmove", function (view) {
-                    return function () {
-                        this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
-                    }
-                }(this));
-                image.setAttr("control-group", group);
-                this._currentDesignRegion.getControlLayer().add(group).draw();
-                dispatcher.trigger('object-added', image, group);
-                this._generatePreview();
+                            this._aspectImageLayer.width(),
+                            this._aspectImageLayer.height());
+                        }
+                    }.bind(this))
+                    .on("dragmove", function (view) {
+                        return function () {
+                            this.snap(this.getLayer().width() / 2, this.getLayer().height() / 2, config.MAGNET_TOLERANCE);
+                        }
+                    }(this));
+                    image.setAttr("control-group", group);
+                    this._currentDesignRegion.getControlLayer().add(group).draw();
+                    dispatcher.trigger('object-added', image, group);
+                    this._generatePreview();
+                }.bind(this);
+                if (_(imageObj.src).endsWith('.duri')) {
+                    // resize by ourself, a compromised way
+                    var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
+                            imageObj.height);
+                    new Resize(imageObj.width, imageObj.height, width, height, 
+                            true, true, false,
+                            function (buffer) {
+                                var canvasEl = document.createElement('canvas');
+                                canvasEl.width = width;
+                                canvasEl.height = height;
+                                var destCtx = canvasEl.getContext('2d');
+                                var destImageData = destCtx.createImageData(width, height);
+                                for (var i = 0; i < buffer.length; ++i) {
+                                    destImageData.data[i] = buffer[i] & 0xFF;
+                                }
+                                destCtx.putImageData(destImageData, 0, 0);
+                                imageObj.src = canvasEl.toDataURL('image/png');
+                            }).resize(srcImageData);
+                } else {
+                    // let qiniu resize, this will generate best result
+                    imageObj.src += '?imageView2/0/w/' + parseInt(Math.max(width, height));
+                }
             }.bind(this));
 
         },
@@ -789,7 +815,6 @@ mvc, readImageData) {
             for (var i = 0; i < width; ++i) {
                 for (var j = 0; j < height; ++j) {
                     if (designRegion.within(i, j)) {
-                        console.log(i, j);
                         var origPoint = mvc([i, j], controlPointsMap);
                         interpolation.bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
                         var pos = (j * width + i) * 4;
