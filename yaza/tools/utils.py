@@ -92,7 +92,7 @@ def calc_control_points(edges, size, cp_num):
 
 
 def _adjust_vertex(point, pa):
-    if pa[point][3]:  # if this point is not transparent, then just return
+    if pa[tuple(point)][3]:  # if this point is not transparent, then just return
         return point
     range = 1
     hit = []
