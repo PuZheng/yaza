@@ -786,9 +786,11 @@ mvc, readImageData) {
                 255
             ];
 
+            debugger;
             for (var i = 0; i < width; ++i) {
                 for (var j = 0; j < height; ++j) {
                     if (designRegion.within(i, j)) {
+                        console.log(i, j);
                         var origPoint = mvc([i, j], controlPointsMap);
                         interpolation.bicubicInterpolation(imageData, [i, j], width, height, srcImageData, origPoint, srcWidth, srcHeight, rgba, pointsMatrix);
                         var pos = (j * width + i) * 4;
@@ -806,6 +808,7 @@ mvc, readImageData) {
                     }
                 }
             }
+            
             // for each point on edges, do anti alias (sampling around itself)
             designRegion.previewEdges['bottom'].forEach(function (point) {
                 // 若对象已经超出边界
