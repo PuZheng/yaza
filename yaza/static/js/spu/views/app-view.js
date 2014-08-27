@@ -21,7 +21,8 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
     var AppView = Backbone.View.extend({
         el: '.primary',
         
-       initialize: function () {
+        initialize: function () {
+            this.$('.mask').hide();
             var spu = this.$('input[name="spu"]').data('val');
             spu = Spu(spu);
             var tagList = this.$('input[name=tag-list]').data('val');
@@ -64,7 +65,7 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
             }, this)
             .on('update-preview-done', function (designRegion, previewLayer) {
                 this._controlPanel.trigger('update-preview-done', designRegion, 
-                previewLayer);
+                    previewLayer);
             }, this)
             .on('update-preview', function () {
                 this._playGround.trigger('update-preview');
