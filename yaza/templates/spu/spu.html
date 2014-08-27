@@ -15,6 +15,7 @@
   <script type='text/javascript'>
     (function () {
       if (!Modernizr.canvas) {
+        debugger;
         //IE11起移除了 document.createStyleSheet()
 
         var style = document.createStyleSheet(),
@@ -38,17 +39,16 @@
             };
 
         //  be rly sure not to destroy a thing!
-        if (document.querySelectorAll || document.querySelector) {
-          return;
+        if (!(document.querySelectorAll || document.querySelector)) {
+          // patch querySelectorAll for ie7-
+          document.querySelectorAll = function (selector) {
+            return select(selector, Infinity);
+          };
+          document.querySelector = function (selector) {
+            return select(selector, 1)[0] || null;
+          };
         }
 
-        // patch querySelectorAll for ie7-
-        document.querySelectorAll = function (selector) {
-          return select(selector, Infinity);
-        };
-        document.querySelector = function (selector) {
-          return select(selector, 1)[0] || null;
-        };
 
         var primaryEl = document.querySelector('.primary');
         var noCanvasEl = document.querySelector('.noCanvas');
