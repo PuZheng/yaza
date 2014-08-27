@@ -97,6 +97,8 @@ def setup_nav_bar():
     admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
                            enabler=lambda nav: request.path.startswith('/admin/design-image'))
 
+    admin_nav_bar.register(admin, name=_(u"高清图转换"), default_url="/admin/convert",
+                           enabler=lambda nav: request.path.startswith("/admin/convert"))
 
 register_views()
 
