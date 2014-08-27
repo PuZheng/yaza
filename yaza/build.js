@@ -136,7 +136,7 @@
         },
         'image-resizer': {
             exports: 'Resize', 
-        }
+        },
         'jquery.browser': {
             deps: ['jquery'],
         }
