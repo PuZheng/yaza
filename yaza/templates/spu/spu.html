@@ -15,6 +15,7 @@
   <script type='text/javascript'>
     (function () {
       if (!Modernizr.canvas) {
+        debugger;
         //IE11起移除了 document.createStyleSheet()
 
         var style = document.createStyleSheet(),
@@ -38,17 +39,16 @@
             };
 
         //  be rly sure not to destroy a thing!
-        if (document.querySelectorAll || document.querySelector) {
-          return;
+        if (!(document.querySelectorAll || document.querySelector)) {
+          // patch querySelectorAll for ie7-
+          document.querySelectorAll = function (selector) {
+            return select(selector, Infinity);
+          };
+          document.querySelector = function (selector) {
+            return select(selector, 1)[0] || null;
+          };
         }
 
-        // patch querySelectorAll for ie7-
-        document.querySelectorAll = function (selector) {
-          return select(selector, Infinity);
-        };
-        document.querySelector = function (selector) {
-          return select(selector, 1)[0] || null;
-        };
 
         var primaryEl = document.querySelector('.primary');
         var noCanvasEl = document.querySelector('.noCanvas');
@@ -90,6 +90,7 @@
         <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
         <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
         <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
+        <input name="readonly" type="hidden" data-val="{{ readonly }}"/>
         <div class='mask text-center'>
           <i class="fa fa-spinner fa-spin fa-4x"></i>
         </div>
@@ -119,9 +120,7 @@
         </ul>
       </div>
     </div>
-
   </div>
-
   <!--/row-->
   <footer class="footer visible-md visible-lg">
     <div class="container">
