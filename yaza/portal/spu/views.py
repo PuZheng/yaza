@@ -35,12 +35,20 @@ class SPUModelView(ModelView):
                 raise PermissionDenied
 
         spu = self._get_one(id_)
-        design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
+        if "design-image" in request.args:
+            design_image_list = [wraps(models.DesignImage.query.get(request.args["design-image"])).as_dict(False)]
+            readonly = True
+        else:
+            design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
+            readonly = False
+
         params = {"time": time.time(), "spu": wraps(spu),
                   "design_image_list": json.dumps(design_image_list),
                   'tag_list': [wraps(tag).as_dict() for tag in Tag.query.all()]}
         if order_id:
             params["order_id"], params["operator_id"] = order_id, operator_id
+        if readonly:
+            params["readonly"] = True
         return render_template(self.edit_template, **params)
 
 

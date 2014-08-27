@@ -90,6 +90,7 @@
         <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
         <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
         <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
+        <input name="readonly" type="hidden" data-val="{{ readonly }}"/>
       {% else %}
         <div class="alert alert-danger">
           <h3>对不起， 该产品已经下架!</h3>
