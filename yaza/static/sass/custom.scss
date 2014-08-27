@@ -22,6 +22,18 @@ body {
         height: 816px;
     }
 
+    .mask {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        line-height: 816px;
+        & i {
+            vertical-align: middle;
+            color:yellow;
+        }
+    }
 }
 
 
