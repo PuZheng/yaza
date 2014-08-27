@@ -62,3 +62,5 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 BLACK_ALPHA_THRESHOLD = 80
 WHITE_ALPHA_THRESHOLD = 128
+
+LOGIN_REQUIRED = True  # login required before design online

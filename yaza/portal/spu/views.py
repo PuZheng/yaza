@@ -8,6 +8,7 @@ from flask.ext.babel import lazy_gettext
 from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied, Permission, RoleNeed
 
+from yaza.basemain import app
 from yaza import models, const
 from yaza.apis import wraps
 from yaza.database import db
@@ -27,12 +28,14 @@ class SPUModelView(ModelView):
             try:
                 order_id, operator_id = serializer.loads(request.args["captcha"])
             except Exception:
-                raise PermissionDenied
+                if app.config["LOGIN_REQUIRED"]:
+                    raise PermissionDenied
         else:
             if current_user.is_authenticated():
                 Permission(RoleNeed(const.VENDOR_GROUP)).test()
             else:
-                raise PermissionDenied
+                if app.config["LOGIN_REQUIRED"]:
+                    raise PermissionDenied
 
         spu = self._get_one(id_)
         if "design-image" in request.args:
