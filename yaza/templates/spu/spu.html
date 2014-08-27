@@ -90,14 +90,14 @@
         <input name="design-image-list" type="hidden" data-val='{{ design_image_list|safe }}'/>
         <input name="order-id" type="hidden" data-val='{{ order_id }}'/>
         <input name="tag-list" type="hidden" data-val='{{ tag_list|tojson|safe }}'/>
+        <div class='mask text-center'>
+          <i class="fa fa-spinner fa-spin fa-4x"></i>
+        </div>
       {% else %}
         <div class="alert alert-danger">
           <h3>对不起， 该产品已经下架!</h3>
         </div>
       {% endif %}
-      <div class='mask text-center'>
-        <i class="fa fa-spinner fa-spin fa-4x"></i>
-      </div>
     </div>
     <div class="noCanvas" style='display: none'>
       <div class="alert alert-danger">
