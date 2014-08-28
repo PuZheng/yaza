@@ -908,24 +908,32 @@ mvc, readImageData, Resize) {
                     var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                     _.each(imageLayer.children, function (node) {
                         if (node.className === "Image") {
-                            // 对于用户上传的图片， 就直接保证是用户自己上传的原图
-                            // 对于官方设计图， 内容是低清图， 增加一个design-image-file属性
-                            // 用于后续转换为高清图
-                            var f = function (src) {
-                                var im = this._draw.image(
-                                    src, node.width() * ratio, node.height() * ratio).move(
-                                    (node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(
-                                    node.rotation(), node.x() * ratio, node.y() * ratio);
-                                if (!node.getAttr('ugc')) {
-                                    im.data("design-image-file", node.getAttr('hdSrc'));
-                                } 
-                            }.bind(this);
-                            if (_(node.getAttr('hdSrc')).endsWith('.duri')) {
-                                $.get(node.getAttr('hdSrc'), function (data) {
-                                    f(data);
-                                });     
+                            // 这里的情况很复杂，分情况描述：
+                            // 1. 用户自己上传的图， 现在有两份: 一份是原图， 一份是经过resize的
+                            // hdSrc这个时候就是data uri,
+                            // 这里肯定要使用原图, 这两份图的格式都是data uri, 即'data:image/png,base64;.........'
+                            // 2. 官方的图， 又分为两种情况:
+                            // 2.1 现代浏览器，hdSrc是(低清晰)图片链接，那么直接用(低清晰)图片转成data uri格式，加上属性'design-image-file'， 用于后续转换, 
+                            // 这个design-image-file倒不一定指向一张图片， 也可以是'.duri'格式文件
+                            // 2.2 古代浏览器, hdSrc是.duri链接，直接用低清晰图片的data uri数据（其实就是当前图片的src）， 加上属性'design-image-file'， 用于后续转换
+                            // 总之， 需要保证这张svg中， 只能有data uri形式的图片
+                            if (node.getAttr('ugc')) {
+                                var src = node.getAttr('hdSrc');
                             } else {
-                                f(readImageData.readImageDataUrl(node.image(), node.width(), node.height()));
+                                if (!_(node.getAttr('hdSrc')).endsWith('.duri')) {
+                                    var src = node.image().src;
+                                } else {
+                                    var image = new Image();
+                                    image.src = node.getAttr('hdSrc');
+                                    var src = readImageData.readImageDataUrl(image, node.width(), node.height());
+                                }
+                            }
+                            var im = this._draw.image(
+                                src, node.width() * ratio, node.height() * ratio).move(
+                                (node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(
+                                node.rotation(), node.x() * ratio, node.y() * ratio);
+                            if (!node.getAttr('ugc')) {
+                                im.data("design-image-file", node.getAttr('hdSrc'));
                             }
                         }
                         data[designRegion.name] = this._draw.exportSvg({whitespace: true});
@@ -1048,6 +1056,7 @@ mvc, readImageData, Resize) {
                 }
                 var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
                 $form.append($input);
+                
                 $form.attr({method: "POST", id: "download-form", action: "/image/echo"});
                 $form.appendTo($("body")).submit();
                 $(evt.currentTarget).bootstrapButton('reset');

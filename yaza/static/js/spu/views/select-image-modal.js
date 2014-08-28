@@ -15,7 +15,6 @@ define([
         'underscore.string',
         'jquery.iframe-transport',
         'jquery-file-upload',
-        'jquery.browser'
     ],
     function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
 
