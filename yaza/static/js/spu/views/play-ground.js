@@ -503,6 +503,7 @@ mvc, readImageData, Resize) {
         },
 
         _addDesignImage: function (src, title, designImageId) {
+            var ugc = !title;
             if (!title) { // 用户自己上传的图片没有title
                 title = new Date().getTime();
             }
@@ -532,7 +533,9 @@ mvc, readImageData, Resize) {
                         offset: {
                             x: width / 2,
                             y: height / 2
-                        }
+                        },
+                        hdSrc: src,  // 原图src, 可能是duri(以.duri结尾的链接)
+                        ugc: ugc,  // 是否是用户上传
                     });
                     imageLayer.add(image);
                     imageLayer.draw();
@@ -547,19 +550,18 @@ mvc, readImageData, Resize) {
                                 view._crossLayer.draw();
                                 // 注意，这里一定不能用stage.draw, 否则会清除掉其他设计区
                                 // 的预览
-                                view._currentDesignRegion.previewLayer.getContext()
-                            .clearRect(view._aspectImageLayer.x(),
+                                view._currentDesignRegion.previewLayer.getContext().clearRect(view._aspectImageLayer.x(),
                                 view._aspectImageLayer.y(),
                                 view._aspectImageLayer.width(),
                                 view._aspectImageLayer.height());
-                        view._currentDesignRegion.getImageLayer().draw();
-                        if (__debug__) {
-                            view._currentDesignRegion.getImageLayer().moveToTop();
-                            setTimeout(function () {
-                                view._currentDesignRegion.getImageLayer().moveToBottom();
-                            }, 1000);
-                        }
-                        view._generatePreview();
+                                view._currentDesignRegion.getImageLayer().draw();
+                                if (__debug__) {
+                                    view._currentDesignRegion.getImageLayer().moveToTop();
+                                    setTimeout(function () {
+                                        view._currentDesignRegion.getImageLayer().moveToBottom();
+                                    }, 1000);
+                                }
+                                view._generatePreview();
                             };
                         }(this))
                     .on('mousedown', function () {
@@ -588,7 +590,7 @@ mvc, readImageData, Resize) {
                     dispatcher.trigger('object-added', image, group);
                     this._generatePreview();
                 }.bind(this);
-                if (_(imageObj.src).endsWith('.duri')) {
+                if (_(src).endsWith('.duri')) { // data uri
                     // resize by ourself, a compromised way
                     var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
                             imageObj.height);
@@ -906,15 +908,25 @@ mvc, readImageData, Resize) {
                     var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                     _.each(imageLayer.children, function (node) {
                         if (node.className === "Image") {
-                            var im = this._draw.image(
-                                readImageData.readImageDataUrl(node.image(), node.width(), node.height()),
-                                node.width() * ratio,
-                                node.height() * ratio)
-                                .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
-                                .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
-                                if (node.image().src.match(/^http/)) {
-                                    im.data("design-image-file", node.image().src)
-                                }
+                            // 对于用户上传的图片， 就直接保证是用户自己上传的原图
+                            // 对于官方设计图， 内容是低清图， 增加一个design-image-file属性
+                            // 用于后续转换为高清图
+                            var f = function (src) {
+                                var im = this._draw.image(
+                                    src, node.width() * ratio, node.height() * ratio).move(
+                                    (node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(
+                                    node.rotation(), node.x() * ratio, node.y() * ratio);
+                                if (!node.getAttr('ugc')) {
+                                    im.data("design-image-file", node.getAttr('hdSrc'));
+                                } 
+                            }.bind(this);
+                            if (_(node.getAttr('hdSrc')).endsWith('.duri')) {
+                                $.get(node.getAttr('hdSrc'), function (data) {
+                                    f(data);
+                                });     
+                            } else {
+                                f(readImageData.readImageDataUrl(node.image(), node.width(), node.height()));
+                            }
                         }
                         data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                     }, this);
@@ -1036,7 +1048,7 @@ mvc, readImageData, Resize) {
                 }
                 var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
                 $form.append($input);
-                $form.attr({target: "_blank", method: "POST", id: "download-form", action: "/image/design-pkg"});
+                $form.attr({method: "POST", id: "download-form", action: "/image/echo"});
                 $form.appendTo($("body")).submit();
                 $(evt.currentTarget).bootstrapButton('reset');
             } else {

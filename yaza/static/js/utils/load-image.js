@@ -1,4 +1,4 @@
-define(['jquery'], function ($) {
+define(['jquery', 'underscore'], function ($, _) {
 
     return function loadImage(url) {
         var d = $.Deferred();
@@ -7,7 +7,13 @@ define(['jquery'], function ($) {
         imageObj.onload = function () {
             d.resolve(imageObj);
         }.bind(this);
-        imageObj.src = url;
+        if (_(url).endsWith('.duri')) {
+            $.get(url, function (data) {
+                imageObj.src = data;
+            });
+        } else {
+            imageObj.src = url;
+        }
         return d;
     }
 })

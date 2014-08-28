@@ -13,6 +13,8 @@ from StringIO import StringIO
 from PIL import Image, ImageFont, ImageDraw
 from flask import request, jsonify, url_for, send_from_directory, json
 from flask.ext.login import current_user
+from flask.ext.headers import headers
+from speaklater import make_lazy_string
 
 from yaza.basemain import app
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
@@ -70,14 +72,15 @@ def calc_control_points(design_region_id):
     return jsonify(wraps(design_region).control_points)
 
 
-@image.route('/design-pkg', methods=['POST'])
-def design_pkg():
-    # 将svg打入包
-    sio = StringIO()
-    with closing(zipfile.ZipFile(sio, mode='w')) as zip_pkg:
-        for k, v in request.form.items():
-            zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
-    return base64.b64encode(sio.getvalue())
+@image.route('/echo', methods=['POST'])
+@headers({
+    'Content-Type': 'application/zip',
+    'Content-Disposition':
+          make_lazy_string(lambda:
+                           'attachment;filename=\"%d.zip\"' % int(time.time() * 1000))
+})
+def echo():
+    return base64.b64decode(request.form['data'])
 
 
 @image.route('/font-image', methods=['POST'])
