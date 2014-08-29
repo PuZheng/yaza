@@ -534,7 +534,7 @@ mvc, readImageData, Resize) {
                             x: width / 2,
                             y: height / 2
                         },
-                        hdSrc: src,  // 原图src, 可能是duri(以.duri结尾的链接)
+                        hdSrc: src,  // 原图src, 可能是duri链接(以.duri结尾的链接), 还有可能是data uri(用户上传的文件)
                         ugc: ugc,  // 是否是用户上传
                     });
                     imageLayer.add(image);
@@ -590,7 +590,7 @@ mvc, readImageData, Resize) {
                     dispatcher.trigger('object-added', image, group);
                     this._generatePreview();
                 }.bind(this);
-                if (_(src).endsWith('.duri')) { // data uri
+                if (_(src).endsWith('.duri') || _(src).startsWith('data')) { // data uri
                     // resize by ourself, a compromised way
                     var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
                             imageObj.height);
@@ -895,18 +895,58 @@ mvc, readImageData, Resize) {
             });
         },
 
+        // 获取所有的设计结果, 按定制区分组
         _getDesignData: function () {
-            this._draw.clear();
-            var data = {};
             var ocspu = this._currentAspect.ocspu;
+            var d = $.Deferred();
+            var drCnt = _.reduce(ocspu.aspectList.map(function (aspect) {
+                return aspect.designRegionList.length;
+            }), function (a, b) {return a + b});
+            var data = {};
+            d.progress(function (count) {
+                var counter = 0;
+                return function (drData) {
+                    if (++counter == count) {
+                        d.resolve(data);
+                    }
+                }
+            }(drCnt));
+            
             ocspu.aspectList.forEach(function (asepct) {
                 asepct.designRegionList.forEach(function (designRegion) {
                     var imageLayer = designRegion.getImageLayer();
                     this._draw.clear();
-                    this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI)
-                    .data('name', name);
+                    this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI).data('name', name);
                     var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
-                    _.each(imageLayer.children, function (node) {
+                    var designRegionD = $.Deferred(); // 这个设计区的Deferred
+                    designRegionD.progress(function (count, draw) {
+                        var counter = 0;
+                        var args = [];
+                        return function (arg) {
+                            args.push(arg);
+                            if (++counter == count) {
+                                // 因为是异步的， 必须要重新排序
+                                args.sort(function (a, b) {
+                                    return a.index - b.index;
+                                }).forEach(function (arg) {
+                                    var src = arg.src;
+                                    var node = arg.node;
+                                    var im = draw.image(
+                                        src, node.width() * ratio, node.height() * ratio).move(
+                                        (node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(
+                                        node.rotation(), node.x() * ratio, node.y() * ratio);
+                                    if (!node.getAttr('ugc')) {
+                                        im.data("design-image-file", node.getAttr('hdSrc'));
+                                    }
+                                });
+                                data[designRegion.name] = draw.exportSvg({whitespace: true});
+                                d.notify();
+                            }
+                        };
+                    }(imageLayer.getChildren(function (node) {
+                        return node.className == 'Image';
+                    }).length, this._draw));
+                    _.each(imageLayer.children, function (node, index) {
                         if (node.className === "Image") {
                             // 这里的情况很复杂，分情况描述：
                             // 1. 用户自己上传的图， 现在有两份: 一份是原图， 一份是经过resize的
@@ -917,30 +957,35 @@ mvc, readImageData, Resize) {
                             // 这个design-image-file倒不一定指向一张图片， 也可以是'.duri'格式文件
                             // 2.2 古代浏览器, hdSrc是.duri链接，直接用低清晰图片的data uri数据（其实就是当前图片的src）， 加上属性'design-image-file'， 用于后续转换
                             // 总之， 需要保证这张svg中， 只能有data uri形式的图片
+                            function _addImage(src, node, index) {
+                                designRegionD.notify({
+                                    src: src,
+                                    node: node,
+                                    index: index,
+                                });
+                            };
                             if (node.getAttr('ugc')) {
                                 var src = node.getAttr('hdSrc');
+                                _addImage(src, node, index);
                             } else {
-                                if (!_(node.getAttr('hdSrc')).endsWith('.duri')) {
+                                if (_(node.getAttr('hdSrc')).endsWith('.duri')) {
                                     var src = node.image().src;
+                                    _addImage(src, node, index);
                                 } else {
                                     var image = new Image();
+                                    image.crossOrigin = 'Anonymous';
                                     image.src = node.getAttr('hdSrc');
-                                    var src = readImageData.readImageDataUrl(image, node.width(), node.height());
+                                    image.onload = function (e) {
+                                        var src = readImageData.readImageDataUrl(image, image.width, image.height);
+                                        _addImage(src, node, index);
+                                    }.bind(this);
                                 }
                             }
-                            var im = this._draw.image(
-                                src, node.width() * ratio, node.height() * ratio).move(
-                                (node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio).rotate(
-                                node.rotation(), node.x() * ratio, node.y() * ratio);
-                            if (!node.getAttr('ugc')) {
-                                im.data("design-image-file", node.getAttr('hdSrc'));
-                            }
                         }
-                        data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                     }, this);
                 }, this);
             }, this);
-            return data;
+            return d;
         },
 
         // 下载当前面的预览
@@ -1038,33 +1083,35 @@ mvc, readImageData, Resize) {
             }
             $(evt.currentTarget).bootstrapButton('loading');
 
-            var data = this._getDesignData();
-
-            var zip = new JSZip();
-            _.each(data, function (val, key) {
-                zip.file(key + ".svg", val);
-            });
-            // 对于IE<10的浏览器，没有Blob对象，所以jszip不能正常的generate blob，并且，generate成base64后
-            // "data:application/zip;base64," + zip.generate({type:"base64"})
-            // ，其生成的链接太长，导致ie出现“传递给系统调用的数据区域太小”异常， 所以，依旧传递到后台拼装
-            if (typeof Blob == "undefined") {
-                var $form = $("#download-form");
-                if (!$form[0]) {
-                    $form = $("<form></form>");
+            this._getDesignData().done(function (data) {
+                var zip = new JSZip();
+                _.each(data, function (val, key) {
+                    zip.file(key + ".svg", val);
+                });
+                // 对于IE<10的浏览器，没有Blob对象，所以jszip不能正常的generate blob，并且，generate成base64后
+                // "data:application/zip;base64," + zip.generate({type:"base64"})
+                // ，其生成的链接太长，导致ie出现“传递给系统调用的数据区域太小”异常， 所以，依旧传递到后台拼装
+                if (typeof Blob == "undefined") {
+                    var $form = $("#download-form");
+                    if (!$form[0]) {
+                        $form = $("<form></form>");
+                    } else {
+                        $form.empty();
+                    }
+                    var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
+                    $form.append($input);
+                    
+                    $form.attr({method: "POST", id: "download-form", action: "/image/echo"});
+                    $form.appendTo($("body")).submit();
+                    $(evt.currentTarget).bootstrapButton('reset');
                 } else {
-                    $form.empty();
+                    var content = zip.generate({type: "blob"});
+                    saveAs(content, new Date().getTime() + ".zip");
+                    $(evt.currentTarget).bootstrapButton('reset');
                 }
-                var $input = $("<input></input>").attr({"name": "data", "type": "hidden"}).val(zip.generate("base64"));
-                $form.append($input);
-                
-                $form.attr({method: "POST", id: "download-form", action: "/image/echo"});
-                $form.appendTo($("body")).submit();
-                $(evt.currentTarget).bootstrapButton('reset');
-            } else {
-                var content = zip.generate({type: "blob"});
-                saveAs(content, new Date().getTime() + ".zip");
-                $(evt.currentTarget).bootstrapButton('reset');
-            }
+
+            });
+
         }
     });
 

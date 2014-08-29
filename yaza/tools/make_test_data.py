@@ -105,6 +105,7 @@ class InitializeTestDB(Command):
                         pic_url = upload_str(fname, s, bucket,
                                              mime_type='image/png')
                         upload_str(fname.rstrip('.png') + '.duri',
+                                   'data:image/png;base64,' +
                                    b2a_base64(s).strip(),
                                    bucket,
                                    mime_type='image/png')

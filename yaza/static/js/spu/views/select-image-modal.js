@@ -11,12 +11,14 @@ define([
         'spu/collections/design-images',
         'cookies-js',
         'spu/config',
+        'FileAPI',
         'utils/lazy-load',
         'underscore.string',
         'jquery.iframe-transport',
         'jquery-file-upload',
     ],
-    function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
+    function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config, 
+             FileAPI) {
 
         _.mixin(_.str.exports());
 
@@ -66,25 +68,46 @@ define([
 
                     view.$('.upload-img-form').fileupload({
                         dataType: 'json',
+                        url: 'http://up.qiniu.com',
                         add: function (e, data) {
                             $('.nav-tabs a:last').tab('show');
-                            view.$('.uploading-progress').html(
-                                templateProgress({
-                                    fileSize: formatFileSize(data.files[0].size)
-                                })).show();
-                            view.$('.uploading-progress .progress-bar').text(0 + '%').css('width', 0 + '%');
-                            var reader = new FileReader();
-                            reader.onload = function (e) {
-                                view.$('.uploading-progress img').attr('src', e.target.result);
-                            };
-                            reader.readAsDataURL(data.files[0]);
-                            // Automatically upload the file once it is added to the queue
-                            var jqXHR = data.submit();
-                            view.$('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                    jqXHR.abort();
-                                    view.$('.uploading-progress').fadeOut(1000);
+                            $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
+                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                                postfix = (postfix && postfix[0]) || '';
+                                view.$('.uploading-progress').html(
+                                    templateProgress({
+                                        fileSize: formatFileSize(data.files[0].size)
+                                    }));
+                                view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
+                                view.$('.uploading-progress').show();
+                                view.$('.uploading-progress .upload-cancel-btn').click(
+                                    function () {
+                                        data.abort();
+                                        view.$('.uploading-progress').fadeOut(1000);
+                                        return false;
+                                    });
+                                data.formData = {
+                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
+                                    'token': token.token,
+                                };
+                                debugger;
+                                FileAPI.readAsDataURL(data.files[0], function (e) {
+                                    if (e.type === 'load') {
+                                        view.$('.uploading-progress img').attr('src', e.result);
+                                        data.files[0] = new Blob([e.result], {
+                                            type: 'text/plain',
+                                        });
+                                        view.$('.upload-img-form').fileupload('send', data);
+                                    }
                                 });
+                            }).fail(function () {
+                                // TODO unhandled
+                                dispatcher.trigger('flash', {
+                                    type: 'error',
+                                    msg: '不能获取七牛的上传token',
+                                });
+                                data.abort();
+                            });
                         },
                         progress: function (e, data) {
                             // Calculate the completion percentage of the upload
@@ -95,17 +118,20 @@ define([
                             view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
                         },
                         done: function (e, data) {
-                            url = data.result.picUrl;
-                            if ($.browser.name == "msie" && $.browser.versionNumber !== 11) {
-                                url = data.result.duri;
-                            }
+                            url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
                             view.$('.uploading-progress').html(templateSuccess());
                             view.$('.uploading-progress').fadeOut(1000);
-                            Cookies.set('upload-images',
-                                    url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                            view._renderUserPics();
-                            $(".thumbnails .thumbnail").removeClass("selected");
-                            $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            FileAPI.readAsText(data.files[0], function (e) {
+                                if (e.type === 'load') {
+                                    Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                    var overrides = {};
+                                    overrides.url = e.result;
+                                    view._renderUserPics(overrides);
+                                    $(".thumbnails .thumbnail").removeClass("selected");
+                                    $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                                }
+                            });
+
                         },
                         fail: function (e, data) {
                             view.$('.uploading-progress').html(templateFail());
@@ -203,7 +229,7 @@ define([
                 },
             },
 
-            _renderUserPics: function () {
+            _renderUserPics: function (overrides) {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
                 var upload_images = (Cookies.get('upload-images') || '').trim();
@@ -229,23 +255,10 @@ define([
 
                 //加载duri的图片
                 this.$(".customer-pics").find("img").each(function (idx, item) {
-                    if (item.src.indexOf(".duri") >= 0) {
-                        var $mask = $('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></i></div>').css({
-                            width: $(item).parent().width()
-                        }).appendTo($(item).parent());
-                        $(item).hide();
-
-                        $(item).one("load", function () {
-                            $mask.remove();
-                            $(item).show();
-                        }).error(function () {
-                            $mask.remove();
-                            $(item).show();
-                        });
-                        $.get(item.src, function (data) {
-                            item.src = data;
-                        });
-
+                    if (!!overrides && overrides[item.src]) {
+                        item.src = overrides[item.src];
+                    } else {
+                        $(item).lazyLoad();
                     }
                 });
             },

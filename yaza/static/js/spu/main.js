@@ -39,6 +39,7 @@
             'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
             "image-resizer": "components/JS-Image-Resizer/resize",
+            'FileAPI': "components/FileAPI/dist/FileAPI",
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -118,6 +119,9 @@
                 deps: ['jquery'],
                 exports: '$.fn.browser'
             },
+            'FileAPI': {
+                exports: 'FileAPI',
+            },
             'image-resizer': {
                 exports: 'Resize', 
             }
@@ -150,8 +154,14 @@
 
     if (QueryString.develop != '1') {
         config.paths['js/infrastructure'] = 'http://yaza-static.qiniudn.com/static/js/infrastructure';
+        window.FileAPI = {
+            staticPath: 'http://yaza-static.qiniudn.com/static/components/FileAPI/dist/'
+        };
     } else {
         config.urlArgs = "bust=" + (new Date()).getTime();
+        window.FileAPI = { 
+            staticPath: '/static/components/FileAPI/dist/'
+        }
     }
     require.config(config);
 

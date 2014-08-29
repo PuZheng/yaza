@@ -24,31 +24,6 @@ from yaza.apis import wraps
 from yaza.qiniu_handler import upload_str
 
 
-@image.route('/upload', methods=['POST'])
-def upload():
-    fs = request.files['files[]']
-    filename = random_str(32) + '.' + fs.filename.split('.')[-1]
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    fs.save(file_path)
-    # upload to qiniu
-    bucket_ = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-
-    key = md5sum(file_path)
-    data = open(file_path, "rb").read()
-    qiniu_url = upload_str(key + os.path.splitext(file_path)[-1],
-                           data, bucket_, True, "image/png")
-
-    qiniu_duri = upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data), bucket_,
-                            True, "text/plain")
-
-    return jsonify({
-        'status': 'success',
-        "duri":qiniu_duri,
-        "picUrl" : qiniu_url,
-        'filename': url_for('image.serve', filename=filename)
-    })
-
-
 @image.route("/serve/<path:filename>")
 def serve(filename):
     if sys.platform.startswith("win32"):
