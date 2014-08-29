@@ -189,7 +189,7 @@ mvc, readImageData, Resize) {
                 }.bind(this));
             })
             .on('design-image-selected', function (arg) {
-                this._addDesignImage(arg.url, arg.title, arg.designImageId);
+                this._addDesignImage(arg.url, arg.title, arg.designImageId, arg.pic_url);
             })
             .on('active-object', function (controlGroup) {
                 if (!controlGroup) {
@@ -502,7 +502,7 @@ mvc, readImageData, Resize) {
             };
         },
 
-        _addDesignImage: function (src, title, designImageId) {
+        _addDesignImage: function (src, title, designImageId, pic_url) {
             if (!title) { // 用户自己上传的图片没有title
                 title = new Date().getTime();
             }
@@ -528,6 +528,7 @@ mvc, readImageData, Resize) {
                         width: width,
                         height: height,
                         "design-image-id": designImageId,
+                        "pic-url": pic_url,
                         name: title,
                         offset: {
                             x: width / 2,
@@ -908,13 +909,18 @@ mvc, readImageData, Resize) {
                         if (node.className === "Image") {
                             var im = this._draw.image(
                                 readImageData.readImageDataUrl(node.image(), node.width(), node.height()),
-                                node.width() * ratio,
-                                node.height() * ratio)
-                                .move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
+                                    node.width() * ratio,
+                                    node.height() * ratio);
+
+                            im.move((node.x() - node.offsetX()) * ratio, (node.y() - node.offsetY()) * ratio)
                                 .rotate(node.rotation(), node.x() * ratio, node.y() * ratio);
-                                if (node.image().src.match(/^http/)) {
-                                    im.data("design-image-file", node.image().src)
-                                }
+
+                            var pic_url = node.getAttr("pic-url");
+                            if (pic_url && pic_url.match(/^http/)) {
+                                im.data("design-image-file", pic_url)
+                            } else if (node.image().src.match(/^http/)) {
+                                im.data("design-image-file", node.image().src)
+                            }
                         }
                         data[designRegion.name] = this._draw.exportSvg({whitespace: true});
                     }, this);

@@ -153,18 +153,20 @@ define([
                         this.$el.one('hidden.bs.modal', function () {
                             var $img = this.$(".gallery .thumbnail.selected img");
                             dispatcher.trigger('design-image-selected', {
-                                url: $img.data("pic-url") || $img.attr('src'),
+                                url: $img.attr('src'),
                                 title: $img.data('title'),
                                 designImageId: $img.data("design-image-id"),
+                                pic_url: $img.data("pic-url")
                             });
                         }.bind(this));
                     } else {
                         setTimeout(function () {
                             var $img = this.$(".gallery .thumbnail.selected img");
                             dispatcher.trigger('design-image-selected', {
-                                url: $img.data("pic-url") || $img.attr('src'),
+                                url: $img.attr('src'),
                                 title: $img.data('title'),
                                 designImageId: $img.data("design-image-id"),
+                                pic_url: $img.data("pic-url")
                             });
                         }.bind(this), 50);
                     }
@@ -173,9 +175,10 @@ define([
                     this.$el.one('hidden.bs.modal', function () {
                         var $img = this.$(".gallery .thumbnail.selected img");
                         dispatcher.trigger('design-image-selected', {
-                            url: $img.data("pic-url") || $img.attr('src'),
+                            url: $img.attr('src'),
                             title: $img.data('title'),
                             designImageId: $img.data("design-image-id"),
+                            pic_url: $img.data("pic-url")
                         });
                     }.bind(this));
                     this.$el.modal('hide');

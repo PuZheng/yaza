@@ -11,8 +11,9 @@ from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
-from flask import request, jsonify, url_for, send_from_directory, json
+from flask import request, jsonify, url_for, send_from_directory, json, send_file
 from flask.ext.login import current_user
+from io import BytesIO
 
 from yaza.basemain import app
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
@@ -73,11 +74,12 @@ def calc_control_points(design_region_id):
 @image.route('/design-pkg', methods=['POST'])
 def design_pkg():
     # 将svg打入包
-    sio = StringIO()
-    with closing(zipfile.ZipFile(sio, mode='w')) as zip_pkg:
-        for k, v in request.form.items():
-            zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
-    return base64.b64encode(sio.getvalue())
+    data = request.form["data"]
+    sio = BytesIO()
+    sio.write(base64.decodestring(data))
+    sio.seek(0)
+    return send_file(sio, "application/zip", True, str(int(time.time() * 100)) + ".zip")
+
 
 
 @image.route('/font-image', methods=['POST'])
