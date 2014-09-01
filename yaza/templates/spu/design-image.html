@@ -4,6 +4,27 @@
 {% block __data_browser__customized_head_block %}
   {{ super() }}
   <script src="{{ url_for('static', filename='components/jquery.ui/ui/jquery.ui.widget.js') }}"></script>
+  <script src="{{ url_for('static', filename='components/mootools/dist/mootools-core.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='components/JSPinyin/Source/pinyin.js') }}"></script>
+  <script>
+    $(function () {
+      function my_matcher(term, text) {
+        return new Pinyin().getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+      }
 
+      if ($("select").data("select2") == undefined || $("select").data("select2") == null) {
+        $("select").select2({
+          width: "element",
+          placeholder: "请选择",
+          matcher: my_matcher
+        });
+      } else {
+        $("select").each(function () {
+          $(this).data("select2").opts.placeholder = "请选择";
+          $(this).data("select2").opts.matcher = my_matcher;
+        });
+      }
+    })
+  </script>
   {% include "flask_upload2__/macro.html" %}
 {% endblock %}

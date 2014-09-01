@@ -13,7 +13,7 @@ from yaza import ext_validators, const
 from yaza.apis import wraps
 from yaza.apis.ocspu import OCSPUWrapper, AspectWrapper
 from yaza.basemain import app, admin_nav_bar
-from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage
+from yaza.models import SPU, OCSPU, Aspect, DesignResult, DesignImage, Tag
 from yaza.database import db
 from yaza.tools.color_tools import dominant_colorz
 from yaza.utils import assert_dir, do_commit, md5sum
@@ -161,9 +161,7 @@ class AspectAdminModelView(ModelView):
 
 
 class DesignResultModelView(ModelView):
-
     list_template = "admin/design-result/list.html"
-
 
     @ModelView.cached
     @property
@@ -212,7 +210,8 @@ class DesignImageModelView(ModelView):
     @property
     def create_columns(self):
         return [col_spec.InputColSpec("title", label=u"标题"),
-                col_spec.FileColSpec("pic_upload", label=u"上传设计图", validators=[img_validator])]
+                col_spec.FileColSpec("pic_upload", label=u"上传设计图", validators=[img_validator]),
+                col_spec.InputColSpec("tags", label=u"标签")]
 
     def on_record_created(self, obj):
         obj.dominant_color = dominant_colorz(obj.pic_upload, 1)[0]
@@ -230,7 +229,9 @@ class DesignImageModelView(ModelView):
     @ModelView.cached
     @property
     def list_columns(self):
-        return ["id", "title", col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image(Image.SMALL))]
+        return ["id", "title", col_spec.HtmlSnippetColSpec("tags", label=u"标签",
+                                                           template="admin/design-image-tags-snippet.html"),
+                col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image(Image.SMALL))]
 
     def save_pic(self, pic_path):
         key = md5sum(pic_path)
@@ -240,17 +241,43 @@ class DesignImageModelView(ModelView):
 
         # upload duri
         upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
-                                app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                True, "text/plain")
+                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                   True, "text/plain")
         return qiniu_url
-
 
     @ModelView.cached
     @property
     def edit_columns(self):
         return [col_spec.InputColSpec("title", label=u"标题"),
                 col_spec.ColSpec('pic_url', label=_(u'设计图'), widget=Image()),
+                col_spec.InputColSpec("tags", label=u"标签"),
                 col_spec.FileColSpec("pic_path", label=u"上传设计图")]
+
+
+class TagModelView(ModelView):
+    def try_edit(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_view(self, processed_objs=None):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    def try_create(self):
+        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+
+    @ModelView.cached
+    @property
+    def edit_columns(self):
+        return [col_spec.InputColSpec("tag", label=u"名称")]
+
+    @ModelView.cached
+    @property
+    def create_columns(self):
+        return [col_spec.InputColSpec("tag", label=u"名称")]
+
+    @ModelView.cached
+    @property
+    def list_columns(self):
+        return [col_spec.ColSpec("id", u"编号"), col_spec.ColSpec("tag", label=u"名称")]
 
 
 spu_model_view = SPUAdminModelView(sa.SAModell(SPU, db, lazy_gettext("SPU")))
@@ -261,4 +288,7 @@ aspect_model_view = AspectAdminModelView(sa.SAModell(Aspect, db, lazy_gettext("A
 
 design_result_view = DesignResultModelView(modell=sa.SAModell(DesignResult, db, lazy_gettext("Design Result")))
 
-design_image_view = DesignImageModelView(modell=sa.SAModell(DesignImage, db, lazy_gettext("Design Image")))
+design_image_view = DesignImageModelView(
+    modell=sa.SAModell(DesignImage, db, lazy_gettext("Design Image")))
+
+tag_view = TagModelView(modell=sa.SAModell(Tag, db, lazy_gettext("Tag")))

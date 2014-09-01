@@ -9,3 +9,9 @@ class TagWrapper(ModelWrapper):
             'id': self.id,
             'tag': self.tag,
         }
+
+    def __unicode__(self):
+        return self.tag
+
+    def __repr__(self):
+        return self.tag.encode("utf-8")

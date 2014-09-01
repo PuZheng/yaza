@@ -48,7 +48,7 @@ def register_model_view(model_view, bp, **kwargs):
 
 
 for v in [views.spu_model_view, views.ocspu_model_view, views.aspect_model_view, views.design_result_view,
-          views.design_image_view]:
+          views.design_image_view, views.tag_view]:
     register_model_view(v, admin)
 
 

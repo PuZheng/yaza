@@ -125,6 +125,12 @@ class DesignImage(db.Model):
                            backref="design_image_list")
     dominant_color = db.Column(db.String(7))  # "#rrggbb"
 
+    def __unicode__(self):
+        return self.title
+
+    def __repr__(self):
+        return self.title.encode("utf-8")
+
 
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
@@ -151,6 +157,9 @@ class Tag(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(16), nullable=False, unique=True)
+
+    def __unicode__(self):
+        return self.tag
 
 
 class DesignResult(db.Model):

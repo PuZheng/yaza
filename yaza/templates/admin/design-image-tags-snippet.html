@@ -1,0 +1,5 @@
+<ul class="nav nav-pills">
+  {% for row in obj.tags %}
+  <li><a href="{{ url_for("admin.tag", id_=row.id, url=request.url) }}">{{ row.tag}}</a></li>
+  {% endfor %}
+</ul>
