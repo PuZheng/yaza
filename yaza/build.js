@@ -27,19 +27,19 @@
         "jszip": "empty:",
         "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
+        modernizr: 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
         buckets: 'components/buckets/buckets',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-        'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
+        'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
         'text': 'components/text/text',
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',
         'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
         "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
         "image-resizer": "components/JS-Image-Resizer/resize",
-        'FileAPI': "components/FileAPI/dist/FileAPI.min",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
@@ -138,8 +138,8 @@
         'image-resizer': {
             exports: 'Resize', 
         },
-        'FileAPI': {
-            exports: 'FileAPI',
+        'modernizr': {
+            exports: 'Modernizr',
         },
         'jquery.browser': {
             deps: ['jquery'],

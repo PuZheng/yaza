@@ -13,6 +13,10 @@
 
 {% block customized_tail_block %}
   <script type='text/javascript'>
+    function loadImages() {
+      debugger;
+      alert('hello');
+    }
     (function () {
       if (!Modernizr.canvas) {
         //IE11起移除了 document.createStyleSheet()

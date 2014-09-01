@@ -11,18 +11,39 @@ from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
-from flask import request, jsonify, url_for, send_from_directory, json
+from flask import request, jsonify, url_for, send_from_directory, json, render_template
 from flask.ext.login import current_user
 from flask.ext.headers import headers
 from speaklater import make_lazy_string
 
-from yaza.basemain import app
+from yaza.basemain import app, scheduler
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
 from yaza.utils import random_str, do_commit, assert_dir, md5sum
 from yaza.apis import wraps
 from yaza.qiniu_handler import upload_str
 
+
+@image.route('/upload', methods=['GET', 'POST'])
+def upload():
+    return render_template('image/upload.html')
+    #fs = request.files['file']
+    #filename = request.form['key']
+    #file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #si = StringIO()
+    #fs.save(si)
+    #with closing(open(file_path, 'w')) as f:
+        #s = 'data:' + request.form['type'] + ';base64,' + base64.b64encode(si.getvalue())
+        #f.write(s)
+
+    #scheduler.add_job(upload_str, args=[filename, s,
+                                        #app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                        #True,
+                                        #'text/plain'])
+    #return jsonify({
+        #'status': 'success',
+        #"duri": url_for('image.serve', filename=filename)
+    #})
 
 @image.route("/serve/<path:filename>")
 def serve(filename):

@@ -3,6 +3,7 @@ define([
         'backbone',
         'underscore',
         'handlebars',
+        'modernizr',
         'dispatcher',
         'text!templates/gallery.hbs',
         'text!templates/uploading-progress.hbs',
@@ -11,14 +12,14 @@ define([
         'spu/collections/design-images',
         'cookies-js',
         'spu/config',
-        'FileAPI',
         'utils/lazy-load',
         'underscore.string',
         'jquery.iframe-transport',
         'jquery-file-upload',
     ],
-    function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config, 
-             FileAPI) {
+    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
+              uploadingProgressTemplate, uploadingSuccessTemplate, 
+              uploadingFailTemplate, DesignImages, Cookies, config) {
 
         _.mixin(_.str.exports());
 
@@ -66,48 +67,59 @@ define([
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
                     var templateFail = handlebars.default.compile(uploadingFailTemplate);
 
+
                     view.$('.upload-img-form').fileupload({
                         dataType: 'json',
-                        url: 'http://up.qiniu.com',
+                        acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
+                        url: Modernizr.filereader? 'http://up.qiniu.com': '/image/upload',
                         add: function (e, data) {
                             $('.nav-tabs a:last').tab('show');
-                            $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
-                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
-                                postfix = (postfix && postfix[0]) || '';
-                                view.$('.uploading-progress').html(
-                                    templateProgress({
-                                        fileSize: formatFileSize(data.files[0].size)
-                                    }));
-                                view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
-                                view.$('.uploading-progress').show();
-                                view.$('.uploading-progress .upload-cancel-btn').click(
-                                    function () {
-                                        data.abort();
-                                        view.$('.uploading-progress').fadeOut(1000);
-                                        return false;
-                                    });
-                                data.formData = {
-                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
-                                    'token': token.token,
-                                };
-                                debugger;
-                                FileAPI.readAsDataURL(data.files[0], function (e) {
-                                    if (e.type === 'load') {
-                                        view.$('.uploading-progress img').attr('src', e.result);
-                                        data.files[0] = new Blob([e.result], {
-                                            type: 'text/plain',
-                                        });
-                                        view.$('.upload-img-form').fileupload('send', data);
-                                    }
-                                });
-                            }).fail(function () {
-                                // TODO unhandled
-                                dispatcher.trigger('flash', {
-                                    type: 'error',
-                                    msg: '不能获取七牛的上传token',
-                                });
+                            view.$('.uploading-progress').html(
+                                templateProgress({
+                                fileSize: formatFileSize(data.files[0].size)
+                            }));
+                            view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
+                            view.$('.uploading-progress').show();
+                            view.$('.uploading-progress .upload-cancel-btn').click(
+                                function () {
                                 data.abort();
+                                view.$('.uploading-progress').fadeOut(1000);
+                                return false;
                             });
+                            // 如果支持filereader, 那么就直接可以产生data uri, 就
+                            // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
+                            var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                            postfix = (postfix && postfix[0]) || '';
+                            data.formData = {
+                                'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
+                                'type': 'image/' + postfix,
+                            }
+                            if (Modernizr.filereader) {
+                                $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
+                                    data.formData.token = token.token;
+
+                                    var fr = new FileReader();
+                                    fr.onload = function (e) {
+                                        if (e.type == 'load') {
+                                            view.$('.uploading-progress img').attr('src', e.target.result);
+                                            data.files[0] = new Blob([e.target.result], {
+                                                type: 'text/plain',
+                                            });
+                                            view.$('.upload-img-form').fileupload('send', data);
+                                        }
+                                    }
+                                    fr.readAsDataURL(data.files[0]);
+                                }).fail(function () {
+                                    // TODO unhandled
+                                    dispatcher.trigger('flash', {
+                                        type: 'error',
+                                        msg: '不能获取七牛的上传token',
+                                    });
+                                    data.abort();
+                                });
+                            } else {
+                                view.$('.upload-img-form').fileupload('send', data);
+                            }
                         },
                         progress: function (e, data) {
                             // Calculate the completion percentage of the upload
@@ -118,20 +130,30 @@ define([
                             view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
                         },
                         done: function (e, data) {
-                            url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
                             view.$('.uploading-progress').html(templateSuccess());
                             view.$('.uploading-progress').fadeOut(1000);
-                            FileAPI.readAsText(data.files[0], function (e) {
-                                if (e.type === 'load') {
-                                    Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                                    var overrides = {};
-                                    overrides.url = e.result;
-                                    view._renderUserPics(overrides);
-                                    $(".thumbnails .thumbnail").removeClass("selected");
-                                    $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
+                            if (Modernizr.filereader) {
+                                var fr = new FileReader();
+                                fr.onload = function (e) {
+                                    if (e.type === 'load') {
+                                        Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                        var overrides = {};
+                                        overrides.url = e.target.result;
+                                        view._renderUserPics(overrides);
+                                        $(".thumbnails .thumbnail").removeClass("selected");
+                                        $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                                    }
                                 }
-                            });
-
+                                fr.readAsText(data.files[0]);
+                            } else {
+                                url = url + ';' + data.response().result.duri;
+                                Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                view._renderUserPics();
+                                $(".thumbnails .thumbnail").removeClass("selected");
+                                $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            }
+                                
                         },
                         fail: function (e, data) {
                             view.$('.uploading-progress').html(templateFail());
@@ -164,6 +186,12 @@ define([
             },
 
             events: {
+                'click button.btn-success': function (e) {
+                    var myWindow = window.open(
+                        '/image/upload', 
+                        'myWindow', 
+                        'status=0,toolbar=0,width=500,height=100');
+                },
                 'click .gallery .thumbnail': function (evt) {
                     this.$(".gallery .thumbnail").removeClass("selected");
                     this.$(evt.currentTarget).addClass("selected");
@@ -258,7 +286,18 @@ define([
                     if (!!overrides && overrides[item.src]) {
                         item.src = overrides[item.src];
                     } else {
-                        $(item).lazyLoad();
+                        if (_(item.src).include(';')) {
+                            var fallbackSrc = item.src.split(';')[1];
+                            item.src = item.src.split(';')[0];
+                            $(item).lazyLoad({
+                                fail: function () {
+                                    this.src = fallbackSrc;
+                                    $(this).lazyLoad();
+                                }, 
+                            });
+                        } else {
+                            $(item).lazyLoad();
+                        }
                     }
                 });
             },

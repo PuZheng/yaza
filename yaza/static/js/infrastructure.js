@@ -10,6 +10,5 @@ define(['jquery'], function () {
         'jquery.browser',
         "canvas-toBlob",
         'filesaver',
-        'FileAPI',
         'image-resizer'], function () {});
 });

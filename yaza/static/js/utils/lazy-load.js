@@ -6,10 +6,10 @@ require(['jquery'], function (jQuery) {
         $.fn.extend({ 
             
             //This is where you write your plugin's name
-            lazyLoad: function() {
+            lazyLoad: function(opts) {
 
                 //Iterate over the current set of matched elements
-                return this.each(function() {
+                return this.each(function(index) {
                     var $obj = $(this);	
                     if ($obj[0].completed) {
                         return;
@@ -20,13 +20,17 @@ require(['jquery'], function (jQuery) {
                     var src = $obj.attr('src');
 
                     $obj.hide();
-                    $obj.one("load", function () {
+                    this.onload = function (e) {
                         $mask.remove();
                         $obj.show();
-                    }).error(function() {
+                    }
+                    this.onerror = function (e) {
                         $mask.remove();
                         $obj.show();
-                    });
+                        if (!!opts && opts.fail) {
+                            opts.fail.call($obj[0], index)
+                        }
+                    }
                     if (src.indexOf(".duri") >= 0) {
                         $.get(src).done(function(data){
                             $obj.attr("src", data);

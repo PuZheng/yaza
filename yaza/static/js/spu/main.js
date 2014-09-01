@@ -26,12 +26,13 @@
             'toastr': 'http://cdn.bootcss.com/toastr.js/latest/js/toastr.min',
             "jszip": "http://cdn.bootcss.com/jszip/2.3.0/jszip.min",
             'jquery-ajaxtransport-xdomainrequest': "http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
+            modernizr: 'http://cdn.bootcss.com/modernizr/2.8.2/modernizr.min',
             // vendors not using cdn
             'svg.export': 'components/svg.export.js/svg.export',
             kineticjs: 'components/kineticjs/kinetic.min',
             buckets: 'components/buckets/buckets',
             'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-            'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
+            'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
             'text': 'components/text/text',
             'css': 'components/require-css/css.min',
             "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
@@ -39,7 +40,6 @@
             'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
             "image-resizer": "components/JS-Image-Resizer/resize",
-            'FileAPI': "components/FileAPI/dist/FileAPI",
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -73,7 +73,9 @@
             },
             'jquery-file-upload': {
                 deps: ['css!components/blueimp-file-upload/css/jquery.fileupload.css',
-                    'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css']
+                    'css!components/blueimp-file-upload/css/jquery.fileupload-ui.css',
+                    'jquery.ui.widget',
+                    'jquery.iframe-transport']
             },
             'spectrum': {
                 deps: ['css!http://cdn.bootcss.com/spectrum/1.3.0/css/spectrum.min.css', 'jquery'],
@@ -119,8 +121,8 @@
                 deps: ['jquery'],
                 exports: '$.fn.browser'
             },
-            'FileAPI': {
-                exports: 'FileAPI',
+            'modernizr': {
+                exports: 'Modernizr',
             },
             'image-resizer': {
                 exports: 'Resize', 
