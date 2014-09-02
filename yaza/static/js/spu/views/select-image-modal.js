@@ -44,12 +44,6 @@ define([
             render: function () {
                 this.$('.nav-tabs a:first').tab('show');
 
-                if (Modernizr.filereader) {
-                    this.$('button.btn-upload-img').hide();
-                } else {
-                    this.$('upload-img-form').hide();
-                }
-
                 var view = this;
                 this.$el.on('shown.bs.modal', function (e) {
                     if (!view._designImagesPerPage) {
@@ -135,7 +129,7 @@ define([
                             done: function (e, data) {
                                 view.$('.uploading-progress').html(templateSuccess());
                                 view.$('.uploading-progress').fadeOut(1000);
-                                url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
+                                var url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
                                 var fr = new FileReader();
                                 fr.onload = function (e) {
                                     if (e.type === 'load') {
@@ -156,21 +150,33 @@ define([
                         });
 
                     } else {
+                        var key = null;
                         view.$('.upload-img-form').fileupload({
-                            dataType: '',
+                            dataType: '',  // 注意， 一定不能是json， 否则服务器返回空， 没法解析
                             acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
                             url: '/image/upload',
                             add: function (e, data) {
                                 var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                                 postfix = (postfix && postfix[0]) || '';
+                                key = 'ugc.' + new Date().getTime() + '.' + postfix + '.duri';
                                 data.formData = {
-                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
-                                    'type': 'image/' + postfix,
+                                    key: key,
+                                    type: 'image/' + postfix,
                                 }
-                                data.submit();
+                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
+                                                                   config.QINIU_CONF.STATIC_BUCKET + 
+                                                                   '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
+                                view.$('.upload-img-form').fileupload('send', data);
                             },
                             done: function (e, data) {
-                                debugger;
+                                view.$('.uploading-progress').html(templateSuccess());
+                                view.$('.uploading-progress').fadeOut(1000);
+                                var src = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + key;
+                                var fallbackSrc = '/image/serve/' + key;
+                                Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                view._renderUserPics();
+                                $(".thumbnails .thumbnail").removeClass("selected");
+                                $(".customer-pics").find(".thumbnail:first").addClass("selected");
                             }
                         });
                     }
@@ -200,13 +206,6 @@ define([
             },
 
             events: {
-                'click button.btn-upload-img': function (e) {
-                    var myWindow = window.open(
-                        '/image/upload', 
-                        'upload', 
-                        'status=0,menubar=0,toolbar=0');
-                    return false;
-                },
                 'click .gallery .thumbnail': function (evt) {
                     this.$(".gallery .thumbnail").removeClass("selected");
                     this.$(evt.currentTarget).addClass("selected");
@@ -365,13 +364,6 @@ define([
                 return d;
             },
 
-            addImage: function (src, fallbackSrc) {
-                url = url + ';' + data.response().result.duri;
-                Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                view._renderUserPics();
-                $(".thumbnails .thumbnail").removeClass("selected");
-                $(".customer-pics").find(".thumbnail:first").addClass("selected");
-            }
         });
 
         return SelectImageModal;

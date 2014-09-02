@@ -111,6 +111,12 @@ class InitializeTestDB(Command):
                                    mime_type='image/png')
                 except AlreadyExists:
                     pic_url = u"http://%s.qiniudn.com/%s" % (bucket, fname)
+                    upload_str(fname.rstrip('.png') + '.duri',
+                               'data:image/png;base64,' +
+                               b2a_base64(s).strip(),
+                               bucket,
+                               True,
+                               mime_type='image/png')
 
                 dominant_color = color_tools.dominant_colorz(full_path, 1)[0]
                 # 简单起见, thumbnail不压缩了

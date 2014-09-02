@@ -71,7 +71,13 @@
             & .upload-cancel-btn {
                 margin-left: 10px;
             }
+
+            & img.progressbar {
+                height: 20px;
+                width: 100%;
+            }
         }
+
     }
 
     & .btn-tag {

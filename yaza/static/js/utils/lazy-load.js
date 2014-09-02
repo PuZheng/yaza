@@ -14,7 +14,7 @@ require(['jquery'], function (jQuery) {
                     if ($obj[0].completed) {
                         return;
                     }
-                    var $mask = $('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></i></div>').css({
+                    var $mask = $('<div class="image-mask text-center"><i class="fa fa-spinner fa-spin fa-2x"></i><img src="http://yaza-static.qiniudn.com/static/components/blueimp-file-upload/img/loading.gif" /></div>').css({
                         width: $obj.parent().width()
                     }).appendTo($obj.parent());
                     var src = $obj.attr('src');

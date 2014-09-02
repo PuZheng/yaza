@@ -32,6 +32,22 @@ body {
         & i {
             vertical-align: middle;
             color:yellow;
+            display: none;
+        }
+    }
+
+    .image-mask i {
+        display: none;
+    }
+}
+
+.cssanimations .primary {
+    .mask,.image-mask {
+        & i {
+            display: inline-block;
+        }
+        & img {
+            display: none;
         }
     }
 }
