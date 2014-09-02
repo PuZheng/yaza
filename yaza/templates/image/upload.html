@@ -2,15 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title></title>
+  <title>上传图片</title>
+</head>
+<body>
+  <form class='upload-img-form' method="POST" action="/image/upload" enctype="multipart/form-data">
+    <input id="" type="file" name="file">
+    <input type="hidden" name="key">
+    <button class="btn btn-default">确认</button>
+  </form>
   <script src="http://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
   <script>
 $(function () {
-    window.opener.loadImages();
-    });
+    $('input:file').change(function (e) {
+      var postfix = this.files[0].name.match(/png|jpeg|jpg/i);
+      postfix = (postfix && postfix[0]) || '';
+      $('input[type="hidden"]').val('ugc.' + new Date().getTime() + '.' + postfix + '.duri')
+      })
+    $('.upload-img-form').submit(function (e) {
+      $.ajax(
+
+        ).done(function (data) {
+          window.opener.flash('您已经成功上传图片!');
+          window.opener.addImage(data.src, data['fallback-src']);
+          window.close();
+        })
+      return false;
+      })
+  });
   </script>
-</head>
-<body>
-  
 </body>
 </html>

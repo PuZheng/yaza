@@ -44,6 +44,12 @@ define([
             render: function () {
                 this.$('.nav-tabs a:first').tab('show');
 
+                if (Modernizr.filereader) {
+                    this.$('button.btn-upload-img').hide();
+                } else {
+                    this.$('upload-img-form').hide();
+                }
+
                 var view = this;
                 this.$el.on('shown.bs.modal', function (e) {
                     if (!view._designImagesPerPage) {
@@ -68,33 +74,33 @@ define([
                     var templateFail = handlebars.default.compile(uploadingFailTemplate);
 
 
-                    view.$('.upload-img-form').fileupload({
-                        dataType: 'json',
-                        acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
-                        url: Modernizr.filereader? 'http://up.qiniu.com': '/image/upload',
-                        add: function (e, data) {
-                            $('.nav-tabs a:last').tab('show');
-                            view.$('.uploading-progress').html(
-                                templateProgress({
-                                fileSize: formatFileSize(data.files[0].size)
-                            }));
-                            view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
-                            view.$('.uploading-progress').show();
-                            view.$('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                data.abort();
-                                view.$('.uploading-progress').fadeOut(1000);
-                                return false;
-                            });
-                            // 如果支持filereader, 那么就直接可以产生data uri, 就
-                            // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
-                            var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
-                            postfix = (postfix && postfix[0]) || '';
-                            data.formData = {
-                                'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
-                                'type': 'image/' + postfix,
-                            }
-                            if (Modernizr.filereader) {
+                    if (Modernizr.filereader) {
+                        view.$('.upload-img-form').fileupload({
+                            dataType: 'json',
+                            acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
+                            url: 'http://up.qiniu.com',
+                            add: function (e, data) {
+                                $('.nav-tabs a:last').tab('show');
+                                view.$('.uploading-progress').html(
+                                    templateProgress({
+                                    fileSize: formatFileSize(data.files[0].size)
+                                }));
+                                view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
+                                view.$('.uploading-progress').show();
+                                view.$('.uploading-progress .upload-cancel-btn').click(
+                                    function () {
+                                    data.abort();
+                                    view.$('.uploading-progress').fadeOut(1000);
+                                    return false;
+                                });
+                                // 如果支持filereader, 那么就直接可以产生data uri, 就
+                                // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
+                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                                postfix = (postfix && postfix[0]) || '';
+                                data.formData = {
+                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
+                                    'type': 'image/' + postfix,
+                                }
                                 $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
                                     data.formData.token = token.token;
 
@@ -117,23 +123,19 @@ define([
                                     });
                                     data.abort();
                                 });
-                            } else {
-                                view.$('.upload-img-form').fileupload('send', data);
-                            }
-                        },
-                        progress: function (e, data) {
-                            // Calculate the completion percentage of the upload
-                            var progress = parseInt(data.loaded / data.total * 100, 10);
+                            },
+                            progress: function (e, data) {
+                                // Calculate the completion percentage of the upload
+                                var progress = parseInt(data.loaded / data.total * 100, 10);
 
-                            // Update the hidden input field and trigger a change
-                            // so that the jQuery knob plugin knows to update the dial
-                            view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
-                        },
-                        done: function (e, data) {
-                            view.$('.uploading-progress').html(templateSuccess());
-                            view.$('.uploading-progress').fadeOut(1000);
-                            url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
-                            if (Modernizr.filereader) {
+                                // Update the hidden input field and trigger a change
+                                // so that the jQuery knob plugin knows to update the dial
+                                view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
+                            },
+                            done: function (e, data) {
+                                view.$('.uploading-progress').html(templateSuccess());
+                                view.$('.uploading-progress').fadeOut(1000);
+                                url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
                                 var fr = new FileReader();
                                 fr.onload = function (e) {
                                     if (e.type === 'load') {
@@ -146,20 +148,32 @@ define([
                                     }
                                 }
                                 fr.readAsText(data.files[0]);
-                            } else {
-                                url = url + ';' + data.response().result.duri;
-                                Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                                view._renderUserPics();
-                                $(".thumbnails .thumbnail").removeClass("selected");
-                                $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            },
+                            fail: function (e, data) {
+                                view.$('.uploading-progress').html(templateFail());
+                                view.$('.uploading-progress').fadeOut(1000);
                             }
-                                
-                        },
-                        fail: function (e, data) {
-                            view.$('.uploading-progress').html(templateFail());
-                            view.$('.uploading-progress').fadeOut(1000);
-                        }
-                    });
+                        });
+
+                    } else {
+                        view.$('.upload-img-form').fileupload({
+                            dataType: '',
+                            acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
+                            url: '/image/upload',
+                            add: function (e, data) {
+                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                                postfix = (postfix && postfix[0]) || '';
+                                data.formData = {
+                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
+                                    'type': 'image/' + postfix,
+                                }
+                                data.submit();
+                            },
+                            done: function (e, data) {
+                                debugger;
+                            }
+                        });
+                    }
                 });
 
                 this.$('.thumbnails').scroll(function (playGround) {
@@ -186,11 +200,12 @@ define([
             },
 
             events: {
-                'click button.btn-success': function (e) {
+                'click button.btn-upload-img': function (e) {
                     var myWindow = window.open(
                         '/image/upload', 
-                        'myWindow', 
-                        'status=0,toolbar=0,width=500,height=100');
+                        'upload', 
+                        'status=0,menubar=0,toolbar=0');
+                    return false;
                 },
                 'click .gallery .thumbnail': function (evt) {
                     this.$(".gallery .thumbnail").removeClass("selected");
@@ -348,8 +363,15 @@ define([
                     }
                 }(this));
                 return d;
-            }
+            },
 
+            addImage: function (src, fallbackSrc) {
+                url = url + ';' + data.response().result.duri;
+                Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                view._renderUserPics();
+                $(".thumbnails .thumbnail").removeClass("selected");
+                $(".customer-pics").find(".thumbnail:first").addClass("selected");
+            }
         });
 
         return SelectImageModal;

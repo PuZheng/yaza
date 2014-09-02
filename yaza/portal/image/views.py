@@ -26,24 +26,29 @@ from yaza.qiniu_handler import upload_str
 
 @image.route('/upload', methods=['GET', 'POST'])
 def upload():
-    return render_template('image/upload.html')
-    #fs = request.files['file']
-    #filename = request.form['key']
-    #file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    #si = StringIO()
-    #fs.save(si)
-    #with closing(open(file_path, 'w')) as f:
-        #s = 'data:' + request.form['type'] + ';base64,' + base64.b64encode(si.getvalue())
-        #f.write(s)
+    if request.method == 'GET':
+        return render_template('image/upload.html')
+    else:
+        fs = request.files['file']
+        filename = request.form['key']
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        si = StringIO()
+        fs.save(si)
+        with closing(open(file_path, 'w')) as f:
+            s = 'data:' + request.form['type'] + ';base64,' + base64.b64encode(si.getvalue())
+            f.write(s)
 
-    #scheduler.add_job(upload_str, args=[filename, s,
-                                        #app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                        #True,
-                                        #'text/plain'])
-    #return jsonify({
-        #'status': 'success',
-        #"duri": url_for('image.serve', filename=filename)
-    #})
+        scheduler.add_job(upload_str, args=[filename, s,
+                                            app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                            True,
+                                            'text/plain'])
+        src = 'http://' + app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'] + \
+            '.qiniudn.com/' + filename
+        return ''
+        return jsonify({
+            'src': src,
+            'fallback-src': url_for('image.server', filename=filename)
+        })
 
 @image.route("/serve/<path:filename>")
 def serve(filename):
