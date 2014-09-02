@@ -1,3 +1,5 @@
+{
+  "name": "yaza",
   "version": "0.1.0",
   "homepage": "https//github.com/PuZheng/yaza",
   "authors": [
@@ -50,7 +52,6 @@
     "ekko-lightbox": "~3.1.4",
     "jquery.browser": "~0.0.6",
     "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git",
-    "JS-Image-Resizer": "https://github.com/grantgalitz/JS-Image-Resizer.git",
-    "FileAPI": "~2.0.6"
+    "JS-Image-Resizer": "https://github.com/grantgalitz/JS-Image-Resizer.git"
   }
 }
