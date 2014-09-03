@@ -918,8 +918,8 @@ mvc, readImageData, Resize) {
             ocspu.aspectList.forEach(function (asepct) {
                 asepct.designRegionList.forEach(function (designRegion) {
                     var imageLayer = designRegion.getImageLayer();
-                    this._draw.clear();
-                    this._draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI).data('name', name);
+                    var draw = SVG(document.createElement("div"));
+                    draw.size(designRegion.size[0] * config.PPI, designRegion.size[1] * config.PPI).data('name', name);
                     var ratio = designRegion.size[0] * config.PPI / imageLayer.width();
                     var designRegionD = $.Deferred(); // 这个设计区的Deferred
                     designRegionD.progress(function (count, draw) {
@@ -948,7 +948,11 @@ mvc, readImageData, Resize) {
                         };
                     }(imageLayer.getChildren(function (node) {
                         return node.className == 'Image';
-                    }).length, this._draw));
+                    }).length, draw));
+                    // 若当前定制区没有操作， 不要忘了通知
+                    if (imageLayer.children.length == 0) {
+                        d.notify();
+                    }
                     _.each(imageLayer.children, function (node, index) {
                         if (node.className === "Image") {
                             // 这里的情况很复杂，分情况描述：
