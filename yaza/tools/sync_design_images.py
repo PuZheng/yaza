@@ -42,12 +42,11 @@ if __name__ == '__main__':
 
             data = requests.get(record["url"]).content
 
-            key = md5(data).hexdigest()
             # push img to qiniu
-            pic_url = upload_str(key + ".png", data,
+            pic_url = upload_str(record['file_name'] + ".png", data,
                                  app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"], True, "image/png")
 
-            upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data),
+            upload_str(record['file_name'] + ".duri", "data:image/png;base64," + base64.b64encode(data),
                        app.config["QINIU_CONF"]["DESIGN_IMAGE_BUCKET"], True, "text/plain")
 
             dominant_color = color_tools.dominant_colorz(StringIO(data), 1)[0]
