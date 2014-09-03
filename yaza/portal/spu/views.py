@@ -8,6 +8,7 @@ from flask.ext.babel import lazy_gettext
 from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied, Permission, RoleNeed
 
+from yaza.basemain import app
 from yaza import models, const
 from yaza.apis import wraps
 from yaza.database import db
@@ -27,20 +28,30 @@ class SPUModelView(ModelView):
             try:
                 order_id, operator_id = serializer.loads(request.args["captcha"])
             except Exception:
-                raise PermissionDenied
+                if app.config["LOGIN_REQUIRED"]:
+                    raise PermissionDenied
         else:
             if current_user.is_authenticated():
                 Permission(RoleNeed(const.VENDOR_GROUP)).test()
             else:
-                raise PermissionDenied
+                if app.config["LOGIN_REQUIRED"]:
+                    raise PermissionDenied
 
         spu = self._get_one(id_)
-        design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
+        if "design-image" in request.args:
+            design_image_list = [wraps(models.DesignImage.query.get(request.args["design-image"])).as_dict(False)]
+            readonly = True
+        else:
+            design_image_list = [wraps(di).as_dict(False) for di in models.DesignImage.query.all()]
+            readonly = False
+
         params = {"time": time.time(), "spu": wraps(spu),
                   "design_image_list": json.dumps(design_image_list),
                   'tag_list': [wraps(tag).as_dict() for tag in Tag.query.all()]}
         if order_id:
             params["order_id"], params["operator_id"] = order_id, operator_id
+        if readonly:
+            params["readonly"] = True
         return render_template(self.edit_template, **params)
 
 

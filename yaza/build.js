@@ -27,12 +27,13 @@
         "jszip": "empty:",
         "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
+        modernizr: 'empty:',
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
         buckets: 'components/buckets/buckets',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
-        'jquery.iframe-transport': 'components/jquery.iframe-transport/jquery.iframe-transport',
+        'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
         'text': 'components/text/text',
         "filesaver":"components/FileSaver/FileSaver",
         'css': 'components/require-css/css.min',
@@ -136,6 +137,9 @@
         },
         'image-resizer': {
             exports: 'Resize', 
+        },
+        'modernizr': {
+            exports: 'Modernizr',
         },
         'jquery.browser': {
             deps: ['jquery'],

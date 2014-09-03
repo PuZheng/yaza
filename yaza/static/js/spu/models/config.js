@@ -33,6 +33,7 @@ define(['backbone'], function (Backbone) {
             PREVIEW_DOWNLOADABLE: true,
             DESIGN_DOWNLOADABLE: true,
             CLEAR_PREVIEW_BEFORE_DRAG: false,
+            QINIU_CONF: {}
         }
     });
 

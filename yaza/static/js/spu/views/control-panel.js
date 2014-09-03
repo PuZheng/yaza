@@ -15,10 +15,14 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             this._spu = option.spu;
             this._tagList = option.tagList;
             this._setupEventsHandler();
+            this._readonly = $("[name=readonly]").data("val") == "True";
+            if(this._readonly){
+                this._defaultDesignImage = $("[name=design-image-list]").data("val")[0];
+            }
         },
 
         render: function () {
-            this.$el.html(this._template({spu: this._spu, tagList: this._tagList}));
+            this.$el.html(this._template({spu: this._spu, tagList: this._tagList, readonly: this._readonly}));
             this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                 $(e).data('ocspu', this._spu.ocspuList[idx]);
             }.bind(this));
@@ -29,7 +33,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 el: this.$('.object-manager')
             }).render();
             this._textOperators = new TextOperators({
-                el: this.$('.text-operators'),
+                el: this.$('.text-operators')
             }).render();
             return this;
         },
@@ -78,7 +82,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 var $btn = $(e.currentTarget);
                 $btn.bootstrapButton('loading');
                 dispatcher.trigger('submit-design');
-            },
+            }
         },
 
 
@@ -126,15 +130,26 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 }
             })
             .on('design-region-setup', function (designRegion) {
-                this._objectManager.empty();
-                designRegion.getImageLayer().getChildren(function (node) {
-                    return node.getClassName() == "Image";
-                }).sort(function (a, b) {
-                    return a.getZIndex() - b.getZIndex();
-                }).forEach(function (node) {
-                    this._objectManager.add(node, node.getAttr("control-group"));
-                }.bind(this));
-                this._textOperators.reset();
+                    if (this._readonly && this._defaultDesignImage) {
+                        dispatcher.trigger("design-image-selected",
+                            {url: this._defaultDesignImage.pic_url,
+                                title: this._defaultDesignImage.title,
+                                designImageId: this._defaultDesignImage.id});
+
+                        // _defaultDesignImage只能设置一次
+                        this._defaultDesignImage = null;
+                    }
+
+                    this._objectManager.empty();
+                    designRegion.getImageLayer().getChildren(function (node) {
+                        return node.getClassName() == "Image";
+                    }).sort(function (a, b) {
+                        return a.getZIndex() - b.getZIndex();
+                    }).forEach(function (node) {
+                        this._objectManager.add(node, node.getAttr("control-group"));
+                    }.bind(this));
+                    this._textOperators.reset();
+
             }, this)
             .on('active-object', function (controlGroup) {
                 if (!!controlGroup) {
@@ -213,7 +228,7 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             var thumbnailContext = layer.getContext();
             thumbnailContext.imageSmoothEnabled = true;
             thumbnailContext.drawImage(previewLayer.getContext().canvas._canvas, previewLayer.x(), previewLayer.y(), previewLayer.width(), previewLayer.height(), 0, 0, $image.width(), $image.height());
-        },
+        }
 
     });
     return ControlPanel;

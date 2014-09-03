@@ -6,16 +6,18 @@
 import os
 import shutil
 import json
+from contextlib import closing
+from binascii import b2a_base64
 
 from setuptools import Command
 from werkzeug.security import generate_password_hash
-from flask import url_for
 
 import yaza
 from yaza.basemain import app
 from yaza.models import (User, Group, DesignImage, Tag)
 from yaza.utils import do_commit, assert_dir
 from yaza.tools import color_tools
+from yaza.qiniu_handler import upload_str, AlreadyExists
 
 
 class InitializeTestDB(Command):
@@ -76,7 +78,6 @@ class InitializeTestDB(Command):
                     os.path.join(os.path.split(yaza.__file__)[0],
                                  app.config["UPLOAD_FOLDER"]))
 
-
     def _create_design_images(self, dir):
         assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
                                 app.config['DESIGN_IMAGE_FOLDER']))
@@ -86,10 +87,6 @@ class InitializeTestDB(Command):
         with app.test_request_context():
             for fname, v in config.items():
                 full_path = os.path.join(dir, fname)
-                shutil.copy(full_path,
-                            os.path.join(app.config['UPLOAD_FOLDER'],
-                                         app.config['DESIGN_IMAGE_FOLDER'],
-                                         fname))
                 title = v['title']
                 tags = v['tags']
                 tag_record_list = []
@@ -100,10 +97,26 @@ class InitializeTestDB(Command):
                     else:
                         tag_record = tag_record[0]
                     tag_record_list.append(tag_record)
-                pic_url = url_for('image.serve', filename=os.path.join(
-                    app.config['DESIGN_IMAGE_FOLDER'],
-                    fname,
-                ).replace('\\', '/'))
+                bucket = app.config['QINIU_CONF']['SPU_IMAGE_BUCKET']
+                try:
+                    with closing(open(full_path, 'rb')) as f:
+                        print 'uploading ' + full_path + ' ...'
+                        s = f.read()
+                        pic_url = upload_str(fname, s, bucket,
+                                             mime_type='image/png')
+                        upload_str(fname.rstrip('.png') + '.duri',
+                                   'data:image/png;base64,' +
+                                   b2a_base64(s).strip(),
+                                   bucket,
+                                   mime_type='image/png')
+                except AlreadyExists:
+                    pic_url = u"http://%s.qiniudn.com/%s" % (bucket, fname)
+                    upload_str(fname.rstrip('.png') + '.duri',
+                               'data:image/png;base64,' +
+                               b2a_base64(s).strip(),
+                               bucket,
+                               True,
+                               mime_type='image/png')
 
                 dominant_color = color_tools.dominant_colorz(full_path, 1)[0]
                 # 简单起见, thumbnail不压缩了

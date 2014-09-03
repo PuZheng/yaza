@@ -26,22 +26,24 @@
 </div>
 
 
-<div class="add-object-btns">
-  <div class="row">
-    <div class="col-sm-6">
-      <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
-        <i class="fa fa-file-image-o"></i>
-        增加图片
-      </button>
+{{#unless readonly}}
+  <div class="add-object-btns">
+    <div class="row">
+      <div class="col-sm-6">
+        <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
+          <i class="fa fa-file-image-o"></i>
+          增加图片
+        </button>
+      </div>
+      <div class="col-sm-6">
+        <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
+          <i class="fa fa-pencil-square"></i>
+          增加文字
+        </button>
+      </div>
     </div>
-    <div class="col-sm-6">
-      <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
-        <i class="fa fa-pencil-square"></i>
-        增加文字
-      </button>
-    </div> 
   </div>
-</div>
+{{/unless}}
 
 <div class='row'>
   <div class="text-operators" style="display: none">
@@ -93,11 +95,11 @@
         </div>
       </div>
       <div class="modal-footer">
-        <form class='upload-img-form' method="post" action="/image/upload" enctype="multipart/form-data">
+        <form class='upload-img-form' method="POST" action="/image/upload" enctype="multipart/form-data">
             <span class="btn btn-success fileinput-button">
               <i class="glyphicon glyphicon-plus"></i>
               <span>上传新图片</span>
-              <input type="file" name="files[]">
+              <input type="file" name="file">
             </span>
 
           <div class='uploading-progress'>

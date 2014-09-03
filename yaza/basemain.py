@@ -63,6 +63,10 @@ def init_login():
 
 init_login()
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 def register_views():
     from yaza.admin import admin

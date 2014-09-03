@@ -10,3 +10,5 @@ static/dist/css/style.css
 static/dist/vendor/bootswatch-scss/flatly/bootstrap.css
 static/dist/assets/congruent_outline.png
 static/dist/favicon.ico
+static/dist/components/blueimp-file-upload/img/progressbar.gif
+static/dist/components/blueimp-file-upload/img/loading.gif
