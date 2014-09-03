@@ -11,7 +11,7 @@ define(['backbone', 'jquery', 'jquery.browser'], function (Backbone, $) {
         },
 
         parse: function (response, options) {
-            if ($.browser.name == 'ie' && $.browser.version != '11') {
+            if ($.browser.msie && $.browser.version != '11') {
                 response.picUrl = response.duri;
             }
             return response;
