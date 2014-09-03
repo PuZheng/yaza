@@ -976,12 +976,14 @@ mvc, readImageData, Resize) {
                                     _addImage(src, node, index);
                                 } else {
                                     var image = new Image();
-                                    image.crossOrigin = 'Anonymous';
-                                    image.src = node.getAttr('hdSrc');
+                                    if (_(node.getAttr('hdSrc')).startsWith('http:')) {
+                                        image.crossOrigin = 'Anonymous';
+                                    }
                                     image.onload = function (e) {
                                         var src = readImageData.readImageDataUrl(image, image.width, image.height);
                                         _addImage(src, node, index);
                                     }.bind(this);
+                                    image.src = node.getAttr('hdSrc');
                                 }
                             }
                         }
