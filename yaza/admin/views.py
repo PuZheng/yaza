@@ -200,13 +200,13 @@ class DesignImageModelView(ModelView):
     create_template = edit_template = "spu/design-image.html"
 
     def try_edit(self, processed_objs=None):
-        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+        raise PermissionDenied
 
     def try_view(self, processed_objs=None):
         Permission(RoleNeed(const.VENDOR_GROUP)).test()
 
     def try_create(self):
-        Permission(RoleNeed(const.VENDOR_GROUP)).test()
+        raise PermissionDenied
 
     @ModelView.cached
     @property
