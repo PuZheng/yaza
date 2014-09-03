@@ -299,7 +299,7 @@ mvc, readImageData, Resize) {
                         dispatcher.trigger('submit-design-done', 'failed');
                     });
 
-                });
+                }.bind(this));
             });
         },
 
