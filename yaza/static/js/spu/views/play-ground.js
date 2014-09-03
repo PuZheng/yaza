@@ -283,19 +283,22 @@ mvc, readImageData, Resize) {
                     dispatcher.trigger('submit-design-done', 'failed');
                     return;
                 }
-                var data = {"data": JSON.stringify(this._getDesignData())};
-                data['order_id'] = this._orderId;
-                data["spu_id"] = $("[name=spu]").data("val")["id"];
+                this._getDesignData().done(function (data) {
+                    var data = {"data": JSON.stringify(data)};
+                    data['order_id'] = this._orderId;
+                    data["spu_id"] = $("[name=spu]").data("val")["id"];
 
-                $.ajax({
-                    type: 'POST',
-                    url: '/image/design-save',
-                    data: data
-                }).done(function (content) {
-                    dispatcher.trigger('flash', 'success', '您已经成功保存了定制结果');
-                    dispatcher.trigger('submit-design-done', 'success');
-                }).fail(function (jqXHR) {
-                    dispatcher.trigger('submit-design-done', 'failed');
+                    $.ajax({
+                        type: 'POST',
+                        url: '/image/design-save',
+                        data: data
+                    }).done(function (content) {
+                        dispatcher.trigger('flash', 'success', '您已经成功保存了定制结果');
+                        dispatcher.trigger('submit-design-done', 'success');
+                    }).fail(function (jqXHR) {
+                        dispatcher.trigger('submit-design-done', 'failed');
+                    });
+
                 });
             });
         },
