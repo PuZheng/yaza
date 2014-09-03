@@ -50,6 +50,10 @@ $(function () {
             var href = $(this).data('design-image-file');
             if (href) {
                 href = href.split("?")[0];
+                if(href.endsWith(".duri")){
+                    href = href.substr(0, href.lastIndexOf(".duri")) + ".png";
+                }
+
                 var file = fileMap[href.replace(/.*\//, '')];
                 if (file) {
                     var fr = new FileReader();
