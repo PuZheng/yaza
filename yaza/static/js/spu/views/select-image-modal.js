@@ -3,6 +3,7 @@ define([
         'backbone',
         'underscore',
         'handlebars',
+        'modernizr',
         'dispatcher',
         'text!templates/gallery.hbs',
         'text!templates/uploading-progress.hbs',
@@ -15,9 +16,10 @@ define([
         'underscore.string',
         'jquery.iframe-transport',
         'jquery-file-upload',
-        'jquery.browser'
     ],
-    function ($, Backbone, _, handlebars, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
+    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
+              uploadingProgressTemplate, uploadingSuccessTemplate, 
+              uploadingFailTemplate, DesignImages, Cookies, config) {
 
         _.mixin(_.str.exports());
 
@@ -46,11 +48,12 @@ define([
                 this.$el.on('shown.bs.modal', function (e) {
                     if (!view._designImagesPerPage) {
                         var fakeImage = $('<li><div class="thumbnail"></div></li>');
-                        fakeImage = $(fakeImage.appendTo(view.$('.thumbnails'))[0]).hide();
+                        fakeImage = $(fakeImage.appendTo(view.$('.thumbnails:first'))[0]).hide();
                         var imagesOneRow = Math.floor(view.$('.thumbnails').width() / fakeImage.width());
                         var imagesOneColumn = Math.ceil(view.$('.thumbnails').height() / fakeImage.height());
                         fakeImage.remove();
                         view._designImagesPerPage = imagesOneColumn * imagesOneRow;
+                        console.log(view._designImagesPerPage);
                     }
 
                     if (!view.$('.builtin-pics img').length) {
@@ -65,54 +68,120 @@ define([
                     var templateSuccess = handlebars.default.compile(uploadingSuccessTemplate);
                     var templateFail = handlebars.default.compile(uploadingFailTemplate);
 
-                    view.$('.upload-img-form').fileupload({
-                        dataType: 'json',
-                        add: function (e, data) {
-                            $('.nav-tabs a:last').tab('show');
-                            view.$('.uploading-progress').html(
-                                templateProgress({
-                                    fileSize: formatFileSize(data.files[0].size)
-                                })).show();
-                            view.$('.uploading-progress .progress-bar').text(0 + '%').css('width', 0 + '%');
-                            var reader = new FileReader();
-                            reader.onload = function (e) {
-                                view.$('.uploading-progress img').attr('src', e.target.result);
-                            };
-                            reader.readAsDataURL(data.files[0]);
-                            // Automatically upload the file once it is added to the queue
-                            var jqXHR = data.submit();
-                            view.$('.uploading-progress .upload-cancel-btn').click(
-                                function () {
-                                    jqXHR.abort();
-                                    view.$('.uploading-progress').fadeOut(1000);
-                                });
-                        },
-                        progress: function (e, data) {
-                            // Calculate the completion percentage of the upload
-                            var progress = parseInt(data.loaded / data.total * 100, 10);
 
-                            // Update the hidden input field and trigger a change
-                            // so that the jQuery knob plugin knows to update the dial
-                            view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
-                        },
-                        done: function (e, data) {
-                            url = data.result.picUrl;
-                            if ($.browser.name == "msie" && $.browser.versionNumber !== 11) {
-                                url = data.result.duri;
+                    if (Modernizr.filereader) {
+                        view.$('.upload-img-form').fileupload({
+                            dataType: 'json',
+                            acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
+                            url: 'http://up.qiniu.com',
+                            add: function (e, data) {
+                                $('.nav-tabs a:last').tab('show');
+                                view.$('.uploading-progress').html(
+                                    templateProgress({
+                                    fileSize: formatFileSize(data.files[0].size)
+                                }));
+                                view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
+                                view.$('.uploading-progress').show();
+                                view.$('.uploading-progress .upload-cancel-btn').click(
+                                    function () {
+                                    data.abort();
+                                    view.$('.uploading-progress').fadeOut(1000);
+                                    return false;
+                                });
+                                // 如果支持filereader, 那么就直接可以产生data uri, 就
+                                // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
+                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                                postfix = (postfix && postfix[0]) || '';
+                                data.formData = {
+                                    'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
+                                    'type': 'image/' + postfix,
+                                }
+                                $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
+                                    data.formData.token = token.token;
+
+                                    var fr = new FileReader();
+                                    fr.onload = function (e) {
+                                        if (e.type == 'load') {
+                                            view.$('.uploading-progress img').attr('src', e.target.result);
+                                            data.files[0] = new Blob([e.target.result], {
+                                                type: 'text/plain',
+                                            });
+                                            view.$('.upload-img-form').fileupload('send', data);
+                                        }
+                                    }
+                                    fr.readAsDataURL(data.files[0]);
+                                }).fail(function () {
+                                    // TODO unhandled
+                                    dispatcher.trigger('flash', {
+                                        type: 'error',
+                                        msg: '不能获取七牛的上传token',
+                                    });
+                                    data.abort();
+                                });
+                            },
+                            progress: function (e, data) {
+                                // Calculate the completion percentage of the upload
+                                var progress = parseInt(data.loaded / data.total * 100, 10);
+
+                                // Update the hidden input field and trigger a change
+                                // so that the jQuery knob plugin knows to update the dial
+                                view.$('.uploading-progress .progress-bar').text(progress + '%').css('width', progress + '%');
+                            },
+                            done: function (e, data) {
+                                view.$('.uploading-progress').html(templateSuccess());
+                                view.$('.uploading-progress').fadeOut(1000);
+                                var url = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + data.formData.key;
+                                var fr = new FileReader();
+                                fr.onload = function (e) {
+                                    if (e.type === 'load') {
+                                        Cookies.set('upload-images', url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                        var overrides = {};
+                                        overrides.url = e.target.result;
+                                        view._renderUserPics(overrides);
+                                        $(".thumbnails .thumbnail").removeClass("selected");
+                                        $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                                    }
+                                }
+                                fr.readAsText(data.files[0]);
+                            },
+                            fail: function (e, data) {
+                                view.$('.uploading-progress').html(templateFail());
+                                view.$('.uploading-progress').fadeOut(1000);
                             }
-                            view.$('.uploading-progress').html(templateSuccess());
-                            view.$('.uploading-progress').fadeOut(1000);
-                            Cookies.set('upload-images',
-                                    url + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                            view._renderUserPics();
-                            $(".thumbnails .thumbnail").removeClass("selected");
-                            $(".customer-pics").find(".thumbnail:first").addClass("selected");
-                        },
-                        fail: function (e, data) {
-                            view.$('.uploading-progress').html(templateFail());
-                            view.$('.uploading-progress').fadeOut(1000);
-                        }
-                    });
+                        });
+
+                    } else {
+                        var key = null;
+                        view.$('.upload-img-form').fileupload({
+                            dataType: '',  // 注意， 一定不能是json， 否则服务器返回空， 没法解析
+                            acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
+                            url: '/image/upload',
+                            add: function (e, data) {
+                                $('.nav-tabs a:last').tab('show');
+                                var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
+                                postfix = (postfix && postfix[0]) || '';
+                                key = 'ugc.' + new Date().getTime() + '.' + postfix + '.duri';
+                                data.formData = {
+                                    key: key,
+                                    type: 'image/' + postfix,
+                                }
+                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
+                                                                   config.QINIU_CONF.STATIC_BUCKET + 
+                                                                   '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
+                                view.$('.upload-img-form').fileupload('send', data);
+                            },
+                            done: function (e, data) {
+                                view.$('.uploading-progress').html(templateSuccess());
+                                view.$('.uploading-progress').fadeOut(1000);
+                                var src = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + key;
+                                var fallbackSrc = '/image/serve/' + key;
+                                Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                view._renderUserPics();
+                                $(".thumbnails .thumbnail").removeClass("selected");
+                                $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            }
+                        });
+                    }
                 });
 
                 this.$('.thumbnails').scroll(function (playGround) {
@@ -204,7 +273,7 @@ define([
                 },
             },
 
-            _renderUserPics: function () {
+            _renderUserPics: function (overrides) {
                 var template = handlebars.default.compile(galleryTemplate);
                 var rows = [];
                 var upload_images = (Cookies.get('upload-images') || '').trim();
@@ -230,23 +299,21 @@ define([
 
                 //加载duri的图片
                 this.$(".customer-pics").find("img").each(function (idx, item) {
-                    if (item.src.indexOf(".duri") >= 0) {
-                        var $mask = $('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></i></div>').css({
-                            width: $(item).parent().width()
-                        }).appendTo($(item).parent());
-                        $(item).hide();
-
-                        $(item).one("load", function () {
-                            $mask.remove();
-                            $(item).show();
-                        }).error(function () {
-                            $mask.remove();
-                            $(item).show();
-                        });
-                        $.get(item.src, function (data) {
-                            item.src = data;
-                        });
-
+                    if (!!overrides && overrides[item.src]) {
+                        item.src = overrides[item.src];
+                    } else {
+                        if (_(item.src).include(';')) {
+                            var fallbackSrc = item.src.split(';')[1];
+                            item.src = item.src.split(';')[0];
+                            $(item).lazyLoad({
+                                fail: function () {
+                                    this.src = fallbackSrc;
+                                    $(this).lazyLoad();
+                                }, 
+                            });
+                        } else {
+                            $(item).lazyLoad();
+                        }
                     }
                 });
             },
@@ -297,7 +364,7 @@ define([
                     }
                 }(this));
                 return d;
-            }
+            },
 
         });
 

@@ -5,7 +5,7 @@
         margin: 10px 0 0;
         overflow: auto;
         padding: 0;
-        height: 512px;
+        height: 500px;
         & ul {
             list-style: none outside none;
             margin: 0;
@@ -72,7 +72,13 @@
             & .upload-cancel-btn {
                 margin-left: 10px;
             }
+
+            & img.progressbar {
+                height: 20px;
+                width: 100%;
+            }
         }
+
     }
 
     & .btn-tag {

@@ -26,7 +26,7 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
             var spu = this.$('input[name="spu"]').data('val');
             spu = Spu(spu);
             var tagList = this.$('input[name=tag-list]').data('val');
-            var orderId = this.$('input[name=order-id]').data('val');;
+            var orderId = this.$('input[name=order-id]').data('val');
             this.$mask = this.$('.mask');
 
             dispatcher.on('aspect-selected', function (aspect) {

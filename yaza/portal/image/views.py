@@ -11,10 +11,12 @@ from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
-from flask import request, jsonify, url_for, send_from_directory, json
+from flask import request, jsonify, url_for, send_from_directory, json, render_template
 from flask.ext.login import current_user
+from flask.ext.headers import headers
+from speaklater import make_lazy_string
 
-from yaza.basemain import app
+from yaza.basemain import app, scheduler
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
 from yaza.utils import random_str, do_commit, assert_dir, md5sum
@@ -24,28 +26,21 @@ from yaza.qiniu_handler import upload_str
 
 @image.route('/upload', methods=['POST'])
 def upload():
-    fs = request.files['files[]']
-    filename = random_str(32) + '.' + fs.filename.split('.')[-1]
+    fs = request.files['file']
+    filename = request.form['key']
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    fs.save(file_path)
-    # upload to qiniu
-    bucket_ = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
+    si = StringIO()
+    fs.save(si)
+    with closing(open(file_path, 'w')) as f:
+        s = 'data:' + request.form['type'] + ';base64,' + base64.b64encode(si.getvalue())
+        f.write(s)
 
-    key = md5sum(file_path)
-    data = open(file_path, "rb").read()
-    qiniu_url = upload_str(key + os.path.splitext(file_path)[-1],
-                           data, bucket_, True, "image/png")
-
-    qiniu_duri = upload_str(key + ".duri", "data:image/png;base64," + base64.b64encode(data), bucket_,
-                            True, "text/plain")
-
-    return jsonify({
-        'status': 'success',
-        "duri":qiniu_duri,
-        "picUrl" : qiniu_url,
-        'filename': url_for('image.serve', filename=filename)
-    })
-
+    scheduler.add_job(upload_str, args=[filename, s,
+                                        app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
+                                        True,
+                                        'text/plain'])
+    # 只能返回空， 否则IE浏览器会打开新的页面
+    return ''
 
 @image.route("/serve/<path:filename>")
 def serve(filename):
@@ -70,14 +65,15 @@ def calc_control_points(design_region_id):
     return jsonify(wraps(design_region).control_points)
 
 
-@image.route('/design-pkg', methods=['POST'])
-def design_pkg():
-    # 将svg打入包
-    sio = StringIO()
-    with closing(zipfile.ZipFile(sio, mode='w')) as zip_pkg:
-        for k, v in request.form.items():
-            zip_pkg.writestr(k + '.svg', v.encode('utf-8'))
-    return base64.b64encode(sio.getvalue())
+@image.route('/echo', methods=['POST'])
+@headers({
+    'Content-Type': 'application/zip',
+    'Content-Disposition':
+          make_lazy_string(lambda:
+                           'attachment;filename=\"%d.zip\"' % int(time.time() * 1000))
+})
+def echo():
+    return base64.b64decode(request.form['data'])
 
 
 @image.route('/font-image', methods=['POST'])
