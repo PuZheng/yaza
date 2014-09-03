@@ -48,11 +48,12 @@ define([
                 this.$el.on('shown.bs.modal', function (e) {
                     if (!view._designImagesPerPage) {
                         var fakeImage = $('<li><div class="thumbnail"></div></li>');
-                        fakeImage = $(fakeImage.appendTo(view.$('.thumbnails'))[0]).hide();
+                        fakeImage = $(fakeImage.appendTo(view.$('.thumbnails:first'))[0]).hide();
                         var imagesOneRow = Math.floor(view.$('.thumbnails').width() / fakeImage.width());
                         var imagesOneColumn = Math.ceil(view.$('.thumbnails').height() / fakeImage.height());
                         fakeImage.remove();
                         view._designImagesPerPage = imagesOneColumn * imagesOneRow;
+                        console.log(view._designImagesPerPage);
                     }
 
                     if (!view.$('.builtin-pics img').length) {
@@ -156,6 +157,7 @@ define([
                             acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
                             url: '/image/upload',
                             add: function (e, data) {
+                                $('.nav-tabs a:last').tab('show');
                                 var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                                 postfix = (postfix && postfix[0]) || '';
                                 key = 'ugc.' + new Date().getTime() + '.' + postfix + '.duri';
