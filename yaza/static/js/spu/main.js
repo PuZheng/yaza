@@ -35,7 +35,6 @@
             'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
             'text': 'components/text/text',
             'css': 'components/require-css/css.min',
-            "autosize": ["http://cdn.bootcss.com/autosize.js/1.18.9/jquery.autosize.min", "components/autosize/jquery.autosize.min"],
             "filesaver": "components/FileSaver/FileSaver",
             'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
@@ -105,9 +104,6 @@
                 deps: ['jquery']
             },
             'jquery.ui.widget': {
-                deps: ['jquery']
-            },
-            'autosize': {
                 deps: ['jquery']
             },
             'js-url': {
