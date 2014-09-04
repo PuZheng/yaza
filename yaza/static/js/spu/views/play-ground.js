@@ -507,7 +507,7 @@ mvc, readImageData, Resize) {
 
         _addDesignImage: function (src, title, designImageId) {
             var ugc = !title;
-            if (!title) { // 用户自己上传的图片没有title
+            if (ugc) { // 用户自己上传的图片没有title
                 title = new Date().getTime();
             }
 
@@ -538,7 +538,7 @@ mvc, readImageData, Resize) {
                             y: height / 2
                         },
                         hdSrc: src,  // 原图src, 可能是duri链接(以.duri结尾的链接), 还有可能是data uri(用户上传的文件)
-                        ugc: ugc,  // 是否是用户上传
+                        ugc: ugc // 是否是用户上传
                     });
                     imageLayer.add(image);
                     imageLayer.draw();
@@ -968,7 +968,7 @@ mvc, readImageData, Resize) {
                                 designRegionD.notify({
                                     src: src,
                                     node: node,
-                                    index: index,
+                                    index: index
                                 });
                             };
                             if (node.getAttr('ugc')) {

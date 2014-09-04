@@ -83,3 +83,7 @@ def design_result_file(file_):
 def spu_url_generator(id_):
     return render_template('admin/spu/spu.html', spu=get_or_404(SPU, id_))
 
+
+@admin.route("/convert")
+def convert():
+    return render_template("admin/convert.html", nav_bar=admin_nav_bar)
