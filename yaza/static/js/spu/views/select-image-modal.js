@@ -17,9 +17,7 @@ define([
         'jquery.iframe-transport',
         'jquery-file-upload',
     ],
-    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
-              uploadingProgressTemplate, uploadingSuccessTemplate, 
-              uploadingFailTemplate, DesignImages, Cookies, config) {
+    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
 
         _.mixin(_.str.exports());
 
@@ -43,6 +41,13 @@ define([
 
             render: function () {
                 this.$('.nav-tabs a:first').tab('show');
+                this.$('.nav-tabs').on("show.bs.tab", function (e) {
+                    if ($(e.target).attr("href") === ".customer-pics") {
+                        this.$('[name="tags-div"]').hide();
+                    } else {
+                        this.$('[name="tags-div"]').show();
+                    }
+                }.bind(this));
 
                 var view = this;
                 this.$el.on('shown.bs.modal', function (e) {
@@ -78,16 +83,16 @@ define([
                                 $('.nav-tabs a:last').tab('show');
                                 view.$('.uploading-progress').html(
                                     templateProgress({
-                                    fileSize: formatFileSize(data.files[0].size)
-                                }));
+                                        fileSize: formatFileSize(data.files[0].size)
+                                    }));
                                 view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
                                 view.$('.uploading-progress').show();
                                 view.$('.uploading-progress .upload-cancel-btn').click(
                                     function () {
-                                    data.abort();
-                                    view.$('.uploading-progress').fadeOut(1000);
-                                    return false;
-                                });
+                                        data.abort();
+                                        view.$('.uploading-progress').fadeOut(1000);
+                                        return false;
+                                    });
                                 // 如果支持filereader, 那么就直接可以产生data uri, 就
                                 // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
                                 var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
@@ -165,9 +170,9 @@ define([
                                     key: key,
                                     type: 'image/' + postfix,
                                 }
-                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
-                                                                   config.QINIU_CONF.STATIC_BUCKET + 
-                                                                   '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
+                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' +
+                                    config.QINIU_CONF.STATIC_BUCKET +
+                                    '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
                                 view.$('.upload-img-form').fileupload('send', data);
                             },
                             done: function (e, data) {
@@ -270,7 +275,7 @@ define([
                     var tagId = $(evt.currentTarget).data('tag-id');
                     this._selectTag(tagId, $(evt.currentTarget).find('b').text());
                     return false;
-                },
+                }
             },
 
             _renderUserPics: function (overrides) {
@@ -309,7 +314,7 @@ define([
                                 fail: function () {
                                     this.src = fallbackSrc;
                                     $(this).lazyLoad();
-                                }, 
+                                },
                             });
                         } else {
                             $(item).lazyLoad();
@@ -324,6 +329,14 @@ define([
                     return;
                 }
                 this._currentTagId = tagId;
+                this.$(".tags-list a").each(function () {
+                    if ($(this).data("tag-id") === tagId) {
+                        $(this).addClass("text-success").removeClass("text-danger");
+                    } else {
+                        $(this).removeClass("text-success").addClass("text-danger");
+                    }
+
+                });
                 this.$(".builtin-pics .thumbnails").empty();
                 this.$("span.selected-tag").text(tag || '不限标签');
                 this._loadMoreDesignImages().done(function () {
