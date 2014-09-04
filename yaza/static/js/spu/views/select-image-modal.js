@@ -17,9 +17,7 @@ define([
         'jquery.iframe-transport',
         'jquery-file-upload',
     ],
-    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
-              uploadingProgressTemplate, uploadingSuccessTemplate, 
-              uploadingFailTemplate, DesignImages, Cookies, config) {
+    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
 
         _.mixin(_.str.exports());
 
@@ -78,43 +76,41 @@ define([
                                 $('.nav-tabs a:last').tab('show');
                                 view.$('.uploading-progress').html(
                                     templateProgress({
-                                    fileSize: formatFileSize(data.files[0].size)
-                                }));
+                                        fileSize: formatFileSize(data.files[0].size)
+                                    }));
                                 view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
                                 view.$('.uploading-progress').show();
                                 view.$('.uploading-progress .upload-cancel-btn').click(
                                     function () {
-                                    data.abort();
-                                    view.$('.uploading-progress').fadeOut(1000);
-                                    return false;
-                                });
+                                        data.abort();
+                                        return false;
+                                    });
                                 // 如果支持filereader, 那么就直接可以产生data uri, 就
                                 // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
                                 var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
                                 postfix = (postfix && postfix[0]) || '';
                                 data.formData = {
                                     'key': 'ugc.' + new Date().getTime() + '.' + postfix + '.duri',
-                                    'type': 'image/' + postfix,
-                                }
+                                    'type': 'image/' + postfix
+                                };
                                 $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
                                     data.formData.token = token.token;
-
                                     var fr = new FileReader();
                                     fr.onload = function (e) {
                                         if (e.type == 'load') {
                                             view.$('.uploading-progress img').attr('src', e.target.result);
                                             data.files[0] = new Blob([e.target.result], {
-                                                type: 'text/plain',
+                                                type: 'text/plain'
                                             });
-                                            view.$('.upload-img-form').fileupload('send', data);
+                                            data.submit();
                                         }
-                                    }
+                                    };
                                     fr.readAsDataURL(data.files[0]);
                                 }).fail(function () {
                                     // TODO unhandled
                                     dispatcher.trigger('flash', {
                                         type: 'error',
-                                        msg: '不能获取七牛的上传token',
+                                        msg: '不能获取七牛的上传token'
                                     });
                                     data.abort();
                                 });
@@ -141,7 +137,7 @@ define([
                                         $(".thumbnails .thumbnail").removeClass("selected");
                                         $(".customer-pics").find(".thumbnail:first").addClass("selected");
                                     }
-                                }
+                                };
                                 fr.readAsText(data.files[0]);
                             },
                             fail: function (e, data) {
@@ -149,7 +145,6 @@ define([
                                 view.$('.uploading-progress').fadeOut(1000);
                             }
                         });
-
                     } else {
                         var key = null;
                         view.$('.upload-img-form').fileupload({
@@ -163,12 +158,13 @@ define([
                                 key = 'ugc.' + new Date().getTime() + '.' + postfix + '.duri';
                                 data.formData = {
                                     key: key,
-                                    type: 'image/' + postfix,
-                                }
-                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
-                                                                   config.QINIU_CONF.STATIC_BUCKET + 
-                                                                   '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
-                                view.$('.upload-img-form').fileupload('send', data);
+                                    type: 'image/' + postfix
+                                };
+                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' +
+                                    config.QINIU_CONF.STATIC_BUCKET +
+                                    '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
+                                view.$('.uploading-progress').show();
+                                data.submit();
                             },
                             done: function (e, data) {
                                 view.$('.uploading-progress').html(templateSuccess());
@@ -179,6 +175,10 @@ define([
                                 view._renderUserPics();
                                 $(".thumbnails .thumbnail").removeClass("selected");
                                 $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            },
+                            fail: function (e, data) {
+                                view.$('.uploading-progress').html(templateFail());
+                                view.$('.uploading-progress').fadeOut(1000);
                             }
                         });
                     }
@@ -309,7 +309,7 @@ define([
                                 fail: function () {
                                     this.src = fallbackSrc;
                                     $(this).lazyLoad();
-                                }, 
+                                },
                             });
                         } else {
                             $(item).lazyLoad();
