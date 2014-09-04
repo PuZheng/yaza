@@ -3,7 +3,6 @@ import codecs
 import os
 import sys
 import base64
-import zipfile
 import time
 import datetime
 
@@ -11,15 +10,14 @@ from contextlib import closing
 from StringIO import StringIO
 
 from PIL import Image, ImageFont, ImageDraw
-from flask import request, jsonify, url_for, send_from_directory, json, render_template
+from flask import request, jsonify, send_from_directory, json, send_file
 from flask.ext.login import current_user
-from flask.ext.headers import headers
-from speaklater import make_lazy_string
+from io import BytesIO
 
 from yaza.basemain import app, scheduler
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
-from yaza.utils import random_str, do_commit, assert_dir, md5sum
+from yaza.utils import do_commit, assert_dir
 from yaza.apis import wraps
 from yaza.qiniu_handler import upload_str
 
@@ -41,6 +39,7 @@ def upload():
                                         'text/plain'])
     # 只能返回空， 否则IE浏览器会打开新的页面
     return ''
+
 
 @image.route("/serve/<path:filename>")
 def serve(filename):
@@ -65,15 +64,15 @@ def calc_control_points(design_region_id):
     return jsonify(wraps(design_region).control_points)
 
 
-@image.route('/echo', methods=['POST'])
-@headers({
-    'Content-Type': 'application/zip',
-    'Content-Disposition':
-          make_lazy_string(lambda:
-                           'attachment;filename=\"%d.zip\"' % int(time.time() * 1000))
-})
-def echo():
-    return base64.b64decode(request.form['data'])
+@image.route('/design-pkg', methods=['POST'])
+def design_pkg():
+    # 将svg打入包
+    data = request.form["data"]
+    sio = BytesIO()
+    sio.write(base64.decodestring(data))
+    sio.seek(0)
+    return send_file(sio, "application/zip", True, str(int(time.time() * 100)) + ".zip")
+
 
 
 @image.route('/font-image', methods=['POST'])

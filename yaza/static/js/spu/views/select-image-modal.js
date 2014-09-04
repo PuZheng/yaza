@@ -15,9 +15,11 @@ define([
         'utils/lazy-load',
         'underscore.string',
         'jquery.iframe-transport',
-        'jquery-file-upload',
+        'jquery-file-upload'
     ],
-    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, uploadingProgressTemplate, uploadingSuccessTemplate, uploadingFailTemplate, DesignImages, Cookies, config) {
+    function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
+              uploadingProgressTemplate, uploadingSuccessTemplate, 
+              uploadingFailTemplate, DesignImages, Cookies, config) {
 
         _.mixin(_.str.exports());
 
@@ -76,15 +78,15 @@ define([
                                 $('.nav-tabs a:last').tab('show');
                                 view.$('.uploading-progress').html(
                                     templateProgress({
-                                        fileSize: formatFileSize(data.files[0].size)
-                                    }));
+                                    fileSize: formatFileSize(data.files[0].size)
+                                }));
                                 view.$('.uploading-progress .progress-bar').text('0%').css('width', '0%').attr('aria-valuenow', 0);
                                 view.$('.uploading-progress').show();
                                 view.$('.uploading-progress .upload-cancel-btn').click(
                                     function () {
-                                        data.abort();
-                                        return false;
-                                    });
+                                    data.abort();
+                                    return false;
+                                });
                                 // 如果支持filereader, 那么就直接可以产生data uri, 就
                                 // 可以直接上传到qiniu, 否则， 交由自己的服务器处理
                                 var postfix = data.files[0].name.match(/png|jpeg|jpg/i);
@@ -137,7 +139,7 @@ define([
                                         $(".thumbnails .thumbnail").removeClass("selected");
                                         $(".customer-pics").find(".thumbnail:first").addClass("selected");
                                     }
-                                };
+                                }
                                 fr.readAsText(data.files[0]);
                             },
                             fail: function (e, data) {
@@ -160,9 +162,9 @@ define([
                                     key: key,
                                     type: 'image/' + postfix
                                 };
-                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' +
-                                    config.QINIU_CONF.STATIC_BUCKET +
-                                    '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
+                                view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
+                                                                   config.QINIU_CONF.STATIC_BUCKET + 
+                                                                   '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
                                 view.$('.uploading-progress').show();
                                 data.submit();
                             },
@@ -224,7 +226,7 @@ define([
                             dispatcher.trigger('design-image-selected', {
                                 url: $img.data("pic-url") || $img.attr('src'),
                                 title: $img.data('title'),
-                                designImageId: $img.data("design-image-id"),
+                                designImageId: $img.data("design-image-id")
                             });
                         }.bind(this));
                     } else {
@@ -233,7 +235,7 @@ define([
                             dispatcher.trigger('design-image-selected', {
                                 url: $img.data("pic-url") || $img.attr('src'),
                                 title: $img.data('title'),
-                                designImageId: $img.data("design-image-id"),
+                                designImageId: $img.data("design-image-id")
                             });
                         }.bind(this), 50);
                     }
@@ -244,7 +246,7 @@ define([
                         dispatcher.trigger('design-image-selected', {
                             url: $img.data("pic-url") || $img.attr('src'),
                             title: $img.data('title'),
-                            designImageId: $img.data("design-image-id"),
+                            designImageId: $img.data("design-image-id")
                         });
                     }.bind(this));
                     this.$el.modal('hide');
@@ -270,7 +272,7 @@ define([
                     var tagId = $(evt.currentTarget).data('tag-id');
                     this._selectTag(tagId, $(evt.currentTarget).find('b').text());
                     return false;
-                },
+                }
             },
 
             _renderUserPics: function (overrides) {
@@ -309,7 +311,7 @@ define([
                                 fail: function () {
                                     this.src = fallbackSrc;
                                     $(this).lazyLoad();
-                                },
+                                }
                             });
                         } else {
                             $(item).lazyLoad();
@@ -364,7 +366,7 @@ define([
                     }
                 }(this));
                 return d;
-            },
+            }
 
         });
 

@@ -1,0 +1,32 @@
+{% extends "data_browser__/layout.html" %}
+{% block __data_browser__customized_head_block %}
+  {{ super() }}
+  <link href="http://cdn.bootcss.com/select2/3.5.0/select2-bootstrap.min.css" rel="stylesheet">
+  <script src="http://cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js"></script>
+  <script src="http://cdn.bootcss.com/underscore.js/1.6.0/underscore-min.js"></script>
+  <script src="http://cdn.bootcss.com/blueimp-file-upload/9.5.7/jquery.iframe-transport.min.js"></script>
+  <script src="http://cdn.bootcss.com/blueimp-file-upload/9.5.7/jquery.fileupload.min.js"></script>
+  <script src="{{ url_for('static', filename='components/FileSaver/FileSaver.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin/convert.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+  <form role="form">
+    <div class="form-group">
+      <lable>选择高清设计图所在目录:</lable>
+      <input class="design-image-dir" type="file" multiple directory webkitdirectory mozdirectory/>
+    </div>
+
+    <hr/>
+    <div class="form-group">
+      <lable>选择要转换为高清图的svg:</lable>
+      <input class="select-design" type="file" accept="image/svg+xml"/>
+    </div>
+
+    <button class="btn btn-primary" type="button" id="convert">转换</button>
+  </form>
+
+
+  <div class="alert alert-warning hide" role="alert"></div>
+
+{% endblock %}
