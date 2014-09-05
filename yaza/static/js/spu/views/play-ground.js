@@ -694,12 +694,10 @@ mvc, readImageData, Resize) {
                     controlGroup.off('dblclick')
                     .on('dblclick', function (view) {
                         return function (evt) {
-                            view._crossLayer.hide();
-                            view._stage.draw();
                             // 之所以不用position, 是因为chrome下面position方法有bug
                             var left = controlGroup.x() - im.width() / 2 + controlGroup.getLayer().x();
                             left = Math.max(left, 0);
-                            var top = controlGroup.y() - im.height() / 2 + controlGroup.getLayer().y();
+                            var top = controlGroup.y() + im.height() / 2 + controlGroup.getLayer().y();
                             view.$('.change-text-panel').css({
                                 left: left,
                                 top: top,
@@ -716,13 +714,18 @@ mvc, readImageData, Resize) {
                                         baseZ: 0
                                     });
                                 });
-                                view.$('.change-text-panel textarea').val(im.name()).trigger('autosize.resize');
-                                view.$('.change-text-panel textarea').focus();
+                                view.$('.change-text-panel input:text').off("keypress").val(im.name()).select().focus();
+                                view.$(".change-text-panel").on("keypress", "input:text", function (e) {
+                                    if (e.key === 'Enter') {
+                                        view.$(".change-text-panel .btn-primary").click();
+                                    }
+                                });
+
                                 view.$('.change-text-panel .btn-primary').off('click').click(function () {
-                                    var text = view.$('.change-text-panel textarea').val().trim();
+                                    var text = view.$('.change-text-panel input:text').val().trim();
                                     if (!text) {
                                         alert("文字不能为空");
-                                        view.$('.change-text-panel textarea').val(im.name());
+                                        view.$('.change-text-panel input:text').val(im.name());
                                         return false;
                                     }
                                     view.$('.change-text-panel').hide();

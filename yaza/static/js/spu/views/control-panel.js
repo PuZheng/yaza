@@ -82,6 +82,9 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 var $btn = $(e.currentTarget);
                 $btn.bootstrapButton('loading');
                 dispatcher.trigger('submit-design');
+            },
+            'shown.bs.modal .modal': function() {
+                this.$(".modal input:text").focus();
             }
         },
 

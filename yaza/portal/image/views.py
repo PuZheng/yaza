@@ -38,7 +38,7 @@ def upload():
                                         True,
                                         'text/plain'])
     # 只能返回空， 否则IE浏览器会打开新的页面
-    return ''
+    return 'success'
 
 
 @image.route("/serve/<path:filename>")
