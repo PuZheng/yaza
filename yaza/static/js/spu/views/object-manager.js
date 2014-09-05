@@ -42,8 +42,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         parent.data("object-layer").add(object);
                         parent.data("invisible", false);
                     } else {
-                        controlGroup.destroy();
-                        object.destroy();
+                        controlGroup.remove();
+                        object.remove();
                         parent.data("invisible", true);
                     }
                     parent.data("control-layer").draw();
@@ -181,6 +181,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
             add: function (im, controlGroup) {
                 // 默认新增的对象要选中
+                debugger;
+
                 var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).data("control-layer", controlGroup.getLayer()).data("object-layer", im.getLayer());
                 item.click();
                 item.find('img').load(function (objectManager, item) {
