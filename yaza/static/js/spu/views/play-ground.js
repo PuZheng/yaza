@@ -568,7 +568,7 @@ mvc, readImageData, Resize) {
                             };
                         }(this))
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient')) {
+                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
                             dispatcher.trigger('active-object', this);
                         }
                     })
@@ -667,7 +667,7 @@ mvc, readImageData, Resize) {
                         view._generatePreview();
                     })
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient')) {
+                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
                             dispatcher.trigger('active-object', this);
                         }
                     })

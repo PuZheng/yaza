@@ -38,13 +38,37 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     if (visible) {
                         parent.data('control-group').show();
                         parent.data('object').show();
+                        parent.data("invisible", false);
                     } else {
                         parent.data('control-group').hide();
                         parent.data('object').hide();
+                        parent.data("invisible", true);
                     }
                     parent.data('control-group').getLayer().draw();
                     parent.data('object').getLayer().draw();
                     dispatcher.trigger('update-preview');
+                    if (visible) {
+                        if (!$(".active-object")[0]) {
+                            //如果没有active-object，默认激活当前item
+                            dispatcher.trigger('active-object', parent.data('control-group'));
+                        }
+                    } else {
+                        //说明当前item是被选中的
+                        if (parent.attr("class").indexOf("active-object") >= 0) {
+
+                            //所有的未隐藏的item
+                            var items = _.filter($("a.column"), function (item) {
+                                return !$(item).data("invisible");
+                            });
+                            if (items.length != 0) {
+                                //说明除当前item外还有别的item
+                                $(items[0]).click();
+                            } else {
+                                parent.removeClass("active-object");
+                                dispatcher.trigger('active-object');
+                            }
+                        }
+                    }
                     return false;
                 },
                 'click button.up-btn': function (evt) {
@@ -60,6 +84,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
+                    if($(evt.currentTarget).data("invisible")) {
+                        return false;
+                    }
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
@@ -98,7 +125,6 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
                     return false;
                 }
-
             },
 
             replace: function (im, controlGroup, oldIm, oldControlGroup) {
@@ -128,7 +154,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 var ret= $(this._itemTemplate({
                     src: image.getImage().src,
                     name: name,
-                    title: image.name(),
+                    title: image.name()
                 }));
                 return ret;
             },
