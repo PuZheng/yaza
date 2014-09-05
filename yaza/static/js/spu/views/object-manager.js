@@ -33,24 +33,26 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     var parent = $(evt.currentTarget).parents('.list-group-item');
                     $(evt.currentTarget).find('.fa-ban').toggle();
                     var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
-                    parent.data('control-group').setAttr('hidden', !visible);
-                    parent.data('object').setAttr('hidden', !visible);
+                    var controlGroup = parent.data('control-group');
+                    controlGroup.setAttr('hidden', !visible);
+                    var object = parent.data('object');
+                    object.setAttr('hidden', !visible);
                     if (visible) {
-                        parent.data('control-group').show();
-                        parent.data('object').show();
+                        parent.data("control-layer").add(controlGroup);
+                        parent.data("object-layer").add(object);
                         parent.data("invisible", false);
                     } else {
-                        parent.data('control-group').hide();
-                        parent.data('object').hide();
+                        controlGroup.destroy();
+                        object.destroy();
                         parent.data("invisible", true);
                     }
-                    parent.data('control-group').getLayer().draw();
-                    parent.data('object').getLayer().draw();
+                    parent.data("control-layer").draw();
+                    parent.data("object-layer").draw();
                     dispatcher.trigger('update-preview');
                     if (visible) {
                         if (!this.$(".active-object")[0]) {
                             //如果没有active-object，默认激活当前item
-                            dispatcher.trigger('active-object', parent.data('control-group'));
+                            dispatcher.trigger('active-object', controlGroup);
                         }
                     } else {
                         //说明当前item是被选中的
@@ -83,7 +85,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
-                    if($(evt.currentTarget).data("invisible")) {
+                    if ($(evt.currentTarget).data("invisible")) {
                         return false;
                     }
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
@@ -132,6 +134,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     if ($(this).data('object') == oldIm) {
                         $(this).data('object', im);
                         $(this).data('control-group', controlGroup);
+                        $(this).data("control-layer", controlGroup.getLayer());
+                        $(this).data("object-layer", im.getLayer());
                         $(this).html(objectManager._renderImage(im).html());
                         $(this).find('img').load(function (objectManager, item) {
                             return function (evt) {
@@ -150,7 +154,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     name = name.substr(0, MAX_LENGTH - 3) + "...";
                 }
 
-                var ret= $(this._itemTemplate({
+                var ret = $(this._itemTemplate({
                     src: image.getImage().src,
                     name: name,
                     title: image.name()
@@ -177,7 +181,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
             add: function (im, controlGroup) {
                 // 默认新增的对象要选中
-                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup);
+                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).data("control-layer", controlGroup.getLayer()).data("object-layer", im.getLayer());
                 item.click();
                 item.find('img').load(function (objectManager, item) {
                     return function (evt) {
