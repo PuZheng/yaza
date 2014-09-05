@@ -150,7 +150,7 @@ define([
                     } else {
                         var key = null;
                         view.$('.upload-img-form').fileupload({
-                            dataType: '',  // 注意， 一定不能是json， 否则服务器返回空， 没法解析
+                            dataType: 'text',  // 注意， 一定不能是json， 否则服务器返回空， 没法解析
                             acceptFileTypes: /(\.|\/)(jpe?g|png)$/i,
                             url: '/image/upload',
                             add: function (e, data) {
@@ -169,18 +169,20 @@ define([
                                 data.submit();
                             },
                             done: function (e, data) {
-                                view.$('.uploading-progress').html(templateSuccess());
-                                view.$('.uploading-progress').fadeOut(1000);
-                                var src = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + key;
-                                var fallbackSrc = '/image/serve/' + key;
-                                Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
-                                view._renderUserPics();
-                                $(".thumbnails .thumbnail").removeClass("selected");
-                                $(".customer-pics").find(".thumbnail:first").addClass("selected");
-                            },
-                            fail: function (e, data) {
-                                view.$('.uploading-progress').html(templateFail());
-                                view.$('.uploading-progress').fadeOut(1000);
+                                //由于不使用json的dataType，所以即使服务器没有回应，框架也认为是success的。所以要自己区分response内容
+                                if (data.result === "success") {
+                                    view.$('.uploading-progress').html(templateSuccess());
+                                    view.$('.uploading-progress').fadeOut(1000);
+                                    var src = 'http://' + config.QINIU_CONF.SPU_IMAGE_BUCKET + '.qiniudn.com/' + key;
+                                    var fallbackSrc = '/image/serve/' + key;
+                                    Cookies.set('upload-images', src + ';' + fallbackSrc + '||' + (Cookies.get('upload-images') || ''), {expires: 7 * 24 * 3600});
+                                    view._renderUserPics();
+                                    $(".thumbnails .thumbnail").removeClass("selected");
+                                    $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                                } else {
+                                    view.$('.uploading-progress').html(templateFail());
+                                    view.$('.uploading-progress').fadeOut(1000);
+                                }
                             }
                         });
                     }
