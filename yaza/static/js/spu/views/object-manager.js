@@ -48,7 +48,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     parent.data('object').getLayer().draw();
                     dispatcher.trigger('update-preview');
                     if (visible) {
-                        if (!$(".active-object")[0]) {
+                        if (!this.$(".active-object")[0]) {
                             //如果没有active-object，默认激活当前item
                             dispatcher.trigger('active-object', parent.data('control-group'));
                         }
