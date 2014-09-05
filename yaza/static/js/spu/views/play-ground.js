@@ -206,9 +206,7 @@ mvc, readImageData, Resize) {
                     }
                 });
 
-                if (!controlGroup.getAttr('hidden')) {
-                    controlGroup.show();
-                }
+                controlGroup.show();
                 controlGroup.setAttr('trasient', false);
 
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
@@ -568,7 +566,7 @@ mvc, readImageData, Resize) {
                             };
                         }(this))
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
+                        if (this.getAttr('trasient')) {
                             dispatcher.trigger('active-object', this);
                         }
                     })
@@ -667,7 +665,7 @@ mvc, readImageData, Resize) {
                         view._generatePreview();
                     })
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
+                        if (this.getAttr('trasient')) {
                             dispatcher.trigger('active-object', this);
                         }
                     })

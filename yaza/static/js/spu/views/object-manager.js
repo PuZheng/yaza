@@ -34,17 +34,18 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     $(evt.currentTarget).find('.fa-ban').toggle();
                     var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
                     var controlGroup = parent.data('control-group');
-                    controlGroup.setAttr('hidden', !visible);
                     var object = parent.data('object');
-                    object.setAttr('hidden', !visible);
                     if (visible) {
                         parent.data("control-layer").add(controlGroup);
+                        var index = parent.data("ZIndex");
+                        controlGroup.setZIndex(index);
                         parent.data("object-layer").add(object);
+                        object.setZIndex(index);
                         parent.data("invisible", false);
                     } else {
+                        parent.data("ZIndex", controlGroup.getZIndex()).data("invisible", true);
                         controlGroup.remove();
                         object.remove();
-                        parent.data("invisible", true);
                     }
                     parent.data("control-layer").draw();
                     parent.data("object-layer").draw();
@@ -53,6 +54,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         if (!this.$(".active-object")[0]) {
                             //如果没有active-object，默认激活当前item
                             dispatcher.trigger('active-object', controlGroup);
+                        } else {
+                            dispatcher.trigger('active-object', this.$(".active-object").data("control-group"));
                         }
                     } else {
                         //说明当前item是被选中的
@@ -181,9 +184,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
             add: function (im, controlGroup) {
                 // 默认新增的对象要选中
-                debugger;
-
-                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).data("control-layer", controlGroup.getLayer()).data("object-layer", im.getLayer());
+                var item = this._renderImage(im).prependTo(this._$container).data('object', im).data('control-group', controlGroup).data("control-layer", controlGroup.getLayer()).data("object-layer", im.getLayer()).data("ZIndex", controlGroup.getZIndex());
                 item.click();
                 item.find('img').load(function (objectManager, item) {
                     return function (evt) {
@@ -213,10 +214,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             },
 
             _exchangeImage: function (source, target) {
-                if (target.length == 0) {
-                    return;
+                if (target.length == 0 || source.data("invisible") || target.data("invisible")) {
+                    return false;
                 }
-                var playGround = this;
 
                 var sourceTop = source.position().top;
                 var targetTop = target.position().top;
