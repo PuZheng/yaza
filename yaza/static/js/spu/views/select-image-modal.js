@@ -43,6 +43,13 @@ define([
 
             render: function () {
                 this.$('.nav-tabs a:first').tab('show');
+                this.$('.nav-tabs').on("show.bs.tab", function (e) {
+                    if ($(e.target).attr("href") === ".customer-pics") {
+                        this.$('[name="tags-div"]').hide();
+                    } else {
+                        this.$('[name="tags-div"]').show();
+                    }
+                }.bind(this));
 
                 var view = this;
                 this.$el.on('shown.bs.modal', function (e) {
@@ -326,6 +333,14 @@ define([
                     return;
                 }
                 this._currentTagId = tagId;
+                this.$(".tags-list a").each(function () {
+                    if ($(this).data("tag-id") === tagId) {
+                        $(this).addClass("text-success").removeClass("text-danger");
+                    } else {
+                        $(this).removeClass("text-success").addClass("text-danger");
+                    }
+
+                });
                 this.$(".builtin-pics .thumbnails").empty();
                 this.$("span.selected-tag").text(tag || '不限标签');
                 this._loadMoreDesignImages().done(function () {
