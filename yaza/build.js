@@ -25,7 +25,6 @@
         "ekko-lightbox": 'empty:',
         'fancybox': 'empty:',
         "jszip": "empty:",
-        "autosize": 'empty:',
         'jquery-ajaxtransport-xdomainrequest': "empty:",
         modernizr: 'empty:',
         // vendors not using cdn
