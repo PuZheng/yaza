@@ -85,7 +85,6 @@ define([
                                 view.$('.uploading-progress .upload-cancel-btn').click(
                                     function () {
                                     data.abort();
-                                    view.$('.uploading-progress').fadeOut(1000);
                                     return false;
                                 });
                                 // 如果支持filereader, 那么就直接可以产生data uri, 就
@@ -98,7 +97,6 @@ define([
                                 };
                                 $.getJSON('/qiniu/token?bucket=yaza-spus', function (token) {
                                     data.formData.token = token.token;
-
                                     var fr = new FileReader();
                                     fr.onload = function (e) {
                                         if (e.type == 'load') {
@@ -106,7 +104,7 @@ define([
                                             data.files[0] = new Blob([e.target.result], {
                                                 type: 'text/plain'
                                             });
-                                            view.$('.upload-img-form').fileupload('send', data);
+                                            data.submit();
                                         }
                                     };
                                     fr.readAsDataURL(data.files[0]);
@@ -149,7 +147,6 @@ define([
                                 view.$('.uploading-progress').fadeOut(1000);
                             }
                         });
-
                     } else {
                         var key = null;
                         view.$('.upload-img-form').fileupload({
@@ -168,7 +165,8 @@ define([
                                 view.$('.uploading-progress').html('<img class="progressbar" src="http://' + 
                                                                    config.QINIU_CONF.STATIC_BUCKET + 
                                                                    '.qiniudn.com/static/components/blueimp-file-upload/img/progressbar.gif"></img>');
-                                view.$('.upload-img-form').fileupload('send', data);
+                                view.$('.uploading-progress').show();
+                                data.submit();
                             },
                             done: function (e, data) {
                                 view.$('.uploading-progress').html(templateSuccess());
@@ -179,6 +177,10 @@ define([
                                 view._renderUserPics();
                                 $(".thumbnails .thumbnail").removeClass("selected");
                                 $(".customer-pics").find(".thumbnail:first").addClass("selected");
+                            },
+                            fail: function (e, data) {
+                                view.$('.uploading-progress').html(templateFail());
+                                view.$('.uploading-progress').fadeOut(1000);
                             }
                         });
                     }
