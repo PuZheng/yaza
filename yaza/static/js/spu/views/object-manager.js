@@ -94,6 +94,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
+                    if($(evt.currentTarget).data("invisible")){
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("moving");
                     this._dragSrcEl = evt.currentTarget;
                     evt.originalEvent.dataTransfer.effectAllowed = 'move';
@@ -110,11 +113,16 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     $(evt.currentTarget).removeClass("over").removeClass('bg-info');
                 },
                 'dragenter .column': function (evt) {
+                    if($(evt.currentTarget).data("invisible")) {
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("over").addClass('bg-info');
                 },
                 'drop .column': function (evt) {
                     evt.stopPropagation && evt.stopPropagation();
-
+                    if($(evt.currentTarget).data("invisible")) {
+                        return false;
+                    }
                     if (evt.currentTarget != this._dragSrcEl) {
                         var items = $(".object-manager .list-group-item");
                         if (items.index(evt.currentTarget) < items.index(this._dragSrcEl)) {
