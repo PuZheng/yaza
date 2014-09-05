@@ -54,8 +54,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         }
                     } else {
                         //说明当前item是被选中的
-                        if (parent.attr("class").indexOf("active-object") >= 0) {
-
+                        if (parent.hasClass("active-object")) {
                             //所有的未隐藏的item
                             var items = _.filter($("a.column"), function (item) {
                                 return !$(item).data("invisible");
