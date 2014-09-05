@@ -354,8 +354,8 @@ define(['jquery', 'dispatcher', 'admin/spu/context', 'underscore', 'backbone', '
                                 });
                                 view.$createBtn.hide();
                                 view.$title.find('.hint').text('修改');
-                                view.$title.find('em').text(model.get(model.id + ' - ' + view.title));
-                                view.$entry.find('em').text(model.id + ' - ' + model.get('view.title'));
+                                view.$title.find('em').text(model.id + ' - ' + model.get(view.title));
+                                view.$entry.find('em').text(model.id + ' - ' + model.get(view.title));
                                 view.$collapseBtn.show();
                                 view.$nextLevelBtn.show();
                                 view.trigger('object-created');
