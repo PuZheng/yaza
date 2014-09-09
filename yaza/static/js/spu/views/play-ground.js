@@ -639,7 +639,9 @@ mvc, readImageData, Resize) {
                         offset: {
                             x: width / 2,
                             y: height / 2
-                        }
+                        },
+                        ugc: true,
+                        hdSrc: imageObj.src,
                     });
                     imageLayer.add(im);
                     imageLayer.draw();
