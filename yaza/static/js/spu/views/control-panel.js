@@ -15,7 +15,9 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             this._spu = option.spu;
             this._tagList = option.tagList;
             this._setupEventsHandler();
-            this._defaultDesignImage = $("[name=design-image-list]").data("val")[0];
+            if($("[name=readonly]").val("readonly") == "True"){
+                this._defaultDesignImage = $("[name=design-image-list]").data("val")[0];
+            }
         },
 
         render: function () {
