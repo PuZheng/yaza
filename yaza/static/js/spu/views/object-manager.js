@@ -129,6 +129,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     src: image.getImage().src,
                     name: name,
                     title: image.name(),
+                    default: image.getAttr('default'),
                 }));
                 return ret;
             },

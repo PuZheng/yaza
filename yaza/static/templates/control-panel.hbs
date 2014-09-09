@@ -26,24 +26,24 @@
 </div>
 
 
-{{#unless readonly}}
-  <div class="add-object-btns">
-    <div class="row">
-      <div class="col-sm-6">
-        <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'>
-          <i class="fa fa-file-image-o"></i>
-          增加图片
-        </button>
-      </div>
-      <div class="col-sm-6">
-        <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
-          <i class="fa fa-pencil-square"></i>
-          增加文字
-        </button>
-      </div>
+<div class="add-object-btns">
+  <div class="row">
+    <div class="col-sm-6">
+      <button class="btn btn-primary add-img-btn" data-toggle='modal' data-target='.add-img-modal'
+        {{#if defaultDesignImage }}disabled{{/if}}
+        >
+        <i class="fa fa-file-image-o"></i>
+        增加图片
+      </button>
+    </div>
+    <div class="col-sm-6">
+      <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
+        <i class="fa fa-pencil-square"></i>
+        增加文字
+      </button>
     </div>
   </div>
-{{/unless}}
+</div>
 
 <div class='row'>
   <div class="text-operators" style="display: none">
