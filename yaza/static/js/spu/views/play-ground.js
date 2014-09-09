@@ -201,7 +201,7 @@ mvc, readImageData, Resize) {
                     if (group.nodeType == 'Group') {
                         group.hide();
                         group.find('.rect')[0].stroke(hoveredComplementaryColor);
-                        group.setAttr('trasient', true);
+                        group.activated(false);
                         group.getLayer().draw();
                     }
                 });
@@ -209,7 +209,7 @@ mvc, readImageData, Resize) {
                 if (!controlGroup.getAttr('hidden')) {
                     controlGroup.show();
                 }
-                controlGroup.setAttr('trasient', false);
+                controlGroup.activated(true);
 
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
                 this._activeObject = controlGroup;
@@ -568,7 +568,7 @@ mvc, readImageData, Resize) {
                             };
                         }(this))
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
+                        if (!this.activated() && this.getAttr("target").visible()) {
                             dispatcher.trigger('active-object', this);
                         }
                     })
@@ -667,7 +667,7 @@ mvc, readImageData, Resize) {
                         view._generatePreview();
                     })
                     .on('mousedown', function () {
-                        if (this.getAttr('trasient') && !this.getAttr("hidden")) {
+                        if (!this.activated() && this.getAttr("target").visible()) {
                             dispatcher.trigger('active-object', this);
                         }
                     })

@@ -33,16 +33,14 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     var parent = $(evt.currentTarget).parents('.list-group-item');
                     $(evt.currentTarget).find('.fa-ban').toggle();
                     var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
-                    parent.data('control-group').setAttr('hidden', !visible);
-                    parent.data('object').setAttr('hidden', !visible);
                     if (visible) {
                         parent.data('control-group').show();
+                        parent.data('control-group').draggable(true);
                         parent.data('object').show();
-                        parent.data("invisible", false);
                     } else {
                         parent.data('control-group').hide();
+                        parent.data('control-group').draggable(false);
                         parent.data('object').hide();
-                        parent.data("invisible", true);
                     }
                     parent.data('control-group').getLayer().draw();
                     parent.data('object').getLayer().draw();
@@ -56,13 +54,14 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         //说明当前item是被选中的
                         if (parent.hasClass("active-object")) {
                             //所有的未隐藏的item
-                            var items = _.filter(this.$("a.column"), function (item) {
-                                return !$(item).data("invisible");
+                            var visibleItems = _.filter(this.$("a.column"), function (item) {
+                                return $(item).data("object").visible();
                             });
-                            if (items.length != 0) {
+                            if (visibleItems.length != 0) {
                                 //说明除当前item外还有别的item
-                                $(items[0]).click();
+                                $(visibleItems[0]).click();
                             } else {
+                                // 全不选所有的对象
                                 parent.removeClass("active-object");
                                 dispatcher.trigger('active-object');
                             }
