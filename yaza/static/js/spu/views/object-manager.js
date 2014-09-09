@@ -34,11 +34,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     $(evt.currentTarget).find('.fa-ban').toggle();
                     var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
                     if (visible) {
-                        parent.data('control-group').show();
                         parent.data('control-group').draggable(true);
                         parent.data('object').show();
                     } else {
-                        parent.data('control-group').hide();
                         parent.data('control-group').draggable(false);
                         parent.data('object').hide();
                     }
