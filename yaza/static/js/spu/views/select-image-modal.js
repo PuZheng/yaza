@@ -60,7 +60,6 @@ define([
                         var imagesOneColumn = Math.ceil(view.$('.thumbnails').height() / fakeImage.height());
                         fakeImage.remove();
                         view._designImagesPerPage = imagesOneColumn * imagesOneRow;
-                        console.log(view._designImagesPerPage);
                     }
 
                     if (!view.$('.builtin-pics img').length) {

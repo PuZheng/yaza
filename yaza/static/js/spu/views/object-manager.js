@@ -33,18 +33,40 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     var parent = $(evt.currentTarget).parents('.list-group-item');
                     $(evt.currentTarget).find('.fa-ban').toggle();
                     var visible = !$(evt.currentTarget).find('.fa-ban').is(':visible');
-                    parent.data('control-group').setAttr('hidden', !visible);
-                    parent.data('object').setAttr('hidden', !visible);
                     if (visible) {
-                        parent.data('control-group').show();
+                        parent.data('control-group').draggable(true);
+                        this._orderNodes();
                         parent.data('object').show();
                     } else {
-                        parent.data('control-group').hide();
+                        parent.data('control-group').draggable(false);
+                        parent.data('control-group').moveToBottom();
                         parent.data('object').hide();
                     }
                     parent.data('control-group').getLayer().draw();
                     parent.data('object').getLayer().draw();
                     dispatcher.trigger('update-preview');
+                    if (visible) {
+                        if (!this.$(".active-object")[0]) {
+                            //如果没有active-object，默认激活当前item
+                            dispatcher.trigger('active-object', parent.data('control-group'));
+                        }
+                    } else {
+                        //说明当前item是被选中的
+                        if (parent.hasClass("active-object")) {
+                            //所有的未隐藏的item
+                            var visibleItems = _.filter(this.$("a.column"), function (item) {
+                                return $(item).data("object").visible();
+                            });
+                            if (visibleItems.length != 0) {
+                                //说明除当前item外还有别的item
+                                $(visibleItems[0]).click();
+                            } else {
+                                // 全不选所有的对象
+                                parent.removeClass("active-object");
+                                dispatcher.trigger('active-object');
+                            }
+                        }
+                    }
                     return false;
                 },
                 'click button.up-btn': function (evt) {
@@ -60,9 +82,15 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
+                    if(!$(evt.currentTarget).data("object").visible()) {
+                        return false;
+                    }
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("moving");
                     this._dragSrcEl = evt.currentTarget;
                     evt.originalEvent.dataTransfer.effectAllowed = 'move';
@@ -79,10 +107,16 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     $(evt.currentTarget).removeClass("over").removeClass('bg-info');
                 },
                 'dragenter .column': function (evt) {
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("over").addClass('bg-info');
                 },
                 'drop .column': function (evt) {
                     evt.stopPropagation && evt.stopPropagation();
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
 
                     if (evt.currentTarget != this._dragSrcEl) {
                         var items = $(".object-manager .list-group-item");
@@ -98,7 +132,6 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
 
                     return false;
                 }
-
             },
 
             replace: function (im, controlGroup, oldIm, oldControlGroup) {
@@ -129,6 +162,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     src: image.getImage().src,
                     name: name,
                     title: image.name(),
+                    default: image.getAttr('default')
                 }));
                 return ret;
             },
@@ -182,7 +216,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             },
 
             _exchangeImage: function (source, target) {
-                if (target.length == 0) {
+                if (target.length == 0 || !source.data('object').visible() || !target.data('object').visible()) {
                     return;
                 }
                 var playGround = this;
