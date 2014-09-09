@@ -192,23 +192,22 @@ mvc, readImageData, Resize) {
                 this._addDesignImage(arg.url, arg.title, arg.designImageId);
             })
             .on('active-object', function (controlGroup) {
-                if (!controlGroup) {
-                    return;
-                }
+                // 清除所有的选中状态
                 var complementaryColor = this._currentAspect.ocspu.complementaryColor;
                 var hoveredComplementaryColor = this._currentAspect.ocspu.hoveredComplementaryColor;
-                controlGroup.getLayer().getChildren().forEach(function (group) {
+                this._currentDesignRegion.getControlLayer().getChildren().forEach(function (group) {
                     if (group.nodeType == 'Group') {
                         group.hide();
                         group.find('.rect')[0].stroke(hoveredComplementaryColor);
                         group.activated(false);
-                        group.getLayer().draw();
                     }
                 });
 
-                if (!controlGroup.getAttr('hidden')) {
-                    controlGroup.show();
+                this._currentDesignRegion.getControlLayer().draw();
+                if (!controlGroup) {
+                    return;
                 }
+                controlGroup.show();
                 controlGroup.activated(true);
 
                 controlGroup.find('.rect')[0].stroke(complementaryColor);
