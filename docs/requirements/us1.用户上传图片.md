@@ -5,6 +5,8 @@
 
 # 适配性
 * IE9+.
+注:　IE9不能展示上传进度．
+
 * firefox
 * chrome 
  
