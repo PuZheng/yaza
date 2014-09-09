@@ -80,7 +80,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     return false;
                 },
                 'click .column': function (evt) {
-                    if($(evt.currentTarget).data("invisible")) {
+                    if(!$(evt.currentTarget).data("object").visible()) {
                         return false;
                     }
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
