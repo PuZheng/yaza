@@ -86,6 +86,9 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     dispatcher.trigger('active-object', $(evt.currentTarget).data('control-group'));
                 },
                 'dragstart .column': function (evt) {
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("moving");
                     this._dragSrcEl = evt.currentTarget;
                     evt.originalEvent.dataTransfer.effectAllowed = 'move';
@@ -102,10 +105,16 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     $(evt.currentTarget).removeClass("over").removeClass('bg-info');
                 },
                 'dragenter .column': function (evt) {
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
                     $(evt.currentTarget).addClass("over").addClass('bg-info');
                 },
                 'drop .column': function (evt) {
                     evt.stopPropagation && evt.stopPropagation();
+                    if (!$(evt.currentTarget).data('object').visible()) {
+                        return false;
+                    }
 
                     if (evt.currentTarget != this._dragSrcEl) {
                         var items = $(".object-manager .list-group-item");
@@ -204,7 +213,7 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
             },
 
             _exchangeImage: function (source, target) {
-                if (target.length == 0) {
+                if (target.length == 0 || !source.data('object').visible() || !target.data('object').visible()) {
                     return;
                 }
                 var playGround = this;
