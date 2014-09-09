@@ -951,14 +951,14 @@ mvc, readImageData, Resize) {
                             }
                         };
                     }(imageLayer.getChildren(function (node) {
-                        return node.className == 'Image';
+                        return node.className == 'Image' && node.isVisible();
                     }).length, draw));
                     // 若当前定制区没有操作， 不要忘了通知
-                    if (imageLayer.children.length == 0) {
+                    if (imageLayer.getChildren(function (node) {return node.isVisible() && node.className == 'Image'}).length == 0) {
                         d.notify();
                     }
                     _.each(imageLayer.children, function (node, index) {
-                        if (node.className === "Image") {
+                        if (node.className === "Image" && node.isVisible()) {
                             // 这里的情况很复杂，分情况描述：
                             // 1. 用户自己上传的图， 现在有两份: 一份是原图， 一份是经过resize的
                             // hdSrc这个时候就是data uri,
@@ -1004,7 +1004,7 @@ mvc, readImageData, Resize) {
         // 下载当前面的预览
         _downloadPreview: function () {
             if (this._currentAspect.designRegionList.every(function (dr) {
-                return !dr.getImageLayer().hasChildren();
+                return dr.getImageLayer().getChildren(function (node) {return node.className == 'Image' && node.isVisible()}).length == 0;
             })) {
                 dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
                 return false;
@@ -1089,7 +1089,9 @@ mvc, readImageData, Resize) {
 
         _downloadDesign: function (evt) {
             if (this._currentAspect.designRegionList.every(function (dr) {
-                return !dr.getImageLayer().hasChildren();
+                return dr.getImageLayer().getChildren(function (node) {
+                    return node.isVisible();
+                }).length == 0;
             })) {
                 dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
                 return false;
