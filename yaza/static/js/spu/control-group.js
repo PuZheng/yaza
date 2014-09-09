@@ -1,4 +1,6 @@
-define(["spu/config"], function (config) {
+define(["spu/config", "kineticjs"], function (config, Kinetic) {
+
+    'use strict';
 
     function info(group) {
         var rect = group.find('.rect')[0];
@@ -9,34 +11,44 @@ define(["spu/config"], function (config) {
         resizable = !!resizable;
 
         var containerGroup = new Kinetic.Group({
-            draggable: true,
             name: title,
-            target: node,
+            target: node
         });
         containerGroup.hide = function () {
-            group.hide();   
+            group.hide();
         };
         containerGroup.show = function () {
-            group.show();   
+            group.show();
+        };
+        containerGroup.draggable = function (arg) {
+            group.draggable(arg);
         };
         containerGroup.position = function (arg) {
             if (!!arg) {
                 return group.position(arg);
             }
             return group.position();
-        }
-        containerGroup.x = function(arg) {
+        };
+        containerGroup.x = function (arg) {
             if (!!arg) {
                 return group.x(arg);
             }
             return group.x();
         };
-        containerGroup.y = function(arg) {
+        containerGroup.y = function (arg) {
             if (!!arg) {
                 return group.y(arg);
             }
             return group.y();
         };
+        containerGroup.activated = function (arg) {
+            if (arg != undefined) {
+                this._activated = arg;
+            } else {
+                return !!this._activated; 
+            }
+        };
+
         var fakeImage = new Kinetic.Rect({
             x: node.x() + node.width() / 2 - node.offsetX(),
             y: node.y() + node.height() / 2 - node.offsetY(),
@@ -49,7 +61,7 @@ define(["spu/config"], function (config) {
             }
         });
         fakeImage.on('mouseenter', function () {
-            if (containerGroup.getAttr('trasient') && !group.visible()) {
+            if (!containerGroup.activated() && !group.visible() && containerGroup.getAttr('target').visible()) {
                 group.show();
                 rect.stroke(hoveredComplementaryColor);
                 group.getLayer().draw();
@@ -92,7 +104,7 @@ define(["spu/config"], function (config) {
         rect.on("mouseout", function () {
             document.body.style.cursor = 'default';
             // 如果是临时控制组, 离开rect要隐藏
-            if (containerGroup.getAttr('trasient')) {
+            if (!containerGroup.activated()) {
                 group.hide();
             }
             this.getLayer().draw();
