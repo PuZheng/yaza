@@ -161,7 +161,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                 var ret= $(this._itemTemplate({
                     src: image.getImage().src,
                     name: name,
-                    title: image.name()
+                    title: image.name(),
+                    default: image.getAttr('default')
                 }));
                 return ret;
             },

@@ -118,7 +118,9 @@ define(['dispatcher', 'admin/spu/views/base-view',
                     }(this));
 
                 });
-                return BaseView.prototype.render.call(this, collapsed);
+                var ret = BaseView.prototype.render.call(this, collapsed);
+                this.$removeBtn.hide();
+                return ret;
             },
 
             checkDataIntegrity: function () {

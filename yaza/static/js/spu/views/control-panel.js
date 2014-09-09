@@ -15,14 +15,11 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
             this._spu = option.spu;
             this._tagList = option.tagList;
             this._setupEventsHandler();
-            this._readonly = $("[name=readonly]").data("val") == "True";
-            if(this._readonly){
-                this._defaultDesignImage = $("[name=design-image-list]").data("val")[0];
-            }
+            this._defaultDesignImage = $("[name=design-image-list]").data("val")[0];
         },
 
         render: function () {
-            this.$el.html(this._template({spu: this._spu, tagList: this._tagList, readonly: this._readonly}));
+            this.$el.html(this._template({spu: this._spu, tagList: this._tagList, defaultDesignImage: this._defaultDesignImage}));
             this.$('.ocspu-selector .thumbnail').each(function (idx, e) {
                 $(e).data('ocspu', this._spu.ocspuList[idx]);
             }.bind(this));
@@ -133,14 +130,12 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 }
             })
             .on('design-region-setup', function (designRegion) {
-                    if (this._readonly && this._defaultDesignImage) {
+                    if (!!this._defaultDesignImage) {
                         dispatcher.trigger("design-image-selected",
                             {url: this._defaultDesignImage.pic_url,
                                 title: this._defaultDesignImage.title,
                                 designImageId: this._defaultDesignImage.id});
 
-                        // _defaultDesignImage只能设置一次
-                        this._defaultDesignImage = null;
                     }
 
                     this._objectManager.empty();
@@ -164,11 +159,16 @@ dispatcher, SelectImageModal, ObjectManager, AddTextModal, TextOperators) {
                 }
             })
             .on('object-added', function (image, group, oldIm, oldControlGroup) {
+                if (!!this._defaultDesignImage && image.image().src.split('?')[0] == this._defaultDesignImage.pic_url) {
+                    image.setAttr('default', true);
+                }
                 if (!!oldIm && !!oldControlGroup) {
                     this._objectManager.replace(image, group, oldIm, oldControlGroup);
                 } else {
                     this._objectManager.add(image, group);
                 }
+                // _defaultDesignImage只能设置一次, 就在默认的第一个定制区上
+                this._defaultDesignImage = null;
             })
             .on('update-preview-done', function (designRegion, previewLayer) {
                 if (!previewLayer) {
