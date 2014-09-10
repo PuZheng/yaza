@@ -275,7 +275,9 @@ mvc, readImageData, Resize) {
                 var ocspu = this._currentAspect.ocspu;
                 if (ocspu.aspectList.every(function (aspect) {
                     return aspect.designRegionList.every(function (dr) {
-                        return !dr.getImageLayer().hasChildren();
+                        return dr.getImageLayer().getChildren(function (node) {
+                            return node.className == "Image" && node.isVisible();
+                        }).length == 0;
                     });
                 })) {
                     dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
