@@ -162,7 +162,8 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                     src: image.getImage().src,
                     name: name,
                     title: image.name(),
-                    default: image.getAttr('default')
+                    default: image.getAttr('default'),
+                    visible: image.isVisible()
                 }));
                 return ret;
             },
@@ -193,7 +194,6 @@ define(['backbone', 'handlebars', 'text!templates/object-manager.hbs',
                         objectManager._formatItem(item);
                     }
                 }(this, item));
-                //this._formatItem(im);
                 this._setupButtons();
                 this._imageLayer = im.getLayer();
             },

@@ -6,7 +6,7 @@
     <button type='button' title='是否显示' class='btn btn-link visible-btn btn-xs'>
       <span class="fa-stack">
         <i class="fa fa-eye fa-stack-1x"></i>
-        <i class="fa fa-ban fa-stack-2x text-danger" style='display: none'></i>
+        <i class="fa fa-ban fa-stack-2x text-danger" {{#if visible}}style='display: none'{{/if}}></i>
       </span>
     </button>
     <button type='button' title='上' class='btn btn-link up-btn btn-xs'>

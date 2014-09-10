@@ -962,7 +962,7 @@ mvc, readImageData, Resize) {
                     _.each(imageLayer.children, function (node, index) {
                         if (node.className === "Image" && node.isVisible()) {
                             // 这里的情况很复杂，分情况描述：
-                            // 1. 用户自己上传的图， 现在有两份: 一份是原图， 一份是经过resize的
+                            // 1. 用户自己上传的图(包括文字)， 现在有两份: 一份是原图， 一份是经过resize的
                             // hdSrc这个时候就是data uri,
                             // 这里肯定要使用原图, 这两份图的格式都是data uri, 即'data:image/png,base64;.........'
                             // 2. 官方的图， 又分为两种情况:
