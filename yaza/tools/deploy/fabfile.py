@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 
+from yaza.basemain import app
+
 from fabric.api import (cd, sudo, prefix, run, put, prompt,
                         settings)
 
@@ -66,7 +68,7 @@ def upload2cdn():
 
     with cd(yaza_env):
         with prefix('source env/bin/activate'):
-            run('cd yaza/yaza && cat tools/deploy/upload2cdn-files.txt | python tools/deploy/upload2cdn.py')
+            run('cd yaza/yaza && cat tools/deploy/upload2cdn-files.txt | python tools/deploy/upload2cdn.py --bucket ' + app.config['QINIU_CONF']['STATIC_BUCKET'])
 
 
 def take_effect(remote_config_file, sudoer):

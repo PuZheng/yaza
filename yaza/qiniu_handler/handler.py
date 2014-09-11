@@ -51,11 +51,11 @@ def upload_str(key, data, bucket, force=False, mime_type=''):
 
 
 def delete_file(bucket, key):
-    qiniu.rs.Client().delete(bucket, key)
+    qiniu.rs.Client().delete(bucket, key.encode('utf-8'))
 
 
 def is_exists(bucket, key):
-    ret, err = qiniu.rs.Client().stat(bucket, key)
+    ret, err = qiniu.rs.Client().stat(bucket, key.encode('utf-8'))
     return ret is not None
 
 
