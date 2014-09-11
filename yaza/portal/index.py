@@ -20,14 +20,33 @@ def index():
 
 @app.route("/config")
 def config():
-    fonts = app.config["FONTS_MAP"].keys()
-    config_ = {
-        "FONT_FAMILY_LIST": fonts,
-        "DEFAULT_PREVIEW_BACKGROUND_COLOR": '#1b5a71',
-        "QINIU_CONF": app.config["QINIU_CONF"]
-    }
+    fonts = [font_name for font_name in app.config["FONTS_AVAILABLE"] if
+             font_name in app.config['FONTS_MAP']]
+    config_ = {}
     if fonts:
+        config_["FONT_FAMILY_LIST"] = fonts,
         config_["DEFAULT_FONT_FAMILY"] = fonts[0]
+        for c in [
+            'BLACK_ALPHA_THRESHOLD',
+            'WHITE_ALPHA_THRESHOLD',
+            'LOGIN_REQUIRED',
+            'DEFAULT_FONT_SIZE',
+            'PPI',
+            'DEFAULT_FONT_COLOR',
+            'FONT_SIZE_LIST',
+            'CONTROL_POINT_NUM',
+            'DISPROPORTIONATE',
+            'MAGNET_TOLERANCE',
+            'DOWNLOADABLE',
+            'PLAYGROUND_MARGIN',
+            'DEFAULT_PREVIEW_BACKGROUND_COLOR',
+            'DESIGN_IMAGE_INTIAL_ZOOMNESS',
+            'PREVIEW_DOWNLOADABLE',
+            'DESIGN_DOWNLOADABLE',
+            'QINIU_CONF',
+            'FONTS_AVAILABLE',
+        ]:
+            config_[c] = app.config[c]
     return jsonify(config_)
 
 

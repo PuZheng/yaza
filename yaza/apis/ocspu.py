@@ -121,7 +121,7 @@ class AspectWrapper(ModelWrapper):
         return 'http://%s.qiniudn.com/%s?imageView2/0/w/%s' % (
             app.config['QINIU_CONF']['SPU_IMAGE_BUCKET'],
             self.pic_path,
-            app.config['QINIU_CONF']['DESIGN_IMAGE_THUMNAIL_SIZE'])
+            app.config['QINIU_CONF']['ASPECT_THUMNAIL_SIZE'])
 
     def as_dict(self, camel_case=True):
         return {
