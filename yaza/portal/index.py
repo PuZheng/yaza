@@ -24,7 +24,7 @@ def config():
              font_name in app.config['FONTS_MAP']]
     config_ = {}
     if fonts:
-        config_["FONT_FAMILY_LIST"] = fonts,
+        config_["FONT_FAMILY_LIST"] = fonts
         config_["DEFAULT_FONT_FAMILY"] = fonts[0]
         for c in [
             'BLACK_ALPHA_THRESHOLD',
@@ -44,7 +44,6 @@ def config():
             'PREVIEW_DOWNLOADABLE',
             'DESIGN_DOWNLOADABLE',
             'QINIU_CONF',
-            'FONTS_AVAILABLE',
         ]:
             config_[c] = app.config[c]
     return jsonify(config_)
