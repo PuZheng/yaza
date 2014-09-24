@@ -598,14 +598,17 @@ mvc, readImageData, Resize) {
                     // resize by ourself, a compromised way
                     var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
                             imageObj.height);
-                    new Resize(imageObj.width, imageObj.height, width, height, 
+                    var abc = 1.0 / config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
+                    var resizedWidth = parseInt(width / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
+                    var resizedHeight = parseInt(height / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
+                    new Resize(imageObj.width, imageObj.height, resizedWidth, resizedHeight,
                             true, true, false,
                             function (buffer) {
                                 var canvasEl = document.createElement('canvas');
-                                canvasEl.width = width;
-                                canvasEl.height = height;
+                                canvasEl.width = resizedWidth;
+                                canvasEl.height = resizedHeight;
                                 var destCtx = canvasEl.getContext('2d');
-                                var destImageData = destCtx.createImageData(width, height);
+                                var destImageData = destCtx.createImageData(resizedWidth, resizedHeight);
                                 for (var i = 0; i < buffer.length; ++i) {
                                     destImageData.data[i] = buffer[i] & 0xFF;
                                 }
