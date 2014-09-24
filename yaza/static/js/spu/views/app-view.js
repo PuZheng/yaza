@@ -1,8 +1,8 @@
 define(['backbone', 'toastr',
 'spu/config', 'spu/views/play-ground', 'spu/views/control-panel', 
-'dispatcher', 'spu/datastructures/spu', 'bootstrap'
+'dispatcher', 'spu/datastructures/spu', 'i18next', 'bootstrap'
 ], 
-function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
+function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n) {
     toastr.options = {
         "closeButton": false,
         "debug": false,
@@ -18,6 +18,11 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
         "hideMethod": "fadeOut"
     };
 
+    i18n.init({
+        resGetPath: '/static/locales/__lng__/__ns__.json'
+    });
+
+    
     var AppView = Backbone.View.extend({
         el: '.primary',
         

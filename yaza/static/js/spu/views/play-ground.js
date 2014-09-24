@@ -1,15 +1,30 @@
 define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
 'kineticjs', 'dispatcher', 'color-tools',
-'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer',
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer', 'i18next',
 'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob", "underscore.string"],
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
-mvc, readImageData, Resize) {
+mvc, readImageData, Resize, i18n) {
 
     var __debug__ = ($.url('?debug') == '1');
 
     _.mixin(_.string.exports());
+
+    handlebars.default.registerHelper('t', function(i18n_key) {
+    var result = i18n.t(i18n_key);
+    
+    return new handlebars.default.SafeString(result);
+    });
+
+    handlebars.default.registerHelper('tr', function(context, options) { 
+        var opts = i18n.functions.extend(options.hash, context);
+        if (options.fn) opts.defaultValue = options.fn(context);
+
+        var result = i18n.t(opts.key, opts);
+
+        return new handlebars.default.SafeString(result);
+    });
 
     var PlayGround = Backbone.View.extend({
         _template: handlebars.default.compile(playGroundTemplate),
