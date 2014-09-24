@@ -1,8 +1,8 @@
 define(['backbone', 'toastr',
 'spu/config', 'spu/views/play-ground', 'spu/views/control-panel', 
-'dispatcher', 'spu/datastructures/spu', 'i18next', 'bootstrap'
+'dispatcher', 'spu/datastructures/spu', 'i18next', 'handlebars', 'bootstrap'
 ], 
-function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n) {
+function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n, handlebars) {
     toastr.options = {
         "closeButton": false,
         "debug": false,
@@ -20,6 +20,21 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
 
     i18n.init({
         resGetPath: '/static/locales/__lng__/__ns__.json'
+    });
+
+    handlebars.default.registerHelper('t', function(i18n_key) {
+        var result = i18n.t(i18n_key);
+
+        return new handlebars.default.SafeString(result);
+    });
+
+    handlebars.default.registerHelper('tr', function(context, options) { 
+        var opts = i18n.functions.extend(options.hash, context);
+        if (options.fn) opts.defaultValue = options.fn(context);
+
+        var result = i18n.t(opts.key, opts);
+
+        return new handlebars.default.SafeString(result);
     });
 
     

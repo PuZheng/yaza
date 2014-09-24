@@ -11,21 +11,6 @@ mvc, readImageData, Resize, i18n) {
 
     _.mixin(_.string.exports());
 
-    handlebars.default.registerHelper('t', function(i18n_key) {
-    var result = i18n.t(i18n_key);
-    
-    return new handlebars.default.SafeString(result);
-    });
-
-    handlebars.default.registerHelper('tr', function(context, options) { 
-        var opts = i18n.functions.extend(options.hash, context);
-        if (options.fn) opts.defaultValue = options.fn(context);
-
-        var result = i18n.t(opts.key, opts);
-
-        return new handlebars.default.SafeString(result);
-    });
-
     var PlayGround = Backbone.View.extend({
         _template: handlebars.default.compile(playGroundTemplate),
 
@@ -295,7 +280,7 @@ mvc, readImageData, Resize, i18n) {
                         }).length == 0;
                     });
                 })) {
-                    dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                    dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                     dispatcher.trigger('submit-design-done', 'failed');
                     return;
                 }
@@ -309,7 +294,7 @@ mvc, readImageData, Resize, i18n) {
                         url: '/image/design-save',
                         data: data
                     }).done(function (content) {
-                        dispatcher.trigger('flash', 'success', '您已经成功保存了定制结果');
+                        dispatcher.trigger('flash', 'success', i18n.t('Design submitted!'));
                         dispatcher.trigger('submit-design-done', 'success');
                     }).fail(function (jqXHR) {
                         dispatcher.trigger('submit-design-done', 'failed');
@@ -1026,7 +1011,7 @@ mvc, readImageData, Resize, i18n) {
             if (this._currentAspect.designRegionList.every(function (dr) {
                 return dr.getImageLayer().getChildren(function (node) {return node.className == 'Image' && node.isVisible()}).length == 0;
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                 return false;
             }
             var backgroundColor = this.$('input.preview-background-color').spectrum('get');
@@ -1113,7 +1098,7 @@ mvc, readImageData, Resize, i18n) {
                     return node.isVisible();
                 }).length == 0;
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                 return false;
             }
             $(evt.currentTarget).bootstrapButton('loading');

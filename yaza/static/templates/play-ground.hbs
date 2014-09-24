@@ -1,16 +1,17 @@
 <div class="helpler-btns">
   <div class="input-group">
     <span class="input-group-btn">
-      <button class="btn btn-default btn-download-preview" style='display: none'><small>下载预览</small></button>
+      <button class="btn btn-default btn-download-preview" style='display: none'>
+        <i class="fa fa-download"></i>
+        <small>{{t "Preview" }}</small>
+      </button>
     </span>
     <input type="text" class="form-control preview-background-color" style='display: none'>
   </div>
-  <!--<button class="btn btn-info pull-left btn-download-preview" style='display: none'>-->
-    <!--下载预览-->
-  <!--</button>-->
-  <button type='button' class="btn btn-default btn-download-design" style='display: none' data-loading-text='生成设计...'>
+  <button type='button' class="btn btn-default btn-download-design" style='display: none' data-loading-text='{{t "Generating"}}...'>
+    <i class="fa fa-download"></i>
     <small>
-      下载设计结果
+      {{t "Design"}}
     </small>
   </button>
 </div>
@@ -22,8 +23,8 @@
       <input name="change-text" id="change-text" type="text"/>
     </div>
     <div class="panel-footer">
-      <button class="btn btn-default btn-xs">取消</button>
-      <button class="btn btn-primary btn-xs">确定</button>
+      <button class="btn btn-default btn-xs">{{t "Cancel"}}</button>
+      <button class="btn btn-primary btn-xs">{{t "Ok"}}</button>
     </div>
   </div>
 </div>
