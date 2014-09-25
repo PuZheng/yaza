@@ -19,5 +19,8 @@
     "Close": "关闭",
     "Input text": "输入文字",
     "Modify": "修改",
-    "You havn't uploaded any images yet!": "您还没有上传过任何图片，请先上传!"
+    "You havn't uploaded any images yet!": "您还没有上传过任何图片，请先上传!",
+    "Up": "上",
+    "Down": "下",
+    "Visible or not": "是否可见"
 }

@@ -39,7 +39,6 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
         el: '.primary',
         
         initialize: function () {
-            this.$('.mask').hide();
             var spu = this.$('input[name="spu"]').data('val');
             spu = Spu(spu);
             var tagList = this.$('input[name=tag-list]').data('val');
@@ -101,6 +100,7 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
                       fallbackLng: false,
                       useCookie: false},
                       function (t) {
+                          this.$('.mask').hide();
                           this._playGround = new PlayGround({
                               el: this.$('.play-ground'), 
                               spu: spu, 
