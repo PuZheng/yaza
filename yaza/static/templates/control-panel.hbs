@@ -5,8 +5,8 @@
     </div>
   </div>
   <div class="col-md-6">
-    <button type='button' class="btn btn-success btn-lg btn-submit" data-loading-text="正在提交...">
-      提交
+    <button type='button' class="btn btn-success btn-lg btn-submit" data-loading-text="{{t "Submitting"}}...">
+      {{t "Submit"}}
     </button>
   </div>
 </div>
@@ -33,13 +33,13 @@
         {{#if defaultDesignImage }}disabled{{/if}}
         >
         <i class="fa fa-file-image-o"></i>
-        增加图片
+        {{t "Add image"}}
       </button>
     </div>
     <div class="col-sm-6">
       <button class="btn btn-primary add-text-btn" data-toggle='modal' data-target='.add-text-modal'>
         <i class="fa fa-pencil-square"></i>
-        增加文字
+        {{t "Add text"}}
       </button>
     </div>
   </div>
@@ -61,14 +61,14 @@
       <div class="modal-body">
         <div class='pull-right' name="tags-div">
           <button class='btn-tag btn btn-primary'>
-            <i class="fa fa-tag"></i><span class='selected-tag'>不限标签</span>
+            <i class="fa fa-tag"></i><span class='selected-tag'>{{t "All"}}</span>
           </button>
           <div class="tags-list" style='display: none'>
             <div class="row">
               <div class="panel panel-info col-md-10 col-md-offset-1">
                 <div class="panel-body">
                   <button type="button" class="close" aria-hidden="true">&times;</button>
-                  <a href="#" class='tag text-success' data-tag-id="0"><b>不限标签</b></a>
+                  <a href="#" class='tag text-success' data-tag-id="0"><b>{{t "All"}}</b></a>
                     {{#each tagList}}
                       <a href="#" class='tag text-danger' data-tag-id="{{this.id}}"><b>{{this.tag}}</b></a>
                     {{/each}}
@@ -78,8 +78,8 @@
           </div>
         </div>
         <ul class="nav nav-tabs">
-          <li><a data-toggle="tab" href=".builtin-pics">默认图片</a></li>
-          <li><a href=".customer-pics" data-toggle="tab">自定义图片</a></li>
+          <li><a data-toggle="tab" href=".builtin-pics">{{t "Builtin"}}</a></li>
+          <li><a href=".customer-pics" data-toggle="tab">{{t "Yours"}}</a></li>
         </ul>
         <div class="tab-content">
           <div class="tab-pane fade builtin-pics">
@@ -89,7 +89,7 @@
           </div>
           <div class="toast" style='display: none'>
               <span>
-                没有设计图了
+                {{t "No more images"}}
               </span>
           </div>
         </div>
@@ -98,7 +98,7 @@
         <div class='upload-img-form' enctype="multipart/form-data">
             <span class="btn btn-success fileinput-button">
               <i class="glyphicon glyphicon-plus"></i>
-              <span>上传新图片</span>
+              <span>{{t "Upload new"}}</span>
               <input type="file" name="file">
             </span>
 
@@ -106,8 +106,8 @@
             <!-- The file uploads will be shown here -->
           </div>
         </div>
-        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-        <button type="button" class="btn-ok btn btn-primary" data-dismiss="modal">确认</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{t "Close"}}</button>
+        <button type="button" class="btn-ok btn btn-primary" data-dismiss="modal">{{t "OK"}}</button>
       </div>
     </div>
     <!-- /.modal-content -->
@@ -121,16 +121,16 @@
     <div class="modal-content">
       <div class="modal-body">
         <div class="modal-header">
-          <h4 class="modal-title">请输入文字</h4>
+          <h4 class="modal-title">{{t "Input text"}}</h4>
         </div>
         <div class="modal-body">
           <div class="text-center">
-            <input type="text" placeholder="请输入文字"/>
+            <input type="text" placeholder="{{t 'Input text'}}"/>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-          <button type="button" class="btn btn-ok btn-primary" data-dimiss="modal">确认</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">{{t "Close"}}</button>
+          <button type="button" class="btn btn-ok btn-primary" data-dimiss="modal">{{t "OK"}}</button>
         </div>
       </div>
     </div>

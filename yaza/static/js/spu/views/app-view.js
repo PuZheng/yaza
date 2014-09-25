@@ -18,9 +18,6 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
         "hideMethod": "fadeOut"
     };
 
-    i18n.init({
-        resGetPath: '/static/locales/__lng__/__ns__.json'
-    });
 
     handlebars.default.registerHelper('t', function(i18n_key) {
         var result = i18n.t(i18n_key);
@@ -100,18 +97,22 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
                 this._controlPanel.trigger('submit-design-done', status);
             }, this);
 
-
-            this._playGround = new PlayGround({
-                el: this.$('.play-ground'), 
-                spu: spu, 
-                orderId: orderId,
-            }).render();
-            this._controlPanel = new ControlPanel({
-                el: this.$('.control-panel'), 
-                spu: spu,
-                tagList: tagList,
-            }).render();
-
+            i18n.init({resGetPath: 'http://yaza-static.qiniudn.com/static/locales/__lng__/__ns__.json',
+                      fallbackLng: false,
+                      useCookie: false},
+                      function (t) {
+                          this._playGround = new PlayGround({
+                              el: this.$('.play-ground'), 
+                              spu: spu, 
+                              orderId: orderId,
+                          }).render();
+                          this._controlPanel = new ControlPanel({
+                              el: this.$('.control-panel'), 
+                              spu: spu,
+                              tagList: tagList,
+                          }).render();
+                      }.bind(this)
+                     );
         }
     });
     return AppView;
