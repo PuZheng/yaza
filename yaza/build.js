@@ -27,6 +27,7 @@
         "jszip": "empty:",
         'jquery-ajaxtransport-xdomainrequest': "empty:",
         modernizr: 'empty:',
+        i18next: "empty:",
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
@@ -139,6 +140,9 @@
         },
         'modernizr': {
             exports: 'Modernizr',
+        },
+        i18next: {
+            exports: 'i18n',
         },
         'jquery.browser': {
             deps: ['jquery'],
