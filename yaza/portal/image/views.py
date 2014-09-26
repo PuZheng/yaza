@@ -64,7 +64,7 @@ def calc_control_points(design_region_id):
     return jsonify(wraps(design_region).control_points)
 
 
-@image.route('/design-pkg', methods=['POST'])
+@image.route('/echo', methods=['POST'])
 def design_pkg():
     # 将svg打入包
     data = request.form["data"]
