@@ -1,14 +1,15 @@
-static/dist/js/admin/spu/infrastructure.js
-static/dist/js/admin/spu/main.js
-static/dist/js/infrastructure.js
-static/dist/js/spu/main.js
-static/dist/css/admin/spu.css
-static/dist/css/admin.css
-static/dist/css/custom.css
-static/dist/css/login.css
-static/dist/css/style.css
-static/dist/vendor/bootswatch-scss/flatly/bootstrap.css
-static/dist/assets/congruent_outline.png
-static/dist/favicon.ico
-static/dist/components/blueimp-file-upload/img/progressbar.gif
-static/dist/components/blueimp-file-upload/img/loading.gif
+static/dist/js/admin/spu/infrastructure.js static/js/admin/spu/infrastructure.js
+static/dist/js/admin/spu/main.js static/js/admin/spu/main.js
+static/dist/js/infrastructure.js static/js/infrastructure.js
+static/dist/js/spu/main.js static/js/spu/main.js
+static/dist/css/admin/spu.css static/css/admin/spu.css
+static/dist/css/admin.css static/css/admin.css
+static/dist/css/custom.css static/css/custom.css
+static/dist/css/login.css static/css/login.css
+static/dist/css/style.css static/css/style.css
+static/dist/vendor/bootswatch-scss/flatly/bootstrap.css static/vendor/bootswatch-scss/flatly/bootstrap.css
+static/dist/assets/congruent_outline.png static/assets/congruent_outline.png
+static/dist/favicon.ico static/favicon.ico
+static/dist/components/blueimp-file-upload/img/progressbar.gif static/components/blueimp-file-upload/img/progressbar.gif
+static/dist/components/blueimp-file-upload/img/loading.gif static/components/blueimp-file-upload/img/loading.gif
+static/locales/zh-CN/translation.json static/locales/zh-CN/translation.json

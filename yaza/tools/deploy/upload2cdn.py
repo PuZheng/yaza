@@ -16,11 +16,10 @@ def upload_files(bucket):
     upload files (read from stdin) to qiniu
     """
     for l in sys.stdin.xreadlines():
-        upload_file(l.strip().decode('utf-8'), bucket)
+        upload_file(*l.strip().decode('utf-8').split() + [bucket])
 
 
-def upload_file(file_, bucket):
-    key = os.path.join('static', os.path.relpath(file_, 'static/dist'))
+def upload_file(file_, key, bucket):
     print "uploading " + file_ + '...'
     upload_str(key, open(file_).read(), bucket, True)
 

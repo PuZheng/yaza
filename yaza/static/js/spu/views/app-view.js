@@ -1,8 +1,8 @@
 define(['backbone', 'toastr',
 'spu/config', 'spu/views/play-ground', 'spu/views/control-panel', 
-'dispatcher', 'spu/datastructures/spu', 'bootstrap'
+'dispatcher', 'spu/datastructures/spu', 'i18next', 'handlebars', 'bootstrap'
 ], 
-function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
+function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n, handlebars) {
     toastr.options = {
         "closeButton": false,
         "debug": false,
@@ -18,11 +18,27 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
         "hideMethod": "fadeOut"
     };
 
+
+    handlebars.default.registerHelper('t', function(i18n_key) {
+        var result = i18n.t(i18n_key);
+
+        return new handlebars.default.SafeString(result);
+    });
+
+    handlebars.default.registerHelper('tr', function(context, options) { 
+        var opts = i18n.functions.extend(options.hash, context);
+        if (options.fn) opts.defaultValue = options.fn(context);
+
+        var result = i18n.t(opts.key, opts);
+
+        return new handlebars.default.SafeString(result);
+    });
+
+    
     var AppView = Backbone.View.extend({
         el: '.primary',
         
         initialize: function () {
-            this.$('.mask').hide();
             var spu = this.$('input[name="spu"]').data('val');
             spu = Spu(spu);
             var tagList = this.$('input[name=tag-list]').data('val');
@@ -80,18 +96,23 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu) {
                 this._controlPanel.trigger('submit-design-done', status);
             }, this);
 
-
-            this._playGround = new PlayGround({
-                el: this.$('.play-ground'), 
-                spu: spu, 
-                orderId: orderId,
-            }).render();
-            this._controlPanel = new ControlPanel({
-                el: this.$('.control-panel'), 
-                spu: spu,
-                tagList: tagList,
-            }).render();
-
+            i18n.init({resGetPath: 'http://yaza-static.qiniudn.com/static/locales/__lng__/__ns__.json',
+                      fallbackLng: false,
+                      useCookie: false},
+                      function (t) {
+                          this.$('.mask').hide();
+                          this._playGround = new PlayGround({
+                              el: this.$('.play-ground'), 
+                              spu: spu, 
+                              orderId: orderId,
+                          }).render();
+                          this._controlPanel = new ControlPanel({
+                              el: this.$('.control-panel'), 
+                              spu: spu,
+                              tagList: tagList,
+                          }).render();
+                      }.bind(this)
+                     );
         }
     });
     return AppView;

@@ -1,11 +1,11 @@
 define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
 'kineticjs', 'dispatcher', 'color-tools',
-'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer',
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer', 'i18next',
 'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob", "underscore.string"],
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
-mvc, readImageData, Resize) {
+mvc, readImageData, Resize, i18n) {
 
     var __debug__ = ($.url('?debug') == '1');
 
@@ -280,7 +280,7 @@ mvc, readImageData, Resize) {
                         }).length == 0;
                     });
                 })) {
-                    dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                    dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                     dispatcher.trigger('submit-design-done', 'failed');
                     return;
                 }
@@ -294,7 +294,7 @@ mvc, readImageData, Resize) {
                         url: '/image/design-save',
                         data: data
                     }).done(function (content) {
-                        dispatcher.trigger('flash', 'success', '您已经成功保存了定制结果');
+                        dispatcher.trigger('flash', 'success', i18n.t('Design submitted!'));
                         dispatcher.trigger('submit-design-done', 'success');
                     }).fail(function (jqXHR) {
                         dispatcher.trigger('submit-design-done', 'failed');
@@ -598,14 +598,17 @@ mvc, readImageData, Resize) {
                     // resize by ourself, a compromised way
                     var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
                             imageObj.height);
-                    new Resize(imageObj.width, imageObj.height, width, height, 
+                    var abc = 1.0 / config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
+                    var resizedWidth = parseInt(width / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
+                    var resizedHeight = parseInt(height / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
+                    new Resize(imageObj.width, imageObj.height, resizedWidth, resizedHeight,
                             true, true, false,
                             function (buffer) {
                                 var canvasEl = document.createElement('canvas');
-                                canvasEl.width = width;
-                                canvasEl.height = height;
+                                canvasEl.width = resizedWidth;
+                                canvasEl.height = resizedHeight;
                                 var destCtx = canvasEl.getContext('2d');
-                                var destImageData = destCtx.createImageData(width, height);
+                                var destImageData = destCtx.createImageData(resizedWidth, resizedHeight);
                                 for (var i = 0; i < buffer.length; ++i) {
                                     destImageData.data[i] = buffer[i] & 0xFF;
                                 }
@@ -1008,7 +1011,7 @@ mvc, readImageData, Resize) {
             if (this._currentAspect.designRegionList.every(function (dr) {
                 return dr.getImageLayer().getChildren(function (node) {return node.className == 'Image' && node.isVisible()}).length == 0;
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                 return false;
             }
             var backgroundColor = this.$('input.preview-background-color').spectrum('get');
@@ -1095,7 +1098,7 @@ mvc, readImageData, Resize) {
                     return node.isVisible();
                 }).length == 0;
             })) {
-                dispatcher.trigger('flash', 'error', '您尚未作出任何定制，请先定制!');
+                dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                 return false;
             }
             $(evt.currentTarget).bootstrapButton('loading');

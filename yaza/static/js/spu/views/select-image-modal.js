@@ -12,6 +12,7 @@ define([
         'spu/collections/design-images',
         'cookies-js',
         'spu/config',
+        'i18next',
         'utils/lazy-load',
         'underscore.string',
         'jquery.iframe-transport',
@@ -19,7 +20,7 @@ define([
     ],
     function ($, Backbone, _, handlebars, Modernizr, dispatcher, galleryTemplate, 
               uploadingProgressTemplate, uploadingSuccessTemplate, 
-              uploadingFailTemplate, DesignImages, Cookies, config) {
+              uploadingFailTemplate, DesignImages, Cookies, config, i18n) {
 
         _.mixin(_.str.exports());
 
@@ -343,7 +344,7 @@ define([
 
                 });
                 this.$(".builtin-pics .thumbnails").empty();
-                this.$("span.selected-tag").text(tag || '不限标签');
+                this.$("span.selected-tag").text(tag || i18n.t('All'));
                 this._loadMoreDesignImages().done(function () {
                     if (this.$("ul.thumbnails .thumbnail.selected img").length == 0) {
                         this.$(".builtin-pics .thumbnail:first").addClass("selected");

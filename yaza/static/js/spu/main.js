@@ -27,6 +27,7 @@
             "jszip": "http://cdn.bootcss.com/jszip/2.3.0/jszip.min",
             'jquery-ajaxtransport-xdomainrequest': "http://cdn.bootcss.com/jquery-ajaxtransport-xdomainrequest/1.0.2/jquery.xdomainrequest.min",
             modernizr: 'http://cdn.bootcss.com/modernizr/2.8.2/modernizr.min',
+            i18next: "http://cdn.bootcss.com/i18next/1.6.3/i18next.amd-1.6.3.min",
             // vendors not using cdn
             'svg.export': 'components/svg.export.js/svg.export',
             kineticjs: 'components/kineticjs/kinetic.min',
@@ -122,6 +123,9 @@
             },
             'image-resizer': {
                 exports: 'Resize', 
+            },
+            i18next: {
+                exports: 'i18n',
             }
         }
     };
