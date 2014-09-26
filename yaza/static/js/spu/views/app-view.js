@@ -1,8 +1,9 @@
 define(['backbone', 'toastr',
 'spu/config', 'spu/views/play-ground', 'spu/views/control-panel', 
-'dispatcher', 'spu/datastructures/spu', 'i18next', 'handlebars', 'bootstrap'
+'dispatcher', 'spu/datastructures/spu', 'i18next', 'handlebars', 'locales/translations',
+'bootstrap',
 ], 
-function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n, handlebars) {
+function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i18n, handlebars, translations) {
     toastr.options = {
         "closeButton": false,
         "debug": false,
@@ -96,22 +97,23 @@ function (Backbone, toastr, config, PlayGround, ControlPanel, dispatcher, Spu, i
                 this._controlPanel.trigger('submit-design-done', status);
             }, this);
 
-            i18n.init({resGetPath: 'http://yaza-static.qiniudn.com/static/locales/__lng__/__ns__.json',
-                      fallbackLng: false,
-                      useCookie: false},
-                      function (t) {
-                          this.$('.mask').hide();
-                          this._playGround = new PlayGround({
-                              el: this.$('.play-ground'), 
-                              spu: spu, 
-                              orderId: orderId,
-                          }).render();
-                          this._controlPanel = new ControlPanel({
-                              el: this.$('.control-panel'), 
-                              spu: spu,
-                              tagList: tagList,
-                          }).render();
-                      }.bind(this)
+            i18n.init({
+                fallbackLng: false,
+                useCookie: false,
+                resStore: translations,
+            }, function (t) {
+                this.$('.mask').hide();
+                this._playGround = new PlayGround({
+                    el: this.$('.play-ground'), 
+                    spu: spu, 
+                    orderId: orderId,
+                }).render();
+                this._controlPanel = new ControlPanel({
+                    el: this.$('.control-panel'), 
+                    spu: spu,
+                    tagList: tagList,
+                }).render();
+            }.bind(this)
                      );
         }
     });
