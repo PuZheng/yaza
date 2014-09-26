@@ -1093,10 +1093,13 @@ mvc, readImageData, Resize, i18n) {
         },
 
         _downloadDesign: function (evt) {
-            if (this._currentAspect.designRegionList.every(function (dr) {
-                return dr.getImageLayer().getChildren(function (node) {
-                    return node.isVisible();
-                }).length == 0;
+            var ocspu = this._currentAspect.ocspu;
+            if (ocspu.aspectList.every(function (aspect) {
+                return aspect.designRegionList.every(function (dr) {
+                    return dr.getImageLayer().getChildren(function (node) {
+                        return node.className == "Image" && node.isVisible();
+                    }).length == 0;
+                });
             })) {
                 dispatcher.trigger('flash', 'error', i18n.t('Please customize at first!'));
                 return false;
