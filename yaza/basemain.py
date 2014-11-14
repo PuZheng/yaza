@@ -141,7 +141,7 @@ def permission_denied(error):
                                         'this page or perform this action, '
                                         'please contact Administrator to '
                                         'grant you required permission'),
-                                back_url=request.args.get('__back_url__'))
+                                back_url=request.args.get('__back_url__', '/'))
     return redirect(url_for("user.login", error=_("please login"),
                             next=request.url))
 
