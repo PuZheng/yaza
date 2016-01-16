@@ -102,7 +102,8 @@ class InitializeTestDB(Command):
 
                 dest = path.joinpath(app.config['UPLOAD_FOLDER'], fname)
                 sh.cp(src, dest)
-                pic_url = url_for('image.serve', filename=dest)
+                pic_url = url_for('image.serve', filename=path(dest).relpath(
+					app.config['UPLOAD_FOLDER']))
                 do_commit(DesignImage(title=title,
                                       tags=tag_record_list,
                                       pic_url=pic_url,
