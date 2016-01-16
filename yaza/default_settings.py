@@ -13,6 +13,7 @@ SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
 SQLALCHEMY_ECHO = True
 
 UPLOAD_FOLDER = 'static/uploads'
+ASSETS_DIR = 'static/assets'
 DESIGN_IMAGE_FOLDER = 'design-images'  # relative to UPLOAD_FOLDER
 SPU_IMAGE_FOLDER = 'spus'  # relative to UPLOAD_FOLDER
 SPU_CONFIG_FILE = 'config.json'

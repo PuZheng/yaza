@@ -52,7 +52,6 @@
     "jquery.browser": "~0.0.6",
     "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git",
     "JS-Image-Resizer": "https://github.com/grantgalitz/JS-Image-Resizer.git",
-    "dropwiki": "https://github.com/xiechao06/dropwiki.git",
     "i18next": "~1.7.4"
   }
 }

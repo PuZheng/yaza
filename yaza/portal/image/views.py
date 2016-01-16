@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 import codecs
 import os
-import sys
 import base64
 import time
 import datetime
@@ -14,12 +13,11 @@ from flask import request, jsonify, send_from_directory, json, send_file
 from flask.ext.login import current_user
 from io import BytesIO
 
-from yaza.basemain import app, scheduler
+from yaza.basemain import app
 from yaza.models import Tag, DesignImage, DesignResult, DesignResultFile
 from yaza.portal.image import image
 from yaza.utils import do_commit, assert_dir
 from yaza.apis import wraps
-from yaza.qiniu_handler import upload_str
 
 
 @image.route('/upload', methods=['POST'])
@@ -30,21 +28,16 @@ def upload():
     si = StringIO()
     fs.save(si)
     with closing(open(file_path, 'w')) as f:
-        s = 'data:' + request.form['type'] + ';base64,' + base64.b64encode(si.getvalue())
+        s = ('data:' + request.form['type'] + ';base64,' +
+             base64.b64encode(si.getvalue()))
         f.write(s)
 
-    scheduler.add_job(upload_str, args=[filename, s,
-                                        app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                                        True,
-                                        'text/plain'])
     # 只能返回空， 否则IE浏览器会打开新的页面
     return 'success'
 
 
 @image.route("/serve/<path:filename>")
 def serve(filename):
-    if sys.platform.startswith("win32"):
-        filename = filename.replace(os.path.sep, os.path.altsep)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
@@ -71,8 +64,8 @@ def design_pkg():
     sio = BytesIO()
     sio.write(base64.decodestring(data))
     sio.seek(0)
-    return send_file(sio, "application/zip", True, str(int(time.time() * 100)) + ".zip")
-
+    return send_file(sio, "application/zip", True, str(int(time.time() * 100))
+                     + ".zip")
 
 
 @image.route('/font-image', methods=['POST'])
@@ -142,7 +135,8 @@ def design_save():
     else:
         user = None
 
-    result = DesignResult(user=user, create_time=datetime.datetime.now(), spu_id=spu_id)
+    result = DesignResult(user=user, create_time=datetime.datetime.now(),
+                          spu_id=spu_id)
     if order_id:
         result.order_id = order_id
     do_commit(result)
@@ -150,7 +144,9 @@ def design_save():
         file_name = os.path.join(base_dir, k + ".svg")
         with codecs.open(file_name, "w", "utf-8") as f:
             f.write(v)
-        do_commit(DesignResultFile(design_result=result, name=k,
-                                   file_path=os.path.relpath(file_name, app.config["DESIGNED_FILE_FOLDER"])))
+        do_commit(DesignResultFile(
+            design_result=result, name=k,
+            file_path=os.path.relpath(file_name,
+                                      app.config["DESIGNED_FILE_FOLDER"])))
 
     return dir_name

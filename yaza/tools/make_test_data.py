@@ -6,9 +6,9 @@
 import os
 import shutil
 import json
-from contextlib import closing
-from binascii import b2a_base64
+import sh
 
+from flask import url_for
 from setuptools import Command
 from werkzeug.security import generate_password_hash
 
@@ -17,7 +17,7 @@ from yaza.basemain import app
 from yaza.models import (User, Group, DesignImage, Tag)
 from yaza.utils import do_commit, assert_dir
 from yaza.tools import color_tools
-from yaza.qiniu_handler import upload_str, AlreadyExists
+from path import path
 
 
 class InitializeTestDB(Command):
@@ -38,8 +38,8 @@ class InitializeTestDB(Command):
         # change current work path
         os.chdir(os.path.split(yaza.__file__)[0])
 
-        design_image_dir = os.path.join(os.path.split(yaza.__file__)[0],
-                                        "static", "assets", 'design-images')
+        design_image_dir = os.path.join(app.config['ASSETS_DIR'],
+                                        app.config['DESIGN_IMAGE_FOLDER'])
         if os.path.isdir(design_image_dir):
             self._create_design_images(design_image_dir)
 
@@ -78,15 +78,15 @@ class InitializeTestDB(Command):
                     os.path.join(os.path.split(yaza.__file__)[0],
                                  app.config["UPLOAD_FOLDER"]))
 
-    def _create_design_images(self, dir):
-        assert_dir(os.path.join(app.config['UPLOAD_FOLDER'],
-                                app.config['DESIGN_IMAGE_FOLDER']))
-
-        config = json.load(file(os.path.join(dir, "config.json")))
+    def _create_design_images(self, dir_):
+        upload_to = os.path.join(app.config['UPLOAD_FOLDER'],
+                                 app.config['DESIGN_IMAGE_FOLDER'])
+        assert_dir(upload_to)
+        config = json.load(file(os.path.join(dir_, "config.json")))
 
         with app.test_request_context():
             for fname, v in config.items():
-                full_path = os.path.join(dir, fname)
+                src = os.path.join(dir_, fname)
                 title = v['title']
                 tags = v['tags']
                 tag_record_list = []
@@ -97,29 +97,12 @@ class InitializeTestDB(Command):
                     else:
                         tag_record = tag_record[0]
                     tag_record_list.append(tag_record)
-                bucket = app.config['QINIU_CONF']['SPU_IMAGE_BUCKET']
-                try:
-                    with closing(open(full_path, 'rb')) as f:
-                        print 'uploading ' + full_path + ' ...'
-                        s = f.read()
-                        pic_url = upload_str(fname, s, bucket,
-                                             mime_type='image/png')
-                        upload_str(fname.rstrip('.png') + '.duri',
-                                   'data:image/png;base64,' +
-                                   b2a_base64(s).strip(),
-                                   bucket,
-                                   mime_type='text/plain')
-                except AlreadyExists:
-                    pic_url = u"http://%s.qiniudn.com/%s" % (bucket, fname)
-                    upload_str(fname.rstrip('.png') + '.duri',
-                               'data:image/png;base64,' +
-                               b2a_base64(s).strip(),
-                               bucket,
-                               True,
-                               mime_type='text/plain')
 
-                dominant_color = color_tools.dominant_colorz(full_path, 1)[0]
-                # 简单起见, thumbnail不压缩了
+                dominant_color = color_tools.dominant_colorz(src, 1)[0]
+
+                dest = path.joinpath(app.config['UPLOAD_FOLDER'], fname)
+                sh.cp(src, dest)
+                pic_url = url_for('image.serve', filename=dest)
                 do_commit(DesignImage(title=title,
                                       tags=tag_record_list,
                                       pic_url=pic_url,

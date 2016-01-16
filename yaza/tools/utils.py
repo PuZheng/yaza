@@ -92,7 +92,8 @@ def calc_control_points(edges, size, cp_num):
 
 
 def _adjust_vertex(point, pa):
-    if pa[tuple(point)][3]:  # if this point is not transparent, then just return
+    # if this point is not transparent, then just return
+    if pa[tuple(point)][3]:
         return point
     range = 1
     hit = []
@@ -351,10 +352,6 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
 
     def _create_ocspu(ocspu_dir, cover_full_path, color, rgb, spu, config):
         cover_path = os.path.relpath(cover_full_path, start_dir)
-        upload_str(cover_path,
-                   open(cover_full_path, 'rb').read(),
-                   app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                   True, 'image/png')
 
         ocspu = do_commit(OCSPU(spu=spu, cover_path=cover_path, color=color,
                                 rgb=rgb))
@@ -373,10 +370,6 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     pic_path = os.path.relpath(full_path, start_dir)
                     im = Image.open(full_path)
                     width, height = im.size
-                    bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                    upload_str(pic_path, open(full_path, 'rb').read(),
-                               bucket, True, 'image/png')
-                    duri_path = pic_path.rstrip('.png') + '.duri'
                     md_size = app.config['QINIU_CONF']['ASPECT_MD_SIZE']
                     if height > width:
                         im.resize((md_size, md_size * width / height))
@@ -384,10 +377,6 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                         im.resize((md_size * height / width, md_size))
                     si = StringIO()
                     im.save(si, 'png')
-                    upload_str(duri_path,
-                               'data:image/png;base64,' +
-                               b2a_base64(si.getvalue()).strip(),
-                               bucket, True, 'text/plain')
                     aspect = do_commit(
                         Aspect(name=name, pic_path=pic_path, ocspu=ocspu,
                                width=width, height=height))
@@ -416,17 +405,9 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                     design_region_configs, "name",
                     {"dir": design_region_name})
                 pic_path = os.path.relpath(full_path, start_dir)
-                bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                upload_str(pic_path, file(full_path, 'rb').read(),
-                           bucket, True, 'image/png')
                 edge_full_path, control_point_file, vertex = \
                     calc_design_region_image(full_path)
                 edge_path = os.path.relpath(edge_full_path, start_dir)
-                upload_str(edge_path,
-                           open(edge_full_path, 'rb').read(),
-                           app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"],
-                           True,
-                           mime_type='application/json')
                 black_shadow_im, white_shadow_im = create_shadow_im(
                     Image.open(full_path), aspect.ocspu.rgb,
                     app.config['BLACK_ALPHA_THRESHOLD'],
@@ -443,29 +424,6 @@ def create_or_update_spu(spu_dir, start_dir, spu=None):
                                                     start_dir)
                 white_shadow_path = os.path.relpath(white_shadow_full_path,
                                                     start_dir)
-                bucket = app.config["QINIU_CONF"]["SPU_IMAGE_BUCKET"]
-                upload_str(black_shadow_path,
-                           open(black_shadow_full_path, 'rb').read(),
-                           bucket, True, 'image/png')
-                upload_str(white_shadow_path,
-                           open(white_shadow_full_path, 'rb').read(),
-                           bucket, True, 'image/png')
-                black_shadow_duri_path = black_shadow_path.rstrip('.png') + \
-                    '.duri'
-                white_shadow_duri_path = white_shadow_path.rstrip('.png') + \
-                    '.duri'
-                upload_str(black_shadow_duri_path,
-                           'data:image/png;base64,' +
-                           b2a_base64(
-                               open(black_shadow_full_path, 'rb')
-                               .read()).strip(),
-                           bucket, True, 'text/plain')
-                upload_str(white_shadow_duri_path,
-                           'data:image/png;base64,' +
-                           b2a_base64(
-                               open(white_shadow_full_path, 'rb')
-                               .read()).strip(),
-                           bucket, True, 'text/plain')
                 do_commit(DesignRegion(aspect=aspect,
                                        name=design_region_name,
                                        pic_path=pic_path,

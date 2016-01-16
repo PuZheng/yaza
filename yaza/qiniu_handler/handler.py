@@ -1,15 +1,7 @@
 # -*- coding:utf-8 -*-
-import hashlib
-import os
 from StringIO import StringIO
-import qiniu.conf
-import qiniu.rs
-import qiniu.io
 
 from yaza.basemain import app
-
-qiniu.conf.ACCESS_KEY = app.config["QINIU_CONF"]["ACCESS_KEY"]
-qiniu.conf.SECRET_KEY = app.config["QINIU_CONF"]["SECRET_KEY"]
 
 
 class AlreadyExists(Exception):

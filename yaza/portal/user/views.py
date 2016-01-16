@@ -57,7 +57,7 @@ class LoginForm(Form):
 def login():
     form = LoginForm()
     if request.method == "GET":
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             return render_template("user/login.html", form=form,
                                    error=request.args.get('error'),
                                    next_url=request.args.get('next'))
