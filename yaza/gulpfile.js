@@ -1,6 +1,5 @@
 var gulp = require('gulp');
 var sass = require('gulp-sass');
-var rjs = require('gulp-requirejs');
 var spawn = require('child_process').spawn;
  
 gulp.task('build', function () {
