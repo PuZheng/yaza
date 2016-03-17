@@ -3,8 +3,7 @@ var sass = require('gulp-sass');
 var rjs = require('gulp-requirejs');
 var spawn = require('child_process').spawn;
  
-gulp.task('buildJs', function () {
-    spawn('cp', ['-r', 'static/vendor', 'static/dist/']) 
+gulp.task('build', function () {
     spawn('r.js', ['-o', 'build.js'], {
         stdio: 'inherit'
     });
