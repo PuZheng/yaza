@@ -6,12 +6,12 @@ yet another zazzle
 
 ## quickstart
 
-1. `$ sudo apt-get install rubygems`
-2. `$ sudo gem install sass`
-3. `$ sudo npm install -g grunt-cli`
-4. `$ git clone ...`
-5. `$ cd <repos>/static/vendor/bootswatch-scss`
-6. `$ sudo npm install grunt`
-7. `$ sudo npm install`
-8. `$ grunt build:flatly`
-9. install fonts
+I am on ubuntu 15.04
+
+```bash
+$ sudo apt-get install libjpeg-dev libjpeg8-dev
+$ npm install
+$ pip install -r requirements.txt
+$ python setup.py develop
+```
+then install neccessary fonts

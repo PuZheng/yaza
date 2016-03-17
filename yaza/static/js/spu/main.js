@@ -31,7 +31,7 @@
             // vendors not using cdn
             'svg.export': 'components/svg.export.js/svg.export',
             kineticjs: 'components/kineticjs/kinetic.min',
-            buckets: 'components/buckets/buckets',
+            buckets: 'components/bucketsjs/dist/buckets.min',
             'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
             'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
             'text': 'components/text/text',

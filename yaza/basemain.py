@@ -9,6 +9,14 @@ from flask.ext.mail import Mail, Message
 from plumbum import CommandNotFound
 import speaklater
 from sqlalchemy.exc import SQLAlchemyError
+from flask.ext.babel import Babel
+from flask.ext.login import LoginManager, current_user
+from flask.ext.databrowser import DataBrowser
+from flask.ext.upload2 import FlaskUpload
+from flask.ext.nav_bar import FlaskNavBar
+from apscheduler.schedulers.background import BackgroundScheduler
+import logging
+import logging.handlers
 
 
 class MyFlask(Flask):
@@ -28,21 +36,26 @@ app = MyFlask(__name__, instance_relative_config=True,
 app.config.from_object("yaza.default_settings")
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
 
-from flask.ext.babel import Babel
 
 babel = Babel(app)
 
-from flask.ext.login import LoginManager, current_user
-from flask.ext.databrowser import DataBrowser
+
+def url_for_static(fpath, **kwargs):
+    if app.config.get('DEBUG'):
+        fpath = os.path.join('dist', fpath)
+
+    return url_for('static', filename=fpath, **kwargs)
+
+
+app.jinja_env.globals['url_for_static'] = url_for_static
+
 # TODO logger need
 data_browser = DataBrowser(app, upload_folder=app.config["UPLOAD_FOLDER"],
                            plugins=['password'])
 
-from flask.ext.upload2 import FlaskUpload
 
 FlaskUpload(app)
 
-from flask.ext.nav_bar import FlaskNavBar
 
 admin_nav_bar = FlaskNavBar(app)
 
@@ -63,7 +76,6 @@ def init_login():
 
 init_login()
 
-from apscheduler.schedulers.background import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -128,9 +140,6 @@ def on_identity_loaded(sender, identity):
         identity.provides.add(RoleNeed(int(current_user.group_id)))
 
 
-import logging
-import logging.handlers
-
 logging.basicConfig(level=logging.DEBUG)
 
 file_handler = logging.handlers.TimedRotatingFileHandler(
@@ -192,8 +201,8 @@ if not app.debug:
                                detail=traceback.render_summary(),
                                back_url=request.args.get("__back_url__", "/"))
 
-from yaza.utils import assert_dir
 
+from yaza.utils import assert_dir
 assert_dir(app.config['UPLOAD_FOLDER'])
 
 if app.debug and app.config['ENABLE_DEBUG_TOOLBAR']:

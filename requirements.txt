@@ -23,3 +23,5 @@ Flask-Headers>=1.0
 APScheduler>=3.0.0
 click>=3.3
 sh>=1.11
+furl>=0.4.92
+Flask-DebugToolbar>=0.10.0
