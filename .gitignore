@@ -53,11 +53,12 @@ nosetests.xml
 .pydevproject
 *.swp
 .ropeproject/*
-node_modules/*
-/yaza/static/components/*
+node_modules
+components
 /yaza/*.db
 log.*
 /yaza/.sass-cache/*
 /yaza/static/css/*
 /yaza/static/uploads/*
 /yaza/static/sass/.sass-cache/*
+env

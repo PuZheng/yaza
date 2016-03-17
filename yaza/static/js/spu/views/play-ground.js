@@ -1,7 +1,7 @@
 define(['jquery', 'underscore', 'backbone', 'handlebars', 'jszip',
 'text!templates/play-ground.hbs', 'spu/config', 'spu/control-group',
 'kineticjs', 'dispatcher', 'color-tools',
-'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'image-resizer', 'i18next',
+'utils/load-image', 'spu/core/interpolation', 'spu/core/mvc', 'utils/read-image-data', 'i18next',
 'jquery.scrollTo', 'js-url', 'block-ui', 'filesaver', "canvas-toBlob", "underscore.string"],
 function ($, _, Backbone, handlebars, JSZip, playGroundTemplate, config,
 makeControlGroup, Kinetic, dispatcher, colorTools, loadImage, interpolation,
@@ -594,31 +594,7 @@ mvc, readImageData, Resize, i18n) {
                     dispatcher.trigger('object-added', image, group);
                     this._generatePreview();
                 }.bind(this);
-                if (_(src).endsWith('.duri') || _(src).startsWith('data')) { // data uri
-                    // resize by ourself, a compromised way
-                    var srcImageData = readImageData.readImageData(imageObj, imageObj.width, 
-                            imageObj.height);
-                    var abc = 1.0 / config.DESIGN_IMAGE_INTIAL_ZOOMNESS;
-                    var resizedWidth = parseInt(width / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
-                    var resizedHeight = parseInt(height / config.DESIGN_IMAGE_INTIAL_ZOOMNESS * 1.5);
-                    new Resize(imageObj.width, imageObj.height, resizedWidth, resizedHeight,
-                            true, true, false,
-                            function (buffer) {
-                                var canvasEl = document.createElement('canvas');
-                                canvasEl.width = resizedWidth;
-                                canvasEl.height = resizedHeight;
-                                var destCtx = canvasEl.getContext('2d');
-                                var destImageData = destCtx.createImageData(resizedWidth, resizedHeight);
-                                for (var i = 0; i < buffer.length; ++i) {
-                                    destImageData.data[i] = buffer[i] & 0xFF;
-                                }
-                                destCtx.putImageData(destImageData, 0, 0);
-                                imageObj.src = canvasEl.toDataURL('image/png');
-                            }).resize(srcImageData);
-                } else {
-                    // let qiniu resize, this will generate best result
-                    imageObj.src += '?imageView2/0/w/' + parseInt(Math.max(width, height));
-                }
+                imageObj.src += '?imageView2/0/w/' + parseInt(Math.max(width, height));
             }.bind(this));
 
         },

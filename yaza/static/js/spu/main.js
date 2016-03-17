@@ -39,7 +39,6 @@
             "filesaver": "components/FileSaver/FileSaver",
             'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
             "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
-            "image-resizer": "components/JS-Image-Resizer/resize",
             // application
             dispatcher: 'js/dispatcher',
             'utils': 'js/utils',
@@ -120,9 +119,6 @@
             },
             'modernizr': {
                 exports: 'Modernizr',
-            },
-            'image-resizer': {
-                exports: 'Resize', 
             },
             i18next: {
                 exports: 'i18n',

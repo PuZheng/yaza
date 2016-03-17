@@ -16,7 +16,6 @@
   ],
   "dependencies": {
     "kineticjs": "v5.1.0",
-    "buckets": "git://github.com/mauriciosantos/buckets",
     "backbone": "~1.1.2",
     "font-awesome": "4.1.0",
     "requirejs": "~2.1.11",
@@ -51,8 +50,7 @@
     "ekko-lightbox": "~3.1.4",
     "jquery.browser": "~0.0.6",
     "canvas-toBlob": "https://github.com/eligrey/canvas-toBlob.js.git",
-    "JS-Image-Resizer": "https://github.com/grantgalitz/JS-Image-Resizer.git",
-    "dropwiki": "https://github.com/xiechao06/dropwiki.git",
-    "i18next": "~1.7.4"
+    "i18next": "~1.7.4",
+    "bucketsjs": "^1.98.1"
   }
 }

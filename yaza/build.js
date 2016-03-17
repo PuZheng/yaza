@@ -31,7 +31,7 @@
         // vendors not using cdn
         'svg.export': 'components/svg.export.js/svg.export.min',
         kineticjs: 'components/kineticjs/kinetic.min',
-        buckets: 'components/buckets/buckets',
+        buckets: 'components/bucketsjs/dist/buckets.min',
         'jquery-file-upload': 'components/blueimp-file-upload/js/jquery.fileupload',
         'jquery.iframe-transport': 'components/blueimp-file-upload/js/jquery.iframe-transport',
         'text': 'components/text/text',
@@ -39,7 +39,6 @@
         'css': 'components/require-css/css.min',
         'jquery.browser': 'components/jquery.browser/dist/jquery.browser.min',
         "canvas-toBlob": "components/canvas-toBlob/canvas-toBlob",
-        "image-resizer": "components/JS-Image-Resizer/resize",
         // application
         'infrastructure': 'js/infrastructure',
         dispatcher: 'js/dispatcher',
@@ -134,9 +133,6 @@
         'js-url': {
             deps: ['jquery'],
             exports: '$.fn.url'
-        },
-        'image-resizer': {
-            exports: 'Resize', 
         },
         'modernizr': {
             exports: 'Modernizr',

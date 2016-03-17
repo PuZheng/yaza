@@ -9,6 +9,5 @@ define(['jquery'], function () {
         'css',
         'jquery.browser',
         "canvas-toBlob",
-        'filesaver',
-        'image-resizer'], function () {});
+        'filesaver'], function () {});
 });
