@@ -30,12 +30,6 @@ class SPUModelView(ModelView):
             except Exception:
                 if app.config["LOGIN_REQUIRED"]:
                     raise PermissionDenied
-        else:
-            if current_user.is_authenticated():
-                Permission(RoleNeed(const.VENDOR_GROUP)).test()
-            else:
-                if app.config["LOGIN_REQUIRED"]:
-                    raise PermissionDenied
 
         spu = self._get_one(id_)
         if "design-image" in request.args:

@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import os
-import sys
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask.ext.principal import (identity_loaded, Principal, RoleNeed,
@@ -25,7 +24,7 @@ class MyFlask(Flask):
         pass
 
 app = MyFlask(__name__, instance_relative_config=True,
-            static_url_path='/static')
+              static_url_path='/static')
 app.config.from_object("yaza.default_settings")
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
 
@@ -36,7 +35,8 @@ babel = Babel(app)
 from flask.ext.login import LoginManager, current_user
 from flask.ext.databrowser import DataBrowser
 # TODO logger need
-data_browser = DataBrowser(app, upload_folder=app.config["UPLOAD_FOLDER"], plugins=['password'])
+data_browser = DataBrowser(app, upload_folder=app.config["UPLOAD_FOLDER"],
+                           plugins=['password'])
 
 from flask.ext.upload2 import FlaskUpload
 
@@ -68,6 +68,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 scheduler = BackgroundScheduler()
 scheduler.start()
 
+
 def register_views():
     from yaza.admin import admin
 
@@ -88,21 +89,28 @@ def register_views():
 def setup_nav_bar():
     from yaza.admin import views, admin
 
-
     default_url = speaklater.make_lazy_string(views.spu_model_view.url_for_list)
-    admin_nav_bar.register(admin, name=_('SPU'), default_url=default_url,
-                           enabler=lambda nav: request.path.startswith('/admin/spu'))
+    admin_nav_bar.register(
+        admin, name=_('SPU'),
+        default_url=default_url,
+        enabler=lambda nav: request.path.startswith('/admin/spu'))
 
-    default_url = speaklater.make_lazy_string(views.design_result_view.url_for_list)
-    admin_nav_bar.register(admin, name=_(u'定制结果'), default_url=default_url,
-                           enabler=lambda nav: request.path.startswith('/admin/design-result'))
+    default_url = speaklater.make_lazy_string(
+        views.design_result_view.url_for_list)
+    admin_nav_bar.register(
+        admin, name=_(u'定制结果'),
+        default_url=default_url,
+        enabler=lambda nav: request.path.startswith('/admin/design-result'))
 
-    default_url = speaklater.make_lazy_string(views.design_image_view.url_for_list)
-    admin_nav_bar.register(admin, name=_(u'设计图'), default_url=default_url,
-                           enabler=lambda nav: request.path.startswith('/admin/design-image'))
+    default_url = speaklater.make_lazy_string(
+        views.design_image_view.url_for_list)
+    admin_nav_bar.register(
+        admin, name=_(u'设计图'), default_url=default_url,
+        enabler=lambda nav: request.path.startswith('/admin/design-image'))
 
-    admin_nav_bar.register(admin, name=_(u"高清图转换"), default_url="/admin/convert",
-                           enabler=lambda nav: request.path.startswith("/admin/convert"))
+    admin_nav_bar.register(
+        admin, name=_(u"高清图转换"), default_url="/admin/convert",
+        enabler=lambda nav: request.path.startswith("/admin/convert"))
 
 register_views()
 
@@ -132,16 +140,17 @@ file_handler.setFormatter(
 file_handler.suffix = "%Y%m%d.log"
 app.logger.addHandler(file_handler)
 
+
 @app.errorhandler(PermissionDenied)
 @app.errorhandler(401)
 def permission_denied(error):
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         return render_template("error.html",
-                                error=_('You are not permitted to visit '
-                                        'this page or perform this action, '
-                                        'please contact Administrator to '
-                                        'grant you required permission'),
-                                back_url=request.args.get('__back_url__', '/'))
+                               error=_('You are not permitted to visit '
+                                       'this page or perform this action, '
+                                       'please contact Administrator to '
+                                       'grant you required permission'),
+                               back_url=request.args.get('__back_url__', '/'))
     return redirect(url_for("user.login", error=_("please login"),
                             next=request.url))
 
